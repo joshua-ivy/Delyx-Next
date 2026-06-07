@@ -40,6 +40,23 @@ mod tests {
     }
 
     #[test]
+    fn index_skips_symlink_entries_that_can_escape_scope() {
+        let fixture = Fixture::new("symlink-scope");
+        let outside = Fixture::new("symlink-outside");
+        outside.file("leak.txt", "secret");
+        let link_path = fixture.root().join("linked-outside");
+        if symlink_dir(outside.root(), &link_path).is_err() {
+            return;
+        }
+
+        let mut manager = WorkspaceManager::new();
+        let project = manager.add_project(fixture.root()).unwrap();
+        let files = manager.index_files(&project.id, 20).unwrap();
+
+        assert!(!files.iter().any(|entry| entry.relative_path.contains("linked-outside")));
+    }
+
+    #[test]
     fn denies_reads_outside_approved_roots() {
         let fixture = Fixture::new("denied");
         fixture.file("allowed.txt", "yes");
@@ -97,5 +114,15 @@ mod tests {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.root);
         }
+    }
+
+    #[cfg(unix)]
+    fn symlink_dir(target: &PathBuf, link: &PathBuf) -> std::io::Result<()> {
+        std::os::unix::fs::symlink(target, link)
+    }
+
+    #[cfg(windows)]
+    fn symlink_dir(target: &PathBuf, link: &PathBuf) -> std::io::Result<()> {
+        std::os::windows::fs::symlink_dir(target, link)
     }
 }

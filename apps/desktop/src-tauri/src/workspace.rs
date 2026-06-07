@@ -155,12 +155,13 @@ fn collect_files(
         let path = entry.path();
         let name = entry.file_name();
         let name = name.to_string_lossy();
+        let file_type = entry.file_type().map_err(|error| WorkspaceError::Io(error.to_string()))?;
 
-        if should_skip(&name) {
+        if should_skip(&name) || file_type.is_symlink() {
             continue;
         }
 
-        if path.is_dir() {
+        if file_type.is_dir() {
             collect_files(root, &path, limit, entries)?;
         } else {
             let relative_path = path
