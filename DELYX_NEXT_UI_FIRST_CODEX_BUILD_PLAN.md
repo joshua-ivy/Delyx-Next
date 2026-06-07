@@ -855,6 +855,11 @@ Revert checkpoint
 Ask for revision
 ```
 
+Status update: diff review MVP controls implemented on 2026-06-07.
+
+- ~~Diff panel shows changed files and unified diff artifacts.~~
+- ~~Diff panel exposes Approve apply, Reject, Revert checkpoint, and Ask revision as safe local UI controls.~~
+
 Later:
 
 ```text

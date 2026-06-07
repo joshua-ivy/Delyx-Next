@@ -65,6 +65,10 @@ export function ShellPreferenceController() {
       bindSafeAction(".plan-edit", "Edit plan", "Plan editing is not wired yet; no plan changed.", "warning"),
       bindSafeAction(".plan-question", "Ask question", "Question capture is not wired yet; no model call ran.", "warning"),
       bindSafeAction(".plan-review-mode", "Switch to read-only review", "Read-only review selected locally; no files changed."),
+      bindSafeAction(".diff-approve", "Approve apply", "Patch apply still requires approval; no file changed.", "warning"),
+      bindSafeAction(".diff-reject", "Reject diff", "Diff rejected locally; no file changed."),
+      bindSafeAction(".diff-revert", "Revert checkpoint", "No checkpoint was restored; a checkpoint artifact is required.", "warning"),
+      bindSafeAction(".diff-revise", "Ask for revision", "Revision request stayed local; no file changed."),
     ];
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);

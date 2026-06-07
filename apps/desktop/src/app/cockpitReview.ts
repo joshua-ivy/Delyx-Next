@@ -38,10 +38,11 @@ export function pendingCount(proposals: ActionProposalView[]) {
 
 export function emptyDiffBlock() {
   return `<div class="dfile">
-        <div class="dh"><span class="fn">Diff artifact</span><span class="dst">empty</span></div>
+        <div class="dh"><span class="fn">Unified diff artifact</span><span class="dst">empty</span></div>
         <div class="dc">
           <div class="dr"><span class="g">-</span><span class="x">No patch or file change has been proposed.</span></div>
         </div>
+        ${diffActionsBlock()}
       </div>`;
 }
 
@@ -51,16 +52,25 @@ export function diffBlock(patches: PatchProposalView[]) {
     return emptyDiffBlock();
   }
 
-  return files.map(({ file, patch }) => `<div class="dfile">
+  const changedFiles = `<div class="dfile diff-summary">
+        <div class="dh"><span class="fn">Changed files</span><span class="dst">${files.length} file(s)</span></div>
+        <div class="dc">${files.map(({ file }) => `<div class="dr"><span class="g">file</span><span class="x">${escapeHtml(file.path)}</span></div>`).join("")}</div>
+        ${diffActionsBlock()}
+      </div>`;
+  return `${changedFiles}${files.map(({ file, patch }) => `<div class="dfile">
         <div class="dh"><span class="fn">${escapeHtml(file.path)}</span><span class="dst">${patchSummary(file.diff)} &middot; ${escapeHtml(patch.status)}</span></div>
         <div class="dc">${file.diff.map(diffLine).join("")}</div>
-      </div>`).join("");
+      </div>`).join("")}`;
 }
 
 export function patchSummary(lines: DiffLineView[]) {
   const added = lines.filter((line) => line.kind === "added").length;
   const removed = lines.filter((line) => line.kind === "removed").length;
   return `<span class="p">+${added}</span> <span class="m">-${removed}</span>`;
+}
+
+function diffActionsBlock() {
+  return `<div class="diff-actions"><span class="btn diff-approve">Approve apply</span><span class="btn diff-reject">Reject</span><span class="btn diff-revert">Revert checkpoint</span><span class="btn diff-revise">Ask revision</span></div>`;
 }
 
 export function emptyTestBlock() {
