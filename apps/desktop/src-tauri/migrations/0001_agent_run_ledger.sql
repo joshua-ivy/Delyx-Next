@@ -104,3 +104,24 @@ CREATE TABLE IF NOT EXISTS model_role_routes (
   model_id TEXT NOT NULL,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS memory_candidates (
+  id TEXT PRIMARY KEY NOT NULL,
+  scope TEXT NOT NULL,
+  key TEXT NOT NULL,
+  value TEXT NOT NULL,
+  source_run_id TEXT NOT NULL,
+  source_thread_id TEXT NOT NULL,
+  status TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS memory_records (
+  id TEXT PRIMARY KEY NOT NULL,
+  scope TEXT NOT NULL,
+  key TEXT NOT NULL,
+  value TEXT NOT NULL,
+  source_run_id TEXT NOT NULL,
+  source_thread_id TEXT NOT NULL,
+  supersedes TEXT,
+  suppressed INTEGER NOT NULL DEFAULT 0
+);

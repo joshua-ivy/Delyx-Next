@@ -7,7 +7,7 @@ Last updated: 2026-06-07.
 Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
-- `cargo test --workspace`: 198 passed, 0 failed.
+- `cargo test --workspace`: 199 passed, 0 failed.
 - `npm run typecheck`, `npm test` (smoke/source-contract), and `npm run smoke:ui`: pass.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
@@ -39,7 +39,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Current Reality
 
 - PR 1-18.1 breadth is skeleton-complete.
-- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, and model role routes now use a real SQLite database and migration; broader app stores are still in memory.
+- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, and the Rust memory governance store now use a real SQLite database and migration; broader app stores are still in memory.
 - There is no full execution engine: no scheduler, executor, resume engine, repair loop, or hook runner.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
@@ -121,9 +121,10 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Tauri approval bridge state now saves proposals, scope, status, decisions, and decision notes to SQLite and reloads them on desktop startup.
   - Recent workspace project snapshots now save project metadata, rules files, approved roots, Git metadata, and indexed file names to SQLite.
   - Model role routes now save to SQLite; runtime status reloads a valid saved coding route before falling back to the first ready Ollama model.
-  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, and SQLite file format.
-  - Persist remaining artifacts, evidence-first stores, memory, skills, automations, and release state.
-  - Next: persist memory governance state so memory candidates, promotions, suppression, and approval context survive app restart.
+  - The Rust memory governance store now saves candidates, promoted records, suppression state, and ID continuity to SQLite; no live Tauri memory bridge is wired yet.
+  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, and SQLite file format.
+  - Persist remaining artifacts, evidence-first stores, skills, automations, and release state.
+  - Next: persist skills and automation state, then wire any persisted stores that still lack a Tauri bridge.
   - Add migration/repository tests that prove data survives reload.
 
 - [ ] D2 - AgentRun Execution Engine

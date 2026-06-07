@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, and model-route persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, and memory-store persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -35,7 +35,9 @@ complete:
   proposals, UI scope, status, and decisions. Recent workspace project snapshots
   persist project metadata, approved roots, rules files, Git metadata, and
   indexed file names. Model role routes persist to SQLite and are validated
-  against current provider health before becoming active. Memory, skills,
+  against current provider health before becoming active. The Rust memory
+  governance store persists candidates, durable records, suppression state, and
+  ID continuity, but there is no live Tauri memory bridge yet. Skills,
   automations, and release state are not yet persisted in SQLite.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
@@ -224,6 +226,22 @@ tool requirements. Codex CLI read-only launch now flows through external-agent
 approval, terminal-command approval, captured output, and UI-visible artifacts.
 Codex write-capable launch and any diff-capturing external run still require a
 real checkpoint or isolated worktree. Claude launch remains preview-only.
+
+## Memory Governance
+
+Owns:
+
+- memory candidates
+- approval-gated promotion
+- durable memory records
+- suppression and supersession
+- source run/thread receipts
+
+The Rust `MemoryStore` persists candidates and records to SQLite, including
+candidate status, record suppression, source run/thread IDs, and post-reload ID
+continuity. The shipped UI still reads the frontend memory state and has no live
+Tauri memory bridge, so memory persistence is not yet an end-to-end user
+workflow.
 
 ## Model Layer
 

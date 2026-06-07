@@ -7,13 +7,13 @@ mod tests {
         let connection = open_migrated_memory_database().unwrap();
         let count: i64 = connection
             .query_row(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('agent_runs', 'agent_events', 'artifacts', 'task_threads', 'thread_messages', 'thread_run_records', 'action_proposals', 'approval_bridge_records', 'workspace_project_snapshots', 'model_role_routes')",
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('agent_runs', 'agent_events', 'artifacts', 'task_threads', 'thread_messages', 'thread_run_records', 'action_proposals', 'approval_bridge_records', 'workspace_project_snapshots', 'model_role_routes', 'memory_candidates', 'memory_records')",
                 [],
                 |row| row.get(0),
             )
             .unwrap();
 
-        assert_eq!(count, 10);
+        assert_eq!(count, 12);
     }
 
     #[test]

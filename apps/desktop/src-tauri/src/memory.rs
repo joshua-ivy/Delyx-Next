@@ -65,6 +65,12 @@ impl MemoryStore {
         Self::default()
     }
 
+    pub(crate) fn from_loaded(candidates: Vec<MemoryCandidate>, records: Vec<MemoryRecord>) -> Self {
+        let next_candidate_id = next_id(&candidates, |candidate| candidate.id.as_str(), "memory-candidate-");
+        let next_record_id = next_id(&records, |record| record.id.as_str(), "memory-");
+        Self { candidates, next_candidate_id, next_record_id, records }
+    }
+
     pub fn propose_candidate(&mut self, input: MemoryCandidateInput) -> MemoryCandidate {
         self.next_candidate_id += 1;
         let candidate = MemoryCandidate {
@@ -155,6 +161,10 @@ impl MemoryStore {
         record.suppressed = true;
         Some(record.id.clone())
     }
+}
+
+fn next_id<T>(items: &[T], id: impl Fn(&T) -> &str, prefix: &str) -> usize {
+    items.iter().filter_map(|item| id(item).strip_prefix(prefix)?.parse::<usize>().ok()).max().unwrap_or(items.len())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
