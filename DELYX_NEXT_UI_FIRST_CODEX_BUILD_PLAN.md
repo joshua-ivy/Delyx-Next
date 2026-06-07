@@ -2,6 +2,20 @@
 
 Last updated: 2026-06-07.
 
+## Independent Verification
+
+Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
+confirmed accurate; no checkbox was overclaimed. Evidence:
+
+- `cargo test --workspace`: 181 passed, 0 failed.
+- `npm run typecheck`, `npm test` (smoke/source-contract), and `npm run smoke:ui`: pass.
+- SQLite absence, missing execution engine, Ollama-only live model path,
+  OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
+  grep-style frontend verifiers all match the "Current Reality" claims below.
+- Functional islands confirmed to do real I/O: `apply_approved_patch` performs
+  approval-gated `fs::write` + checkpoint, and the generic terminal worker does a
+  real `Command::spawn` with timeout and output capture.
+
 ## Core Product
 
 - Delyx Next is a local-first, UI-first AI workbench.
@@ -35,6 +49,8 @@ Last updated: 2026-06-07.
 - Frontend tests are smoke/source-contract verifier scripts, not behavioral React/component tests.
 - The cockpit UI is currently string-rendered with `buildCockpitMarkup` plus DOM bindings.
 - The repo intentionally has one Rust crate today: `apps/desktop/src-tauri`.
+- `openai/codex` was audited at commit `e093d81` as a reference/salvage pool, not a repo to blindly copy.
+- A small Codex-inspired PowerShell UTF-8 terminal-capture polish is wired for approved external worker commands.
 
 ## Phase 1 Skeleton Checklist
 
@@ -105,6 +121,7 @@ Last updated: 2026-06-07.
   - Add executor, scheduler, node runner, resume, repair, and hook modules.
   - Make AgentRun the real execution graph, not only an inspector artifact.
   - Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
+  - Use Codex thread/start vs turn/start and command/exec protocol shapes as reference.
   - Keep all risky actions approval-gated.
 
 - [ ] D3 - Behavioral Frontend Tests
@@ -122,6 +139,7 @@ Last updated: 2026-06-07.
 - [ ] D5 - Functional Build Flow
   - Convert approved plans into patch proposals through the runtime engine.
   - Apply approved patches only after approval and checkpointing.
+  - Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - Surface real diffs and rollback state in the UI.
   - Connect build outputs to test and review steps.
 
@@ -133,12 +151,14 @@ Last updated: 2026-06-07.
 
 - [ ] D7 - Model Integration Depth
   - Decide whether OpenAI-compatible providers are in scope.
-  - If yes, implement real calls, secret handling, health checks, and tests.
+  - If yes, implement real calls, keyring-backed secret handling, health checks, and tests.
   - If no, mark them out of scope and remove misleading provider surfaces.
+  - Add Ollama version/readiness and optional pull-progress UI only when backed by real local state.
 
 - [ ] D8 - External Agent Integration Depth
   - Decide whether Codex and Claude launch adapters are in scope.
   - If yes, execute them behind external-agent and terminal approvals with scoped tools, transcript capture, diff capture, and rollback.
+  - Prefer Codex CLI as the first live external-agent adapter because its command contract already matches our app.
   - If no, keep them detection/contract-preview only and label them that way in UI.
 
 - [ ] D9 - Evidence and Final Answer Receipts
@@ -149,6 +169,13 @@ Last updated: 2026-06-07.
   - Record the current single-crate Rust decision in `docs/ARCHITECTURE.md`.
   - Split crates only when real pressure justifies it.
   - Keep target architecture as an extraction map, not a fake repo shape.
+
+- [ ] D11 - Codex Reference Salvage Track
+  - Use `docs/CODEX_REFERENCE_AUDIT.md` as the pick list.
+  - Pull only pieces that reduce risk or save real implementation time.
+  - Candidate direct/adapt pieces: exec policy decisions, command exec artifacts, thread/turn protocol shape, apply-patch deltas, keyring store, Ollama readiness, Git baseline/diff helpers, sandbox capability detection.
+  - Avoid importing Codex core, generated protocol macros, cloud auth, or broad parser stacks until a PR proves the need.
+  - Every Codex-derived change needs tests, UI-visible state, approval gates, and dependency justification.
 
 ## Validation Gates
 

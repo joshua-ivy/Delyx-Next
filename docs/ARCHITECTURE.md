@@ -37,6 +37,26 @@ complete:
   plus manual DOM bindings. That is a Phase 1 implementation choice awaiting an
   explicit architecture decision or migration.
 
+## Codex Reference Integration
+
+`openai/codex` is a reference and salvage pool, not the Delyx architecture.
+The audited reference commit is `e093d81`; details live in
+`docs/CODEX_REFERENCE_AUDIT.md`.
+
+Rules:
+
+- import or adapt only pieces that reduce risk or save real implementation time
+- keep Delyx approval gates and UI-visible runtime state around every imported behavior
+- document dependency weight before adding broad crates
+- prefer small local adapters over wholesale crate-graph imports
+- keep cloud/auth paths optional and explicit
+
+Current Codex-inspired local adaptation:
+
+- `terminal_command_prep` applies best-effort PowerShell UTF-8 output setup for
+  approved external worker commands without changing the visible approved
+  command label.
+
 ## Source File Size Budget
 
 Keep source files small enough to review comfortably:

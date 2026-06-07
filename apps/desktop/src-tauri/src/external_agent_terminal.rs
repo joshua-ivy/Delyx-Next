@@ -3,6 +3,7 @@ use crate::external_agent::{
     ExternalAgentRunStatus, ExternalAgentScope,
 };
 use crate::external_agent_scope::checked_scoped_path;
+use crate::terminal_command_prep::prepare_terminal_command;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::thread::sleep;
@@ -64,8 +65,9 @@ fn run_command(
         return Err(ExternalAgentError::Timeout);
     }
     let started = Instant::now();
-    let mut child = Command::new(&command.program)
-        .args(&command.args)
+    let prepared = prepare_terminal_command(&command.program, &command.args);
+    let mut child = Command::new(&prepared.program)
+        .args(&prepared.args)
         .current_dir(working_directory)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
