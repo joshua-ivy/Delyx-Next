@@ -88,6 +88,22 @@ mod tests {
     }
 
     #[test]
+    fn zero_timeout_blocks_test_command_without_artifact() {
+        let root = temp_workspace("zero-timeout-command");
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(command_input());
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut runner = TestRunner::new(vec![root.clone()]).unwrap();
+        let mut input = test_input(&approval.id, &root, passing_command());
+        input.timeout_ms = 0;
+
+        let result = runner.run_approved_test(input, 10, &approvals);
+
+        assert_eq!(result.unwrap_err(), TestRunnerError::Timeout);
+        assert!(!runner.has_execution_artifact("run-1"));
+    }
+
+    #[test]
     fn failed_test_captures_failure_summary() {
         let root = temp_workspace("failing-command");
         let mut approvals = ApprovalEngine::new();
@@ -137,6 +153,7 @@ mod tests {
             approval_id: approval_id.to_string(),
             program: command.0,
             args: command.1,
+            timeout_ms: 60_000,
             working_directory: cwd.to_path_buf(),
         }
     }

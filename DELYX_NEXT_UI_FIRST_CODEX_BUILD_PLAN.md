@@ -2131,6 +2131,7 @@ Acceptance:
 - ~~Final answer cannot claim tested unless artifact exists.~~
 - ~~Terminal rerun/open/error controls stay disabled until a command artifact exists.~~
 - ~~Test command detection rejects shell wrappers that can hide non-test work.~~
+- ~~Approved test commands have explicit timeouts and timeout failures do not create test artifacts.~~
 
 ---
 

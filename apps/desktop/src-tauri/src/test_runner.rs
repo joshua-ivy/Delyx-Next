@@ -1,8 +1,9 @@
 use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::time::Instant;
+use std::process::{Command, Stdio};
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestArtifact {
@@ -33,6 +34,7 @@ pub enum TestRunnerError {
     Io(String),
     NotTestCommand,
     OutsideApprovedRoot,
+    Timeout,
 }
 
 #[derive(Debug)]
@@ -67,13 +69,29 @@ impl TestRunner {
             .assert_can_execute_action_for_run(&input.approval_id, now, RiskyAction::TerminalCommand, &input.run_id)
             .map_err(TestRunnerError::Approval)?;
         let working_directory = self.checked_directory(&input.working_directory)?;
+        if input.timeout_ms == 0 {
+            return Err(TestRunnerError::Timeout);
+        }
 
         let started = Instant::now();
-        let output = Command::new(&input.program)
+        let mut child = Command::new(&input.program)
             .args(&input.args)
             .current_dir(&working_directory)
-            .output()
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
             .map_err(io_error)?;
+        let output = loop {
+            if child.try_wait().map_err(io_error)?.is_some() {
+                break child.wait_with_output().map_err(io_error)?;
+            }
+            if started.elapsed() >= Duration::from_millis(input.timeout_ms) {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(TestRunnerError::Timeout);
+            }
+            sleep(Duration::from_millis(10));
+        };
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
         let status = if output.status.success() { TestStatus::Passed } else { TestStatus::Failed };
@@ -121,6 +139,7 @@ pub struct TestCommandInput {
     pub approval_id: String,
     pub program: String,
     pub args: Vec<String>,
+    pub timeout_ms: u64,
     pub working_directory: PathBuf,
 }
 
