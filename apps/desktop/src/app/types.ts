@@ -40,8 +40,11 @@ export interface ThreadSummary {
   goal: string;
   status: TaskStatus;
   mode: AgentMode;
+  branch?: string;
+  worktreePath?: string;
   changedFilesCount: number;
   pendingApprovalsCount: number;
+  lastRunStatus?: string;
   updatedAt: string;
 }
 
@@ -104,6 +107,37 @@ export interface TerminalBlockViewModel {
   label: string;
   status: "idle" | "running" | "done" | "failed";
   lines: string[];
+}
+
+export interface ReviewViewModel {
+  changedFiles: string[];
+  decision: "pending" | "accept" | "revise" | "reject";
+  findings: {
+    id: string;
+    priority: "P0" | "P1" | "P2" | "P3";
+    title: string;
+    detail: string;
+    filePath?: string;
+  }[];
+}
+
+export interface BlockerViewModel {
+  id: string;
+  reason: string;
+  severity: "info" | "warning" | "error";
+  nextStep: string;
+}
+
+export interface ActiveTaskViewModel {
+  approvals: ApprovalViewModel[];
+  blockers: BlockerViewModel[];
+  evidence: EvidenceViewModel[];
+  plan?: PlanViewModel;
+  review: ReviewViewModel;
+  terminal: TerminalBlockViewModel[];
+  tests: TestRunViewModel[];
+  thread: ThreadSummary;
+  timeline: TimelineItem[];
 }
 
 export interface WorkbenchData {

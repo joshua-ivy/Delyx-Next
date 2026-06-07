@@ -1153,6 +1153,10 @@ interface ActiveTaskViewModel {
 }
 ```
 
+Status update: UI state contract types implemented on 2026-06-07.
+
+- ~~Task status, thread summary, blocker, review, and active task view-model contracts are represented in shared TypeScript types.~~
+
 ---
 
 ## 15. Target Architecture

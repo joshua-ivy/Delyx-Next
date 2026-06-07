@@ -336,6 +336,10 @@ export const requiredChecks = [
   ["src/design-system/CommandPalette.tsx", "visibleCommands"],
   ["src/main.tsx", "workbench-details.css"],
   ["src-tauri/tauri.conf.json", "com.geaux.delyxnext"],
+  ["src/app/types.ts", "ActiveTaskViewModel"],
+  ["src/app/types.ts", "BlockerViewModel"],
+  ["src/app/types.ts", "worktreePath"],
+  ["src/app/types.ts", "lastRunStatus"],
 ];
 export const forbiddenRenderedDemoStrings = [
   "Disable network during tests",
