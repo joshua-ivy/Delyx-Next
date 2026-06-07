@@ -1658,6 +1658,7 @@ Status update: AppShell cockpit DOM bindings were extracted into a focused hook 
 - ~~AppShell remains under the 300-line target while cockpit DOM bindings live in a focused hook.~~
 - ~~Plan-action DOM bindings are split into a focused module before the cockpit hook approaches the 300-line target.~~
 - ~~Unused generic safe-action no-op binder is removed after controls become stateful or unavailable.~~
+- ~~External-agent path-scope checks are split into a focused helper module before the bridge file approaches the 300-line target.~~
 
 ## UI Rules
 

@@ -1,7 +1,8 @@
 use crate::approval::{ApprovalEngine, ApprovalError};
+use crate::external_agent_scope::{checked_approved_path, checked_scoped_path};
 use crate::external_agent_terminal::{run_worker_command, ExternalAgentCommand};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExternalAgentAvailability {
@@ -255,11 +256,11 @@ impl ExternalAgentBridge {
     }
 
     fn checked_scope(&self, scope: ExternalAgentScope) -> Result<ExternalAgentScope, ExternalAgentError> {
-        let root = checked_path(&scope.project_root, &self.approved_roots)?;
+        let root = checked_approved_path(&scope.project_root, &self.approved_roots)?;
         let allowed_paths = scope
             .allowed_paths
             .iter()
-            .map(|path| checked_path(path, &self.approved_roots))
+            .map(|path| checked_approved_path(path, &self.approved_roots))
             .collect::<Result<Vec<_>, _>>()?;
         Ok(ExternalAgentScope { project_root: root, checkpoint_id: scope.checkpoint_id, worktree_id: scope.worktree_id, allowed_paths })
     }
@@ -279,22 +280,6 @@ fn default_adapters() -> Vec<ExternalAgentAvailability> {
 
 fn adapter(id: &str, kind: ExternalAgentKind, display_name: &str, status: AdapterStatus, detail: &str) -> ExternalAgentAvailability {
     ExternalAgentAvailability { adapter_id: id.to_string(), kind, display_name: display_name.to_string(), status, detail: detail.to_string() }
-}
-
-fn checked_path(path: &Path, approved_roots: &[PathBuf]) -> Result<PathBuf, ExternalAgentError> {
-    let normalized = fs::canonicalize(path).map_err(io_error)?;
-    approved_roots
-        .iter()
-        .any(|root| normalized.starts_with(root))
-        .then_some(normalized)
-        .ok_or(ExternalAgentError::OutsideApprovedRoot)
-}
-
-fn checked_scoped_path(path: &Path, scope: &ExternalAgentScope) -> Result<PathBuf, ExternalAgentError> {
-    let normalized = fs::canonicalize(path).map_err(io_error)?;
-    let inside_root = normalized.starts_with(&scope.project_root);
-    let inside_allowed = scope.allowed_paths.iter().any(|allowed| normalized.starts_with(allowed));
-    (inside_root && inside_allowed).then_some(normalized).ok_or(ExternalAgentError::OutsideApprovedRoot)
 }
 
 fn event(kind: ExternalAgentEventKind, message: &str, timestamp: u64) -> ExternalAgentEvent {

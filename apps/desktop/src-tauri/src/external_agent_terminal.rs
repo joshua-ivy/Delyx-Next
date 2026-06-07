@@ -2,7 +2,7 @@ use crate::external_agent::{
     ExternalAgentError, ExternalAgentEvent, ExternalAgentEventKind, ExternalAgentRunRequest,
     ExternalAgentRunStatus, ExternalAgentScope,
 };
-use std::fs;
+use crate::external_agent_scope::checked_scoped_path;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::thread::sleep;
@@ -49,10 +49,7 @@ pub fn run_worker_command(
 }
 
 fn checked_working_directory(path: &Path, scope: &ExternalAgentScope) -> Result<PathBuf, ExternalAgentError> {
-    let normalized = fs::canonicalize(path).map_err(io_error)?;
-    let inside_root = normalized.starts_with(&scope.project_root);
-    let inside_allowed = scope.allowed_paths.iter().any(|allowed| normalized.starts_with(allowed));
-    (inside_root && inside_allowed).then_some(normalized).ok_or(ExternalAgentError::OutsideApprovedRoot)
+    checked_scoped_path(path, scope)
 }
 
 fn run_command(
