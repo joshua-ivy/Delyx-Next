@@ -2092,6 +2092,33 @@ The AgentRun graph is the future execution engine, not just an inspection artifa
 
 ---
 
+### ~~PR 5.1 - Tauri Thread/Run Session Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added a Tauri-backed thread/run session bridge that creates UI-ready
+threads through the Rust ThreadManager, allocates an AgentRun ledger record,
+captures a real `thread.created` event, and lets the renderer restore bridge
+session threads instead of relying only on React state. Web preview keeps the
+existing local fallback.
+
+Scope:
+
+- ~~Tauri command for creating a thread/run session record.~~
+- ~~Tauri command for listing current bridge session thread/run records.~~
+- ~~Renderer thread creation prefers the bridge and falls back only when the bridge is unavailable.~~
+- ~~Composer-created first threads use the same bridge path.~~
+- ~~Deterministic Rust tests cover create, list, and empty-goal rejection.~~
+
+Acceptance:
+
+- ~~Created bridge threads are idle/explore and do not claim model or tool execution.~~
+- ~~Initial bridge runs are UI-ready `created` records with a real `thread.created` event.~~
+- ~~Snapshots only return records for the requested project.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 6 — Explore and Plan Modes~~
 
 Status: Complete on 2026-06-07.

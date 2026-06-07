@@ -25,6 +25,7 @@ import { currentResearchAnswers } from "../features/research/researchData";
 import { currentSkillState } from "../features/skills/skillData";
 import { currentTestArtifacts } from "../features/tests/testData";
 import { ThreadOverlay } from "../features/threads/ThreadOverlay";
+import { createThreadRunOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
@@ -133,6 +134,20 @@ export function AppShell() {
     };
   }, []);
   useEffect(() => {
+    let cancelled = false;
+    void loadThreadRunSnapshot(activeProject.id).then((snapshot) => {
+      if (!cancelled && snapshot && snapshot.threads.length > 0) {
+        setThreads((current) => current.length > 0 ? current : snapshot.threads);
+        setAgentRuns((current) => current.length > 0 ? current : snapshot.runs);
+        setActiveThreadId((current) => current ?? snapshot.threads[0]?.id);
+        setThreadState("ready");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProject.id]);
+  useEffect(() => {
     document.documentElement.dataset.mode = activeThread?.mode ?? "build";
   }, [activeThread?.mode]);
   useEffect(() => {
@@ -215,17 +230,22 @@ export function AppShell() {
         }}
         onClose={() => setThreadOpen(false)}
         onCreateThread={(goal) => {
-          const thread = createThread(goal, activeProject.id, threads.length + 1);
-          if (!thread) {
+          const createdAt = new Date().toISOString();
+          void createThreadRunOverBridge(activeProject.id, goal, createdAt).then((record) => {
+            const thread = record?.thread ?? createThread(goal, activeProject.id, threads.length + 1);
+            const run = record?.run ?? (thread ? createRunForThread(thread, activeProject.id, threads.length + 1) : undefined);
+            const runnableThread = thread && run ? (record?.thread ?? threadWithRun(thread, run)) : undefined;
+            if (!runnableThread || !run) {
+              setThreadState("error");
+              return;
+            }
+            setAgentRuns((current) => [run, ...current]);
+            setThreads((current) => [runnableThread, ...current]);
+            setActiveThreadId(runnableThread.id);
+            setThreadState("ready");
+          }).catch(() => {
             setThreadState("error");
-            return;
-          }
-          const run = createRunForThread(thread, activeProject.id, threads.length + 1);
-          const runnableThread = threadWithRun(thread, run);
-          setAgentRuns((current) => [run, ...current]);
-          setThreads((current) => [runnableThread, ...current]);
-          setActiveThreadId(runnableThread.id);
-          setThreadState("ready");
+          });
         }}
         onSelectThread={(threadId) => {
           setActiveThreadId(threadId);

@@ -8,6 +8,7 @@ import { recordModelCallFailure, recordModelCallResult } from "./appShellModelRu
 import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { createThread, modeForThreadStatus } from "./appShellThreadActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
+import { createThreadRunOverBridge } from "../features/threads/threadClient";
 
 export interface ComposerBindingState {
   activeProject: WorkspaceProject;
@@ -38,7 +39,7 @@ export function bindComposerForm(state: ComposerBindingState, form: Element | nu
     }
     input.value = "";
     if (!state.activeThread) {
-      createThreadFromComposer(state, text);
+      void createThreadFromComposer(state, text);
       return;
     }
     continueThreadFromComposer(state, text);
@@ -47,15 +48,17 @@ export function bindComposerForm(state: ComposerBindingState, form: Element | nu
   return () => form.removeEventListener("submit", submit);
 }
 
-function createThreadFromComposer(state: ComposerBindingState, goal: string) {
-  const thread = createThread(goal, state.activeProject.id, state.threads.length + 1);
-  if (!thread) {
+async function createThreadFromComposer(state: ComposerBindingState, goal: string) {
+  const createdAt = new Date().toISOString();
+  const record = await createThreadRunOverBridge(state.activeProject.id, goal, createdAt);
+  const thread = record?.thread ?? createThread(goal, state.activeProject.id, state.threads.length + 1);
+  const run = record?.run ?? (thread ? createRunForThread(thread, state.activeProject.id, state.threads.length + 1) : undefined);
+  const runnableThread = thread && run ? (record?.thread ?? threadWithRun(thread, run)) : undefined;
+  if (!runnableThread || !run) {
     state.setThreadState("error");
     notifyLocalAction("Thread goal was empty", "warning");
     return;
   }
-  const run = createRunForThread(thread, state.activeProject.id, state.threads.length + 1);
-  const runnableThread = threadWithRun(thread, run);
   state.setAgentRuns((current) => [run, ...current]);
   state.setThreads((current) => [runnableThread, ...current]);
   state.setActiveThreadId(runnableThread.id);
