@@ -1,0 +1,122 @@
+/* Command Deck composer and bottom hint bar. */
+.deck-composer {
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  flex: none;
+  padding: 11px 30px 13px;
+}
+
+.deck-quicks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.deck-quick {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 5px 12px;
+}
+
+.deck-quick:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.deck-comp-row {
+  align-items: flex-end;
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  display: flex;
+  gap: 9px;
+  padding: 7px 8px 7px 10px;
+  transition: border-color .12s, box-shadow .12s;
+}
+
+.deck-comp-row:focus-within {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.deck-comp-attach {
+  align-self: center;
+  border-radius: 8px;
+  color: var(--fg-3);
+  display: grid;
+  flex: none;
+  font-size: 17px;
+  height: 30px;
+  place-items: center;
+  width: 30px;
+}
+
+.deck-comp-attach:hover {
+  background: var(--surface-2);
+  color: var(--fg-2);
+}
+
+.deck-comp-input {
+  background: none;
+  border: 0;
+  color: var(--fg);
+  flex: 1;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.45;
+  max-height: 110px;
+  outline: none;
+  overflow-y: auto;
+  padding: 6px 2px;
+  resize: none;
+  scrollbar-width: none;
+}
+
+.deck-comp-input::-webkit-scrollbar {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+.deck-comp-input::placeholder {
+  color: var(--fg-3);
+}
+
+.deck-comp-mode,
+.deck-comp-send {
+  align-self: center;
+  flex: none;
+}
+
+.deck-comp-send:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.deck-hintbar {
+  align-items: center;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  color: var(--fg-3);
+  display: flex;
+  font-size: var(--fs-xs);
+  gap: 18px;
+  grid-column: 2 / 4;
+  grid-row: 3;
+  height: 30px;
+  padding: 0 18px;
+  position: static;
+}
+
+.deck-hintbar b {
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  margin-right: 2px;
+}

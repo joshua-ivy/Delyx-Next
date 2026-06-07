@@ -1,0 +1,139 @@
+/* Command palette, toasts, and responsive shell overrides. */
+.palette-backdrop {
+  align-items: flex-start;
+  backdrop-filter: blur(3px);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding-top: 14vh;
+  position: fixed;
+  z-index: 200;
+}
+
+.palette {
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  width: min(620px, 92vw);
+}
+
+.palette header {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto 1fr auto;
+  padding: 14px 16px;
+}
+
+.deck-pal-search,
+.deck-pal-esc {
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+}
+
+.deck-pal-search {
+  padding: 3px 7px;
+}
+
+.deck-pal-esc {
+  background: transparent;
+  padding: 2px 6px;
+}
+
+.palette input {
+  background: none;
+  border: 0;
+  color: var(--fg);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.palette input::placeholder {
+  color: var(--fg-3);
+}
+
+.palette ul {
+  list-style: none;
+  margin: 0;
+  max-height: 50vh;
+  overflow: auto;
+  padding: 8px;
+}
+
+.palette li button {
+  border-radius: 9px;
+  color: var(--fg);
+  display: grid;
+  gap: 4px;
+  padding: 9px 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.palette li small {
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+.palette li button:hover {
+  background: var(--card-2);
+}
+
+.toast-viewport {
+  bottom: 46px;
+  display: grid;
+  gap: 8px;
+  left: 50%;
+  pointer-events: none;
+  position: fixed;
+  right: auto;
+  top: auto;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 36px));
+  z-index: 300;
+}
+
+.toast {
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  box-shadow: var(--shadow-pop);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  padding: 11px 16px;
+  text-align: center;
+}
+
+.toast-success {
+  border-color: color-mix(in srgb, var(--success) 45%, transparent);
+}
+
+.toast-warning {
+  border-color: color-mix(in srgb, var(--warning) 45%, transparent);
+}
+
+@media (max-width: 1100px) {
+  .deckC {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .deck-inspect {
+    display: none;
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .deck-bar,
+  .deck-hintbar {
+    grid-column: 2;
+  }
+}

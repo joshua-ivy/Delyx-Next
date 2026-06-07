@@ -35,6 +35,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const projectButton = document.querySelector(".project-trigger") ?? document.querySelector('.rail .rnav[title="Projects"]');
     const threadButton = document.querySelector(".thread-trigger") ?? document.querySelector(".side-h .add");
     const composerForm = document.querySelector(".deck-comp-form");
+    const terminalButton = document.querySelector(".deck-termbtn");
+    const diffTabs = Array.from(document.querySelectorAll<HTMLElement>(".deck-ftab[data-diff-file]"));
     const approvalApproveButtons = Array.from(document.querySelectorAll<HTMLElement>(".approval-approve-once[data-proposal-id]"));
     const approvalDenyButtons = Array.from(document.querySelectorAll<HTMLElement>(".approval-deny[data-proposal-id]"));
     const reviewReviseButtons = Array.from(document.querySelectorAll(".review-revise"));
@@ -60,6 +62,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const denyProposal = (event: Event) => updateProposalStatus(state, event, "denied");
     const cleanupPlanControls = bindPlanControls(state, activateOnKeyboard);
     const cleanupComposer = bindComposerForm(state, composerForm);
+    const cleanupTerminal = bindTerminalToggle(terminalButton);
+    const cleanupDiffTabs = bindDiffTabs(diffTabs, activateOnKeyboard);
     const requestReviewRevision = () => requestPlanRevision(state);
     bindAccessibility(commandButton, projectButton, threadButton);
     commandButton?.addEventListener("click", openPalette);
@@ -81,12 +85,57 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       threadButton?.removeEventListener("keydown", activateOnKeyboard);
       cleanupPlanControls();
       cleanupComposer();
+      cleanupTerminal();
+      cleanupDiffTabs();
       unbindProposalButtons(approvalApproveButtons, approveProposal, activateOnKeyboard);
       unbindProposalButtons(approvalDenyButtons, denyProposal, activateOnKeyboard);
       unbindReviewButtons(reviewReviseButtons, requestReviewRevision, activateOnKeyboard);
       unbindThreadCards(cards, selectThread, activateOnKeyboard);
     };
   }, [state]);
+}
+
+function bindTerminalToggle(button: Element | null) {
+  const term = document.querySelector(".deck-term");
+  if (!(button instanceof HTMLButtonElement) || !(term instanceof HTMLElement)) {
+    return () => undefined;
+  }
+  const toggle = () => {
+    const open = term.hidden;
+    term.hidden = !open;
+    button.classList.toggle("on", open);
+    button.ariaExpanded = `${open}`;
+    const label = button.querySelector(".deck-termbtn-x");
+    if (label) {
+      label.textContent = open ? "hide" : "terminal";
+    }
+  };
+  button.addEventListener("click", toggle);
+  return () => button.removeEventListener("click", toggle);
+}
+
+function bindDiffTabs(tabs: HTMLElement[], activateOnKeyboard: (event: Event) => void) {
+  const select = (event: Event) => {
+    const id = (event.currentTarget as HTMLElement).dataset.diffFile;
+    if (!id) {
+      return;
+    }
+    document.querySelectorAll<HTMLElement>(".deck-ftab[data-diff-file]").forEach((tab) => {
+      tab.classList.toggle("on", tab.dataset.diffFile === id);
+    });
+    document.querySelectorAll<HTMLElement>(".deck-diff-file-panel[data-diff-file]").forEach((panel) => {
+      panel.hidden = panel.dataset.diffFile !== id;
+    });
+  };
+  tabs.forEach((tab) => {
+    tab.setAttribute("aria-label", `Show diff for ${tab.textContent?.trim() ?? "file"}`);
+    tab.addEventListener("click", select);
+    tab.addEventListener("keydown", activateOnKeyboard);
+  });
+  return () => tabs.forEach((tab) => {
+    tab.removeEventListener("click", select);
+    tab.removeEventListener("keydown", activateOnKeyboard);
+  });
 }
 
 function bindComposerForm(state: CockpitDomBindingState, form: Element | null) {

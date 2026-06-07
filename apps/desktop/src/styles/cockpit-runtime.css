@@ -1,0 +1,227 @@
+/* Approval, diff, test, review, and evidence runtime cards. */
+.appro,
+.deck-ins-card {
+  background: linear-gradient(180deg, var(--accent-soft), transparent 55%), var(--card);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-accent);
+  padding: 20px;
+}
+
+.appro .at,
+.deck-ins-tags {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.appro h4,
+.deck-ins-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: 650;
+  margin: 14px 0 16px;
+}
+
+.meta-id {
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.kv {
+  border-top: 1px solid var(--line);
+  display: flex;
+  font-size: var(--fs-sm);
+  gap: 12px;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.kv:first-of-type {
+  border-top: 0;
+}
+
+.kv .k {
+  color: var(--fg-2);
+}
+
+.kv .v {
+  color: var(--fg);
+  max-width: 220px;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.approval-actions,
+.diff-actions {
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.exp {
+  color: var(--accent);
+  font-size: var(--fs-xs);
+  margin-top: 10px;
+  text-align: center;
+}
+
+.dfile {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.dfile + .dfile,
+.dfile + .sec-h,
+.appro + .dfile {
+  margin-top: 12px;
+}
+
+.dfile .dh {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 9px 12px;
+}
+
+.dfile .fn {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+.dst .p,
+.dr.p .x {
+  color: var(--success);
+}
+
+.dst .m,
+.dr.m .x {
+  color: var(--danger);
+}
+
+.dc {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: 1.7;
+  padding: 5px 0;
+}
+
+.dr {
+  display: flex;
+  padding: 0 12px;
+  white-space: pre-wrap;
+}
+
+.dr .g {
+  color: var(--fg-3);
+  flex: none;
+  padding-right: 11px;
+  text-align: right;
+  width: 44px;
+}
+
+.dr .x {
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
+
+.dr.p { background: color-mix(in srgb, var(--success) 10%, transparent); }
+.dr.m { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+
+.sec-h.compact {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+  margin: 16px 0 6px;
+}
+
+.sec-h h4 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  margin: 0;
+}
+
+.sec-h .ln {
+  background: var(--line);
+  flex: 1;
+  height: 1px;
+}
+
+.rcpt {
+  align-items: flex-start;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 11px;
+  padding: 10px 0;
+}
+
+.rcpt:first-of-type {
+  border-top: 0;
+}
+
+.rcpt .ri {
+  align-items: center;
+  background: var(--card-2);
+  border-radius: 8px;
+  color: var(--accent);
+  display: flex;
+  flex: none;
+  font-size: 13px;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.rcpt .rn {
+  align-items: center;
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  gap: 7px;
+}
+
+.rcpt .rd {
+  color: var(--fg-3);
+  font-size: var(--fs-xs);
+  margin-top: 3px;
+}
+
+.evidence-coverage {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  display: grid;
+  margin: 8px 0 10px;
+  overflow: hidden;
+}
+
+.evidence-coverage div {
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 7px 9px;
+}
+
+.evidence-coverage div:first-child {
+  border-top: 0;
+}
+
+.evidence-coverage span {
+  color: var(--fg-3);
+}
+
+.evidence-coverage b {
+  color: var(--fg-2);
+  font-weight: 700;
+  text-align: right;
+}

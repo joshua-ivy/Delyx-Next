@@ -1,30 +1,15 @@
 import { cockpitMarkup } from "./cockpitMarkup";
-import { automationBlock } from "./cockpitAutomations";
-import { evidenceBlock } from "./cockpitEvidence";
-import { externalAgentBlock } from "./cockpitExternalAgents";
-import { memoryBlock } from "./cockpitMemory";
-import { modePill } from "./cockpitModes";
-import { mobileBlock } from "./cockpitMobile";
-import { modelSettingsBlock } from "./cockpitModels";
-import { releaseBlock } from "./cockpitRelease";
 import { approvalBlock, diffBlock, emptyApprovalBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
-import { runLabel, runStatusPill, runTimeline } from "./cockpitRuns";
+import { runLabel } from "./cockpitRuns";
 import { threadStatsBlock } from "./cockpitStats";
-import { skillBlock } from "./cockpitSkills";
+import { buildProgressBlock, composerMode, terminalLabel, workDiffBlock } from "./cockpitWorkPane";
 import { escapeHtml } from "./html";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
-import type { AutomationStateView } from "../features/automations/automationTypes";
-import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
-import type { MemoryStateView } from "../features/memory/memoryTypes";
-import type { MobileStateView } from "../features/mobile/mobileTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
-import type { ReleaseStateView } from "../features/release/releaseTypes";
 import type { ReviewReportView } from "../features/review/reviewTypes";
-import type { ResearchAnswerView } from "../features/research/researchTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
-import type { SkillStateView } from "../features/skills/skillTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
@@ -41,25 +26,24 @@ export function buildCockpitMarkup(
   tests: TestArtifactView[],
   reviews: ReviewReportView[],
   modelSettings: ModelSettingsView,
-  externalAgents: ExternalAgentStateView,
-  researchAnswers: ResearchAnswerView[],
-  memoryState: MemoryStateView,
-  skillState: SkillStateView,
-  automationState: AutomationStateView,
-  mobileState: MobileStateView,
-  releaseState: ReleaseStateView,
+  _externalAgents: unknown,
+  _researchAnswers: unknown,
+  _memoryState: unknown,
+  _skillState: unknown,
+  _automationState: unknown,
+  _mobileState: unknown,
+  _releaseState: unknown,
   threads: TaskThread[],
 ) {
   const activeProposals = activeRun ? proposals.filter((proposal) => proposal.runId === activeRun.id) : [];
   const activePatches = activeRun ? patches.filter((patch) => patch.runId === activeRun.id) : [];
   const activeTests = activeRun ? tests.filter((artifact) => artifact.runId === activeRun.id) : [];
   const activeReview = activeRun ? reviews.find((report) => report.runId === activeRun.id) : undefined;
-  const activeResearch = activeRun ? researchAnswers.find((answer) => answer.runId === activeRun.id) : undefined;
 
   return cockpitMarkup
     .replace("__SPINE_PIPE__", spinePipeline(activeThread?.status))
     .replace("__MODE_LABEL__", modeLabel(activeThread?.mode))
-    .replace("__STATUS_PILL__", `${modePill(activeThread?.status)}${runStatusPill(activeRun)}`)
+    .replace("__STATUS_PILL__", barStatusPill(activeThread, activeRun, activeProposals))
     .replace("__CONTEXT_CHIPS__", contextChips(project, modelSettings, threads.length))
     .replace("__THREAD_ID__", escapeHtml(activeThread?.id ?? "empty"))
     .replace("__RUN_LABEL__", runLabel(activeRun))
@@ -67,34 +51,52 @@ export function buildCockpitMarkup(
     .replace("__THREAD_DESC__", escapeHtml(activeThread?.goal ?? emptyThreadGoal()))
     .replace("__CONVERSATION__", conversationBlock(activeThread))
     .replace("__THREAD_STATS__", threadStatsBlock(activePatches, activeTests, activeProposals, activeRun))
-    .replace("__PLAN_STATE__", escapeHtml(activePlan?.decision ?? "Empty"))
-    .replace("__PLAN_GRID__", planGrid(activePlan, Boolean(activeThread)))
-    .replace("__TIMELINE__", runTimeline(activeRun))
+    .replace("__BUILD_PROGRESS__", buildProgressBlock(activePlan, activeThread))
+    .replace("__WORK_DIFF__", workDiffBlock(activePatches))
+    .replace("__TERMINAL_LABEL__", terminalLabel(activeRun))
+    .replace("__COMPOSER_MODE__", composerMode(activeThread?.mode))
     .replace("__INSPECTOR_STATUS__", inspectorStatus(activeProposals, activeRun))
     .replace("__INSPECTOR__", inspectorBlock({
       activeProposals,
       activePatches,
       activeTests,
       activeReview,
-      activeResearch,
       activeRun,
-      automationState,
-      externalAgents,
-      memoryState,
-      mobileState,
-      modelSettings,
-      releaseState,
-      skillState,
     }));
+}
+
+function barStatusPill(thread: TaskThread | undefined, run: AgentRunView | undefined, proposals: ActionProposalView[]) {
+  const pending = pendingCount(proposals);
+  if (pending > 0) {
+    return statusPill("warning", "Waiting for approval");
+  }
+  if (!thread || !run) {
+    return statusPill("accent", "Idle");
+  }
+  const status: Record<AgentRunView["status"], { label: string; tone: string }> = {
+    blocked: { label: "Blocked", tone: "danger" },
+    cancelled: { label: "Cancelled", tone: "danger" },
+    created: { label: "Ready", tone: "accent" },
+    failed: { label: "Failed", tone: "danger" },
+    repairing: { label: "Repairing", tone: "warning" },
+    running: { label: "Running", tone: "accent" },
+    succeeded: { label: "Done", tone: "success" },
+    waiting_for_approval: { label: "Waiting for approval", tone: "warning" },
+  };
+  const item = status[run.status];
+  return statusPill(item.tone, item.label);
+}
+
+function statusPill(tone: string, label: string) {
+  return `<span class="pill deck-bar-status ${tone}"><span class="dot ${tone}"></span>${escapeHtml(label)}</span>`;
 }
 
 function contextChips(project: WorkspaceProject, modelSettings: ModelSettingsView, activeThreads: number) {
   const provider = modelSettings.providers.find((item) => item.id === modelSettings.selectedProviderId);
-  const git = project.git.isRepo ? `${project.git.branch} / ${gitChanges(project)}` : "not a Git repo";
+  const git = project.git.isRepo ? project.git.branch : "not a Git repo";
   return [
-    `<span class="deck-ctx-chip"><strong>${escapeHtml(project.name)}</strong> ${escapeHtml(git)}</span>`,
-    `<span class="deck-ctx-chip"><strong>${activeThreads}</strong> active threads</span>`,
-    `<span class="deck-ctx-chip"><strong>${escapeHtml(provider?.label ?? "No provider")}</strong> ${escapeHtml(provider?.status ?? "not_configured")}</span>`,
+    `<span class="deck-ctx-chip"><strong>${escapeHtml(project.name)}</strong> / ${escapeHtml(git)} / ${escapeHtml(gitChanges(project))}</span>`,
+    `<span class="deck-ctx-chip"><strong>${activeThreads}</strong> threads / ${escapeHtml(provider?.label ?? "No provider")}</span>`,
   ].join("");
 }
 
@@ -136,7 +138,7 @@ function activeStepIndex(status: ThreadStatus | undefined) {
 }
 
 function modeLabel(mode: TaskThread["mode"] | undefined) {
-  return (mode ?? "local").toUpperCase();
+  return (mode ?? "build").toUpperCase();
 }
 
 function conversationBlock(thread: TaskThread | undefined) {
@@ -157,41 +159,6 @@ function emptyThreadGoal() {
   return "Create a thread in this project to start real local work. Runtime execution, approvals, diffs, tests, and evidence stay empty until their ledgers exist.";
 }
 
-function planGrid(plan: PlanView | undefined, hasThread: boolean) {
-  if (!plan) {
-    return `<div class="plan-grid">
-      ${planBox("Files likely to change", ["No plan has been created."], "-")}
-      ${planBox("Proposed steps", [hasThread ? "Create a plan from the active thread." : "Create a thread before planning."], "-")}
-      ${planBox("Risks", ["No risky action has been proposed."], "!")}
-      ${planBox("Verify and permissions", ["No test command has been proposed."], "-")}
-    </div>`;
-  }
-  return `<div class="plan-grid">
-    ${planBox("Goal understanding", [plan.goalUnderstanding], "-")}
-    ${planBox("Files likely involved", plan.filesLikelyInvolved, "F")}
-    ${planBox("Steps", plan.steps, "S")}
-    ${planBox("Risks", plan.risks, "!")}
-    ${planBox("Tests to run", plan.testsToRun, "$")}
-    ${planBox("Rollback strategy", [plan.rollbackStrategy], "R")}
-    <div class="pbox"><div class="bh">Permissions needed</div><div class="perm">${plan.permissionsNeeded.map((item) => `<span class="pill ghost micro">${escapeHtml(item)}</span>`).join("")}</div><div class="it"><span class="ix">D</span>${decisionLabel(plan.decision)}</div></div>
-  </div>`;
-}
-
-function planBox(title: string, items: string[], marker: string) {
-  const visibleItems = items.length > 0 ? items : ["None discovered yet."];
-  return `<div class="pbox"><div class="bh">${title}</div>${visibleItems.map((item) => `<div class="it"><span class="ix">${marker}</span>${escapeHtml(item)}</div>`).join("")}</div>`;
-}
-
-function decisionLabel(decision: PlanView["decision"]) {
-  const labels: Record<PlanView["decision"], string> = {
-    approved: "Approved",
-    cancelled: "Cancelled",
-    pending: "Pending review",
-    revision_requested: "Revision requested",
-  };
-  return labels[decision];
-}
-
 function inspectorStatus(proposals: ActionProposalView[], run: AgentRunView | undefined) {
   const pending = pendingCount(proposals);
   if (pending > 0) {
@@ -205,30 +172,31 @@ interface InspectorState {
   activePatches: PatchProposalView[];
   activeTests: TestArtifactView[];
   activeReview: ReviewReportView | undefined;
-  activeResearch: ResearchAnswerView | undefined;
   activeRun: AgentRunView | undefined;
-  automationState: AutomationStateView;
-  externalAgents: ExternalAgentStateView;
-  memoryState: MemoryStateView;
-  mobileState: MobileStateView;
-  modelSettings: ModelSettingsView;
-  releaseState: ReleaseStateView;
-  skillState: SkillStateView;
 }
 
 function inspectorBlock(state: InspectorState) {
-  return [
-    state.activeProposals.length > 0 ? approvalBlock(state.activeProposals) : emptyApprovalBlock(),
-    diffBlock(state.activePatches),
-    testBlock(state.activeTests),
-    reviewBlock(state.activeReview),
-    modelSettingsBlock(state.modelSettings),
-    memoryBlock(state.memoryState, state.activeRun?.id),
-    skillBlock(state.skillState),
-    automationBlock(state.automationState),
-    mobileBlock(state.mobileState),
-    releaseBlock(state.releaseState),
-    externalAgentBlock(state.externalAgents, state.activeRun?.id),
-    evidenceBlock(state.activeResearch),
-  ].join("");
+  const pending = state.activeProposals.filter((proposal) => proposal.status === "pending");
+  if (pending.length > 0) {
+    return approvalBlock(pending);
+  }
+  if (state.activeReview) {
+    return reviewBlock(state.activeReview);
+  }
+  if (state.activeTests.length > 0) {
+    return testBlock(state.activeTests);
+  }
+  if (state.activePatches.length > 0) {
+    return diffBlock(state.activePatches);
+  }
+  if (state.activeRun) {
+    return `<div class="appro">
+        <div class="at"><span class="pill accent">Next action</span><span class="meta-id">${escapeHtml(state.activeRun.id)}</span></div>
+        <h4>${escapeHtml(state.activeRun.status.replaceAll("_", " "))}</h4>
+        <div class="kv"><span class="k">Run</span><span class="v">${escapeHtml(state.activeRun.goal)}</span></div>
+        <div class="kv"><span class="k">Commands</span><span class="v">${state.activeRun.metrics.commandCount}</span></div>
+        <div class="kv"><span class="k">Evidence</span><span class="v">${state.activeRun.metrics.evidenceCount}</span></div>
+      </div>`;
+  }
+  return emptyApprovalBlock();
 }

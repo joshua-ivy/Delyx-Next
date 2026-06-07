@@ -12,6 +12,8 @@ const builtOutput = existsSync(indexPath)
   : "";
 const source = [
   "src/app/cockpitMarkup.ts",
+  "src/app/cockpitWorkPane.ts",
+  "src/app/cockpitPlanBindings.ts",
   "src/app/cockpitStats.ts",
   "src/features/workspace/WorkspaceOverlay.tsx",
   "src/features/threads/ThreadOverlay.tsx",
@@ -29,7 +31,7 @@ for (const label of ["Projects", "Threads", "Plan", "Approvals", "Diff", "Tests"
 for (const state of ["Loading state", "Error state", "blocked", "failed", "done"]) {
   check(source.includes(state), `UI source must include ${state}`);
 }
-for (const action of ["Create plan", "Approve", "Revise", "Cancel"]) {
+for (const action of ["Create plan", "Approve", "Ask question", "Show review"]) {
   check(source.includes(action), `primary workflow action must include ${action}`);
 }
 for (const marker of [
@@ -38,7 +40,6 @@ for (const marker of [
   "No approval requests",
   "No patch or file change has been proposed",
   "No test command artifact has been captured",
-  "No evidence records",
   "No terminal command has run",
   "No external agent run has been approved or captured",
 ]) {

@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 
-import { notifyLocalAction } from "./ShellPreferenceController";
+import { notifyLocalAction, requestThemeToggle } from "./ShellPreferenceController";
 import {
   createPlanApprovalProposal,
   expirePendingProposalsForRun,
@@ -18,6 +18,7 @@ import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/w
 export const paletteCommands = [
   { detail: "Open approved roots, Git facts, and workspace states.", id: "workspace.open", label: "Open workspace" },
   { detail: "Open thread manager for create, archive, and status controls.", id: "threads.open", label: "Open threads" },
+  { detail: "Switch between dark and light Command Deck themes.", id: "theme.toggle", label: "Toggle light / dark" },
   { detail: "Create a read-only plan from the active thread.", id: "plan.create", label: "Create plan" },
   { detail: "Approve the active plan in UI state only.", id: "plan.approve", label: "Approve plan" },
   { detail: "Request revision for the active plan.", id: "plan.revise", label: "Revise plan" },
@@ -52,6 +53,9 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
     case "threads.open":
       context.setThreadOpen(true);
       notifyLocalAction("Thread manager opened");
+      break;
+    case "theme.toggle":
+      requestThemeToggle();
       break;
     case "plan.create":
       createPlan(context);

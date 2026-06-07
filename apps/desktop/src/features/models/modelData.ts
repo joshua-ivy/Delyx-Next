@@ -7,7 +7,7 @@ export const currentModelSettings: ModelSettingsView = {
       detail: "Deterministic local provider for offline development.",
       id: "mock-local",
       kind: "mock",
-      label: "Mock provider",
+      label: "Local deterministic",
       models: ["delyx-mock-coder", "delyx-mock-reasoner"],
       requiresSecret: false,
       status: "ready",

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 import { bindTerminalDrawerActions } from "./drawerActions";
 
@@ -16,6 +16,7 @@ const layoutBounds: Record<ResizeKind, [number, number]> = {
 const layoutDefaults: LayoutPreference = { drawer: 150, review: 392, side: 252 };
 const layoutKey = "delyx-next.layout";
 const themeKey = "delyx-next.theme";
+const themeToggleEventName = "delyx-next.theme.toggle";
 const toastEventName = "delyx-next.toast";
 
 export function ShellPreferenceController() {
@@ -34,11 +35,7 @@ export function ShellPreferenceController() {
 
   useEffect(() => {
     const button = document.querySelector(".theme-trigger");
-    const toggleTheme = () => setTheme((current) => {
-      const next = nextTheme(current);
-      notifyLocalAction(`${next} theme enabled`, "success");
-      return next;
-    });
+    const toggleTheme = () => toggleThemePreference(setTheme);
     const activateOnKeyboard = (event: Event) => {
       const key = (event as KeyboardEvent).key;
       if (key === "Enter" || key === " ") {
@@ -54,6 +51,12 @@ export function ShellPreferenceController() {
       button?.removeEventListener("click", toggleTheme);
       button?.removeEventListener("keydown", activateOnKeyboard);
     };
+  }, []);
+
+  useEffect(() => {
+    const toggleTheme = () => toggleThemePreference(setTheme);
+    window.addEventListener(themeToggleEventName, toggleTheme);
+    return () => window.removeEventListener(themeToggleEventName, toggleTheme);
   }, []);
 
   useEffect(() => {
@@ -74,6 +77,18 @@ export function ShellPreferenceController() {
 
 export function notifyLocalAction(message: string, tone: ToastTone = "info") {
   window.dispatchEvent(new CustomEvent(toastEventName, { detail: { message, tone } }));
+}
+
+export function requestThemeToggle() {
+  window.dispatchEvent(new CustomEvent(themeToggleEventName));
+}
+
+function toggleThemePreference(setTheme: Dispatch<SetStateAction<ThemePreference>>) {
+  setTheme((current) => {
+    const next = nextTheme(current);
+    notifyLocalAction(`${next} theme enabled`, "success");
+    return next;
+  });
 }
 
 function ToastViewport() {

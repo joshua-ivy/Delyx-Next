@@ -1,7 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, X } from "lucide-react";
-
-import { IconButton } from "./IconButton";
 
 export interface CommandPaletteItem {
   detail: string;
@@ -40,15 +37,15 @@ export function CommandPalette({ commands, onClose, onRun, open }: CommandPalett
     <div aria-label="Command palette" aria-modal="true" className="palette-backdrop" role="dialog">
       <div className="palette">
         <header>
-          <Search size={18} />
+          <span className="deck-pal-search mono">&#8984;K</span>
           <input
             aria-label="Command search"
             autoFocus
             onChange={(event) => setQuery(event.currentTarget.value)}
-            placeholder="Search commands"
+            placeholder="Run a command..."
             value={query}
           />
-          <IconButton icon={<X size={16} />} label="Close command palette" onClick={onClose} />
+          <button aria-label="Close command palette" className="deck-pal-esc mono" onClick={onClose} type="button">esc</button>
         </header>
         <ul>
           {visibleCommands.map((command) => (
