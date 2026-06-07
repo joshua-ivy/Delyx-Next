@@ -194,7 +194,11 @@ function approvalActions(proposal: ActionProposalView, status: ProposalStatus) {
   if (status !== "pending") {
     return `<div class="approval-actions"><span class="pill ghost micro">decision recorded: ${escapeHtml(status)}</span></div>`;
   }
-  return `<div class="approval-actions"><span class="btn approval-approve-once" data-proposal-id="${escapeHtml(proposal.id)}">Approve once</span><span class="btn approval-deny" data-proposal-id="${escapeHtml(proposal.id)}">Deny</span><span class="btn approval-always">Always allow for this project later</span><span class="btn approval-scope">Edit scope</span></div>`;
+  return `<div class="approval-actions"><span class="btn approval-approve-once" data-proposal-id="${escapeHtml(proposal.id)}">Approve once</span><span class="btn approval-deny" data-proposal-id="${escapeHtml(proposal.id)}">Deny</span>${disabledApprovalAction("Always allow later", "Persistent allow rules are not available yet.")}${disabledApprovalAction("Edit scope", "Scope editing requires a future scope editor.")}</div>`;
+}
+
+function disabledApprovalAction(label: string, reason: string) {
+  return `<span aria-disabled="true" class="btn approval-unavailable" title="${escapeHtml(reason)}">${escapeHtml(label)}</span>`;
 }
 
 function effectiveProposalStatus(proposal: ActionProposalView): ProposalStatus {

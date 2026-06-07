@@ -171,6 +171,7 @@
   .appro .acts{display:flex;gap:8px;margin-top:13px;}
   .approval-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px;}
   .btn{border-radius:10px;font-size:12px;font-weight:600;padding:10px;cursor:pointer;text-align:center;}
+  .btn[aria-disabled="true"]{cursor:not-allowed;opacity:.52;}
   .btn.ok{flex:1;background:var(--build);color:#1a0f07;}
   .btn.no{flex:0 0 84px;background:transparent;border:1px solid var(--line-2);color:var(--fg-2);}
   .exp{text-align:center;font-size:11px;color:var(--build);margin-top:10px;}

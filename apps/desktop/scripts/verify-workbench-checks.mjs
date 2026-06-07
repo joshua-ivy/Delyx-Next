@@ -185,7 +185,9 @@ export const requiredChecks = [
   ["src/app/cockpitReview.ts", "riskPolicyLabel"],
   ["src/app/cockpitReview.ts", "Files/commands"],
   ["src/app/cockpitReview.ts", "Approve once"],
-  ["src/app/cockpitReview.ts", "Always allow for this project later"],
+  ["src/app/cockpitReview.ts", "Always allow later"],
+  ["src/app/cockpitReview.ts", "approval-unavailable"],
+  ["src/app/cockpitReview.ts", "aria-disabled=\"true\""],
   ["src/app/cockpitReview.ts", "data-proposal-id"],
   ["src/app/cockpitReview.ts", "Node"],
   ["src/app/cockpitReview.ts", "pendingCount"],
@@ -436,4 +438,6 @@ export const forbiddenRenderedDemoStrings = [
   "mock transcript",
   "Create a fixture-backed thread manager state.",
   "Plan editing is not wired yet",
+  "Persistent allow rules are not wired",
+  "Scope editing is not wired yet",
 ];
