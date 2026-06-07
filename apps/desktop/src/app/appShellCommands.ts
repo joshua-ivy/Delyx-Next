@@ -26,7 +26,6 @@ export const paletteCommands = [
   { detail: "Approve the active plan in UI state only.", id: "plan.approve", label: "Approve plan" },
   { detail: "Request revision for the active plan.", id: "plan.revise", label: "Revise plan" },
   { detail: "Cancel the active plan.", id: "plan.cancel", label: "Cancel plan" },
-  { detail: "Show the thread empty state without deleting project facts.", id: "state.threads.empty", label: "Show empty threads" },
 ] as const;
 
 export interface AppShellCommandContext {
@@ -36,7 +35,6 @@ export interface AppShellCommandContext {
   activeThread: TaskThread | undefined;
   modelSettings: ModelSettingsView;
   setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
-  setActiveThreadId: Dispatch<SetStateAction<string | undefined>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setModelSettings: Dispatch<SetStateAction<ModelSettingsView>>;
   setPlans: Dispatch<SetStateAction<PlanView[]>>;
@@ -73,15 +71,6 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
       break;
     case "plan.cancel":
       updatePlanDecision(context, "cancelled", "Plan cancelled in local UI state");
-      break;
-    case "state.threads.empty":
-      context.setActiveThreadId(undefined);
-      context.setAgentRuns([]);
-      context.setActionProposals([]);
-      context.setPlans([]);
-      context.setThreads([]);
-      context.setThreadState("empty");
-      notifyLocalAction("Thread empty state shown");
       break;
   }
 }

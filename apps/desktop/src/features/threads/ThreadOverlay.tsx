@@ -12,7 +12,6 @@ interface ThreadOverlayProps {
   onCreateThread: (goal: string) => void;
   onSelectThread: (threadId: string) => void;
   onSetStatus: (status: ThreadStatus) => void;
-  onShowEmpty: () => void;
 }
 
 export function ThreadOverlay({
@@ -22,7 +21,6 @@ export function ThreadOverlay({
   onCreateThread,
   onSelectThread,
   onSetStatus,
-  onShowEmpty,
   open,
   state,
   threads,
@@ -64,7 +62,6 @@ export function ThreadOverlay({
             />
             <div className="thread-actions">
               <button aria-disabled={!canCreate} disabled={!canCreate} onClick={createThread} type="button">Create thread</button>
-              <button onClick={onShowEmpty} type="button">Show empty state</button>
             </div>
             <StateNotice state={state} />
           </section>

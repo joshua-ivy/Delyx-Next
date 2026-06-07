@@ -1961,7 +1961,31 @@ Acceptance:
 - ~~No fake approvals, diffs, test results, evidence receipts, or terminal output render.~~
 - ~~Empty states explain what is not wired yet.~~
 - ~~Workspace scope, Git status, and rules files still render from the current local project.~~
-- ~~Command palette empty-thread state clears active thread, plans, and in-session AgentRuns.~~
+- ~~Thread empty state is reached through real no-thread or archive flow, not command-palette simulation.~~
+
+---
+
+### ~~PR 4.6 - Remove Simulated Thread Empty-State Controls~~
+
+Status: Complete on 2026-06-07.
+
+Update: Removed the command-palette `Show empty threads` action and the thread
+manager `Show empty state` button. Empty thread UI still renders when no active
+threads exist, and archiving the last active thread naturally returns the
+thread surface to empty.
+
+Scope:
+
+- ~~Remove fake thread empty-state command-palette action.~~
+- ~~Remove fake thread empty-state button from the thread manager.~~
+- ~~Keep create, select, archive, and status controls tied to real in-session thread records.~~
+- ~~Keep empty-state copy visible when no active thread exists.~~
+
+Acceptance:
+
+- ~~Users do not see fake thread-state actions.~~
+- ~~No command clears thread/run/plan data purely to simulate acceptance states.~~
+- ~~Verifier checks require real empty-thread copy instead of simulator controls.~~
 
 ---
 

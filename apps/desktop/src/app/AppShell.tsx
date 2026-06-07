@@ -160,7 +160,6 @@ export function AppShell() {
       activeThread,
       modelSettings,
       setActionProposals,
-      setActiveThreadId,
       setAgentRuns,
       setModelSettings,
       setPlans,
@@ -230,14 +229,6 @@ export function AppShell() {
             thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread
           )));
           setThreadState("ready");
-        }}
-        onShowEmpty={() => {
-          setThreads([]);
-          setAgentRuns([]);
-          setActionProposals([]);
-          setActiveThreadId(undefined);
-          setPlans([]);
-          setThreadState("empty");
         }}
         open={threadOpen}
         state={threadState}
