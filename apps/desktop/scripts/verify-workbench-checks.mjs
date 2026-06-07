@@ -164,6 +164,8 @@ export const requiredChecks = [
   ["src/app/cockpitView.ts", "No active run"],
   ["src/app/cockpitReview.ts", "approvalBlock"],
   ["src/app/cockpitReview.ts", "decision recorded"],
+  ["src/app/cockpitReview.ts", "effectiveProposalStatus"],
+  ["src/app/cockpitReview.ts", "expired: request a fresh approval"],
   ["src/app/cockpitReview.ts", "Changed files"],
   ["src/app/cockpitReview.ts", "Unified diff artifact"],
   ["src/app/cockpitReview.ts", "Approve apply"],

@@ -1,4 +1,10 @@
-import { riskPolicyLabel, scopeArtifactLabel, scopeLabel, type ActionProposalView } from "../features/approvals/approvalTypes";
+import {
+  riskPolicyLabel,
+  scopeArtifactLabel,
+  scopeLabel,
+  type ActionProposalView,
+  type ProposalStatus,
+} from "../features/approvals/approvalTypes";
 import type { DiffLineView, PatchProposalView } from "../features/patches/patchTypes";
 import type { ReviewFindingView, ReviewReportView } from "../features/review/reviewTypes";
 import type { TestArtifactView, TestStatus } from "../features/tests/testTypes";
@@ -20,7 +26,9 @@ export function approvalBlock(proposals: ActionProposalView[]) {
     return emptyApprovalBlock();
   }
 
-  return proposals.map((proposal) => `<div class="appro">
+  return proposals.map((proposal) => {
+    const status = effectiveProposalStatus(proposal);
+    return `<div class="appro">
         <div class="at"><span class="pill ${riskClass(proposal.riskLabel)}">${escapeHtml(proposal.riskLabel)} risk &middot; ${escapeHtml(proposal.actionType)}</span><span class="meta-id">${escapeHtml(proposal.id)}</span></div>
         <h4>${escapeHtml(proposal.actionType)}</h4>
         <div class="kv"><span class="k">Scope</span><span class="v">${escapeHtml(scopeLabel(proposal.scope))}</span></div>
@@ -30,13 +38,14 @@ export function approvalBlock(proposals: ActionProposalView[]) {
         <div class="kv"><span class="k">Expected</span><span class="v">${escapeHtml(proposal.expectedResult)}</span></div>
         <div class="kv"><span class="k">Policy</span><span class="v">${escapeHtml(riskPolicyLabel(proposal.actionType))}</span></div>
         <div class="kv"><span class="k">Rollback</span><span class="v">${escapeHtml(proposal.rollbackPlan ?? "No rollback plan recorded.")}</span></div>
-        <div class="exp">Run ${escapeHtml(proposal.runId)} &middot; Node ${escapeHtml(proposal.nodeId)} &middot; Expires ${escapeHtml(proposal.expiresAt)} &middot; ${escapeHtml(proposal.status)}</div>
-        ${approvalActions(proposal)}
-      </div>`).join("");
+        <div class="exp">Run ${escapeHtml(proposal.runId)} &middot; Node ${escapeHtml(proposal.nodeId)} &middot; Expires ${escapeHtml(proposal.expiresAt)} &middot; ${escapeHtml(status)}</div>
+        ${approvalActions(proposal, status)}
+      </div>`;
+  }).join("");
 }
 
 export function pendingCount(proposals: ActionProposalView[]) {
-  return proposals.filter((proposal) => proposal.status === "pending").length;
+  return proposals.filter((proposal) => effectiveProposalStatus(proposal) === "pending").length;
 }
 
 export function emptyDiffBlock() {
@@ -177,11 +186,22 @@ function riskClass(risk: ActionProposalView["riskLabel"]) {
   return risk === "low" ? "ghost" : risk === "medium" ? "wait" : "blocked";
 }
 
-function approvalActions(proposal: ActionProposalView) {
-  if (proposal.status !== "pending") {
-    return `<div class="approval-actions"><span class="pill ghost micro">decision recorded: ${escapeHtml(proposal.status)}</span></div>`;
+function approvalActions(proposal: ActionProposalView, status: ProposalStatus) {
+  if (status === "expired") {
+    return '<div class="approval-actions"><span class="pill blocked micro">expired: request a fresh approval</span></div>';
+  }
+  if (status !== "pending") {
+    return `<div class="approval-actions"><span class="pill ghost micro">decision recorded: ${escapeHtml(status)}</span></div>`;
   }
   return `<div class="approval-actions"><span class="btn approval-approve-once" data-proposal-id="${escapeHtml(proposal.id)}">Approve once</span><span class="btn approval-deny" data-proposal-id="${escapeHtml(proposal.id)}">Deny</span><span class="btn approval-always">Always allow for this project later</span><span class="btn approval-scope">Edit scope</span></div>`;
+}
+
+function effectiveProposalStatus(proposal: ActionProposalView): ProposalStatus {
+  if (proposal.status !== "pending") {
+    return proposal.status;
+  }
+  const expiresAt = Date.parse(proposal.expiresAt);
+  return Number.isFinite(expiresAt) && expiresAt <= Date.now() ? "expired" : "pending";
 }
 
 function statusForArtifact(artifact: TestArtifactView): TestStatus {

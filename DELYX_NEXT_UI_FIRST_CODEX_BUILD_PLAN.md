@@ -2051,6 +2051,7 @@ Acceptance:
 - ~~AgentRun timeline records approval proposal and decision receipts without implying a patch or command executed.~~
 - ~~Denial blocks node.~~
 - ~~Expired proposal blocks node.~~
+- ~~Expired pending proposals render as expired and remove decision controls.~~
 - ~~UI shows risk, scope, reason, expected result, and expiration when real proposals exist.~~
 
 ---
