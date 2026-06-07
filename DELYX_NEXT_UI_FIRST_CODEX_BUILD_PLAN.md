@@ -693,7 +693,7 @@ Advanced mode:
 ### 11.4 UI Must-Haves
 
 - ~~Command palette with safe local shell actions~~
-- Keyboard shortcuts
+- ~~Keyboard shortcuts for command palette, primary controls, theme toggle, and pane resize handles~~
 - ~~Resizable split panes~~
 - ~~Persistent layout for pane sizes and theme preference~~
 - ~~Light/dark themes with persisted local preference~~
