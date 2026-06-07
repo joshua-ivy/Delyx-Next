@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CommandPalette } from "../design-system/CommandPalette";
 import { ShellPreferenceController } from "./ShellPreferenceController";
-import { canTransition, createThread, upsertPlan } from "./appShellThreadActions";
+import { canTransition, createThread, modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { buildCockpitMarkup } from "./cockpitView";
 import { currentActionProposals } from "../features/approvals/approvalData";
@@ -228,7 +228,7 @@ export function AppShell() {
             return;
           }
           setThreads((current) => current.map((thread) => (
-            thread.id === activeThread.id ? { ...thread, archived: true } : thread
+            thread.id === activeThread.id ? { ...thread, archived: true, updatedAt: new Date().toISOString() } : thread
           )));
           setThreadState(visibleThreads.length <= 1 ? "empty" : "ready");
         }}
@@ -257,7 +257,7 @@ export function AppShell() {
             return;
           }
           setThreads((current) => current.map((thread) => (
-            thread.id === activeThread.id ? { ...thread, status } : thread
+            thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: new Date().toISOString() } : thread
           )));
           setThreadState("ready");
         }}

@@ -1273,6 +1273,10 @@ interface TaskThread {
 }
 ```
 
+Status update: frontend TaskThread core model fields implemented on 2026-06-07.
+
+- ~~TaskThread carries mode, activeRunId, runIds, createdAt, and updatedAt in the local UI model.~~
+
 ### 16.3 AgentRun
 
 ```ts

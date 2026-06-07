@@ -9,6 +9,7 @@ export type ThreadStatus =
   | "blocked"
   | "failed"
   | "done";
+export type ThreadMode = "explore" | "plan" | "build" | "review" | "test" | "research";
 
 export const threadStatuses: ThreadStatus[] = [
   "idle",
@@ -36,6 +37,11 @@ export interface TaskThread {
   title: string;
   goal: string;
   status: ThreadStatus;
+  mode: ThreadMode;
+  activeRunId?: string;
+  runIds: string[];
+  createdAt: string;
+  updatedAt: string;
   createdLabel: string;
   messages: ThreadMessage[];
   archived: boolean;
