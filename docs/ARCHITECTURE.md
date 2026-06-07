@@ -154,6 +154,10 @@ through the Rust TestRunner. It reads the same Rust ApprovalEngine owned by the
 approval bridge, rejects pending or mismatched approvals, captures stdout,
 stderr, exit code, duration, and failure summary, and stores UI-ready
 TestArtifactView records by run.
+The Tauri `review_create` bridge exposes the read-only Rust ReviewAgent for
+real patch and test artifacts. It returns UI-ready ReviewReportView findings
+without write capability and rejects not-run test artifacts so review cannot
+turn missing execution into tested claims.
 Codex CLI and Claude Code adapter detection reads PATH only. Their typed
 command contracts produce visible `codex exec` and `claude -p` command arrays
 with explicit permission mode, transcript format, working directory, and Delyx

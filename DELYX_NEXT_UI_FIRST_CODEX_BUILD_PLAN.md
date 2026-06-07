@@ -2491,6 +2491,52 @@ Acceptance:
 
 ---
 
+### ~~PR 10.1 - Tauri Review Report Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added a read-only Tauri review bridge and frontend client. The bridge
+accepts real PatchProposalView and TestArtifactView-shaped inputs, converts
+them into the Rust ReviewAgent domain model, returns UI-ready ReviewReportView
+records, stores snapshots by run, and rejects not-run test artifacts so review
+cannot convert missing execution into tested claims. It also rejects patch or
+test artifacts from another run before storing a review report. No write, patch
+apply, terminal, connector, memory, scheduled-work, or external-agent authority
+was added.
+
+Scope:
+
+- ~~Expose `review_create` and `review_snapshot` Tauri commands.~~
+- ~~Map patch diff records into the Rust ReviewAgent without adding write capability.~~
+- ~~Map test artifacts into failed/passed review inputs and reject not-run artifacts.~~
+- ~~Reject patch or test artifacts whose run does not match the review request.~~
+- ~~Return UI-ready prioritized findings linked to file paths and hunk labels.~~
+- ~~Add a frontend review client without seeding fake ReviewReports.~~
+- ~~Add deterministic Rust tests and verifier markers.~~
+
+Acceptance:
+
+- ~~Real patch/test artifacts can produce ReviewReportView records through the bridge.~~
+- ~~Review remains read-only and cannot edit.~~
+- ~~Not-run test artifacts are rejected before review.~~
+- ~~Cross-run patch/test artifacts are rejected before review.~~
+- ~~First-run UI still shows honest empty review state until a real report exists.~~
+- ~~Source files stay within the line-budget rule.~~
+
+Validation:
+
+- ~~`npm run typecheck` passed.~~
+- ~~`cargo test review_bridge_tests --workspace` passed.~~
+- ~~`cargo test --workspace` passed with 179 Rust tests.~~
+- ~~`npm test` passed, including workbench, Ollama agent, and release smoke verifiers.~~
+- ~~`npm run build` passed.~~
+- ~~`npm run smoke:ui` passed.~~
+- ~~`npm run smoke:tauri` passed with installer artifact `target/release/bundle/nsis/Delyx Next_0.0.0_x64-setup.exe`.~~
+- ~~`git diff --check` passed with only Windows line-ending warnings.~~
+- ~~Desktop source scan found no `.rs`, `.ts`, `.tsx`, or `.mjs` files over 300 lines.~~
+
+---
+
 ### ~~PR 11 — Model Provider Abstraction~~
 
 Status: Complete on 2026-06-07.

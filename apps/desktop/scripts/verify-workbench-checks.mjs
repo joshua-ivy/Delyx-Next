@@ -296,7 +296,6 @@ export const forbiddenRenderedDemoStrings = [
   "Local deterministic",
   "Deterministic local provider",
   "delyx-mock-coder",
-  "kind: \"mock\"",
-  "role: \"answer\", saved: true",
+  "kind: \"mock\"", "role: \"answer\", saved: true",
   "role: \"helper\", saved: true",
 ];
