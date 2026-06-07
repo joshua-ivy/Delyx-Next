@@ -692,7 +692,7 @@ Advanced mode:
 
 ### 11.4 UI Must-Haves
 
-- Command palette
+- ~~Command palette with safe local shell actions~~
 - Keyboard shortcuts
 - Resizable split panes
 - Persistent layout

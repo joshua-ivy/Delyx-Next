@@ -1,8 +1,13 @@
 export const requiredChecks = [
   ["src/app/AppShell.tsx", "document.documentElement.dataset.mode"],
+  ["src/app/AppShell.tsx", "setPaletteOpen"],
   ["src/app/AppShell.tsx", "review-revise"],
   ["src/app/appShellThreadActions.ts", "createThread"],
+  ["src/app/appShellCommands.ts", "paletteCommands"],
+  ["src/app/appShellCommands.ts", "runAppShellCommand"],
+  ["src/app/appShellCommands.ts", "state.workspace.loading"],
   ["src/app/cockpitMarkup.ts", "Cockpit workbench"],
+  ["src/app/cockpitMarkup.ts", "command-trigger"],
   ["src/app/cockpitMarkup.ts", "Empty: no active threads"],
   ["src/app/cockpitMarkup.ts", "No active run"],
   ["src/app/cockpitMarkup.ts", "No approval requests"],
@@ -231,6 +236,8 @@ export const requiredChecks = [
   ["src-tauri/src/workbench_modes.rs", "BuildRequiresApprovedPlanOrDirectInstruction"],
   ["src/design-system/tokens.css", "--mode-build"],
   ["src/design-system/tokens.css", "--accent-soft"],
+  ["src/design-system/CommandPalette.tsx", "CommandPaletteItem"],
+  ["src/design-system/CommandPalette.tsx", "visibleCommands"],
   ["src-tauri/tauri.conf.json", "com.geaux.delyxnext"],
 ];
 export const forbiddenRenderedDemoStrings = [

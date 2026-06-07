@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { CommandPalette } from "../design-system/CommandPalette";
 import { canTransition, createThread, upsertPlan } from "./appShellThreadActions";
+import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { buildCockpitMarkup } from "./cockpitView";
 import { currentActionProposals } from "../features/approvals/approvalData";
 import { currentAutomationState } from "../features/automations/automationData";
@@ -29,6 +31,7 @@ export function AppShell() {
   const [threadOpen, setThreadOpen] = useState(false);
   const [threads, setThreads] = useState<TaskThread[]>([]);
   const [threadState, setThreadState] = useState<ThreadUiState>("empty");
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [projects, setProjects] = useState<WorkspaceProject[]>([currentWorkspaceProject]);
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
@@ -66,6 +69,21 @@ export function AppShell() {
   }, []);
 
   useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen(true);
+      }
+      if (event.key === "Escape") {
+        setPaletteOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const commandButton = document.querySelector(".command-trigger");
     const projectButton = document.querySelector('.rail .rnav[title="Projects"]');
     const threadButton = document.querySelector(".side-h .add");
     const planCreate = document.querySelector(".plan-create");
@@ -76,6 +94,7 @@ export function AppShell() {
     const cards = Array.from(document.querySelectorAll<HTMLElement>(".tcard[data-thread-id]"));
     const openProject = () => setWorkspaceOpen(true);
     const openThread = () => setThreadOpen(true);
+    const openPalette = () => setPaletteOpen(true);
     const createPlan = () => {
       if (!activeThread) {
         setThreadState("empty");
@@ -124,7 +143,12 @@ export function AppShell() {
     planApprove?.setAttribute("aria-label", "Approve plan");
     planRevise?.setAttribute("aria-label", "Revise plan");
     planCancel?.setAttribute("aria-label", "Cancel plan");
+    commandButton?.setAttribute("role", "button");
+    commandButton?.setAttribute("tabindex", "0");
+    commandButton?.setAttribute("aria-label", "Open command palette");
 
+    commandButton?.addEventListener("click", openPalette);
+    commandButton?.addEventListener("keydown", activateOnKeyboard);
     projectButton?.addEventListener("click", openProject);
     projectButton?.addEventListener("keydown", activateOnKeyboard);
     threadButton?.addEventListener("click", openThread);
@@ -152,6 +176,8 @@ export function AppShell() {
     });
 
     return () => {
+      commandButton?.removeEventListener("click", openPalette);
+      commandButton?.removeEventListener("keydown", activateOnKeyboard);
       projectButton?.removeEventListener("click", openProject);
       projectButton?.removeEventListener("keydown", activateOnKeyboard);
       threadButton?.removeEventListener("click", openThread);
@@ -175,8 +201,24 @@ export function AppShell() {
     };
   }, [activePlan, activeProject, activeThread, cockpitHtml]);
 
+  const runPaletteCommand = (commandId: string) => {
+    runAppShellCommand(commandId, {
+      activePlan,
+      activeProject,
+      activeThread,
+      setPlans,
+      setThreadOpen,
+      setThreads,
+      setThreadState,
+      setWorkspaceOpen,
+      setWorkspaceState,
+    });
+    setPaletteOpen(false);
+  };
+
   return (
     <>
+      <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} onRun={runPaletteCommand} open={paletteOpen} />
       <div dangerouslySetInnerHTML={{ __html: cockpitHtml }} />
       <ThreadOverlay
         activeThread={activeThread}

@@ -210,10 +210,15 @@
   border: 0;
   color: var(--text);
   cursor: pointer;
-  display: block;
+  display: grid;
+  gap: 4px;
   padding: 10px;
   text-align: left;
   width: 100%;
+}
+
+.palette li small {
+  color: var(--text-muted);
 }
 
 .palette li button:hover {

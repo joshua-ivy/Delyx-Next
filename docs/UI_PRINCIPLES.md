@@ -76,7 +76,7 @@ Screens and panels:
 - evidence panel
 - terminal/log drawer
 - external agent transcript panel
-- command palette placeholder
+- command palette with safe local shell actions
 - settings/model status placeholder
 - blocked state
 - failed state

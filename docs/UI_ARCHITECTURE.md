@@ -321,17 +321,18 @@ Name-only evidence cannot support final claims by itself.
 
 ## Command Palette
 
-PR 2 only needs a placeholder command palette with shell actions.
+Current implementation: the command palette is a safe local shell surface. It
+opens with the top-bar K control or Ctrl+K and only dispatches UI-state actions.
+It does not execute file writes, terminal commands, connectors, memory saves, or
+external agents.
 
 Early commands:
 
-- switch project
-- create thread
-- focus composer
-- open approvals
-- open diff
-- open tests
-- open evidence
+- open workspace
+- open thread manager
+- create plan
+- approve, revise, or cancel plan
+- show deterministic thread/workspace states
 - toggle bottom drawer
 - toggle theme
 
@@ -344,4 +345,3 @@ Frontend state should be boring and truthful:
 - no final answer support without evidence records
 - no write state without approval record
 - no failed or blocked state collapsed into a generic idle state
-
