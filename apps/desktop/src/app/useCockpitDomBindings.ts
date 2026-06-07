@@ -3,7 +3,7 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
-import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
+import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { createPlanApprovalProposal, upsertActionProposal } from "./appShellApprovalActions";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
@@ -60,6 +60,7 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       if (decision === "approved" && state.activeThread) {
         const proposal = createPlanApprovalProposal(state.activePlan, state.activeThread, state.activeRun, state.activeProject);
         state.setActionProposals((current) => upsertActionProposal(current, proposal));
+        updateThreadAndRunStatus(state, state.activeThread, "waiting_for_approval");
       }
     };
     const selectThread = (event: Event) => {
@@ -117,7 +118,7 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
   }, [state]);
 }
 
-function updateThreadAndRunStatus(state: CockpitDomBindingState, activeThread: TaskThread, status: "planning") {
+function updateThreadAndRunStatus(state: CockpitDomBindingState, activeThread: TaskThread, status: ThreadStatus) {
   const now = new Date().toISOString();
   state.setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, status, now));
   state.setThreads((current) => current.map((thread) => (

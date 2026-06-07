@@ -37,6 +37,7 @@ export const requiredChecks = [
   ["src/app/appShellCommands.ts", "paletteCommands"],
   ["src/app/appShellCommands.ts", "notifyLocalAction"],
   ["src/app/appShellCommands.ts", "moveThreadAndRunToPlanning"],
+  ["src/app/appShellCommands.ts", "moveThreadAndRun(context, context.activeThread, \"waiting_for_approval\")"],
   ["src/app/appShellCommands.ts", "createPlanApprovalProposal"],
   ["src/app/appShellCommands.ts", "setActiveThreadId(undefined)"],
   ["src/app/appShellCommands.ts", "runAppShellCommand"],

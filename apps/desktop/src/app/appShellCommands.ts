@@ -8,7 +8,7 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
-import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
+import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 
 export const paletteCommands = [
@@ -107,14 +107,19 @@ function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecis
   if (decision === "approved" && context.activeThread) {
     const proposal = createPlanApprovalProposal(context.activePlan, context.activeThread, context.activeRun, context.activeProject);
     context.setActionProposals((current) => upsertActionProposal(current, proposal));
+    moveThreadAndRun(context, context.activeThread, "waiting_for_approval");
   }
   notifyLocalAction(message, "success");
 }
 
 function moveThreadAndRunToPlanning(context: AppShellCommandContext, activeThread: TaskThread) {
+  moveThreadAndRun(context, activeThread, "planning");
+}
+
+function moveThreadAndRun(context: AppShellCommandContext, activeThread: TaskThread, status: ThreadStatus) {
   const now = new Date().toISOString();
-  context.setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, "planning", now));
+  context.setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, status, now));
   context.setThreads((current) => current.map((thread) => (
-    thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus("planning"), status: "planning", updatedAt: now } : thread
+    thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread
   )));
 }
