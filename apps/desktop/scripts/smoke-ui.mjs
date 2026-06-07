@@ -15,6 +15,7 @@ const source = [
   "src/app/cockpitWorkPane.ts",
   "src/app/cockpitPlanBindings.ts",
   "src/app/runtimeBridge.ts",
+  "src/app/workspaceBridge.ts",
   "src/app/cockpitStats.ts",
   "src/features/workspace/WorkspaceOverlay.tsx",
   "src/features/threads/ThreadOverlay.tsx",
@@ -44,6 +45,7 @@ for (const marker of [
   "No terminal command has run",
   "No external agent run has been approved or captured",
   "Web preview / Rust bridge unavailable",
+  "No indexed files are loaded for this query",
 ]) {
   check(builtOutput.includes(marker), `built UI must include real first-run marker: ${marker}`);
 }

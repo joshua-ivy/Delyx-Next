@@ -8,7 +8,7 @@ export const currentWorkspaceProject: WorkspaceProject = {
   approvalPolicy: "Approval required for file writes, terminal commands, memory saves, connector writes, and external agents.",
   git: {
     isRepo: true,
-    branch: "main",
+    branch: "branch not loaded",
     uncommittedChanges: null,
   },
   isolation: {
@@ -18,26 +18,6 @@ export const currentWorkspaceProject: WorkspaceProject = {
   },
   lastOpenedLabel: "Current local session",
   pinned: false,
-  rulesFiles: [
-    {
-      path: "AGENTS.md",
-      kind: "AGENTS.md",
-    },
-  ],
-  indexedFiles: [
-    "AGENTS.md",
-    "DELYX_NEXT_UI_FIRST_CODEX_BUILD_PLAN.md",
-    "README.md",
-    "Cargo.toml",
-    "package.json",
-    "apps/desktop/package.json",
-    "apps/desktop/src/app/AppShell.tsx",
-    "apps/desktop/src/app/cockpitMarkup.ts",
-    "apps/desktop/src/design-system/tokens.css",
-    "apps/desktop/src/styles/cockpit.css",
-    "apps/desktop/src-tauri/src/workspace.rs",
-    "apps/desktop/src-tauri/src/workspace_tests.rs",
-    "docs/PRODUCT_DIRECTION.md",
-    "docs/UI_ARCHITECTURE.md",
-  ],
+  rulesFiles: [],
+  indexedFiles: [],
 };

@@ -28,6 +28,7 @@ import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 import { loadRuntimeBridgeState, type RuntimeBridgeState } from "./runtimeBridge";
+import { loadWorkspaceProject } from "./workspaceBridge";
 
 const webRuntimeBridge: RuntimeBridgeState = {
   label: "Web preview / Rust bridge unavailable",
@@ -82,6 +83,23 @@ export function AppShell() {
     void loadRuntimeBridgeState().then((state) => {
       if (!cancelled) {
         setRuntimeBridge(state);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  useEffect(() => {
+    let cancelled = false;
+    setWorkspaceState("loading");
+    void loadWorkspaceProject().then((project) => {
+      if (!cancelled) {
+        setProjects([project]);
+        setWorkspaceState("ready");
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setWorkspaceState("error");
       }
     });
     return () => {
@@ -154,6 +172,15 @@ export function AppShell() {
     });
     setPaletteOpen(false);
   };
+  const addWorkspaceProject = (path: string) => {
+    setWorkspaceState("loading");
+    void loadWorkspaceProject(path).then((project) => {
+      setProjects([project]);
+      setWorkspaceState("ready");
+    }).catch(() => {
+      setWorkspaceState("error");
+    });
+  };
   return (
     <>
       <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} onRun={runPaletteCommand} open={paletteOpen} />
@@ -221,14 +248,7 @@ export function AppShell() {
         activeThreadCount={visibleThreads.length}
         lastRun={agentRuns[0]}
         modelSettings={modelSettings}
-        onAddProject={(path) => {
-          if (path.trim() === currentWorkspaceProject.path) {
-            setProjects([currentWorkspaceProject]);
-            setWorkspaceState("ready");
-          } else {
-            setWorkspaceState("error");
-          }
-        }}
+        onAddProject={addWorkspaceProject}
         onClose={() => setWorkspaceOpen(false)}
         onRemoveProject={() => {
           setProjects([]);

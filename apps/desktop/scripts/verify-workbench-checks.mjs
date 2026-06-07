@@ -1,5 +1,6 @@
 import { runtimeChecks } from "./verify-workbench-runtime-checks.mjs";
 import { bridgeChecks } from "./verify-workbench-bridge-checks.mjs";
+import { workspaceChecks } from "./verify-workbench-workspace-checks.mjs";
 
 export const requiredChecks = [
   ["src/app/AppShell.tsx", "document.documentElement.dataset.mode"],
@@ -143,10 +144,10 @@ export const requiredChecks = [
   ["src/styles/workspace.css", ".workspace-modal"],
   ["src/styles/threads.css", ".thread-modal"],
   ["src/features/workspace/workspaceData.ts", "C:/Users/geaux/Downloads/Delyx Next"],
-  ["src/features/workspace/workspaceData.ts", "branch: \"main\""],
+  ["src/features/workspace/workspaceData.ts", "branch: \"branch not loaded\""],
   ["src/features/workspace/workspaceData.ts", "uncommittedChanges: null"],
   ["src/features/workspace/workspaceData.ts", "No active isolation"],
-  ["src/features/workspace/workspaceData.ts", "AGENTS.md"],
+  ["src/features/workspace/workspaceData.ts", "rulesFiles: []"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Show denied read"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "aria-label=\"Workspace manager\""],
   ["src/features/workspace/WorkspaceOverlay.tsx", "gitChangesLabel"],
@@ -269,6 +270,7 @@ export const requiredChecks = [
   ["src/app/cockpitWorkPane.ts", "data-diff-file"],
   ["src/app/cockpitWorkPane.ts", "No patch"],
   ...bridgeChecks,
+  ...workspaceChecks,
   ...runtimeChecks,
 ];
 export const forbiddenRenderedDemoStrings = [

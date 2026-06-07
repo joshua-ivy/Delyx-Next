@@ -106,7 +106,7 @@ export function WorkspaceOverlay({
               {results.map((file) => (
                 <li key={file}>{file}</li>
               ))}
-              {results.length === 0 && <li>No indexed files match this query.</li>}
+              {results.length === 0 && <li>No indexed files are loaded for this query.</li>}
             </ul>
           </section>
 

@@ -71,6 +71,8 @@ Early rules:
 - reads outside approved roots fail
 - writes are not implemented before approval engine and patch system
 - workspace scope is visible in UI
+- Tauri `workspace_snapshot` exposes approved-root metadata, rules files, and indexed file names only
+- Git dirty counts stay unknown unless a real dirty-count artifact exists
 
 ## Thread Manager
 

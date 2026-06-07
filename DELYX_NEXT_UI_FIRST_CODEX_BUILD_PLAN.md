@@ -1858,6 +1858,33 @@ Acceptance:
 
 ---
 
+### ~~PR 3.1 - Tauri Workspace Snapshot MVP~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added a read-only Tauri `workspace_snapshot` command and renderer
+bridge. The desktop app now loads real approved-root metadata, rules files, Git
+branch, and indexed file names from the selected local path. Browser preview no
+longer carries a stale hardcoded file index and instead shows honest unloaded
+workspace search state until the Rust bridge is available.
+
+Scope:
+
+- ~~Expose workspace metadata through a typed Tauri command.~~
+- ~~Index file names under the approved root without reading arbitrary file contents.~~
+- ~~Load rules files and Git branch from the Rust workspace manager.~~
+- ~~Remove static indexed-file seed data from the default frontend project.~~
+- ~~Keep Git dirty counts unknown until a real dirty-count artifact exists.~~
+
+Acceptance:
+
+- ~~Workspace search does not render stale demo file lists.~~
+- ~~The desktop bridge loads real indexed file names from the approved project path.~~
+- ~~Browser preview shows an honest unloaded workspace state.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 4 — Thread Manager Wired to UI~~
 
 Status: Complete on 2026-06-06.
