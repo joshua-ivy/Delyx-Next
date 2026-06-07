@@ -1,12 +1,13 @@
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
+import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { notifyLocalAction } from "./ShellPreferenceController";
-import { createRunForThread, recordApprovalDecisionForRun, threadWithRun } from "./appShellRunActions";
-import { createThread } from "./appShellThreadActions";
+import { recordApprovalDecisionForRun } from "./appShellRunActions";
+import { bindComposerForm } from "./cockpitComposerBindings";
 import { bindPlanControls, requestPlanRevision } from "./cockpitPlanBindings";
 import { updateThreadAndRunStatus } from "./cockpitStateTransitions";
 
@@ -17,6 +18,7 @@ export interface CockpitDomBindingState {
   activeThread: TaskThread | undefined;
   actionProposals: ActionProposalView[];
   cockpitHtml: string;
+  modelSettings: ModelSettingsView;
   setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
   setActiveThreadId: Dispatch<SetStateAction<string | undefined>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
@@ -136,62 +138,6 @@ function bindDiffTabs(tabs: HTMLElement[], activateOnKeyboard: (event: Event) =>
     tab.removeEventListener("click", select);
     tab.removeEventListener("keydown", activateOnKeyboard);
   });
-}
-
-function bindComposerForm(state: CockpitDomBindingState, form: Element | null) {
-  if (!(form instanceof HTMLFormElement)) {
-    return () => undefined;
-  }
-  const input = form.querySelector(".deck-comp-input");
-  if (!(input instanceof HTMLTextAreaElement)) {
-    return () => undefined;
-  }
-  const submit = (event: Event) => {
-    event.preventDefault();
-    const text = input.value.trim();
-    if (!text) {
-      notifyLocalAction("Type a local instruction before sending", "warning");
-      return;
-    }
-    input.value = "";
-    if (!state.activeThread) {
-      createThreadFromComposer(state, text);
-      return;
-    }
-    appendThreadMessage(state, text);
-  };
-  form.addEventListener("submit", submit);
-  return () => form.removeEventListener("submit", submit);
-}
-
-function createThreadFromComposer(state: CockpitDomBindingState, goal: string) {
-  const thread = createThread(goal, state.activeProject.id, state.threads.length + 1);
-  if (!thread) {
-    state.setThreadState("error");
-    notifyLocalAction("Thread goal was empty", "warning");
-    return;
-  }
-  const run = createRunForThread(thread, state.activeProject.id, state.threads.length + 1);
-  const runnableThread = threadWithRun(thread, run);
-  state.setAgentRuns((current) => [run, ...current]);
-  state.setThreads((current) => [runnableThread, ...current]);
-  state.setActiveThreadId(runnableThread.id);
-  state.setThreadState("ready");
-  notifyLocalAction("Thread created from composer", "success");
-}
-
-function appendThreadMessage(state: CockpitDomBindingState, body: string) {
-  const activeThread = state.activeThread;
-  if (!activeThread) {
-    return;
-  }
-  const now = new Date().toISOString();
-  state.setThreads((current) => current.map((thread) => (
-    thread.id === activeThread.id
-      ? { ...thread, messages: [...thread.messages, { role: "user", body }], updatedAt: now }
-      : thread
-  )));
-  notifyLocalAction("Message recorded locally; no model call ran.", "success");
 }
 
 function updateProposalStatus(state: CockpitDomBindingState, event: Event, status: "approved" | "denied") {

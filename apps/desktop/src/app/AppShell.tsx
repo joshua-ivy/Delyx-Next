@@ -12,6 +12,8 @@ import { currentExternalAgentState } from "../features/externalAgents/externalAg
 import { currentMemoryState } from "../features/memory/memoryData";
 import { currentMobileState } from "../features/mobile/mobileData";
 import { currentModelSettings } from "../features/models/modelData";
+import { refreshOllamaSettings } from "../features/models/ollamaClient";
+import type { ModelSettingsView } from "../features/models/modelTypes";
 import { currentPatchProposals } from "../features/patches/patchData";
 import type { PlanView } from "../features/plans/planTypes";
 import { currentReleaseState } from "../features/release/releaseData";
@@ -37,6 +39,7 @@ export function AppShell() {
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [projects, setProjects] = useState<WorkspaceProject[]>([currentWorkspaceProject]);
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
+  const [modelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
   const activeThread = visibleThreads.find((thread) => thread.id === activeThreadId) ?? visibleThreads[0];
@@ -53,7 +56,7 @@ export function AppShell() {
       currentPatchProposals,
       currentTestArtifacts,
       currentReviewReports,
-      currentModelSettings,
+      modelSettings,
       currentExternalAgentState,
       currentResearchAnswers,
       currentMemoryState,
@@ -63,8 +66,19 @@ export function AppShell() {
       currentReleaseState,
       visibleThreads,
     ),
-    [actionProposals, activePlan, activeProject, activeRun, activeThread, visibleThreads],
+    [actionProposals, activePlan, activeProject, activeRun, activeThread, modelSettings, visibleThreads],
   );
+  useEffect(() => {
+    let cancelled = false;
+    void refreshOllamaSettings(currentModelSettings).then((settings) => {
+      if (!cancelled) {
+        setModelSettings(settings);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   useEffect(() => {
     document.documentElement.dataset.mode = activeThread?.mode ?? "build";
   }, [activeThread?.mode]);
@@ -88,6 +102,7 @@ export function AppShell() {
     activeRun,
     activeThread,
     cockpitHtml,
+    modelSettings,
     setActionProposals,
     setActiveThreadId,
     setAgentRuns,
@@ -105,9 +120,11 @@ export function AppShell() {
       activeProject,
       activeRun,
       activeThread,
+      modelSettings,
       setActionProposals,
       setActiveThreadId,
       setAgentRuns,
+      setModelSettings,
       setPlans,
       setThreadOpen,
       setThreads,
@@ -183,6 +200,7 @@ export function AppShell() {
       <WorkspaceOverlay
         activeThreadCount={visibleThreads.length}
         lastRun={agentRuns[0]}
+        modelSettings={modelSettings}
         onAddProject={(path) => {
           if (path.trim() === currentWorkspaceProject.path) {
             setProjects([currentWorkspaceProject]);

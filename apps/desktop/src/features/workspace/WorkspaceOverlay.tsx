@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 
-import { currentModelSettings } from "../models/modelData";
+import type { ModelSettingsView } from "../models/modelTypes";
 import type { AgentRunView } from "../runs/agentRunTypes";
 import type { WorkspaceProject, WorkspaceUiState } from "./workspaceTypes";
 
 interface WorkspaceOverlayProps {
   activeThreadCount: number;
   lastRun: AgentRunView | undefined;
+  modelSettings: ModelSettingsView;
   open: boolean;
   project: WorkspaceProject;
   projects: WorkspaceProject[];
@@ -22,6 +23,7 @@ interface WorkspaceOverlayProps {
 export function WorkspaceOverlay({
   activeThreadCount,
   lastRun,
+  modelSettings,
   onAddProject,
   onClose,
   onRemoveProject,
@@ -89,7 +91,7 @@ export function WorkspaceOverlay({
               <InfoRow label="Git branch" value={project.git.isRepo ? project.git.branch : "not a repo"} />
               <InfoRow label="Uncommitted" value={gitChangesLabel(project)} />
               <InfoRow label="Isolation" value={`${project.isolation.label}: ${project.isolation.detail}`} />
-              <InfoRow label="Model profile" value={modelProfileLabel()} />
+              <InfoRow label="Model profile" value={modelProfileLabel(modelSettings)} />
               <InfoRow label="Last run status" value={lastRunStatusLabel(lastRun)} />
               <InfoRow label="Active threads" value={`${activeThreadCount}`} />
               <InfoRow label="Approval policy" value={project.approvalPolicy} />
@@ -130,9 +132,9 @@ function gitChangesLabel(project: WorkspaceProject) {
   return project.git.uncommittedChanges === null ? "changes not loaded" : `${project.git.uncommittedChanges}`;
 }
 
-function modelProfileLabel() {
-  const provider = currentModelSettings.providers.find((item) => item.id === currentModelSettings.selectedProviderId);
-  const codingRoute = currentModelSettings.routes.find((route) => route.role === "coding");
+function modelProfileLabel(settings: ModelSettingsView) {
+  const provider = settings.providers.find((item) => item.id === settings.selectedProviderId);
+  const codingRoute = settings.routes.find((route) => route.role === "coding");
   if (!provider) {
     return "No provider selected";
   }

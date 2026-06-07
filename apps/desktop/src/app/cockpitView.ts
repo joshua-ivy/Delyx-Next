@@ -93,10 +93,12 @@ function statusPill(tone: string, label: string) {
 
 function contextChips(project: WorkspaceProject, modelSettings: ModelSettingsView, activeThreads: number) {
   const provider = modelSettings.providers.find((item) => item.id === modelSettings.selectedProviderId);
+  const route = modelSettings.routes.find((item) => item.providerId === provider?.id && item.role === "coding");
+  const model = route?.modelId ?? provider?.models[0] ?? "no model";
   const git = project.git.isRepo ? project.git.branch : "not a Git repo";
   return [
     `<span class="deck-ctx-chip"><strong>${escapeHtml(project.name)}</strong> / ${escapeHtml(git)} / ${escapeHtml(gitChanges(project))}</span>`,
-    `<span class="deck-ctx-chip"><strong>${activeThreads}</strong> threads / ${escapeHtml(provider?.label ?? "No provider")}</span>`,
+    `<span class="deck-ctx-chip"><strong>${activeThreads}</strong> threads / ${escapeHtml(provider?.label ?? "No provider")} / ${escapeHtml(model)}</span>`,
   ].join("");
 }
 

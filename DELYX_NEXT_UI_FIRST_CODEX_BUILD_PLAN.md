@@ -2214,6 +2214,38 @@ Acceptance:
 
 ---
 
+### ~~PR 11.1 - Ollama Composer MVP~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added renderer-side local Ollama discovery and chat for the Command
+Deck composer. The app checks `http://127.0.0.1:11434/api/tags`, selects a
+ready local Ollama model when one exists, sends real composer messages to
+`/api/chat` with `stream: false`, appends the returned assistant message, and
+records a `model_call` node/event/artifact/evidence marker in the active
+AgentRun. If Ollama is not reachable or no model is installed, the UI records a
+truthful system message and a failed model-call event instead of pretending.
+
+Scope:
+
+- ~~Discover local Ollama models from `/api/tags`.~~
+- ~~Show selected Ollama provider/model in Command Deck context.~~
+- ~~Refresh Ollama models from the command palette.~~
+- ~~Send composer messages to `/api/chat`.~~
+- ~~Append only real assistant responses from Ollama.~~
+- ~~Record model-call execution artifacts in the AgentRun ledger.~~
+- ~~Show blocked/unavailable state when Ollama is not ready.~~
+
+Acceptance:
+
+- ~~No prototype scenario or canned assistant text is rendered.~~
+- ~~Composer does not claim a model reply unless Ollama returns one.~~
+- ~~Ollama failures are visible in the thread and run timeline.~~
+- ~~Provider/model state remains local-first and stores no secrets.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 12 — External Agent Bridge Prototype~~
 
 Status: Complete on 2026-06-07.
@@ -2908,7 +2940,9 @@ Scope:
 - mock external agent transcript
 
 Do not implement real agent runtime yet.
-Do not implement real model providers yet.
+~~Do not implement real model providers yet.~~ Superseded by PR 11.1: local
+Ollama composer usage is now allowed and implemented behind truthful provider
+health states.
 Do not build a blank demo shell.
 
 Acceptance:

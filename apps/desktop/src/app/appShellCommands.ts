@@ -9,6 +9,8 @@ import {
 import { recordApprovalProposalForRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
+import { refreshOllamaSettings } from "../features/models/ollamaClient";
+import type { ModelSettingsView } from "../features/models/modelTypes";
 import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
@@ -19,6 +21,7 @@ export const paletteCommands = [
   { detail: "Open approved roots, Git facts, and workspace states.", id: "workspace.open", label: "Open workspace" },
   { detail: "Open thread manager for create, archive, and status controls.", id: "threads.open", label: "Open threads" },
   { detail: "Switch between dark and light Command Deck themes.", id: "theme.toggle", label: "Toggle light / dark" },
+  { detail: "Check 127.0.0.1:11434 and load local Ollama models.", id: "models.ollama.refresh", label: "Refresh Ollama models" },
   { detail: "Create a read-only plan from the active thread.", id: "plan.create", label: "Create plan" },
   { detail: "Approve the active plan in UI state only.", id: "plan.approve", label: "Approve plan" },
   { detail: "Request revision for the active plan.", id: "plan.revise", label: "Revise plan" },
@@ -33,9 +36,11 @@ export interface AppShellCommandContext {
   activeProject: WorkspaceProject;
   activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
+  modelSettings: ModelSettingsView;
   setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
   setActiveThreadId: Dispatch<SetStateAction<string | undefined>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
+  setModelSettings: Dispatch<SetStateAction<ModelSettingsView>>;
   setPlans: Dispatch<SetStateAction<PlanView[]>>;
   setThreadOpen: Dispatch<SetStateAction<boolean>>;
   setThreads: Dispatch<SetStateAction<TaskThread[]>>;
@@ -56,6 +61,9 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
       break;
     case "theme.toggle":
       requestThemeToggle();
+      break;
+    case "models.ollama.refresh":
+      void refreshOllamaModels(context);
       break;
     case "plan.create":
       createPlan(context);
@@ -89,6 +97,13 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
       notifyLocalAction("Workspace error state shown", "warning");
       break;
   }
+}
+
+async function refreshOllamaModels(context: AppShellCommandContext) {
+  const settings = await refreshOllamaSettings(context.modelSettings);
+  context.setModelSettings(settings);
+  const ollama = settings.providers.find((provider) => provider.id === "ollama-local");
+  notifyLocalAction(ollama?.status === "ready" ? `Ollama ready: ${ollama.models.length} model(s)` : ollama?.detail ?? "Ollama unavailable", ollama?.status === "ready" ? "success" : "warning");
 }
 
 function createPlan(context: AppShellCommandContext) {

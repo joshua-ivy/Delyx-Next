@@ -24,3 +24,8 @@ export interface ModelSettingsView {
   providers: ModelProviderView[];
   routes: RoleRouteView[];
 }
+
+export interface ThreadRoleMessage {
+  role: "assistant" | "system" | "user";
+  content: string;
+}

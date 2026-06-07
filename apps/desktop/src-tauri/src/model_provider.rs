@@ -150,7 +150,7 @@ fn mock_provider(checked_at: u64) -> ModelProvider {
     ModelProvider {
         id: "mock-local".to_string(),
         kind: ProviderKind::Mock,
-        label: "Mock provider".to_string(),
+        label: "Local deterministic".to_string(),
         health: ProviderHealth { status: ProviderStatus::Ready, message: "Deterministic local mock provider is ready.".to_string(), checked_at },
         models: vec![model("delyx-mock-coder", "Delyx Mock Coder", true), model("delyx-mock-reasoner", "Delyx Mock Reasoner", false)],
         secret_policy: SecretPolicy::NoSecretRequired,
