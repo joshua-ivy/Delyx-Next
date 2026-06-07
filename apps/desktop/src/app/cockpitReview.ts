@@ -188,7 +188,8 @@ function riskClass(risk: ActionProposalView["riskLabel"]) {
 
 function approvalActions(proposal: ActionProposalView, status: ProposalStatus) {
   if (status === "expired") {
-    return '<div class="approval-actions"><span class="pill blocked micro">expired: request a fresh approval</span></div>';
+    const label = proposal.status === "approved" ? "expired: approval no longer executable" : "expired: request a fresh approval";
+    return `<div class="approval-actions"><span class="pill blocked micro">${escapeHtml(label)}</span></div>`;
   }
   if (status !== "pending") {
     return `<div class="approval-actions"><span class="pill ghost micro">decision recorded: ${escapeHtml(status)}</span></div>`;
@@ -197,11 +198,11 @@ function approvalActions(proposal: ActionProposalView, status: ProposalStatus) {
 }
 
 function effectiveProposalStatus(proposal: ActionProposalView): ProposalStatus {
-  if (proposal.status !== "pending") {
+  if (proposal.status === "denied" || proposal.status === "expired") {
     return proposal.status;
   }
   const expiresAt = Date.parse(proposal.expiresAt);
-  return Number.isFinite(expiresAt) && expiresAt <= Date.now() ? "expired" : "pending";
+  return Number.isFinite(expiresAt) && expiresAt <= Date.now() ? "expired" : proposal.status;
 }
 
 function statusForArtifact(artifact: TestArtifactView): TestStatus {

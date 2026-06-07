@@ -159,7 +159,9 @@ impl ApprovalEngine {
 
     pub fn expire_due(&mut self, now: u64) {
         for proposal in &mut self.proposals {
-            if proposal.status == ProposalStatus::Pending && now >= proposal.expires_at {
+            if matches!(proposal.status, ProposalStatus::Pending | ProposalStatus::Approved)
+                && now >= proposal.expires_at
+            {
                 proposal.status = ProposalStatus::Expired;
             }
         }
