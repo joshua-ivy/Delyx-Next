@@ -1,0 +1,29 @@
+[
+  {
+    "id": "grounded_answer_requires_evidence",
+    "answer": {
+      "markers": ["grounded", "contradiction"],
+      "claims": [
+        {
+          "id": "claim-date",
+          "text": "The failing run happened on 2026-06-06.",
+          "requiresEvidence": true,
+          "evidenceIds": ["ev-test-log"]
+        },
+        {
+          "id": "claim-summary",
+          "text": "The patch needs another test artifact before claiming success.",
+          "requiresEvidence": true,
+          "evidenceIds": ["ev-review"]
+        }
+      ]
+    },
+    "evidenceRecords": [
+      { "id": "ev-test-log", "sourceKind": "test", "title": "captured test log" },
+      { "id": "ev-review", "sourceKind": "diff", "title": "review finding" }
+    ],
+    "contradictions": [
+      { "claimId": "claim-summary", "evidenceIds": ["ev-review"] }
+    ]
+  }
+]

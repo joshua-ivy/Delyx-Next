@@ -1,0 +1,221 @@
+.state-block {
+  align-items: center;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1fr auto;
+  padding: var(--space-3);
+}
+
+.state-block strong {
+  display: block;
+}
+
+.state-warning {
+  border-color: color-mix(in srgb, var(--warning) 42%, var(--border));
+}
+
+.state-danger {
+  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
+}
+
+.state-success {
+  border-color: color-mix(in srgb, var(--success) 42%, var(--border));
+}
+
+.diff-panel,
+.approval-list,
+.test-panel,
+.evidence-panel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.diff-file,
+.approval-card,
+.test-card,
+.receipt-card,
+.terminal-block {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+.diff-file header,
+.approval-card header,
+.test-card header,
+.receipt-card header,
+.terminal-drawer header,
+.terminal-block header {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.diff-file header,
+.approval-card header,
+.test-card header,
+.receipt-card header {
+  margin-bottom: var(--space-2);
+}
+
+.diff-file pre,
+.test-card pre,
+.terminal-block pre {
+  background: #0b0d0f;
+  border-radius: var(--radius-sm);
+  color: #dce5ef;
+  margin: var(--space-3) 0 0;
+  overflow: auto;
+  padding: var(--space-3);
+}
+
+.diff-file code,
+.test-card code,
+.terminal-block code {
+  display: block;
+  font-family: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  font-size: 12px;
+}
+
+.review-actions {
+  justify-content: flex-end;
+}
+
+.review-actions button {
+  background: var(--surface-strong);
+  cursor: pointer;
+}
+
+.approval-card dl,
+.test-card dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+
+.approval-card dl div,
+.test-card dl div {
+  display: grid;
+  gap: var(--space-1);
+  grid-template-columns: 110px 1fr;
+}
+
+.approval-card dt,
+.test-card dt {
+  color: var(--text-muted);
+}
+
+.approval-card dd,
+.test-card dd {
+  margin: 0;
+}
+
+.approval-card footer,
+.receipt-card footer {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  gap: var(--space-2);
+}
+
+.approval-drawer {
+  align-items: center;
+  bottom: 212px;
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: var(--space-2);
+  padding: 10px 12px;
+  position: fixed;
+  right: var(--space-4);
+  z-index: 20;
+}
+
+.terminal-drawer {
+  bottom: var(--space-3);
+  box-shadow: var(--shadow);
+  height: 188px;
+  left: var(--space-3);
+  padding: var(--space-3);
+  position: fixed;
+  right: var(--space-3);
+  z-index: 10;
+}
+
+.terminal-drawer > header {
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.terminal-drawer > header div {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.terminal-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.terminal-block pre {
+  max-height: 86px;
+}
+
+.palette-backdrop {
+  align-items: flex-start;
+  background: rgb(0 0 0 / 44%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding-top: 12vh;
+  position: fixed;
+  z-index: 100;
+}
+
+.palette {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  width: min(560px, 92vw);
+}
+
+.palette header {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: auto 1fr auto;
+  padding: var(--space-3);
+}
+
+.palette input {
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  min-height: 34px;
+}
+
+.palette ul {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2);
+}
+
+.palette li button {
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  cursor: pointer;
+  display: block;
+  padding: 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.palette li button:hover {
+  background: var(--surface-strong);
+}

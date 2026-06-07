@@ -1,0 +1,155 @@
+.workspace-backdrop {
+  align-items: center;
+  background: rgb(0 0 0 / 58%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 50;
+}
+
+.workspace-modal {
+  background: var(--surface);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-pop);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  max-width: 940px;
+  padding: var(--s-8);
+  width: calc(100vw - 96px);
+}
+
+.workspace-modal > header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--s-7);
+}
+
+.workspace-modal p,
+.workspace-modal h2,
+.workspace-modal h3,
+.workspace-modal dl {
+  margin: 0;
+}
+
+.workspace-modal header p {
+  color: var(--fg-3);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.workspace-modal h2,
+.workspace-modal h3 {
+  font-family: var(--font-display);
+}
+
+.workspace-modal h2 {
+  font-size: var(--fs-h2);
+}
+
+.workspace-modal h3 {
+  font-size: var(--fs-h3);
+  margin-bottom: var(--s-5);
+}
+
+.workspace-modal button,
+.workspace-modal input {
+  border-radius: var(--r-md);
+  font: inherit;
+}
+
+.workspace-modal button {
+  background: var(--accent);
+  border: 0;
+  color: var(--accent-ink);
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  padding: 9px 12px;
+}
+
+.workspace-modal input {
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  color: var(--fg);
+  padding: 10px;
+  width: 100%;
+}
+
+.workspace-grid {
+  display: grid;
+  gap: var(--s-5);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workspace-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--s-6);
+}
+
+.workspace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}
+
+.workspace-card dl div {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: 120px 1fr;
+  padding: var(--s-3) 0;
+}
+
+.workspace-card dl div:first-child {
+  border-top: 0;
+}
+
+.workspace-card dt {
+  color: var(--fg-3);
+}
+
+.workspace-card dd {
+  color: var(--fg);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.workspace-results {
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  margin: var(--s-4) 0 0;
+  padding-left: var(--s-7);
+}
+
+.workspace-state {
+  border-radius: var(--r-sm);
+  color: var(--fg-2);
+  margin-top: var(--s-5);
+  padding: var(--s-4);
+}
+
+.workspace-denied,
+.workspace-error {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+}
+
+.workspace-empty,
+.workspace-loading {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.workspace-ready {
+  background: color-mix(in srgb, var(--success) 13%, transparent);
+  color: var(--success);
+}

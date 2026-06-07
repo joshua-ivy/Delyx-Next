@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Delyx Next",
+  "version": "0.0.0",
+  "identifier": "com.geaux.delyxnext",
+  "build": {
+    "beforeDevCommand": "..\\..\\.tools\\npm.cmd run dev",
+    "beforeBuildCommand": "..\\..\\.tools\\npm.cmd run build",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Delyx Next",
+        "width": 1440,
+        "height": 920,
+        "minWidth": 1120,
+        "minHeight": 760
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "createUpdaterArtifacts": false,
+    "windows": {
+      "allowDowngrades": true,
+      "certificateThumbprint": null,
+      "digestAlgorithm": null,
+      "timestampUrl": null,
+      "tsp": false,
+      "signCommand": null,
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "displayLanguageSelector": false,
+        "languages": [
+          "English"
+        ]
+      }
+    }
+  }
+}

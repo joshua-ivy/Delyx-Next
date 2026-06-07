@@ -1,0 +1,38 @@
+CREATE TABLE agent_runs (
+  id TEXT PRIMARY KEY NOT NULL,
+  thread_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  outcome_summary TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE agent_nodes (
+  id TEXT PRIMARY KEY NOT NULL,
+  run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  label TEXT NOT NULL,
+  status TEXT NOT NULL
+);
+
+CREATE TABLE agent_events (
+  id TEXT PRIMARY KEY NOT NULL,
+  run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE artifacts (
+  id TEXT PRIMARY KEY NOT NULL,
+  run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  label TEXT NOT NULL
+);
+
+CREATE TABLE evidence_records (
+  id TEXT PRIMARY KEY NOT NULL,
+  run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
+  source_kind TEXT NOT NULL,
+  title TEXT NOT NULL
+);

@@ -1,0 +1,156 @@
+import type { ActionProposalView } from "../features/approvals/approvalTypes";
+import type { DiffLineView, PatchProposalView } from "../features/patches/patchTypes";
+import type { ReviewFindingView, ReviewReportView } from "../features/review/reviewTypes";
+import type { TestArtifactView } from "../features/tests/testTypes";
+import { escapeHtml } from "./html";
+
+export function emptyApprovalBlock() {
+  return `<div class="appro">
+        <div class="at"><span class="pill ghost">No proposal</span><span style="font-family:var(--mono);font-size:10px;color:var(--fg-3);">none</span></div>
+        <h4>No approval requests</h4>
+        <div class="kv"><span class="k">Scope</span><span class="v">No file writes, commands, connectors, memory saves, or external agents requested.</span></div>
+        <div class="kv"><span class="k">Risk</span><span class="v">No risky action pending.</span></div>
+        <div class="kv"><span class="k">Rollback</span><span class="v">No checkpoint exists yet.</span></div>
+      </div>`;
+}
+
+export function approvalBlock(proposals: ActionProposalView[]) {
+  if (proposals.length === 0) {
+    return emptyApprovalBlock();
+  }
+
+  return proposals.map((proposal) => `<div class="appro">
+        <div class="at"><span class="pill ${riskClass(proposal.risk)}">${escapeHtml(proposal.risk)} risk &middot; ${escapeHtml(proposal.action)}</span><span style="font-family:var(--mono);font-size:10px;color:var(--fg-3);">${escapeHtml(proposal.id)}</span></div>
+        <h4>${escapeHtml(proposal.action)}</h4>
+        <div class="kv"><span class="k">Scope</span><span class="v">${escapeHtml(proposal.scope)}</span></div>
+        <div class="kv"><span class="k">Reason</span><span class="v">${escapeHtml(proposal.reason)}</span></div>
+        <div class="kv"><span class="k">Expected</span><span class="v">${escapeHtml(proposal.expectedResult)}</span></div>
+        <div class="kv"><span class="k">Rollback</span><span class="v">${escapeHtml(proposal.rollbackPlan)}</span></div>
+        <div class="exp">Run ${escapeHtml(proposal.runId)} &middot; Node ${escapeHtml(proposal.nodeId)} &middot; Expires ${escapeHtml(proposal.expiresAt)} &middot; ${escapeHtml(proposal.status)}</div>
+      </div>`).join("");
+}
+
+export function pendingCount(proposals: ActionProposalView[]) {
+  return proposals.filter((proposal) => proposal.status === "pending").length;
+}
+
+export function emptyDiffBlock() {
+  return `<div class="dfile">
+        <div class="dh"><span class="fn">Diff artifact</span><span class="dst">empty</span></div>
+        <div class="dc">
+          <div class="dr"><span class="g">-</span><span class="x">No patch or file change has been proposed.</span></div>
+        </div>
+      </div>`;
+}
+
+export function diffBlock(patches: PatchProposalView[]) {
+  const files = patches.flatMap((patch) => patch.files.map((file) => ({ file, patch })));
+  if (files.length === 0) {
+    return emptyDiffBlock();
+  }
+
+  return files.map(({ file, patch }) => `<div class="dfile">
+        <div class="dh"><span class="fn">${escapeHtml(file.path)}</span><span class="dst">${patchSummary(file.diff)} &middot; ${escapeHtml(patch.status)}</span></div>
+        <div class="dc">${file.diff.map(diffLine).join("")}</div>
+      </div>`).join("");
+}
+
+export function patchSummary(lines: DiffLineView[]) {
+  const added = lines.filter((line) => line.kind === "added").length;
+  const removed = lines.filter((line) => line.kind === "removed").length;
+  return `<span class="p">+${added}</span> <span class="m">-${removed}</span>`;
+}
+
+export function emptyTestBlock() {
+  return `<div class="dfile test-artifact">
+        <div class="dh"><span class="fn">Test artifact</span><span class="dst">not run</span></div>
+        <div class="dc">
+          <div class="dr"><span class="g">$</span><span class="x">No test command artifact has been captured.</span></div>
+        </div>
+      </div>`;
+}
+
+export function testBlock(artifacts: TestArtifactView[]) {
+  if (artifacts.length === 0) {
+    return emptyTestBlock();
+  }
+
+  return artifacts.map((artifact) => `<div class="dfile test-artifact">
+        <div class="dh"><span class="fn">${escapeHtml(artifact.command)}</span><span class="dst">${testStatus(artifact)} &middot; ${artifact.durationMs}ms</span></div>
+        <div class="dc">
+          <div class="dr"><span class="g">cwd</span><span class="x">${escapeHtml(artifact.workingDirectory)}</span></div>
+          ${failureLine(artifact)}
+          ${streamLines("out", artifact.stdout, "")}
+          ${streamLines("err", artifact.stderr, artifact.status === "failed" ? "m" : "")}
+        </div>
+      </div>`).join("");
+}
+
+export function testStat(artifacts: TestArtifactView[]) {
+  const latest = artifacts[0];
+  if (!latest) {
+    return "Not run";
+  }
+  return latest.status === "passed" ? "Passed" : "Failed";
+}
+
+export function emptyReviewBlock() {
+  return `<div class="sec-h review-findings" style="margin:16px 0 6px;"><h4 style="font-size:12px;">Review &middot; read-only</h4><span class="ln"></span></div>
+      <div class="rcpt review-finding"><span class="ri">R</span><div><div class="rn">No review findings</div><div class="rd">Review mode does not edit. Findings appear only after a real ReviewReport is created.</div></div></div>`;
+}
+
+export function reviewBlock(report: ReviewReportView | undefined) {
+  if (!report) {
+    return emptyReviewBlock();
+  }
+
+  const findings = report.findings.length > 0
+    ? report.findings.map(findingBlock).join("")
+    : '<div class="rcpt review-finding"><span class="ri">R</span><div><div class="rn">No review findings</div><div class="rd">No prioritized issues were recorded in this ReviewReport.</div></div></div>';
+  return `<div class="sec-h review-findings" style="margin:16px 0 6px;"><h4 style="font-size:12px;">Review &middot; ${escapeHtml(report.mode)}</h4><span class="ln"></span><span class="pill ghost">${escapeHtml(report.decision)}</span></div>
+      <div class="rcpt"><span class="ri">S</span><div><div class="rn">${escapeHtml(report.riskSummary)}</div><div class="rd">${escapeHtml(report.testSummary)} ${escapeHtml(report.evidenceSummary)}</div></div></div>
+      ${findings}`;
+}
+
+function findingBlock(finding: ReviewFindingView) {
+  return `<div class="rcpt review-finding">
+        <span class="ri">${escapeHtml(finding.priority.toUpperCase())}</span>
+        <div>
+          <div class="rn">${escapeHtml(finding.title)} <span class="pill blocked" style="font-size:10px;">${escapeHtml(finding.riskLabel)}</span></div>
+          <div class="rd">${escapeHtml(finding.filePath)} &middot; ${escapeHtml(finding.hunkLabel)}</div>
+          <div class="rd">${escapeHtml(finding.detail)}</div>
+          <div class="rd">Suggested fix: ${escapeHtml(finding.suggestedFix)}</div>
+          <span class="btn review-revise" data-finding-id="${escapeHtml(finding.id)}">Ask revise</span>
+        </div>
+      </div>`;
+}
+
+function testStatus(artifact: TestArtifactView) {
+  const label = artifact.status === "passed" ? "passed" : "failed";
+  return `${label} &middot; exit ${artifact.exitCode ?? "unknown"}`;
+}
+
+function failureLine(artifact: TestArtifactView) {
+  if (!artifact.failureSummary) {
+    return "";
+  }
+  return `<div class="dr m"><span class="g">fail</span><span class="x">${escapeHtml(artifact.failureSummary)}</span></div>`;
+}
+
+function streamLines(label: string, text: string, klass: string) {
+  const lines = text.split(/\r?\n/).filter(Boolean).slice(0, 4);
+  if (lines.length === 0) {
+    return "";
+  }
+  return lines.map((line) => `<div class="dr ${klass}"><span class="g">${label}</span><span class="x">${escapeHtml(line)}</span></div>`).join("");
+}
+
+function diffLine(line: DiffLineView) {
+  const sign = line.kind === "added" ? "+" : line.kind === "removed" ? "-" : " ";
+  const klass = line.kind === "added" ? "p" : line.kind === "removed" ? "m" : "";
+  return `<div class="dr ${klass}"><span class="g">${sign}</span><span class="x">${escapeHtml(line.text)}</span></div>`;
+}
+
+function riskClass(risk: ActionProposalView["risk"]) {
+  return risk === "low" ? "ghost" : risk === "medium" ? "wait" : "blocked";
+}

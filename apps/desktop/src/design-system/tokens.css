@@ -1,0 +1,104 @@
+/* =====================================================================
+   Delyx Next — "Cockpit" design tokens
+   ---------------------------------------------------------------------
+   Single source of truth for the Cockpit UI direction.
+   The signature mechanic: the UI is themed by the AGENT MODE.
+   Set [data-mode] on <html> (or any container) and every accent in the
+   subtree retints automatically — soft/line variants are derived from
+   --accent via color-mix(), so you only ever set ONE variable per mode.
+   ===================================================================== */
+
+:root {
+  /* ---- Neutral surfaces (cool slate, dark) ---- */
+  --bg:        #0c0e13;  /* app background            */
+  --surface:   #12151c;  /* rails, sidebars, top bar  */
+  --surface-2: #161a22;  /* nested surface            */
+  --card:      #161a22;  /* cards, panels, diff files */
+  --card-2:    #1b2029;  /* card hover / inset chips  */
+  --line:      #232834;  /* hairline borders          */
+  --line-2:    #2d3340;  /* stronger borders / focus  */
+
+  /* ---- Foreground ---- */
+  --fg:   #e7eaf0;  /* primary text            */
+  --fg-2: #98a1b1;  /* secondary text          */
+  --fg-3: #616a79;  /* tertiary / labels / meta */
+
+  /* ---- Mode palette (the identity of the product) ---- */
+  --mode-explore:  #38bdf8;  /* cyan    — read-only understanding */
+  --mode-plan:     #a78bfa;  /* violet  — proposing a plan        */
+  --mode-build:    #fb8c42;  /* orange  — editing / patching      */
+  --mode-test:     #3fcf8e;  /* green   — running verification    */
+  --mode-review:   #5b9bff;  /* blue    — reading the diff        */
+  --mode-research: #f472b6;  /* pink    — gathering sources       */
+
+  /* ---- Semantic status ---- */
+  --danger:  #f1675c;  /* blocked / failed / high-risk / denied */
+  --warning: #fb8c42;  /* waiting-for-approval (shares build)   */
+  --success: #3fcf8e;  /* done / approved / passed              */
+
+  /* ---- Active accent (defaults to Build; overridden per mode) ---- */
+  --accent: var(--mode-build);
+  /* Derived tints — DO NOT hardcode these; they follow --accent. */
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 40%, transparent);
+  --accent-ink:  #1a0f07; /* text placed ON an --accent fill (dark) */
+
+  /* ---- Typography ---- */
+  --font-display: 'Sora', system-ui, sans-serif;      /* headings, numerals */
+  --font-ui:      'Onest', system-ui, sans-serif;     /* body, UI copy      */
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace; /* code, ids, paths */
+
+  --fs-display: 25px;  --lh-display: 1.18;  /* h1 / thread title */
+  --fs-h2:      18px;                       /* section / panel title */
+  --fs-h3:      14px;                       /* sidebar / card title  */
+  --fs-body:    13px;                       /* default UI body       */
+  --fs-sm:      12px;                       /* dense rows            */
+  --fs-xs:      11px;                       /* meta, code rows       */
+  --fs-label:   10.5px;                     /* uppercase eyebrows    */
+
+  /* ---- Radii ---- */
+  --r-sm:  8px;   /* chips, tabs, small buttons */
+  --r-md:  10px;  /* buttons, icons             */
+  --r-lg:  12px;  /* cards, panels, diff files  */
+  --r-xl:  18px;  /* hero cards, modals         */
+  --r-pill: 999px;
+
+  /* ---- Spacing scale (4px base) ---- */
+  --s-1: 4px;  --s-2: 6px;  --s-3: 8px;  --s-4: 10px; --s-5: 12px;
+  --s-6: 14px; --s-7: 16px; --s-8: 18px; --s-9: 20px; --s-10: 24px;
+
+  /* ---- Elevation ---- */
+  --shadow-accent: 0 0 0 1px var(--accent-line), 0 6px 20px -8px var(--accent-line);
+  --shadow-pop:    0 12px 40px -12px rgba(0,0,0,.6);
+
+  /* ---- Shell metrics (the AppShell grid) ---- */
+  --rail-w:    60px;
+  --side-w:    252px;
+  --review-w:  392px;
+  --top-h:     54px;
+  --drawer-h:  150px;
+}
+
+/* =====================================================================
+   Mode theming — set [data-mode] anywhere; --accent + tints retint.
+   Use on <html> for the whole app, or on a thread container to scope.
+   ===================================================================== */
+[data-mode="explore"]  { --accent: var(--mode-explore);  --accent-ink:#04222e; }
+[data-mode="plan"]     { --accent: var(--mode-plan);     --accent-ink:#1c1336; }
+[data-mode="build"]    { --accent: var(--mode-build);    --accent-ink:#1a0f07; }
+[data-mode="test"]     { --accent: var(--mode-test);     --accent-ink:#04231a; }
+[data-mode="review"]   { --accent: var(--mode-review);   --accent-ink:#04162e; }
+[data-mode="research"] { --accent: var(--mode-research); --accent-ink:#2e0a1e; }
+
+/* =====================================================================
+   Optional light theme hook (not part of the v1 mockup, but reserved).
+   The Cockpit direction ships dark-first; flip these if a light mode
+   is ever requested.
+   ===================================================================== */
+/*
+[data-theme="light"] {
+  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#f0f2f5;
+  --card:#ffffff; --card-2:#eef1f5; --line:#e3e6ec; --line-2:#d3d8e0;
+  --fg:#11151c; --fg-2:#4a5260; --fg-3:#828b99;
+}
+*/

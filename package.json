@@ -1,0 +1,23 @@
+{
+  "name": "delyx-next",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/desktop"
+  ],
+  "scripts": {
+    "dev": ".\\.tools\\npm.cmd --workspace @delyx/desktop run dev",
+    "typecheck": ".\\.tools\\npm.cmd --workspace @delyx/desktop run typecheck",
+    "test": ".\\.tools\\npm.cmd --workspace @delyx/desktop run test",
+    "build": ".\\.tools\\npm.cmd --workspace @delyx/desktop run build",
+    "package:windows": ".\\.tools\\npm.cmd --workspace @delyx/desktop run package:windows",
+    "release:smoke": ".\\.tools\\npm.cmd --workspace @delyx/desktop run release:smoke",
+    "smoke:ui": ".\\.tools\\npm.cmd --workspace @delyx/desktop run smoke:ui",
+    "smoke:tauri": ".\\.tools\\npm.cmd --workspace @delyx/desktop run smoke:tauri",
+    "eval:response": ".\\.tools\\npm.cmd --workspace @delyx/desktop run eval:response",
+    "eval:agentic": ".\\.tools\\npm.cmd --workspace @delyx/desktop run eval:agentic",
+    "tauri": ".\\.tools\\npm.cmd --workspace @delyx/desktop run tauri"
+  },
+  "devDependencies": {}
+}

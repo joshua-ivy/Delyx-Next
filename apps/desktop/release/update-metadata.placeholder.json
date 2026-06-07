@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "channel": "dev-local",
+  "published": false,
+  "notes": "Placeholder only. Unsigned dev builds do not publish updater metadata."
+}

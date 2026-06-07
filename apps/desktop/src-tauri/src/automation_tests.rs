@@ -1,0 +1,99 @@
+#[cfg(test)]
+mod tests {
+    use crate::approval::{ApprovalEngine, ProposalInput, RiskLevel, RiskyAction};
+    use crate::automation::{ActiveHours, AutomationEngine, MissionContractInput, MissionStatus, ScheduledRunStatus};
+
+    #[test]
+    fn recurring_work_starts_paused_until_approved() {
+        let mut engine = AutomationEngine::new();
+
+        let contract = engine.create_contract(contract_input(vec!["read".to_string()]));
+
+        assert_eq!(contract.status, MissionStatus::Paused);
+    }
+
+    #[test]
+    fn contract_shows_scope_schedule_targets_and_stop_condition() {
+        let mut engine = AutomationEngine::new();
+
+        let contract = engine.create_contract(contract_input(vec!["read".to_string()]));
+
+        assert_eq!(contract.scope, "C:/workspace");
+        assert_eq!(contract.active_hours.start_hour, 8);
+        assert_eq!(contract.timezone, "America/Chicago");
+        assert_eq!(contract.delivery_targets, vec!["desktop_notification"]);
+        assert_eq!(contract.stop_condition, "Stop after one failed run.");
+    }
+
+    #[test]
+    fn workspace_drift_blocks_scheduled_work() {
+        let mut engine = AutomationEngine::new();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(approval_input());
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let contract = engine.create_contract(contract_input(vec!["read".to_string()]));
+        engine.approve_contract(&contract.id, &approval.id, 10, &approvals).unwrap();
+
+        let run = engine.schedule_due_run(&contract.id, "changed", 10, &mut approvals).unwrap();
+
+        assert_eq!(run.status, ScheduledRunStatus::Blocked);
+        assert!(run.reason.contains("Workspace drift"));
+    }
+
+    #[test]
+    fn risky_scheduled_action_creates_approval_instead_of_executing() {
+        let mut engine = AutomationEngine::new();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(approval_input());
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let contract = engine.create_contract(contract_input(vec!["terminal_command".to_string()]));
+        engine.approve_contract(&contract.id, &approval.id, 10, &approvals).unwrap();
+
+        let run = engine.schedule_due_run(&contract.id, "fingerprint-1", 10, &mut approvals).unwrap();
+
+        assert_eq!(run.status, ScheduledRunStatus::WaitingForApproval);
+        assert!(run.approval_id.is_some());
+        assert_eq!(approvals.list_proposals(&contract.id).len(), 1);
+    }
+
+    #[test]
+    fn low_risk_scheduled_work_can_create_run_after_approval() {
+        let mut engine = AutomationEngine::new();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(approval_input());
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let contract = engine.create_contract(contract_input(vec!["read".to_string()]));
+        engine.approve_contract(&contract.id, &approval.id, 10, &approvals).unwrap();
+
+        let run = engine.schedule_due_run(&contract.id, "fingerprint-1", 10, &mut approvals).unwrap();
+
+        assert_eq!(run.status, ScheduledRunStatus::Created);
+    }
+
+    fn contract_input(allowed_tools: Vec<String>) -> MissionContractInput {
+        MissionContractInput {
+            active_hours: ActiveHours { start_hour: 8, end_hour: 18 },
+            allowed_tools,
+            delivery_targets: vec!["desktop_notification".to_string()],
+            scope: "C:/workspace".to_string(),
+            stop_condition: "Stop after one failed run.".to_string(),
+            timezone: "America/Chicago".to_string(),
+            title: "Morning repo health".to_string(),
+            workspace_fingerprint: "fingerprint-1".to_string(),
+        }
+    }
+
+    fn approval_input() -> ProposalInput {
+        ProposalInput {
+            action: RiskyAction::ScheduledRiskyAction,
+            expires_at: 30,
+            expected_result: "Allow mission contract activation.".to_string(),
+            node_id: "node-automation".to_string(),
+            reason: "Deterministic automation test.".to_string(),
+            risk: RiskLevel::Medium,
+            rollback_plan: "Pause the mission contract.".to_string(),
+            run_id: "mission-approval".to_string(),
+            scope: "Activate one mission contract.".to_string(),
+        }
+    }
+}

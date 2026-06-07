@@ -1,0 +1,155 @@
+.thread-backdrop {
+  align-items: center;
+  background: rgba(6, 8, 13, .62);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 20;
+}
+
+.thread-modal {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  color: var(--fg);
+  max-width: 1060px;
+  padding: 18px;
+  width: calc(100vw - 64px);
+}
+
+.thread-modal header,
+.thread-actions,
+.thread-statuses {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.thread-modal header {
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.thread-modal h2,
+.thread-modal h3,
+.thread-modal p {
+  margin: 0;
+}
+
+.thread-modal header p {
+  color: var(--fg-3);
+  font: 600 11px var(--mono);
+  text-transform: uppercase;
+}
+
+.thread-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.thread-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.thread-card textarea {
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--fg);
+  font: 13px var(--sans);
+  min-height: 76px;
+  padding: 9px 10px;
+  resize: vertical;
+}
+
+.thread-modal button {
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--fg);
+  cursor: pointer;
+  font: 600 12px var(--sans);
+  padding: 7px 10px;
+}
+
+.thread-list {
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.thread-list button {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  text-align: left;
+  width: 100%;
+}
+
+.thread-list button.active {
+  border-color: var(--build);
+}
+
+.thread-conversation,
+.thread-message {
+  display: grid;
+  gap: 8px;
+}
+
+.thread-message {
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 9px;
+}
+
+.thread-message b,
+.thread-empty,
+.thread-state {
+  color: var(--fg-3);
+}
+
+.thread-pill {
+  border-radius: 20px;
+  font: 700 10px var(--mono);
+  padding: 3px 8px;
+  text-transform: uppercase;
+}
+
+.thread-pill.idle,
+.thread-state.thread-empty {
+  background: var(--card-2);
+  color: var(--fg-2);
+}
+
+.thread-pill.active,
+.thread-state.thread-ready {
+  background: var(--accent-soft);
+  color: var(--build);
+}
+
+.thread-pill.blocked,
+.thread-pill.failed,
+.thread-state.thread-error {
+  background: rgba(241, 103, 92, .13);
+  color: var(--danger);
+}
+
+.thread-pill.done {
+  background: rgba(63, 207, 142, .13);
+  color: var(--test);
+}
+
+.thread-statuses {
+  flex-wrap: wrap;
+}

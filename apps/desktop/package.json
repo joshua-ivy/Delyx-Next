@@ -1,0 +1,33 @@
+{
+  "name": "@delyx/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\vite\\bin\\vite.js --host 127.0.0.1 --port 1420 --configLoader runner",
+    "build": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\typescript\\bin\\tsc -b && ..\\..\\.tools\\node.cmd ..\\..\\node_modules\\vite\\bin\\vite.js build --configLoader runner",
+    "typecheck": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\typescript\\bin\\tsc -b",
+    "test": "..\\..\\.tools\\node.cmd ./scripts/verify-workbench.mjs && ..\\..\\.tools\\node.cmd ./scripts/release-smoke.mjs",
+    "package:windows": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\@tauri-apps\\cli\\tauri.js build --bundles nsis",
+    "release:smoke": "..\\..\\.tools\\node.cmd ./scripts/release-smoke.mjs",
+    "smoke:ui": "..\\..\\.tools\\node.cmd ./scripts/smoke-ui.mjs",
+    "smoke:tauri": "..\\..\\.tools\\node.cmd ./scripts/smoke-tauri.mjs",
+    "eval:response": "..\\..\\.tools\\node.cmd ./scripts/eval-response.mjs",
+    "eval:agentic": "..\\..\\.tools\\node.cmd ./scripts/eval-agentic.mjs",
+    "tauri": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\@tauri-apps\\cli\\tauri.js"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "vite": "^6.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "^5.7.0"
+  }
+}
