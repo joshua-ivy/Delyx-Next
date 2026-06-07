@@ -1,8 +1,8 @@
 # External Agent Bridge
 
 Delyx Next can launch approved generic terminal workers as controlled workers.
-Codex CLI and Claude Code stay detection-only until their command contracts are
-implemented.
+Codex CLI and Claude Code now have typed command contracts, but launch still
+requires explicit external-agent and terminal-command approvals.
 
 Examples:
 
@@ -46,7 +46,9 @@ Current implementation:
 - stdout, stderr, command label, exit status, and duration are captured
 - nonzero command exits create visible failed artifacts
 - Codex CLI and Claude Code adapters are detection-only and report whether their executables are on PATH
-- Codex CLI and Claude Code execution stays disabled until command contracts are implemented
+- Codex CLI contracts use `codex exec` with explicit sandbox mode and JSONL output
+- Claude Code contracts use `claude -p` with stream JSON output, permission mode, and restricted tools
+- Codex CLI and Claude Code commands still run only through the approval-gated terminal worker path
 
 ## Worker Flow
 

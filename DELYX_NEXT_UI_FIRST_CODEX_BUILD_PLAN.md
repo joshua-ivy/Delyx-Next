@@ -2620,6 +2620,34 @@ Acceptance:
 
 ---
 
+### ~~PR 12.2 - External Agent Command Contracts~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added typed command contracts for Codex CLI and Claude Code without
+auto-launching either adapter. Contracts produce visible command arrays,
+working directory, permission mode, transcript format, and required Delyx tools.
+Execution still requires the existing external-agent approval, terminal-command
+approval, checkpoint/worktree isolation, captured terminal output, diff review,
+and rollback path.
+
+Scope:
+
+- ~~Build Codex CLI `codex exec` contracts with JSONL output and explicit sandbox mode.~~
+- ~~Build Claude Code `claude -p` contracts with stream JSON output, permission mode, and restricted tools.~~
+- ~~Expose read-only and workspace-write contract modes without bypassing approvals.~~
+- ~~Reject empty tasks and generic-terminal contract generation.~~
+- ~~Add deterministic contract tests and verifier markers.~~
+
+Acceptance:
+
+- ~~Codex CLI and Claude Code are no longer only placeholder/detection concepts.~~
+- ~~Command contracts are inspectable before execution.~~
+- ~~No external agent command runs without approval-gated bridge execution.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 13 — Source-Backed Research MVP~~
 
 Status: Complete on 2026-06-07.

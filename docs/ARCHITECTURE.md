@@ -138,8 +138,12 @@ Owns:
 - external agent bridge
 
 Tool output should become artifacts or evidence records when relevant.
-Codex CLI and Claude Code adapter detection reads PATH only; execution remains
-disabled until a typed command contract and approval gate exist.
+Codex CLI and Claude Code adapter detection reads PATH only. Their typed
+command contracts produce visible `codex exec` and `claude -p` command arrays
+with explicit permission mode, transcript format, working directory, and Delyx
+tool requirements. Launch still flows through external-agent approval,
+terminal-command approval, checkpoint/worktree isolation, captured output, diff
+review, and rollback.
 
 ## Model Layer
 
