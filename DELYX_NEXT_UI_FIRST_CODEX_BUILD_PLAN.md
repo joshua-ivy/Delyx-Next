@@ -2994,6 +2994,30 @@ Acceptance:
 
 ---
 
+### ~~PR 16.1 - Automation Inspector Wiring~~
+
+Status: Complete on 2026-06-07.
+
+Update: Wired the existing automation state into the cockpit inspector only
+when real mission contracts or scheduled runs exist. The default empty UI does
+not claim paused contracts or recurring work.
+
+Scope:
+
+- ~~Detect mission contracts and scheduled runs from AutomationStateView.~~
+- ~~Render real automation status, scope, allowed tools, active hours, and stop conditions.~~
+- ~~Keep recurring work paused until approved.~~
+- ~~Add verifier coverage for automation inspector wiring.~~
+
+Acceptance:
+
+- ~~Automation inspector output is based on AutomationStateView only.~~
+- ~~Empty automation state does not claim configured mission contracts.~~
+- ~~Risky scheduled work remains approval-gated by the runtime model.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 17 — Mobile Companion~~
 
 Status: Complete on 2026-06-07.

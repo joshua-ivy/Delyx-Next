@@ -24,6 +24,10 @@ export function automationBlock(state: AutomationStateView) {
       </div>`;
 }
 
+export function hasAutomations(state: AutomationStateView) {
+  return state.contracts.length > 0 || state.scheduledRuns.length > 0;
+}
+
 function contractLine(contract: MissionContractView) {
   return `<div class="dr ${contract.status === "blocked" ? "m" : ""}"><span class="g">job</span><span class="x">${escapeHtml(contract.title)} &middot; ${escapeHtml(contract.status)} &middot; tools ${escapeHtml(contract.allowedTools.join(", "))} &middot; ${escapeHtml(contract.activeHours)} ${escapeHtml(contract.timezone)} &middot; ${escapeHtml(contract.scope)} &middot; stops: ${escapeHtml(contract.stopCondition)}</span></div>`;
 }
