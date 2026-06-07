@@ -1843,6 +1843,7 @@ Acceptance:
 - ~~Workspace scope is visible.~~
 - ~~Read outside approved root is denied.~~
 - ~~UI has empty/error/loading states.~~
+- ~~Workspace manager last-run status reads the current in-session AgentRun state instead of a static empty ledger.~~
 
 ---
 

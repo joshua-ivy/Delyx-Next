@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 
 import { currentModelSettings } from "../models/modelData";
-import { currentAgentRuns } from "../runs/agentRunData";
+import type { AgentRunView } from "../runs/agentRunTypes";
 import type { WorkspaceProject, WorkspaceUiState } from "./workspaceTypes";
 
 interface WorkspaceOverlayProps {
   activeThreadCount: number;
+  lastRun: AgentRunView | undefined;
   open: boolean;
   project: WorkspaceProject;
   projects: WorkspaceProject[];
@@ -20,6 +21,7 @@ interface WorkspaceOverlayProps {
 
 export function WorkspaceOverlay({
   activeThreadCount,
+  lastRun,
   onAddProject,
   onClose,
   onRemoveProject,
@@ -88,7 +90,7 @@ export function WorkspaceOverlay({
               <InfoRow label="Uncommitted" value={gitChangesLabel(project)} />
               <InfoRow label="Isolation" value={`${project.isolation.label}: ${project.isolation.detail}`} />
               <InfoRow label="Model profile" value={modelProfileLabel()} />
-              <InfoRow label="Last run status" value={lastRunStatusLabel()} />
+              <InfoRow label="Last run status" value={lastRunStatusLabel(lastRun)} />
               <InfoRow label="Active threads" value={`${activeThreadCount}`} />
               <InfoRow label="Approval policy" value={project.approvalPolicy} />
               <InfoRow label="Rules files" value={project.rulesFiles.map((file) => file.path).join(", ") || "none"} />
@@ -138,8 +140,7 @@ function modelProfileLabel() {
   return `${provider.label} · ${provider.status}${route}`;
 }
 
-function lastRunStatusLabel() {
-  const run = currentAgentRuns[0];
+function lastRunStatusLabel(run: AgentRunView | undefined) {
   return run ? `${run.status} · ${run.id}` : "No AgentRun ledger entries";
 }
 

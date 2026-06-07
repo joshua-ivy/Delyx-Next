@@ -108,6 +108,8 @@ export const requiredChecks = [
   ["src/features/workspace/WorkspaceOverlay.tsx", "Pinned projects"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Model profile"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Last run status"],
+  ["src/features/workspace/WorkspaceOverlay.tsx", "lastRun: AgentRunView | undefined"],
+  ["src/features/workspace/WorkspaceOverlay.tsx", "lastRunStatusLabel(lastRun)"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Active threads"],
   ["src/features/workspace/workspaceTypes.ts", "approvalPolicy"],
   ["src/features/workspace/workspaceTypes.ts", "pinned"],

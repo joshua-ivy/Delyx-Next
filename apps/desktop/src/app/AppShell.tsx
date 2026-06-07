@@ -159,6 +159,7 @@ export function AppShell() {
       />
       <WorkspaceOverlay
         activeThreadCount={visibleThreads.length}
+        lastRun={agentRuns[0]}
         onAddProject={(path) => {
           if (path.trim() === currentWorkspaceProject.path) {
             setProjects([currentWorkspaceProject]);
