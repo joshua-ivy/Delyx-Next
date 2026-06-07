@@ -178,6 +178,8 @@ instead of relying on renderer-only networking. The command validates the
 selected model and message roles before the loopback request, returns a
 provider/model/text artifact shape, and preserves the renderer HTTP path only
 for web preview where no Tauri bridge exists.
+The frontend model view type does not include a live mock provider kind; unknown
+or unsupported runtime provider kinds map to an unavailable UI state.
 
 Model roles:
 

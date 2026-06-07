@@ -2588,6 +2588,31 @@ Acceptance:
 
 ---
 
+### ~~PR 11.9 - Remove Frontend Mock Provider Kind~~
+
+Status: Complete on 2026-06-07.
+
+Update: Removed the user-facing `"mock"` provider kind from the frontend model
+view types and empty provider fallback. Unknown or unsupported runtime provider
+kinds now map to an unavailable UI state, and the verifier rejects frontend
+source files that reintroduce `kind: "mock"`.
+
+Scope:
+
+- ~~Remove `"mock"` from frontend `ProviderKind`.~~
+- ~~Use an unavailable provider kind for empty model settings.~~
+- ~~Map unexpected runtime provider kinds to unavailable instead of mock.~~
+- ~~Add verifier coverage against frontend `kind: "mock"` regression.~~
+
+Acceptance:
+
+- ~~The UI model layer cannot present a mock provider kind as live state.~~
+- ~~Unexpected runtime provider kinds remain visible as unavailable.~~
+- ~~Backend deterministic mock fixtures remain isolated to Rust tests.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 12 — External Agent Bridge Prototype~~
 
 Status: Complete on 2026-06-07.

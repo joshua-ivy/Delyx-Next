@@ -40,7 +40,7 @@ function selectedProvider(settings: ModelSettingsView) {
   return settings.providers.find((provider) => provider.id === settings.selectedProviderId) ?? settings.providers[0] ?? {
     detail: "No provider settings loaded.",
     id: "none",
-    kind: "mock",
+    kind: "unavailable",
     label: "No provider",
     models: [],
     requiresSecret: false,

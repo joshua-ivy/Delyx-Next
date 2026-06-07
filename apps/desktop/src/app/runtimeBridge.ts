@@ -66,7 +66,10 @@ function runtimeProviderView(provider: RuntimeStatusView["providers"][number]): 
 }
 
 function providerKind(kind: string): ProviderKind {
-  return kind === "mock" || kind === "openai_compatible" ? kind : "ollama";
+  if (kind === "ollama" || kind === "openai_compatible") {
+    return kind;
+  }
+  return "unavailable";
 }
 
 function providerStatus(status: string): ProviderStatus {
