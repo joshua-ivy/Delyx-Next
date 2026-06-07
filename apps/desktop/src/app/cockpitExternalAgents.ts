@@ -1,21 +1,39 @@
-import type { ExternalAgentRunArtifactView, ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
+import type {
+  ExternalAgentCommandContractView,
+  ExternalAgentRunArtifactView,
+  ExternalAgentStateView,
+} from "../features/externalAgents/externalAgentTypes";
 import { escapeHtml } from "./html";
 
 export function emptyExternalAgentBlock() {
-  return `<div class="external-agent-stream">
+  return `<div class="external-agent-stream output-block">
+        <div class="dm" data-log-line>No external agent command contract has been proposed or approved.</div>
         <div class="dm" data-log-line>No external agent run has been approved or captured.</div>
       </div>`;
 }
 
 export function externalAgentBlock(state: ExternalAgentStateView, runId: string | undefined) {
+  const contracts = runId ? state.contracts.filter((contract) => contract.runId === runId) : [];
   const artifacts = runId ? state.artifacts.filter((artifact) => artifact.runId === runId) : [];
-  if (artifacts.length === 0) {
+  if (contracts.length === 0 && artifacts.length === 0) {
     return emptyExternalAgentBlock();
   }
 
-  return `<div class="external-agent-stream">
+  return `<div class="external-agent-stream output-block">
+        ${contracts.map(contractBlock).join("")}
         ${artifacts.map(artifactBlock).join("")}
       </div>`;
+}
+
+function contractBlock(contract: ExternalAgentCommandContractView) {
+  const args = contract.args.join(" ");
+  return `<div class="banner" data-log-line>Command contract ${escapeHtml(contract.adapterId)} &middot; ${escapeHtml(contract.status)}</div>
+      <div data-log-line><span class="pr">permission &gt;</span> ${permissionLabel(contract)}</div>
+      <div data-log-line><span class="pr">command &gt;</span> ${escapeHtml(contract.program)} ${escapeHtml(args)}</div>
+      <div data-log-line><span class="pr">cwd &gt;</span> ${escapeHtml(contract.workingDirectory)}</div>
+      <div data-log-line><span class="pr">transcript &gt;</span> ${escapeHtml(contract.transcriptFormat)}</div>
+      <div data-log-line><span class="pr">tools &gt;</span> ${escapeHtml(contract.requiredDelyxTools.join(", "))}</div>
+      <div data-log-line><span class="pr">safety &gt;</span> ${escapeHtml(contract.safetySummary)}</div>`;
 }
 
 function artifactBlock(artifact: ExternalAgentRunArtifactView) {
@@ -25,6 +43,10 @@ function artifactBlock(artifact: ExternalAgentRunArtifactView) {
       <div class="long-output" data-log-line><span class="pr">output &gt;</span> ${escapeHtml(artifact.terminalOutput)}</div>
       ${diffLine(artifact)}
       ${testLine(artifact)}`;
+}
+
+function permissionLabel(contract: ExternalAgentCommandContractView) {
+  return contract.permissionMode === "workspace_write" ? "workspace write" : "read only";
 }
 
 function eventLine(event: ExternalAgentRunArtifactView["transcript"][number]) {

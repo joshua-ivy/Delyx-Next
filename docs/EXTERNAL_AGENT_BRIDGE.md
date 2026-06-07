@@ -49,6 +49,8 @@ Current implementation:
 - Codex CLI contracts use `codex exec` with explicit sandbox mode and JSONL output
 - Claude Code contracts use `claude -p` with stream JSON output, permission mode, and restricted tools
 - Codex CLI and Claude Code commands still run only through the approval-gated terminal worker path
+- the UI has a contract preview ledger that stays empty until a real command contract is proposed
+- contract previews show permission mode, command, cwd, transcript format, required Delyx tools, and safety summary
 
 ## Worker Flow
 

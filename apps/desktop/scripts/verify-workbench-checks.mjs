@@ -99,7 +99,7 @@ export const requiredChecks = [
   ["src/app/cockpitRelease.ts", "No release smoke artifact or support bundle export loaded"],
   ["src/app/cockpitEvidence.ts", "No evidence records"],
   ["src/app/cockpitMarkup.ts", "No terminal command has run"],
-  ["src/app/cockpitMarkup.ts", "No external agent run has been approved or captured"],
+  ["src/app/cockpitMarkup.ts", "__EXTERNAL_AGENT_STREAM__"],
   ["src/app/cockpitMarkup.ts", "Create plan"],
   ["src/app/cockpitMarkup.ts", "Approve"],
   ["src/app/cockpitMarkup.ts", "Ask question"],

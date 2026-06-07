@@ -1,4 +1,5 @@
 import { cockpitMarkup } from "./cockpitMarkup";
+import { externalAgentBlock } from "./cockpitExternalAgents";
 import { approvalBlock, diffBlock, emptyApprovalBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
 import { runLabel } from "./cockpitRuns";
 import { threadStatsBlock } from "./cockpitStats";
@@ -6,6 +7,7 @@ import { buildProgressBlock, composerMode, terminalLabel, workDiffBlock } from "
 import { escapeHtml } from "./html";
 import type { RuntimeBridgeState } from "./runtimeBridge";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
+import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
@@ -27,7 +29,7 @@ export function buildCockpitMarkup(
   tests: TestArtifactView[],
   reviews: ReviewReportView[],
   modelSettings: ModelSettingsView,
-  _externalAgents: unknown,
+  externalAgents: ExternalAgentStateView,
   _researchAnswers: unknown,
   _memoryState: unknown,
   _skillState: unknown,
@@ -56,6 +58,7 @@ export function buildCockpitMarkup(
     .replace("__BUILD_PROGRESS__", buildProgressBlock(activePlan, activeThread))
     .replace("__WORK_DIFF__", workDiffBlock(activePatches))
     .replace("__TERMINAL_LABEL__", terminalLabel(activeRun))
+    .replace("__EXTERNAL_AGENT_STREAM__", externalAgentBlock(externalAgents, activeRun?.id))
     .replace("__COMPOSER_MODE__", composerMode(activeThread?.mode))
     .replace("__INSPECTOR_STATUS__", inspectorStatus(activeProposals, activeRun))
     .replace("__INSPECTOR__", inspectorBlock({

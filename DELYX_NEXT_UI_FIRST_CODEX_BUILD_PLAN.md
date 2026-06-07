@@ -2701,6 +2701,32 @@ Acceptance:
 
 ---
 
+### ~~PR 12.3 - External Agent Contract UI State~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added a frontend external-agent command contract ledger and renderer.
+The ledger starts empty, so no fake contract appears, but real contracts now
+have a visible pre-execution UI state showing permission mode, command, cwd,
+transcript format, required Delyx tools, and safety summary.
+
+Scope:
+
+- ~~Add an external-agent command contract view model.~~
+- ~~Keep contract previews empty until a real contract is proposed.~~
+- ~~Render contract permissions, command, cwd, transcript, tools, and safety summary.~~
+- ~~Keep captured external-agent artifacts separate from pre-execution contracts.~~
+- ~~Add verifier coverage for the empty and rendered contract states.~~
+
+Acceptance:
+
+- ~~External-agent command contracts have a first-class UI state before execution.~~
+- ~~No fake external-agent contract is seeded into the first-run UI.~~
+- ~~External-agent run artifacts remain visible only after captured execution.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 13 — Source-Backed Research MVP~~
 
 Status: Complete on 2026-06-07.

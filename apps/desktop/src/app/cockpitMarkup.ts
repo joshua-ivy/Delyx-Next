@@ -40,9 +40,7 @@ export const cockpitMarkup = String.raw`<div class="delyx deckC" data-screen-lab
       <div class="deck-term term mono" data-output-collapsed="false" hidden>
         <div class="deck-term-l muted terminal-history output-block" data-log-line><span class="pr">history &gt;</span> No command history captured.</div>
         <div class="deck-term-l muted output-block" data-log-line>No terminal command has run. Commands require an approval-backed AgentRun artifact.</div>
-        <div class="external-agent-stream output-block">
-          <div class="deck-term-l muted" data-log-line>No external agent run has been approved or captured.</div>
-        </div>
+        __EXTERNAL_AGENT_STREAM__
         <div class="deck-term-l output-block" data-log-line><span class="pr">delyx local &gt;</span> <span class="bk"></span></div>
       </div>
     </div>
