@@ -35,6 +35,25 @@ mod tests {
     }
 
     #[test]
+    fn external_agent_requires_external_agent_approval_action() {
+        let root = temp_workspace("wrong-external-approval");
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { action: RiskyAction::TerminalCommand, ..external_agent_input() });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut bridge = ExternalAgentBridge::new(vec![root.clone()]).unwrap();
+
+        let result = bridge.run_approved_worker(run_request(&approval.id, &root, true, vec![]), 10, &approvals);
+
+        assert_eq!(
+            result.unwrap_err(),
+            ExternalAgentError::Approval(ApprovalError::ActionMismatch {
+                expected: RiskyAction::ExternalAgentExecution,
+                actual: RiskyAction::TerminalCommand,
+            })
+        );
+    }
+
+    #[test]
     fn external_agent_scope_must_be_inside_approved_root() {
         let root = temp_workspace("approved-external");
         let outside = temp_workspace("outside-external");

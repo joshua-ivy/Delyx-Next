@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::approval::{ApprovalEngine, ProposalInput, RiskLevel, RiskyAction};
+    use crate::approval::{ApprovalEngine, ApprovalError, ProposalInput, RiskLevel, RiskyAction};
     use crate::patch::{DiffLineKind, PatchEngine, PatchError, PatchFileInput, PatchInput, PatchStatus};
     use std::fs;
     use std::path::PathBuf;
@@ -53,6 +53,29 @@ mod tests {
         assert_eq!(checkpoint.files[0].contents.as_deref(), Some("before\n"));
         assert_eq!(fs::read_to_string(&file).unwrap(), "after\n");
         assert_eq!(engine.list_proposals("run-1")[0].status, PatchStatus::Applied);
+    }
+
+    #[test]
+    fn patch_apply_requires_file_write_approval_action() {
+        let root = temp_workspace("wrong-patch-approval");
+        let file = root.join("plan.md");
+        fs::write(&file, "before\n").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { action: RiskyAction::TerminalCommand, ..file_write_input(30) });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut engine = PatchEngine::new(vec![root]).unwrap();
+        let patch = engine.propose_patch(patch_input(&approval.id, &file, "after\n")).unwrap();
+
+        let result = engine.apply_approved_patch(&patch.id, 10, &approvals);
+
+        assert_eq!(
+            result.unwrap_err(),
+            PatchError::Approval(ApprovalError::ActionMismatch {
+                expected: RiskyAction::FileWrite,
+                actual: RiskyAction::TerminalCommand,
+            })
+        );
+        assert_eq!(fs::read_to_string(&file).unwrap(), "before\n");
     }
 
     #[test]

@@ -1,4 +1,4 @@
-use crate::approval::{ApprovalEngine, ApprovalError};
+use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -63,7 +63,9 @@ impl TestRunner {
         if !is_test_command(&input.program, &input.args) {
             return Err(TestRunnerError::NotTestCommand);
         }
-        approvals.assert_can_execute(&input.approval_id, now).map_err(TestRunnerError::Approval)?;
+        approvals
+            .assert_can_execute_action(&input.approval_id, now, RiskyAction::TerminalCommand)
+            .map_err(TestRunnerError::Approval)?;
         let working_directory = self.checked_directory(&input.working_directory)?;
 
         let started = Instant::now();

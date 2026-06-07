@@ -1,4 +1,4 @@
-use crate::approval::{ApprovalEngine, ApprovalError};
+use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
 use crate::external_agent_scope::{checked_approved_path, checked_scoped_path};
 use crate::external_agent_terminal::{run_worker_command, ExternalAgentCommand};
 use std::fs;
@@ -157,7 +157,9 @@ impl ExternalAgentBridge {
         if request.task.trim().is_empty() {
             return Err(ExternalAgentError::EmptyTask);
         }
-        approvals.assert_can_execute(&request.approval_id, now).map_err(ExternalAgentError::Approval)?;
+        approvals
+            .assert_can_execute_action(&request.approval_id, now, RiskyAction::ExternalAgentExecution)
+            .map_err(ExternalAgentError::Approval)?;
         self.ensure_available(&request.adapter_id)?;
         self.ensure_task_authority(&request)?;
         let scope = self.checked_scope(request.scope.clone())?;

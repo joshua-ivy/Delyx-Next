@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::approval::{ApprovalEngine, ProposalInput, RiskLevel, RiskyAction};
+    use crate::approval::{ApprovalEngine, ApprovalError, ProposalInput, RiskLevel, RiskyAction};
     use crate::automation::{ActiveHours, AutomationEngine, MissionContractInput, MissionStatus, ScheduledRunStatus};
 
     #[test]
@@ -38,6 +38,26 @@ mod tests {
 
         assert_eq!(run.status, ScheduledRunStatus::Blocked);
         assert!(run.reason.contains("Workspace drift"));
+    }
+
+    #[test]
+    fn contract_activation_requires_scheduled_action_approval() {
+        let mut engine = AutomationEngine::new();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { action: RiskyAction::FileWrite, ..approval_input() });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let contract = engine.create_contract(contract_input(vec!["read".to_string()]));
+
+        let result = engine.approve_contract(&contract.id, &approval.id, 10, &approvals);
+
+        assert_eq!(
+            result.unwrap_err(),
+            crate::automation::AutomationError::Approval(ApprovalError::ActionMismatch {
+                expected: RiskyAction::ScheduledRiskyAction,
+                actual: RiskyAction::FileWrite,
+            })
+        );
+        assert_eq!(engine.contracts()[0].status, MissionStatus::Paused);
     }
 
     #[test]

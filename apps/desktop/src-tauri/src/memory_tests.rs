@@ -31,6 +31,26 @@ mod tests {
     }
 
     #[test]
+    fn memory_promotion_requires_memory_save_approval_action() {
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { action: RiskyAction::FileWrite, ..memory_save_input() });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut store = MemoryStore::new();
+        let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));
+
+        let result = store.promote_approved(&candidate.id, &approval.id, 10, &approvals, SourceRunStatus::Completed);
+
+        assert_eq!(
+            result.unwrap_err(),
+            MemoryError::Approval(ApprovalError::ActionMismatch {
+                expected: RiskyAction::DurableMemorySave,
+                actual: RiskyAction::FileWrite,
+            })
+        );
+        assert!(store.records().is_empty());
+    }
+
+    #[test]
     fn user_can_suppress_memory_candidate() {
         let mut store = MemoryStore::new();
         let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));

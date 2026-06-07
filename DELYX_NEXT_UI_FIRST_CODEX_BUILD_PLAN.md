@@ -2065,6 +2065,7 @@ Acceptance:
 - ~~Approved approvals visibly expire after their execution window closes.~~
 - ~~UI shows risk, scope, reason, expected result, and expiration when real proposals exist.~~
 - ~~Approval policy controls without implementations render unavailable instead of clickable no-ops.~~
+- ~~Execution gates reject approvals for the wrong risky action type.~~
 
 ---
 

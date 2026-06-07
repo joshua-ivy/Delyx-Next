@@ -41,6 +41,23 @@ mod tests {
     }
 
     #[test]
+    fn approved_action_must_match_execution_request() {
+        let mut engine = ApprovalEngine::new();
+        let proposal = engine.propose(input(RiskyAction::FileWrite, 100));
+        engine.approve(&proposal.id, 50, "approved once").unwrap();
+
+        let result = engine.assert_can_execute_action(&proposal.id, 60, RiskyAction::TerminalCommand);
+
+        assert_eq!(
+            result.unwrap_err(),
+            ApprovalError::ActionMismatch {
+                expected: RiskyAction::TerminalCommand,
+                actual: RiskyAction::FileWrite,
+            }
+        );
+    }
+
+    #[test]
     fn denial_blocks_execution() {
         let mut engine = ApprovalEngine::new();
         let proposal = engine.propose(input(RiskyAction::ExternalAgentExecution, 100));

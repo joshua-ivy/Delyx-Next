@@ -1,4 +1,4 @@
-use crate::approval::{ApprovalEngine, ApprovalError};
+use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -131,7 +131,9 @@ impl PatchEngine {
         if proposal.status != PatchStatus::Proposed {
             return Err(PatchError::AlreadyApplied);
         }
-        approvals.assert_can_execute(&proposal.approval_id, now).map_err(PatchError::Approval)?;
+        approvals
+            .assert_can_execute_action(&proposal.approval_id, now, RiskyAction::FileWrite)
+            .map_err(PatchError::Approval)?;
 
         let checkpoint = self.create_checkpoint(&proposal)?;
         for file in &proposal.files {
@@ -159,7 +161,9 @@ impl PatchEngine {
         if self.proposals[index].status != PatchStatus::Applied {
             return Err(PatchError::AlreadyRestored);
         }
-        approvals.assert_can_execute(&checkpoint.approval_id, now).map_err(PatchError::Approval)?;
+        approvals
+            .assert_can_execute_action(&checkpoint.approval_id, now, RiskyAction::FileWrite)
+            .map_err(PatchError::Approval)?;
 
         for file in &checkpoint.files {
             match &file.contents {

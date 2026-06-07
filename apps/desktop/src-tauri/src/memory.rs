@@ -1,4 +1,4 @@
-use crate::approval::{ApprovalEngine, ApprovalError};
+use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MemoryCandidate {
@@ -88,7 +88,9 @@ impl MemoryStore {
         approvals: &ApprovalEngine,
         source_status: SourceRunStatus,
     ) -> Result<MemoryRecord, MemoryError> {
-        approvals.assert_can_execute(approval_id, now).map_err(MemoryError::Approval)?;
+        approvals
+            .assert_can_execute_action(approval_id, now, RiskyAction::DurableMemorySave)
+            .map_err(MemoryError::Approval)?;
         if source_status != SourceRunStatus::Completed {
             return Err(MemoryError::FailedRunCannotPromote);
         }
