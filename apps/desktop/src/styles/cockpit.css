@@ -169,6 +169,7 @@
   .kv .k{color:var(--fg-2);}
   .kv .v{color:var(--fg);text-align:right;max-width:200px;}
   .appro .acts{display:flex;gap:8px;margin-top:13px;}
+  .approval-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px;}
   .btn{border-radius:10px;font-size:12px;font-weight:600;padding:10px;cursor:pointer;text-align:center;}
   .btn.ok{flex:1;background:var(--build);color:#1a0f07;}
   .btn.no{flex:0 0 84px;background:transparent;border:1px solid var(--line-2);color:var(--fg-2);}

@@ -921,6 +921,10 @@ Always allow for this project later
 Edit scope
 ```
 
+Status update: approval drawer card controls implemented on 2026-06-07.
+
+- ~~Approval cards show action, risk, reason, files/commands scope, expected result, rollback plan, expiration, and safe local controls for approve once, deny, always allow later, and edit scope.~~
+
 Approval types:
 
 ```text

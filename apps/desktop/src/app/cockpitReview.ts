@@ -24,11 +24,13 @@ export function approvalBlock(proposals: ActionProposalView[]) {
         <div class="at"><span class="pill ${riskClass(proposal.risk)}">${escapeHtml(proposal.risk)} risk &middot; ${escapeHtml(proposal.action)}</span><span class="meta-id">${escapeHtml(proposal.id)}</span></div>
         <h4>${escapeHtml(proposal.action)}</h4>
         <div class="kv"><span class="k">Scope</span><span class="v">${escapeHtml(proposal.scope)}</span></div>
+        <div class="kv"><span class="k">Files/commands</span><span class="v">${escapeHtml(proposal.scope)}</span></div>
         <div class="kv"><span class="k">Reason</span><span class="v">${escapeHtml(proposal.reason)}</span></div>
         <div class="kv"><span class="k">Expected</span><span class="v">${escapeHtml(proposal.expectedResult)}</span></div>
         <div class="kv"><span class="k">Policy</span><span class="v">${escapeHtml(riskPolicyLabel(proposal.action))}</span></div>
         <div class="kv"><span class="k">Rollback</span><span class="v">${escapeHtml(proposal.rollbackPlan)}</span></div>
         <div class="exp">Run ${escapeHtml(proposal.runId)} &middot; Node ${escapeHtml(proposal.nodeId)} &middot; Expires ${escapeHtml(proposal.expiresAt)} &middot; ${escapeHtml(proposal.status)}</div>
+        <div class="approval-actions"><span class="btn approval-approve-once">Approve once</span><span class="btn approval-deny">Deny</span><span class="btn approval-always">Always allow for this project later</span><span class="btn approval-scope">Edit scope</span></div>
       </div>`).join("");
 }
 
