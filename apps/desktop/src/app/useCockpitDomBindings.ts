@@ -1,9 +1,11 @@
 import { useEffect, type Dispatch, type SetStateAction } from "react";
+import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
-import { upsertPlan } from "./appShellThreadActions";
+import { updateRunsForThreadStatus } from "./appShellRunActions";
+import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 
 interface CockpitDomBindingState {
   activePlan: PlanView | undefined;
@@ -11,8 +13,10 @@ interface CockpitDomBindingState {
   activeThread: TaskThread | undefined;
   cockpitHtml: string;
   setActiveThreadId: Dispatch<SetStateAction<string | undefined>>;
+  setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setPaletteOpen: Dispatch<SetStateAction<boolean>>;
   setPlans: Dispatch<SetStateAction<PlanView[]>>;
+  setThreads: Dispatch<SetStateAction<TaskThread[]>>;
   setThreadOpen: Dispatch<SetStateAction<boolean>>;
   setThreadState: Dispatch<SetStateAction<ThreadUiState>>;
   setWorkspaceOpen: Dispatch<SetStateAction<boolean>>;
@@ -39,6 +43,7 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
         return;
       }
       state.setPlans((current) => upsertPlan(current, createPlanFromThread(activeThread, state.activeProject)));
+      updateThreadAndRunStatus(state, activeThread, "planning");
     };
     const updatePlanDecision = (decision: PlanDecision) => {
       if (!state.activePlan) {
@@ -102,6 +107,14 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       unbindThreadCards(cards, selectThread, activateOnKeyboard);
     };
   }, [state]);
+}
+
+function updateThreadAndRunStatus(state: CockpitDomBindingState, activeThread: TaskThread, status: "planning") {
+  const now = new Date().toISOString();
+  state.setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, status, now));
+  state.setThreads((current) => current.map((thread) => (
+    thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread
+  )));
 }
 
 function bindAccessibility(commandButton: Element | null, projectButton: Element | null, threadButton: Element | null, planButtons: (Element | null)[]) {

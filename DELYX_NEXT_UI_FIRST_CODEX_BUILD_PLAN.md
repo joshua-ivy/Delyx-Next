@@ -2000,6 +2000,7 @@ Acceptance:
 - ~~Reads outside workspace fail.~~
 - ~~Plan is visible in UI.~~
 - ~~User can approve, revise, or cancel plan.~~
+- ~~Creating a plan moves the active thread and attached in-session AgentRun into planning mode with a timeline event.~~
 
 ---
 

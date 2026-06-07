@@ -1,9 +1,11 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import { notifyLocalAction } from "./ShellPreferenceController";
-import { upsertPlan } from "./appShellThreadActions";
+import { updateRunsForThreadStatus } from "./appShellRunActions";
+import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
+import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 
@@ -23,6 +25,7 @@ export interface AppShellCommandContext {
   activePlan: PlanView | undefined;
   activeProject: WorkspaceProject;
   activeThread: TaskThread | undefined;
+  setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setPlans: Dispatch<SetStateAction<PlanView[]>>;
   setThreadOpen: Dispatch<SetStateAction<boolean>>;
   setThreads: Dispatch<SetStateAction<TaskThread[]>>;
@@ -79,6 +82,7 @@ function createPlan(context: AppShellCommandContext) {
     return;
   }
   context.setPlans((current) => upsertPlan(current, createPlanFromThread(activeThread, context.activeProject)));
+  moveThreadAndRunToPlanning(context, activeThread);
   notifyLocalAction("Plan created from active thread", "success");
 }
 
@@ -92,4 +96,12 @@ function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecis
     plan.threadId === context.activePlan?.threadId ? { ...plan, decision } : plan
   )));
   notifyLocalAction(message, "success");
+}
+
+function moveThreadAndRunToPlanning(context: AppShellCommandContext, activeThread: TaskThread) {
+  const now = new Date().toISOString();
+  context.setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, "planning", now));
+  context.setThreads((current) => current.map((thread) => (
+    thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus("planning"), status: "planning", updatedAt: now } : thread
+  )));
 }
