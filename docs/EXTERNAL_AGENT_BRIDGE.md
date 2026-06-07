@@ -46,6 +46,8 @@ Current implementation:
 - stdout, stderr, command label, exit status, and duration are captured
 - nonzero command exits create visible failed artifacts
 - Codex CLI and Claude Code adapters are detection-only and report whether their executables are on PATH
+- adapter detection is exposed to the UI through a read-only Tauri status command
+- web preview reports adapters as not checked when the desktop bridge is unavailable
 - Codex CLI contracts use `codex exec` with explicit sandbox mode and JSONL output
 - Claude Code contracts use `claude -p` with stream JSON output, permission mode, and restricted tools
 - Codex CLI and Claude Code commands still run only through the approval-gated terminal worker path

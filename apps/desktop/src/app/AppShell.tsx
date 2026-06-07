@@ -8,6 +8,7 @@ import { buildCockpitMarkup } from "./cockpitView";
 import { useCockpitDomBindings } from "./useCockpitDomBindings";
 import { currentActionProposals } from "../features/approvals/approvalData";
 import { currentAutomationState } from "../features/automations/automationData";
+import { externalAgentBridgeUnavailableState, loadExternalAgentStatus } from "../features/externalAgents/externalAgentClient";
 import { currentExternalAgentState } from "../features/externalAgents/externalAgentData";
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
 import { currentMemoryState } from "../features/memory/memoryData";
@@ -93,6 +94,21 @@ export function AppShell() {
         if (!cancelled) {
           setModelSettings(settings);
         }
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  useEffect(() => {
+    let cancelled = false;
+    void loadExternalAgentStatus().then((status) => {
+      if (!cancelled) {
+        setExternalAgentState((current) => ({ ...current, adapters: status.adapters }));
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setExternalAgentState(externalAgentBridgeUnavailableState);
       }
     });
     return () => {

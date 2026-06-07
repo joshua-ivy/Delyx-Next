@@ -2778,6 +2778,33 @@ Acceptance:
 
 ---
 
+### ~~PR 12.6 - External Agent Adapter Status Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added a read-only Tauri status bridge for external-agent adapters.
+The UI now loads Codex CLI, Claude Code, and generic terminal adapter
+availability into the runtime drawer. Web preview maps adapters to a truthful
+not-checked state when the desktop bridge is unavailable.
+
+Scope:
+
+- ~~Expose `external_agent_status` from the Tauri runtime.~~
+- ~~Map Rust adapter availability into frontend adapter status views.~~
+- ~~Load adapter status into AppShell external-agent state on startup.~~
+- ~~Render adapter availability in the terminal/runtime drawer.~~
+- ~~Use not-checked adapter states when the desktop bridge is unavailable.~~
+- ~~Add deterministic Rust tests and verifier markers.~~
+
+Acceptance:
+
+- ~~External-agent detection is visible in the UI trust layer.~~
+- ~~Web preview does not pretend adapters were checked.~~
+- ~~No external agent command runs during adapter detection.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 13 — Source-Backed Research MVP~~
 
 Status: Complete on 2026-06-07.

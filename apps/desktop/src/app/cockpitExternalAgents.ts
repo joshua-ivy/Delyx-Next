@@ -1,4 +1,5 @@
 import type {
+  ExternalAgentAdapterView,
   ExternalAgentCommandContractView,
   ExternalAgentRunArtifactView,
   ExternalAgentStateView,
@@ -7,6 +8,7 @@ import { escapeHtml } from "./html";
 
 export function emptyExternalAgentBlock() {
   return `<div class="external-agent-stream output-block">
+        <div class="dm" data-log-line>External agent adapter status has not been loaded.</div>
         <div class="dm" data-log-line>No external agent command contract has been proposed or approved.</div>
         <div class="dm" data-log-line>No external agent run has been approved or captured.</div>
       </div>`;
@@ -16,13 +18,27 @@ export function externalAgentBlock(state: ExternalAgentStateView, runId: string 
   const contracts = runId ? state.contracts.filter((contract) => contract.runId === runId) : [];
   const artifacts = runId ? state.artifacts.filter((artifact) => artifact.runId === runId) : [];
   if (contracts.length === 0 && artifacts.length === 0) {
-    return emptyExternalAgentBlock();
+    return `<div class="external-agent-stream output-block">
+        ${adapterBlock(state.adapters)}
+        <div class="dm" data-log-line>No external agent command contract has been proposed or approved.</div>
+        <div class="dm" data-log-line>No external agent run has been approved or captured.</div>
+      </div>`;
   }
 
   return `<div class="external-agent-stream output-block">
+        ${adapterBlock(state.adapters)}
         ${contracts.map(contractBlock).join("")}
         ${artifacts.map(artifactBlock).join("")}
       </div>`;
+}
+
+function adapterBlock(adapters: ExternalAgentAdapterView[]) {
+  if (adapters.length === 0) {
+    return '<div class="dm" data-log-line>External agent adapter status has not been loaded.</div>';
+  }
+  return adapters.map((adapter) => (
+    `<div data-log-line><span class="pr">adapter &gt;</span> ${escapeHtml(adapter.label)} &middot; ${escapeHtml(adapter.status)} &middot; ${escapeHtml(adapter.detail)}</div>`
+  )).join("");
 }
 
 function contractBlock(contract: ExternalAgentCommandContractView) {
