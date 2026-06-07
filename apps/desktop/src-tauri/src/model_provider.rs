@@ -73,6 +73,7 @@ pub struct ModelResponse {
 pub enum ModelProviderError {
     ModelNotFound,
     ProviderNotFound,
+    ProviderUnavailable,
 }
 
 #[derive(Debug, Default)]
@@ -101,12 +102,20 @@ impl ModelRegistry {
         &self.providers
     }
 
+    pub fn register_provider(&mut self, provider: ModelProvider) {
+        self.providers.retain(|current| current.id != provider.id);
+        self.providers.push(provider);
+    }
+
     pub fn health(&self, provider_id: &str) -> Result<&ProviderHealth, ModelProviderError> {
         Ok(&self.provider(provider_id)?.health)
     }
 
     pub fn save_role_route(&mut self, role: ModelRole, provider_id: &str, model_id: &str) -> Result<(), ModelProviderError> {
         let provider = self.provider(provider_id)?;
+        if provider.health.status != ProviderStatus::Ready {
+            return Err(ModelProviderError::ProviderUnavailable);
+        }
         if !provider.models.iter().any(|model| model.id == model_id) {
             return Err(ModelProviderError::ModelNotFound);
         }

@@ -149,6 +149,8 @@ Owns:
 - missing provider/API-key states
 
 Initial implementation should include a deterministic mock provider before real model calls.
+Role routing may only save routes to providers whose health is ready; missing-key,
+unconfigured, or unreachable providers remain visible but unusable.
 
 Model roles:
 

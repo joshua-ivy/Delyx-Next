@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
     use crate::model_provider::{
-        ModelProviderError, ModelRegistry, ModelRole, ProviderStatus, SecretPolicy,
+        ModelInfo, ModelProvider, ModelProviderError, ModelRegistry, ModelRole, ProviderHealth,
+        ProviderKind, ProviderStatus, SecretPolicy,
     };
 
     #[test]
@@ -45,6 +46,32 @@ mod tests {
         let result = registry.save_role_route(ModelRole::Coding, "mock-local", "missing-model");
 
         assert_eq!(result.unwrap_err(), ModelProviderError::ModelNotFound);
+    }
+
+    #[test]
+    fn non_ready_provider_route_is_rejected_even_with_models() {
+        let mut registry = ModelRegistry::with_default_local(10);
+        registry.register_provider(ModelProvider {
+            id: "remote-missing-key".to_string(),
+            kind: ProviderKind::OpenAiCompatible,
+            label: "Remote missing key".to_string(),
+            health: ProviderHealth {
+                checked_at: 11,
+                message: "API key is missing; secrets must stay outside the repo.".to_string(),
+                status: ProviderStatus::MissingApiKey,
+            },
+            models: vec![ModelInfo {
+                context_window: 128000,
+                display_name: "Remote model".to_string(),
+                id: "remote-model".to_string(),
+                supports_tools: true,
+            }],
+            secret_policy: SecretPolicy::ExternalSecretOnly,
+        });
+
+        let result = registry.save_role_route(ModelRole::Answer, "remote-missing-key", "remote-model");
+
+        assert_eq!(result.unwrap_err(), ModelProviderError::ProviderUnavailable);
     }
 
     #[test]

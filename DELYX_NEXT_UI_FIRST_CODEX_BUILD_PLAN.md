@@ -2167,6 +2167,7 @@ Scope:
 - ~~Role routing settings~~
 - ~~Model status in top bar~~
 - ~~Provider settings UI~~
+- ~~Role routing rejects non-ready providers instead of treating a discovered model list as usable.~~
 
 Model roles:
 
@@ -2187,6 +2188,7 @@ Acceptance:
 - ~~Role routing can be saved.~~
 - ~~Missing provider/API key produces clear UI state.~~
 - ~~Secrets are not stored in repo.~~
+- ~~Missing-key, unconfigured, or unreachable providers cannot be saved as active routes.~~
 
 ---
 
