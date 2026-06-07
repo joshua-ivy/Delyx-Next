@@ -2278,7 +2278,7 @@ Acceptance:
 Status: Complete on 2026-06-07.
 
 Update: Added an approval-gated ExternalAgentBridge prototype with Codex CLI
-and Claude Code adapter placeholders, a generic terminal-agent prototype
+and Claude Code detection-only adapters, a generic terminal-agent prototype
 adapter, approved-root/checkpoint scope enforcement, transcript/terminal output
 capture, diff-review flags, linked test artifact trust checks, and a truthful
 empty external-agent stream in the bottom drawer. No external worker is spawned
@@ -2305,6 +2305,31 @@ Acceptance:
 - ~~Diffs are reviewed by Delyx UI.~~
 - ~~Tests are not trusted unless captured as artifacts.~~
 - ~~Delyx remains approval/evidence/control layer.~~
+
+---
+
+### ~~PR 12.1 - Truthful External Agent Detection~~
+
+Status: Complete on 2026-06-07.
+
+Update: Replaced the Codex CLI and Claude Code placeholder availability states
+with read-only PATH detection. Delyx now reports whether `codex` or `claude`
+executables are available while keeping their execution disabled until explicit
+command contracts and approvals are added.
+
+Scope:
+
+- ~~Detect Codex CLI from PATH without launching it.~~
+- ~~Detect Claude Code from PATH without launching it.~~
+- ~~Report missing and not-checked states truthfully.~~
+- ~~Keep generic terminal execution as the only approved external worker path.~~
+- ~~Cover detection with deterministic fake-executable tests.~~
+
+Acceptance:
+
+- ~~Detection does not execute external agents.~~
+- ~~Installed and missing adapter states are both test-covered.~~
+- ~~Source files stay within the line-budget rule.~~
 
 ---
 

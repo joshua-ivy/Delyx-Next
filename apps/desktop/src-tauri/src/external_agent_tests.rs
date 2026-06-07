@@ -6,19 +6,49 @@ mod tests {
         ExternalAgentEventKind, ExternalAgentReviewDecision, ExternalAgentRunRequest, ExternalAgentScope,
         ExternalAgentTaskPolicy,
     };
+    use crate::external_agent_adapters::adapters_from_path;
     use std::fs;
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
-    fn detects_placeholder_adapters() {
+    fn detects_external_agent_adapters() {
         let root = temp_workspace("adapter-detect");
         let bridge = ExternalAgentBridge::new(vec![root]).unwrap();
         let adapters = bridge.detect_adapters();
 
-        assert!(adapters.iter().any(|adapter| adapter.adapter_id == "codex-cli" && adapter.status == AdapterStatus::Missing));
-        assert!(adapters.iter().any(|adapter| adapter.adapter_id == "claude-code" && adapter.status == AdapterStatus::Missing));
+        assert!(adapters.iter().any(|adapter| adapter.adapter_id == "codex-cli"));
+        assert!(adapters.iter().any(|adapter| adapter.adapter_id == "claude-code"));
         assert!(adapters.iter().any(|adapter| adapter.adapter_id == "generic-terminal" && adapter.status == AdapterStatus::Available));
+    }
+
+    #[test]
+    fn detects_external_agent_executables_from_path() {
+        let root = temp_workspace("adapter-path");
+        fs::write(root.join("codex.cmd"), "").unwrap();
+        fs::write(root.join("claude.exe"), "").unwrap();
+        let path_var = std::env::join_paths([root.as_path()]).unwrap();
+        let adapters = adapters_from_path(&path_var, ".CMD;.EXE");
+
+        let codex = adapters.iter().find(|adapter| adapter.adapter_id == "codex-cli").unwrap();
+        let claude = adapters.iter().find(|adapter| adapter.adapter_id == "claude-code").unwrap();
+
+        assert_eq!(codex.status, AdapterStatus::Available);
+        assert!(codex.detail.contains("codex.cmd"));
+        assert_eq!(claude.status, AdapterStatus::Available);
+        assert!(claude.detail.contains("claude.exe"));
+    }
+
+    #[test]
+    fn reports_missing_external_agent_executables_from_path() {
+        let root = temp_workspace("adapter-missing");
+        let path_var = std::env::join_paths([root.as_path()]).unwrap();
+        let adapters = adapters_from_path(&path_var, ".CMD;.EXE");
+
+        let codex = adapters.iter().find(|adapter| adapter.adapter_id == "codex-cli").unwrap();
+
+        assert_eq!(codex.status, AdapterStatus::Missing);
+        assert!(codex.detail.contains("not found on PATH"));
     }
 
     #[test]

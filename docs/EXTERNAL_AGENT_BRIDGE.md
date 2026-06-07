@@ -45,7 +45,8 @@ Current implementation:
 - checkpoint or worktree isolation is required before launch
 - stdout, stderr, command label, exit status, and duration are captured
 - nonzero command exits create visible failed artifacts
-- Codex CLI and Claude Code adapters are still detection placeholders
+- Codex CLI and Claude Code adapters are detection-only and report whether their executables are on PATH
+- Codex CLI and Claude Code execution stays disabled until command contracts are implemented
 
 ## Worker Flow
 
@@ -151,8 +152,8 @@ An external agent must not:
 PR 12 should implement:
 
 - bridge abstraction
-- adapter detection for Codex CLI placeholder
-- adapter detection for Claude Code placeholder
+- adapter detection for Codex CLI
+- adapter detection for Claude Code
 - generic terminal-agent adapter shape
 - approval-gated run request
 - transcript capture

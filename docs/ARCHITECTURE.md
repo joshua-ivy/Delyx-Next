@@ -136,6 +136,8 @@ Owns:
 - external agent bridge
 
 Tool output should become artifacts or evidence records when relevant.
+Codex CLI and Claude Code adapter detection reads PATH only; execution remains
+disabled until a typed command contract and approval gate exist.
 
 ## Model Layer
 
