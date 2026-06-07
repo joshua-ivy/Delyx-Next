@@ -45,7 +45,7 @@ export function emptyDiffBlock() {
         <div class="dc">
           <div class="dr"><span class="g">-</span><span class="x">No patch or file change has been proposed.</span></div>
         </div>
-        ${diffActionsBlock()}
+        <div class="diff-actions diff-empty-actions"><span class="pill ghost micro">No patch actions available until a PatchProposal exists.</span></div>
       </div>`;
 }
 

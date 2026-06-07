@@ -116,14 +116,16 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
         <h4>No approval requests</h4>
         <div class="kv"><span class="k">Scope</span><span class="v">No file writes, commands, connectors, memory saves, or external agents requested.</span></div>
         <div class="kv"><span class="k">Risk</span><span class="v">No risky action pending.</span></div>
+        <div class="kv"><span class="k">Policy</span><span class="v">Risk taxonomy active; risky actions keep their minimum risk floor.</span></div>
         <div class="kv"><span class="k">Rollback</span><span class="v">No checkpoint exists yet.</span></div>
       </div>
 
       <div class="dfile">
-        <div class="dh"><span class="fn">Diff artifact</span><span class="dst">empty</span></div>
+        <div class="dh"><span class="fn">Unified diff artifact</span><span class="dst">empty</span></div>
         <div class="dc">
           <div class="dr"><span class="g">-</span><span class="x">No patch or file change has been proposed.</span></div>
         </div>
+        <div class="diff-actions diff-empty-actions"><span class="pill ghost micro">No patch actions available until a PatchProposal exists.</span></div>
       </div>
 
       <div class="dfile test-artifact">

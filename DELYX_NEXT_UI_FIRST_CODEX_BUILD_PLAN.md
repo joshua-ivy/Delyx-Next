@@ -2081,6 +2081,7 @@ Acceptance:
 - ~~Approved patch creates checkpoint.~~
 - ~~Revert restores checkpoint.~~
 - ~~Diff panel shows changed files and patch.~~
+- ~~Empty diff state hides patch action controls until a real PatchProposal exists.~~
 
 ---
 
