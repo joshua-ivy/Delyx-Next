@@ -980,6 +980,10 @@ Model calls
 Approvals granted
 ```
 
+Status update: evidence coverage matrix implemented on 2026-06-07.
+
+- ~~Evidence panel shows every requested receipt category with real counts when receipts exist or an honest not-recorded/not-tested state when they do not.~~
+
 ---
 
 ## 13. Design System
