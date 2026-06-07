@@ -144,6 +144,11 @@ Owns:
 - external agent bridge
 
 Tool output should become artifacts or evidence records when relevant.
+The Tauri `patch_propose` bridge exposes proposal-only diffs from explicit
+approved-root file content requests. It uses the Rust PatchEngine to read
+before contents and build UI-ready diff records, but it does not apply writes
+or create checkpoints. Patch apply and restore remain separate approval-gated
+runtime actions.
 Codex CLI and Claude Code adapter detection reads PATH only. Their typed
 command contracts produce visible `codex exec` and `claude -p` command arrays
 with explicit permission mode, transcript format, working directory, and Delyx

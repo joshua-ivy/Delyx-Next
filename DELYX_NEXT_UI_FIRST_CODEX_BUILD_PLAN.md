@@ -2352,6 +2352,44 @@ Acceptance:
 
 ---
 
+### ~~PR 8.2 - Tauri Patch Proposal Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added a proposal-only Tauri patch bridge that accepts explicit
+approved-root file content requests, uses the Rust PatchEngine to build
+UI-ready diff records, stores in-session patch proposals by run, and exposes a
+frontend client for later Build flow wiring. The bridge never applies writes,
+creates checkpoints, or invents patch content.
+
+Scope:
+
+- ~~Expose `patch_propose` and `patch_snapshot` Tauri commands.~~
+- ~~Use the Rust PatchEngine to compute diff artifacts from explicit file-after contents.~~
+- ~~Reject paths outside approved roots without storing a patch proposal.~~
+- ~~Deduplicate repeated bridge requests by client patch ID.~~
+- ~~Add a frontend patch client without seeding fake patch data.~~
+- ~~Add deterministic Rust tests and verifier markers.~~
+
+Acceptance:
+
+- ~~Patch proposals can cross the Tauri bridge without applying file writes.~~
+- ~~Diff records are UI-ready PatchProposalView shapes.~~
+- ~~Outside-root patch requests are rejected and remain invisible in snapshots.~~
+- ~~First-run UI still shows honest empty diff state until a real patch exists.~~
+- ~~Source files stay within the line-budget rule.~~
+
+Validation:
+
+- ~~`npm run typecheck` passed.~~
+- ~~`cargo test --workspace` passed with 170 Rust tests.~~
+- ~~`npm test` passed.~~
+- ~~`npm run build` passed.~~
+- ~~`npm run smoke:ui` passed.~~
+- ~~`npm run smoke:tauri` passed.~~
+
+---
+
 ### ~~PR 9 — Test Runner Artifacts~~
 
 Status: Complete on 2026-06-07.
