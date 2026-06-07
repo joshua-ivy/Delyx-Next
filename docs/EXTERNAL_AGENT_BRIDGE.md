@@ -51,6 +51,7 @@ Current implementation:
 - Codex CLI and Claude Code commands still run only through the approval-gated terminal worker path
 - the UI has a contract preview ledger that stays empty until a real command contract is proposed
 - contract previews show permission mode, command, cwd, transcript format, required Delyx tools, and safety summary
+- the command palette can request a read-only Codex or Claude contract preview through the Tauri bridge without launching the agent
 
 ## Worker Flow
 

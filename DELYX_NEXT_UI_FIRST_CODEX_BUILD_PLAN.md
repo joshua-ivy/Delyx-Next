@@ -2727,6 +2727,34 @@ Acceptance:
 
 ---
 
+### ~~PR 12.4 - External Agent Contract Preview Command~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added a Tauri-backed command contract preview flow for Codex CLI and
+Claude Code. The command palette can request a read-only contract preview for
+the active thread/run, the Rust bridge builds the inspectable command contract,
+and the UI upserts the returned contract into the external-agent ledger without
+launching an external agent or requesting broader permissions.
+
+Scope:
+
+- ~~Expose a Tauri `external_agent_contract_preview` command.~~
+- ~~Build preview contracts from the Rust command-contract source of truth.~~
+- ~~Store returned contracts in the frontend external-agent ledger.~~
+- ~~Add command palette entries for Codex and Claude read-only previews.~~
+- ~~Keep web preview truthful when the desktop bridge is unavailable.~~
+- ~~Add deterministic Rust tests and verifier markers.~~
+
+Acceptance:
+
+- ~~A user can create an inspectable external-agent contract before execution.~~
+- ~~Contract preview does not launch Codex, Claude, terminal commands, or file writes.~~
+- ~~No fake contract is seeded; previews require an active real thread/run.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 13 — Source-Backed Research MVP~~
 
 Status: Complete on 2026-06-07.

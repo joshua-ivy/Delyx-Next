@@ -6,10 +6,12 @@ import {
   expirePendingProposalsForRun,
   upsertActionProposal,
 } from "./appShellApprovalActions";
+import { previewExternalAgentContractForRun } from "./appShellExternalAgentActions";
 import { recordApprovalProposalForRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { createPlanWithOllama } from "./appShellOllamaPlanActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
+import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
 import { refreshOllamaSettings } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
@@ -26,6 +28,8 @@ export const paletteCommands = [
   { detail: "Queue a scoped build approval proposal for the active plan.", id: "plan.approve", label: "Approve plan" },
   { detail: "Request revision for the active plan.", id: "plan.revise", label: "Revise plan" },
   { detail: "Cancel the active plan.", id: "plan.cancel", label: "Cancel plan" },
+  { detail: "Preview a read-only Codex CLI command contract without launching it.", id: "external.codex.preview", label: "Preview Codex contract" },
+  { detail: "Preview a read-only Claude Code command contract without launching it.", id: "external.claude.preview", label: "Preview Claude contract" },
 ] as const;
 
 export interface AppShellCommandContext {
@@ -36,6 +40,7 @@ export interface AppShellCommandContext {
   modelSettings: ModelSettingsView;
   setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
+  setExternalAgentState: Dispatch<SetStateAction<ExternalAgentStateView>>;
   setModelSettings: Dispatch<SetStateAction<ModelSettingsView>>;
   setPlans: Dispatch<SetStateAction<PlanView[]>>;
   setThreadOpen: Dispatch<SetStateAction<boolean>>;
@@ -72,6 +77,12 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
       break;
     case "plan.cancel":
       updatePlanDecision(context, "cancelled", "Plan cancelled");
+      break;
+    case "external.codex.preview":
+      void previewExternalAgentContractForRun(context, "codex_cli");
+      break;
+    case "external.claude.preview":
+      void previewExternalAgentContractForRun(context, "claude_code");
       break;
   }
 }

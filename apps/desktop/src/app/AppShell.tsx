@@ -9,6 +9,7 @@ import { useCockpitDomBindings } from "./useCockpitDomBindings";
 import { currentActionProposals } from "../features/approvals/approvalData";
 import { currentAutomationState } from "../features/automations/automationData";
 import { currentExternalAgentState } from "../features/externalAgents/externalAgentData";
+import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
 import { currentMemoryState } from "../features/memory/memoryData";
 import { currentMobileState } from "../features/mobile/mobileData";
 import { currentModelSettings } from "../features/models/modelData";
@@ -48,6 +49,7 @@ export function AppShell() {
   const [projects, setProjects] = useState<WorkspaceProject[]>([currentWorkspaceProject]);
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
   const [modelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
+  const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
@@ -66,7 +68,7 @@ export function AppShell() {
       currentTestArtifacts,
       currentReviewReports,
       modelSettings,
-      currentExternalAgentState,
+      externalAgentState,
       currentResearchAnswers,
       currentMemoryState,
       currentSkillState,
@@ -76,7 +78,7 @@ export function AppShell() {
       visibleThreads,
       runtimeBridge,
     ),
-    [actionProposals, activePlan, activeProject, activeRun, activeThread, modelSettings, runtimeBridge, visibleThreads],
+    [actionProposals, activePlan, activeProject, activeRun, activeThread, externalAgentState, modelSettings, runtimeBridge, visibleThreads],
   );
   useEffect(() => {
     let cancelled = false;
@@ -158,6 +160,7 @@ export function AppShell() {
       modelSettings,
       setActionProposals,
       setAgentRuns,
+      setExternalAgentState,
       setModelSettings,
       setPlans,
       setThreadOpen,
