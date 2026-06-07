@@ -1,8 +1,10 @@
 use crate::{
     desktop_shell_info,
+    model_ollama::detect_local_ollama_provider,
     model_provider::{ModelProvider, ModelRegistry, ModelRole, ProviderKind, ProviderStatus},
 };
 use serde::Serialize;
+use std::time::Duration;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,7 +36,14 @@ pub struct RoleRouteStatusView {
 
 #[tauri::command]
 pub fn runtime_status() -> RuntimeStatusView {
-    runtime_status_from_registry(&ModelRegistry::with_runtime_defaults(0))
+    let mut registry = ModelRegistry::with_runtime_defaults(0);
+    let ollama = detect_local_ollama_provider(0, Duration::from_millis(750));
+    let coding_model = ollama.models.first().map(|model| model.id.clone());
+    registry.register_provider(ollama);
+    if let Some(model_id) = coding_model {
+        let _ = registry.save_role_route(ModelRole::Coding, "ollama-local", &model_id);
+    }
+    runtime_status_from_registry(&registry)
 }
 
 pub fn runtime_status_from_registry(registry: &ModelRegistry) -> RuntimeStatusView {

@@ -2504,6 +2504,35 @@ Acceptance:
 
 ---
 
+### ~~PR 11.6 - Tauri Ollama Runtime Detection~~
+
+Status: Complete on 2026-06-07.
+
+Update: The live Tauri `runtime_status` command now performs a read-only
+loopback probe against local Ollama `/api/tags`, reports ready, unreachable,
+or empty-model states without storing secrets, and promotes the first discovered
+local Ollama model into the coding route. This only exposes truthful provider
+state; it does not execute tools, file writes, terminal commands, memory saves,
+connector actions, scheduled work, or external agents.
+
+Scope:
+
+- ~~Probe local Ollama through `127.0.0.1:11434/api/tags` from the Rust runtime bridge.~~
+- ~~Parse Ollama tags with `serde_json` instead of ad hoc response scanning.~~
+- ~~Map discovered local models into a ready Ollama provider state.~~
+- ~~Keep no-model, HTTP-error, and connection-error states visible and unusable.~~
+- ~~Promote only a ready discovered Ollama model into the coding route.~~
+- ~~Add deterministic parser/provider/bridge tests and verifier markers.~~
+
+Acceptance:
+
+- ~~Tauri runtime status can surface a real local Ollama coding route.~~
+- ~~Unavailable Ollama remains a truthful unreachable or not-configured state.~~
+- ~~The bridge remains read-only and local-first with no repo-stored secrets.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 12 — External Agent Bridge Prototype~~
 
 Status: Complete on 2026-06-07.
