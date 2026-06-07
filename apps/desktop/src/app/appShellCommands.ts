@@ -23,7 +23,7 @@ export const paletteCommands = [
   { detail: "Switch between dark and light Command Deck themes.", id: "theme.toggle", label: "Toggle light / dark" },
   { detail: "Check 127.0.0.1:11434 and load local Ollama models.", id: "models.ollama.refresh", label: "Refresh Ollama models" },
   { detail: "Create a read-only plan from the active thread.", id: "plan.create", label: "Create plan" },
-  { detail: "Approve the active plan in UI state only.", id: "plan.approve", label: "Approve plan" },
+  { detail: "Queue a scoped build approval proposal for the active plan.", id: "plan.approve", label: "Approve plan" },
   { detail: "Request revision for the active plan.", id: "plan.revise", label: "Revise plan" },
   { detail: "Cancel the active plan.", id: "plan.cancel", label: "Cancel plan" },
 ] as const;
@@ -64,13 +64,13 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
       createPlan(context);
       break;
     case "plan.approve":
-      updatePlanDecision(context, "approved", "Plan approved in local UI state");
+      updatePlanDecision(context, "approved", "Plan approval proposal queued");
       break;
     case "plan.revise":
-      updatePlanDecision(context, "revision_requested", "Plan revision requested in local UI state");
+      updatePlanDecision(context, "revision_requested", "Plan revision requested");
       break;
     case "plan.cancel":
-      updatePlanDecision(context, "cancelled", "Plan cancelled in local UI state");
+      updatePlanDecision(context, "cancelled", "Plan cancelled");
       break;
   }
 }

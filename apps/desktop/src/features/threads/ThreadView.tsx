@@ -1,7 +1,6 @@
-import { AlertTriangle, CircleDashed, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 
 import { Badge } from "../../design-system/Badge";
-import { Button } from "../../design-system/Button";
 import { Panel } from "../../design-system/Panel";
 import { StateBlock } from "../../design-system/StateBlock";
 import { StatusPill } from "../../design-system/StatusPill";
@@ -48,7 +47,7 @@ export function ThreadView({ plan, thread, timeline }: ThreadViewProps) {
         <div className="composer">
           <FileText size={18} />
           <span>Ask Delyx to revise the plan, inspect a file, or continue after approval.</span>
-          <Button icon={<CircleDashed size={16} />}>Queue follow-up</Button>
+          <Badge tone="info">Use composer</Badge>
         </div>
       </Panel>
     </section>
@@ -112,7 +111,7 @@ function StateGallery({ status }: { status: ThreadSummary["status"] }) {
   return (
     <StateBlock
       action={status === "waiting_for_approval" ? (
-        <Button icon={<AlertTriangle size={16} />}>Review approval</Button>
+        <Badge tone="warning">Approval pending</Badge>
       ) : undefined}
       detail={state.detail}
       title={state.title}

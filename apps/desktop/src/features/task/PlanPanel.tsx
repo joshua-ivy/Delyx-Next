@@ -1,14 +1,14 @@
 import { Check, FileSearch, ShieldAlert } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Button } from "../../design-system/Button";
+import { Badge } from "../../design-system/Badge";
 import { Panel } from "../../design-system/Panel";
 import type { PlanViewModel } from "../../app/types";
 
 export function PlanPanel({ plan }: { plan: PlanViewModel }) {
   return (
     <Panel
-      action={<Button icon={<Check size={16} />} variant="primary">Approve plan</Button>}
+      action={<Badge tone="warning">Approval required</Badge>}
       eyebrow="Plan"
       title={plan.goal}
     >

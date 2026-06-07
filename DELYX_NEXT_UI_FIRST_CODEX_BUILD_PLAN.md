@@ -1985,6 +1985,29 @@ Acceptance:
 
 ---
 
+### ~~PR 4.7 - Remove Legacy Decorative Thread Controls~~
+
+Status: Complete on 2026-06-07.
+
+Update: Removed unbound decorative buttons from the legacy ThreadView and
+PlanPanel source path. The live command palette now describes plan approval as
+queueing a scoped build approval proposal instead of "UI state only."
+
+Scope:
+
+- ~~Replace legacy PlanPanel approve button with approval-required status.~~
+- ~~Replace legacy ThreadView follow-up button with composer guidance status.~~
+- ~~Replace legacy waiting-for-approval button with approval-pending status.~~
+- ~~Remove "UI state only" plan approval copy from command palette messaging.~~
+
+Acceptance:
+
+- ~~No source path renders decorative plan/thread buttons without handlers.~~
+- ~~Plan approval copy describes the real approval proposal flow.~~
+- ~~Verifier forbids the old fake/decorative action labels.~~
+
+---
+
 ### ~~PR 5 — Typed AgentRun Ledger~~
 
 Status: Complete on 2026-06-06.
