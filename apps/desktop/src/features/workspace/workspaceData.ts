@@ -7,8 +7,13 @@ export const currentWorkspaceProject: WorkspaceProject = {
   approvedRoots: ["C:/Users/geaux/Downloads/Delyx Next"],
   git: {
     isRepo: true,
-    branch: "master",
-    uncommittedChanges: 12,
+    branch: "main",
+    uncommittedChanges: null,
+  },
+  isolation: {
+    detail: "Checkpoint or worktree appears after an approved build action.",
+    label: "No active isolation",
+    mode: "none",
   },
   rulesFiles: [
     {

@@ -56,6 +56,7 @@ export function buildCockpitMarkup(
     .replace('<span class="pill ghost">No active run</span>', runStatusPill(activeRun))
     .replace(emptyThreadCardBlock(), threadCards(threads, activeThread?.id))
     .replace("<span class=\"chip\"><span class=\"k\">git</span><b>0</b> uncommitted</span>", gitChip(project))
+    .replace("<span class=\"chip\"><span class=\"k\">isolation</span><b>none</b> no checkpoint/worktree</span>", isolationChip(project))
     .replace("C:/Users/geaux/Downloads/Delyx Next", project.approvedRoots[0])
     .replace("THREAD &middot; empty", `THREAD &middot; ${escapeHtml(activeThread?.id ?? "empty")}${runLabel(activeRun)}`)
     .replace("No active thread", escapeHtml(activeThread?.title ?? "No active thread"))
@@ -114,7 +115,14 @@ function gitChip(project: WorkspaceProject) {
     return "<span class=\"chip\"><span class=\"k\">git</span><b>not repo</b></span>";
   }
 
-  return `<span class="chip"><span class="k">git</span><b>${project.git.uncommittedChanges}</b> uncommitted &middot; ${project.git.branch}</span>`;
+  const changes = project.git.uncommittedChanges === null
+    ? "changes not loaded"
+    : `${project.git.uncommittedChanges} uncommitted`;
+  return `<span class="chip"><span class="k">git</span><b>${escapeHtml(project.git.branch)}</b> ${escapeHtml(changes)}</span>`;
+}
+
+function isolationChip(project: WorkspaceProject) {
+  return `<span class="chip"><span class="k">isolation</span><b>${escapeHtml(project.isolation.mode)}</b> ${escapeHtml(project.isolation.label)}</span>`;
 }
 
 function emptyThreadCardBlock() {

@@ -768,6 +768,12 @@ Provider/model health
 Approval policy
 ```
 
+Status update: top-bar Git/isolation truth slice implemented on 2026-06-07.
+
+- ~~Git UI shows the current `main` branch from real local project facts.~~
+- ~~Uncommitted count is not faked; the UI says changes are not loaded until a real dirty-count artifact exists.~~
+- ~~Checkpoint/worktree isolation has its own visible chip and starts as no active isolation.~~
+
 ### 12.2 Thread View
 
 Thread states:

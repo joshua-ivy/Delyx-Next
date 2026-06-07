@@ -15,6 +15,7 @@ pub struct Project {
 pub struct GitState {
     pub is_repo: bool,
     pub branch: Option<String>,
+    pub uncommitted_changes: Option<usize>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -217,6 +218,7 @@ fn detect_git(root: &Path) -> GitState {
     GitState {
         is_repo: git_dir.exists(),
         branch,
+        uncommitted_changes: None,
     }
 }
 

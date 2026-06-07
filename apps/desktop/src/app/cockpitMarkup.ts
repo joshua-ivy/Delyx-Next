@@ -14,6 +14,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
     <div class="tcrumb"><span class="nm">delyx-next</span><span class="sub">/ no-thread</span></div>
     <span class="chip"><span class="k">runtime</span><b>not connected</b> local only</span>
     <span class="chip"><span class="k">git</span><b>0</b> uncommitted</span>
+    <span class="chip"><span class="k">isolation</span><b>none</b> no checkpoint/worktree</span>
     <span class="grow"></span>
     <span class="pill build"><span class="dot"></span>BUILD MODE</span>
     <span class="pill ghost">No active run</span>

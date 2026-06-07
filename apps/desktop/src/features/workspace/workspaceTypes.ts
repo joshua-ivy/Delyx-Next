@@ -3,7 +3,13 @@ export type WorkspaceUiState = "ready" | "loading" | "empty" | "error" | "denied
 export interface WorkspaceGitState {
   isRepo: boolean;
   branch: string;
-  uncommittedChanges: number;
+  uncommittedChanges: number | null;
+}
+
+export interface WorkspaceIsolationState {
+  detail: string;
+  label: string;
+  mode: "none" | "checkpoint" | "worktree";
 }
 
 export interface WorkspaceRulesFile {
@@ -17,6 +23,7 @@ export interface WorkspaceProject {
   path: string;
   approvedRoots: string[];
   git: WorkspaceGitState;
+  isolation: WorkspaceIsolationState;
   rulesFiles: WorkspaceRulesFile[];
   indexedFiles: string[];
 }

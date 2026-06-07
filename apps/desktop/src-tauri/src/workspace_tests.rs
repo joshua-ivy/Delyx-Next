@@ -18,6 +18,7 @@ mod tests {
         assert_eq!(project.name, fixture.root().file_name().unwrap().to_string_lossy());
         assert!(project.git.is_repo);
         assert_eq!(project.git.branch.as_deref(), Some("main"));
+        assert_eq!(project.git.uncommitted_changes, None);
         assert_eq!(project.rules_files[0].kind, RulesFileKind::Agents);
         assert_eq!(manager.list_projects().len(), 1);
     }
