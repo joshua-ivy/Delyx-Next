@@ -2533,6 +2533,33 @@ Acceptance:
 
 ---
 
+### ~~PR 11.7 - Renderer Runtime Model Sync~~
+
+Status: Complete on 2026-06-07.
+
+Update: The desktop renderer now applies the Tauri `runtime_status` provider
+and coding-route response to the visible model settings on first load. Web
+preview still performs direct read-only Ollama discovery, and failed browser
+refreshes clear stale Ollama routes instead of leaving a model selected after
+the provider becomes unavailable.
+
+Scope:
+
+- ~~Map Tauri runtime providers into the frontend model settings shape.~~
+- ~~Promote only the bridge-reported coding route into the visible route list.~~
+- ~~Use browser `/api/tags` refresh only when the Tauri bridge is unavailable or the user explicitly refreshes Ollama.~~
+- ~~Clear stale Ollama routes when refresh reports unreachable or not configured.~~
+- ~~Add verifier markers for bridge-to-model sync and route cleanup.~~
+
+Acceptance:
+
+- ~~Desktop first load can show the real Ollama model discovered by Rust runtime status.~~
+- ~~Web preview remains honest when the Rust bridge is unavailable.~~
+- ~~Unavailable Ollama does not leave stale saved Ollama routes in UI state.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 12 — External Agent Bridge Prototype~~
 
 Status: Complete on 2026-06-07.

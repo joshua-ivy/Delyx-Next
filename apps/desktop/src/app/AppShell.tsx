@@ -27,7 +27,7 @@ import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes"
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
-import { loadRuntimeBridgeState, type RuntimeBridgeState } from "./runtimeBridge";
+import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, type RuntimeBridgeState } from "./runtimeBridge";
 import { loadWorkspaceProject } from "./workspaceBridge";
 
 const webRuntimeBridge: RuntimeBridgeState = {
@@ -80,9 +80,17 @@ export function AppShell() {
   );
   useEffect(() => {
     let cancelled = false;
-    void loadRuntimeBridgeState().then((state) => {
+    void loadRuntimeBridgeState().then(async (state) => {
       if (!cancelled) {
         setRuntimeBridge(state);
+        if (state.status) {
+          setModelSettings(modelSettingsFromRuntimeStatus(currentModelSettings, state.status));
+          return;
+        }
+        const settings = await refreshOllamaSettings(currentModelSettings);
+        if (!cancelled) {
+          setModelSettings(settings);
+        }
       }
     });
     return () => {
@@ -100,17 +108,6 @@ export function AppShell() {
     }).catch(() => {
       if (!cancelled) {
         setWorkspaceState("error");
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  useEffect(() => {
-    let cancelled = false;
-    void refreshOllamaSettings(currentModelSettings).then((settings) => {
-      if (!cancelled) {
-        setModelSettings(settings);
       }
     });
     return () => {

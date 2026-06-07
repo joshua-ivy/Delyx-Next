@@ -73,18 +73,17 @@ function withOllamaProvider(
     provider.id === ollamaId ? { ...provider, detail, models, status } : provider
   ));
   const selectedProviderId = status === "ready" ? ollamaId : settings.selectedProviderId;
-  const routes = status === "ready" ? upsertOllamaRoutes(settings.routes, models[0]) : settings.routes;
+  const routes = status === "ready" ? upsertOllamaRoute(settings.routes, models[0]) : settings.routes.filter((route) => route.providerId !== ollamaId);
   return { ...settings, providers, routes, selectedProviderId };
 }
 
-function upsertOllamaRoutes(routes: ModelSettingsView["routes"], modelId: string | undefined) {
+function upsertOllamaRoute(routes: ModelSettingsView["routes"], modelId: string | undefined) {
   if (!modelId) {
     return routes;
   }
-  const keep = routes.filter((route) => !(route.providerId === ollamaId && ["answer", "coding"].includes(route.role)));
+  const keep = routes.filter((route) => !(route.providerId === ollamaId && route.role === "coding"));
   return [
     { modelId, providerId: ollamaId, role: "coding" as const, saved: true },
-    { modelId, providerId: ollamaId, role: "answer" as const, saved: true },
     ...keep,
   ];
 }

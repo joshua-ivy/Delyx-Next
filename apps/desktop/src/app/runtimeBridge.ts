@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { ModelProviderView, ModelSettingsView, ProviderKind, ProviderStatus } from "../features/models/modelTypes";
 
 export interface RuntimeBridgeState {
   label: string;
@@ -31,4 +32,45 @@ export async function loadRuntimeBridgeState(): Promise<RuntimeBridgeState> {
   } catch {
     return { label: "Web preview / Rust bridge unavailable", mode: "web" };
   }
+}
+
+export function modelSettingsFromRuntimeStatus(
+  settings: ModelSettingsView,
+  status: RuntimeStatusView,
+): ModelSettingsView {
+  const providers = status.providers.map(runtimeProviderView);
+  const codingRoute = status.codingRoute;
+  const routes = codingRoute ? [{
+    modelId: codingRoute.modelId,
+    providerId: codingRoute.providerId,
+    role: "coding" as const,
+    saved: true,
+  }] : [];
+  const selectedProviderId = codingRoute?.providerId
+    ?? (providers.some((provider) => provider.id === settings.selectedProviderId)
+      ? settings.selectedProviderId
+      : providers[0]?.id ?? settings.selectedProviderId);
+  return { ...settings, providers, routes, selectedProviderId };
+}
+
+function runtimeProviderView(provider: RuntimeStatusView["providers"][number]): ModelProviderView {
+  return {
+    detail: provider.message,
+    id: provider.id,
+    kind: providerKind(provider.kind),
+    label: provider.label,
+    models: provider.models,
+    requiresSecret: provider.kind === "openai_compatible",
+    status: providerStatus(provider.status),
+  };
+}
+
+function providerKind(kind: string): ProviderKind {
+  return kind === "mock" || kind === "openai_compatible" ? kind : "ollama";
+}
+
+function providerStatus(status: string): ProviderStatus {
+  return status === "missing_key" || status === "ready" || status === "unreachable"
+    ? status
+    : "not_configured";
 }

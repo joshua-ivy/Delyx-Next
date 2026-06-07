@@ -164,8 +164,10 @@ The read-only Tauri `runtime_status` command exposes app identity and provider
 status to the UI without executing tools or storing secrets. It probes local
 Ollama through loopback `/api/tags`, promotes discovered local models into the
 runtime coding route, parses tags with `serde_json`, and reports unreachable
-or empty states truthfully. It does not expose the deterministic mock provider
-or a mock coding route as live runtime state.
+or empty states truthfully. The renderer applies that desktop runtime status
+to model settings on first load and uses direct browser Ollama probing only
+when the Tauri bridge is unavailable. It does not expose the deterministic mock
+provider or a mock coding route as live runtime state.
 
 Model roles:
 

@@ -19,6 +19,8 @@ export const ollamaAgentChecks = [
   ["src/features/models/ollamaClient.ts", "/api/chat"],
   ["src/features/models/ollamaClient.ts", "stream: false"],
   ["src/features/models/ollamaClient.ts", "127.0.0.1:11434"],
+  ["src/features/models/ollamaClient.ts", "settings.routes.filter((route) => route.providerId !== ollamaId)"],
+  ["src/features/models/ollamaClient.ts", "upsertOllamaRoute"],
   ["src/features/models/ollamaClient.ts", "responseDetail"],
   ["src/app/appShellModelRunActions.ts", "model_call.completed"],
   ["src/app/appShellModelRunActions.ts", "model_call.failed"],

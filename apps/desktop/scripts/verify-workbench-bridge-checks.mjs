@@ -12,7 +12,10 @@ export const bridgeChecks = [
   ["src-tauri/src/main.rs", "generate_handler"],
   ["src/app/runtimeBridge.ts", "@tauri-apps/api/core"],
   ["src/app/runtimeBridge.ts", "runtime_status"],
+  ["src/app/runtimeBridge.ts", "modelSettingsFromRuntimeStatus"],
+  ["src/app/runtimeBridge.ts", "role: \"coding\" as const"],
   ["src/app/runtimeBridge.ts", "Web preview / Rust bridge unavailable"],
   ["src/app/AppShell.tsx", "loadRuntimeBridgeState"],
+  ["src/app/AppShell.tsx", "modelSettingsFromRuntimeStatus"],
   ["src/app/cockpitView.ts", "runtimeBridge"],
 ];
