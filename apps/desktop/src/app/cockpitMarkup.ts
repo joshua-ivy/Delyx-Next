@@ -191,10 +191,10 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
       <label class="log-search-wrap"><span>Search logs</span><input class="log-search" aria-label="Search drawer logs" type="search" placeholder="Search logs" /></label>
       <button class="output-collapse" type="button" aria-pressed="false">Collapse output</button>
       <button class="terminal-action terminal-copy" type="button">Copy output</button>
-      <button class="terminal-action terminal-jump-error" type="button">Jump to error</button>
-      <button class="terminal-action terminal-open-file" type="button">Open file</button>
-      <button class="terminal-action terminal-rerun" type="button">Rerun</button>
-      <button class="terminal-action terminal-approve-rerun" type="button">Approve rerun</button>
+      <button aria-disabled="true" class="terminal-action terminal-jump-error" disabled title="Requires a captured error artifact" type="button">Jump to error</button>
+      <button aria-disabled="true" class="terminal-action terminal-open-file" disabled title="Requires a referenced file artifact" type="button">Open file</button>
+      <button aria-disabled="true" class="terminal-action terminal-rerun" disabled title="Requires a captured command artifact" type="button">Rerun</button>
+      <button aria-disabled="true" class="terminal-action terminal-approve-rerun" disabled title="Requires a pending rerun approval" type="button">Approve rerun</button>
       <span class="pill ghost">Idle</span>
     </div>
     <div class="term" data-output-collapsed="false">

@@ -37,6 +37,10 @@ function bindDrawerAction(selector: string, label: string, message: string, tone
   if (!(button instanceof HTMLButtonElement)) {
     return () => undefined;
   }
+  if (button.disabled) {
+    button.setAttribute("aria-label", `${label} unavailable`);
+    return () => undefined;
+  }
   const run = () => notify(message, tone);
   button.setAttribute("aria-label", label);
   button.addEventListener("click", run);
