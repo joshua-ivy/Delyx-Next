@@ -2888,6 +2888,31 @@ Acceptance:
 
 ---
 
+### ~~PR 14.1 - Active Run Memory Inspector Wiring~~
+
+Status: Complete on 2026-06-07.
+
+Update: Wired the existing memory governance state into the cockpit inspector
+only when real candidates or records exist for the active run. Empty memory
+state remains invisible in the inspector, so no fake memory panel replaces the
+normal run status.
+
+Scope:
+
+- ~~Detect active-run memory candidates and records.~~
+- ~~Render real memory state beside evidence receipts when both exist.~~
+- ~~Keep the default empty UI free of seeded memory data.~~
+- ~~Add verifier coverage for memory inspector wiring.~~
+
+Acceptance:
+
+- ~~Memory inspector output is based on MemoryStateView only.~~
+- ~~Empty memory state does not claim saved memory.~~
+- ~~Evidence receipts and memory receipts can both remain visible.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 15 — Skills~~
 
 Status: Complete on 2026-06-07.

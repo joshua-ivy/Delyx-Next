@@ -1,6 +1,7 @@
 import { cockpitMarkup } from "./cockpitMarkup";
 import { evidenceBlock } from "./cockpitEvidence";
 import { externalAgentBlock } from "./cockpitExternalAgents";
+import { hasMemoryForRun, memoryBlock } from "./cockpitMemory";
 import { approvalBlock, diffBlock, emptyApprovalBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
 import { runLabel } from "./cockpitRuns";
 import { threadStatsBlock } from "./cockpitStats";
@@ -9,6 +10,7 @@ import { escapeHtml } from "./html";
 import type { RuntimeBridgeState } from "./runtimeBridge";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
+import type { MemoryStateView } from "../features/memory/memoryTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
@@ -34,7 +36,7 @@ export function buildCockpitMarkup(
   modelSettings: ModelSettingsView,
   externalAgents: ExternalAgentStateView,
   researchAnswers: ResearchAnswerView[],
-  _memoryState: unknown,
+  memoryState: MemoryStateView,
   _skillState: unknown,
   _automationState: unknown,
   _mobileState: unknown,
@@ -48,6 +50,9 @@ export function buildCockpitMarkup(
   const activeReview = activeRun ? reviews.find((report) => report.runId === activeRun.id) : undefined;
   const activeEvidence = activeRun
     ? researchAnswers.find((answer) => answer.runId === activeRun.id) ?? researchAnswerFromRunEvidence(activeRun)
+    : undefined;
+  const activeMemory = hasMemoryForRun(memoryState, activeRun?.id)
+    ? memoryBlock(memoryState, activeRun?.id)
     : undefined;
 
   return cockpitMarkup
@@ -71,6 +76,7 @@ export function buildCockpitMarkup(
       activeProposals,
       activePatches,
       activeEvidence,
+      activeMemory,
       activeTests,
       activeReview,
       activeRun,
@@ -191,6 +197,7 @@ interface InspectorState {
   activeProposals: ActionProposalView[];
   activePatches: PatchProposalView[];
   activeEvidence: ResearchAnswerView | undefined;
+  activeMemory: string | undefined;
   activeTests: TestArtifactView[];
   activeReview: ReviewReportView | undefined;
   activeRun: AgentRunView | undefined;
@@ -210,8 +217,8 @@ function inspectorBlock(state: InspectorState) {
   if (state.activePatches.length > 0) {
     return diffBlock(state.activePatches);
   }
-  if (state.activeEvidence) {
-    return evidenceBlock(state.activeEvidence);
+  if (state.activeEvidence || state.activeMemory) {
+    return `${state.activeEvidence ? evidenceBlock(state.activeEvidence) : ""}${state.activeMemory ?? ""}`;
   }
   if (state.activeRun) {
     return `<div class="appro">

@@ -26,6 +26,14 @@ export function memoryBlock(state: MemoryStateView, runId: string | undefined) {
       </div>`;
 }
 
+export function hasMemoryForRun(state: MemoryStateView, runId: string | undefined) {
+  if (!runId) {
+    return state.candidates.length > 0 || state.records.length > 0;
+  }
+  return state.candidates.some((item) => item.sourceRunId === runId)
+    || state.records.some((item) => item.sourceRunId === runId);
+}
+
 function candidateLine(candidate: MemoryCandidateView) {
   return `<div class="dr ${candidate.status === "suppressed" ? "m" : ""}"><span class="g">cand</span><span class="x">${escapeHtml(candidate.scope)}:${escapeHtml(candidate.key)} &middot; ${escapeHtml(candidate.status)} &middot; ${sourceLabel(candidate)}</span></div>`;
 }
