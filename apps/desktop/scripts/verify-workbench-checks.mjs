@@ -187,6 +187,7 @@ export const requiredChecks = [
   ["src/app/cockpitReview.ts", "Approve apply"],
   ["src/app/cockpitReview.ts", "No patch actions available until a PatchProposal exists"],
   ["src/app/cockpitReview.ts", "Revert checkpoint"],
+  ["src/app/cockpitReview.ts", "diff-unavailable"],
   ["src/app/cockpitReview.ts", "Risk taxonomy active"],
   ["src/app/cockpitReview.ts", "riskPolicyLabel"],
   ["src/app/cockpitReview.ts", "Files/commands"],
@@ -445,6 +446,9 @@ export const forbiddenRenderedDemoStrings = [
   "Create a fixture-backed thread manager state.",
   "Plan editing is not wired yet",
   "Question capture is not wired yet",
+  "Patch apply still requires approval",
+  "Diff rejected locally",
+  "Revision request stayed local",
   "Persistent allow rules are not wired",
   "Scope editing is not wired yet",
 ];

@@ -65,10 +65,6 @@ export function ShellPreferenceController() {
       bindLogSearch(),
       bindOutputCollapse(),
       ...bindTerminalDrawerActions(),
-      bindSafeAction(".diff-approve", "Approve apply", "Patch apply still requires approval; no file changed.", "warning"),
-      bindSafeAction(".diff-reject", "Reject diff", "Diff rejected locally; no file changed."),
-      bindSafeAction(".diff-revert", "Revert checkpoint", "No checkpoint was restored; a checkpoint artifact is required.", "warning"),
-      bindSafeAction(".diff-revise", "Ask for revision", "Revision request stayed local; no file changed."),
     ];
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);

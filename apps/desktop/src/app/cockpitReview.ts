@@ -82,7 +82,11 @@ export function patchSummary(lines: DiffLineView[]) {
 }
 
 function diffActionsBlock() {
-  return `<div class="diff-actions"><span class="btn diff-approve">Approve apply</span><span class="btn diff-reject">Reject</span><span class="btn diff-revert">Revert checkpoint</span><span class="btn diff-revise">Ask revision</span></div>`;
+  return `<div class="diff-actions">${disabledDiffAction("Approve apply", "Patch apply requires an approval-gated execution binding.")}${disabledDiffAction("Reject", "Patch rejection requires a stateful patch ledger action.")}${disabledDiffAction("Revert checkpoint", "Checkpoint restore requires an approval-gated execution binding.")}${disabledDiffAction("Ask revision", "Patch revision requests require a stateful plan/build flow.")}</div>`;
+}
+
+function disabledDiffAction(label: string, reason: string) {
+  return `<span aria-disabled="true" class="btn diff-unavailable" title="${escapeHtml(reason)}">${escapeHtml(label)}</span>`;
 }
 
 export function emptyTestBlock() {
