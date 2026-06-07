@@ -700,7 +700,7 @@ Advanced mode:
 - Great empty states
 - Great loading states
 - Great error states
-- Toasts/notifications
+- ~~Toasts/notifications for safe local UI actions~~
 - Accessible dialogs, menus, buttons, and drawers
 - Searchable logs
 - Collapsible long output

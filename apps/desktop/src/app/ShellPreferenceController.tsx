@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 type ThemePreference = "dark" | "light";
 type LayoutPreference = { drawer: number; review: number; side: number };
 type ResizeKind = keyof LayoutPreference;
+type ToastTone = "info" | "success" | "warning";
+type ToastNotice = { id: string; message: string; tone: ToastTone };
 
 const layoutBounds: Record<ResizeKind, [number, number]> = {
   drawer: [120, 260],
@@ -12,6 +14,7 @@ const layoutBounds: Record<ResizeKind, [number, number]> = {
 const layoutDefaults: LayoutPreference = { drawer: 150, review: 392, side: 252 };
 const layoutKey = "delyx-next.layout";
 const themeKey = "delyx-next.theme";
+const toastEventName = "delyx-next.toast";
 
 export function ShellPreferenceController() {
   const [theme, setTheme] = useState<ThemePreference>(readThemePreference);
@@ -29,7 +32,11 @@ export function ShellPreferenceController() {
 
   useEffect(() => {
     const button = document.querySelector(".theme-trigger");
-    const toggleTheme = () => setTheme((current) => nextTheme(current));
+    const toggleTheme = () => setTheme((current) => {
+      const next = nextTheme(current);
+      notifyLocalAction(`${next} theme enabled`, "success");
+      return next;
+    });
     const activateOnKeyboard = (event: Event) => {
       const key = (event as KeyboardEvent).key;
       if (key === "Enter" || key === " ") {
@@ -57,7 +64,41 @@ export function ShellPreferenceController() {
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);
 
-  return null;
+  return <ToastViewport />;
+}
+
+export function notifyLocalAction(message: string, tone: ToastTone = "info") {
+  window.dispatchEvent(new CustomEvent(toastEventName, { detail: { message, tone } }));
+}
+
+function ToastViewport() {
+  const [toasts, setToasts] = useState<ToastNotice[]>([]);
+
+  useEffect(() => {
+    const onToast = (event: Event) => {
+      const detail = (event as CustomEvent<Omit<ToastNotice, "id">>).detail;
+      if (!detail?.message) {
+        return;
+      }
+      const id = `toast-${Date.now()}-${Math.round(Math.random() * 1000)}`;
+      setToasts((current) => [...current.slice(-2), { id, message: detail.message, tone: detail.tone }]);
+      window.setTimeout(() => {
+        setToasts((current) => current.filter((toast) => toast.id !== id));
+      }, 3200);
+    };
+    window.addEventListener(toastEventName, onToast);
+    return () => window.removeEventListener(toastEventName, onToast);
+  }, []);
+
+  return (
+    <div aria-live="polite" className="toast-viewport">
+      {toasts.map((toast) => (
+        <div className={`toast toast-${toast.tone}`} key={toast.id} role="status">
+          {toast.message}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function nextTheme(theme: ThemePreference): ThemePreference {

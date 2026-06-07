@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 
+import { notifyLocalAction } from "./ShellPreferenceController";
 import { upsertPlan } from "./appShellThreadActions";
 import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
@@ -34,33 +35,38 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
   switch (commandId) {
     case "workspace.open":
       context.setWorkspaceOpen(true);
+      notifyLocalAction("Workspace manager opened");
       break;
     case "threads.open":
       context.setThreadOpen(true);
+      notifyLocalAction("Thread manager opened");
       break;
     case "plan.create":
       createPlan(context);
       break;
     case "plan.approve":
-      updatePlanDecision(context, "approved");
+      updatePlanDecision(context, "approved", "Plan approved in local UI state");
       break;
     case "plan.revise":
-      updatePlanDecision(context, "revision_requested");
+      updatePlanDecision(context, "revision_requested", "Plan revision requested in local UI state");
       break;
     case "plan.cancel":
-      updatePlanDecision(context, "cancelled");
+      updatePlanDecision(context, "cancelled", "Plan cancelled in local UI state");
       break;
     case "state.threads.empty":
       context.setThreads([]);
       context.setThreadState("empty");
+      notifyLocalAction("Thread empty state shown");
       break;
     case "state.workspace.loading":
       context.setWorkspaceOpen(true);
       context.setWorkspaceState("loading");
+      notifyLocalAction("Workspace loading state shown");
       break;
     case "state.workspace.error":
       context.setWorkspaceOpen(true);
       context.setWorkspaceState("error");
+      notifyLocalAction("Workspace error state shown", "warning");
       break;
   }
 }
@@ -69,17 +75,21 @@ function createPlan(context: AppShellCommandContext) {
   const activeThread = context.activeThread;
   if (!activeThread) {
     context.setThreadState("empty");
+    notifyLocalAction("Create a thread before planning", "warning");
     return;
   }
   context.setPlans((current) => upsertPlan(current, createPlanFromThread(activeThread, context.activeProject)));
+  notifyLocalAction("Plan created from active thread", "success");
 }
 
-function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecision) {
+function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecision, message: string) {
   if (!context.activePlan) {
     context.setThreadState(context.activeThread ? "ready" : "empty");
+    notifyLocalAction("Create a plan before changing its decision", "warning");
     return;
   }
   context.setPlans((current) => current.map((plan) => (
     plan.threadId === context.activePlan?.threadId ? { ...plan, decision } : plan
   )));
+  notifyLocalAction(message, "success");
 }

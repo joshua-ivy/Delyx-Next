@@ -63,6 +63,9 @@ The shell preserves theme and pane-size preferences locally with
 `ShellPreferenceController`. Sidebar width, review width, and drawer height use
 CSS variables so the UI can resize without changing runtime state.
 
+Local toasts are for confirmed UI-state changes only. They are not evidence
+that runtime work, tool execution, or tests happened.
+
 ## Core Panels
 
 ### Top Bar
