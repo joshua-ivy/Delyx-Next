@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun and thread/run bridge persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, and recent workspace persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -31,9 +31,11 @@ complete:
   `rusqlite` and the migration artifact for AgentRun save/load, including
   nodes, events, artifacts, evidence, and outcome summary. The Tauri
   thread/run bridge also persists task threads, messages, run links, and
-  AgentRun rows to the local SQLite database. Projects, approvals, model
-  routes, memory, skills, automations, and release state are not yet persisted
-  in SQLite.
+  AgentRun rows to the local SQLite database. The approval bridge persists
+  proposals, UI scope, status, and decisions. Recent workspace project snapshots
+  persist project metadata, approved roots, rules files, Git metadata, and
+  indexed file names. Model routes, memory, skills, automations, and release
+  state are not yet persisted in SQLite.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -114,6 +116,7 @@ Early rules:
 - writes are not implemented before approval engine and patch system
 - workspace scope is visible in UI
 - Tauri `workspace_snapshot` exposes approved-root metadata, rules files, and indexed file names only
+- Tauri `workspace_snapshot` stores the latest real workspace snapshot in SQLite so the UI can reopen with recent project state
 - Git dirty counts come from read-only Git index metadata when available; otherwise they stay unknown
 
 ## Thread Manager
@@ -155,8 +158,8 @@ Only narrow runtime islands execute real work: Ollama chat/plan calls,
 approval-gated test commands, patch/checkpoint primitives, the generic
 terminal-worker bridge, and Codex CLI read-only launches. The full Explore ->
 Plan -> Approve -> Build -> Diff -> Test -> Review execution loop remains
-Phase 2 work. AgentRun save/load and Tauri thread/run bridge session reload now
-use SQLite.
+Phase 2 work. AgentRun save/load, Tauri thread/run bridge session reload,
+approval bridge reload, and recent workspace project reload now use SQLite.
 
 ## Permission Engine
 
@@ -178,6 +181,8 @@ same UI-ready proposal shape as the renderer, rejects unsupported non-risky
 approval actions, deduplicates repeated plan-approval requests by client ID, and
 keeps expired decisions visible instead of moving a run forward. Web preview
 retains the local renderer fallback.
+Persistent desktop runs restore approval proposals and decisions from SQLite so
+pending, approved, denied, and expired cards remain inspectable after restart.
 The `approval_taxonomy` command exposes the Rust risk taxonomy as a read-only
 UI snapshot. The renderer merges that snapshot into its web-preview fallback so
 approval policy labels come from the same minimum-risk floors used by execution

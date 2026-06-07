@@ -1,6 +1,11 @@
 fn main() {
     tauri::Builder::default()
-        .manage(delyx_next_desktop::approval_bridge::ApprovalBridgeState::default())
+        .manage(
+            delyx_next_desktop::approval_bridge::ApprovalBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("approval SQLite state should open"),
+        )
         .manage(delyx_next_desktop::patch_bridge::PatchBridgeState::default())
         .manage(delyx_next_desktop::review_bridge::ReviewBridgeState::default())
         .manage(delyx_next_desktop::test_runner_bridge::TestRunnerBridgeState::default())
@@ -10,6 +15,9 @@ fn main() {
             )
             .expect("thread/run SQLite state should open"),
         )
+        .manage(delyx_next_desktop::workspace_bridge::WorkspaceBridgeState::persistent(
+            delyx_next_desktop::sqlite_store::default_database_path(),
+        ))
         .manage(delyx_next_desktop::external_agent_run_bridge::ExternalAgentRunBridgeState::default())
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::approval_bridge::approval_decide,
@@ -33,6 +41,7 @@ fn main() {
             delyx_next_desktop::thread_run_bridge::thread_run_create,
             delyx_next_desktop::thread_run_bridge::thread_run_snapshot,
             delyx_next_desktop::thread_run_bridge::thread_status_update,
+            delyx_next_desktop::workspace_bridge::workspace_recent_project,
             delyx_next_desktop::workspace_bridge::workspace_snapshot
         ])
         .run(tauri::generate_context!())

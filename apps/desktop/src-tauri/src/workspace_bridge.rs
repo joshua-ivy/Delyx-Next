@@ -1,8 +1,19 @@
 use crate::workspace::{Project, RulesFileKind, WorkspaceError, WorkspaceManager};
-use serde::Serialize;
-use std::path::Path;
+use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug)]
+pub struct WorkspaceBridgeState {
+    database_path: PathBuf,
+}
+
+impl WorkspaceBridgeState {
+    pub fn persistent(database_path: PathBuf) -> Self {
+        Self { database_path }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkspaceProjectView {
     pub id: String,
@@ -18,7 +29,7 @@ pub struct WorkspaceProjectView {
     pub indexed_files: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkspaceGitView {
     pub is_repo: bool,
@@ -26,22 +37,35 @@ pub struct WorkspaceGitView {
     pub uncommitted_changes: Option<usize>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WorkspaceIsolationView {
     pub detail: String,
     pub label: String,
     pub mode: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WorkspaceRulesFileView {
     pub path: String,
     pub kind: String,
 }
 
 #[tauri::command]
-pub fn workspace_snapshot(path: String, file_limit: usize) -> Result<WorkspaceProjectView, String> {
-    workspace_snapshot_from_path(Path::new(&path), file_limit).map_err(|error| format!("{error:?}"))
+pub fn workspace_snapshot(
+    state: tauri::State<WorkspaceBridgeState>,
+    path: String,
+    file_limit: usize,
+) -> Result<WorkspaceProjectView, String> {
+    let snapshot = workspace_snapshot_from_path(Path::new(&path), file_limit).map_err(|error| format!("{error:?}"))?;
+    crate::workspace_persistence::save_recent_project(&state.database_path, &snapshot)?;
+    Ok(snapshot)
+}
+
+#[tauri::command]
+pub fn workspace_recent_project(
+    state: tauri::State<WorkspaceBridgeState>,
+) -> Result<Option<WorkspaceProjectView>, String> {
+    crate::workspace_persistence::load_recent_project(&state.database_path)
 }
 
 pub fn workspace_snapshot_from_path(path: &Path, file_limit: usize) -> Result<WorkspaceProjectView, WorkspaceError> {

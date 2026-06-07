@@ -1,34 +1,48 @@
 use crate::approval::{ActionProposal, ApprovalEngine, ApprovalError, ProposalInput, ProposalStatus, RiskLevel, RiskyAction};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 #[derive(Default)]
 pub struct ApprovalBridgeState {
     store: Mutex<ApprovalBridgeStore>,
+    database_path: Option<PathBuf>,
 }
 
 impl ApprovalBridgeState {
+    pub fn persistent(database_path: PathBuf) -> Result<Self, String> {
+        let store = crate::approval_persistence::load_from_path(&database_path)?;
+        Ok(Self { store: Mutex::new(store), database_path: Some(database_path) })
+    }
+
     pub fn with_engine<R>(&self, read: impl FnOnce(&ApprovalEngine) -> R) -> Result<R, String> {
         let store = self.store.lock().map_err(|_| "Approval bridge lock failed.".to_string())?;
         Ok(read(&store.engine))
+    }
+
+    fn persist(&self, store: &ApprovalBridgeStore) -> Result<(), String> {
+        if let Some(path) = &self.database_path {
+            crate::approval_persistence::save_to_path(store, path)?;
+        }
+        Ok(())
     }
 }
 
 #[derive(Default)]
 pub struct ApprovalBridgeStore {
-    engine: ApprovalEngine,
-    records: Vec<ApprovalBridgeRecord>,
+    pub(crate) engine: ApprovalEngine,
+    pub(crate) records: Vec<ApprovalBridgeRecord>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct ApprovalBridgeRecord {
-    action_type: String,
-    client_id: String,
-    expires_at: String,
-    proposal_id: String,
-    required_permission: String,
-    run_id: String,
-    scope: PermissionScopeView,
+pub(crate) struct ApprovalBridgeRecord {
+    pub(crate) action_type: String,
+    pub(crate) client_id: String,
+    pub(crate) expires_at: String,
+    pub(crate) proposal_id: String,
+    pub(crate) required_permission: String,
+    pub(crate) run_id: String,
+    pub(crate) scope: PermissionScopeView,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -92,7 +106,9 @@ pub fn approval_propose(
     request: ApprovalProposalRequest,
 ) -> Result<ActionProposalBridgeView, String> {
     let mut store = state.store.lock().map_err(|_| "Approval bridge lock failed.".to_string())?;
-    propose_approval_record(&mut store, request)
+    let view = propose_approval_record(&mut store, request)?;
+    state.persist(&store)?;
+    Ok(view)
 }
 
 #[tauri::command]
@@ -101,7 +117,9 @@ pub fn approval_decide(
     request: ApprovalDecisionRequest,
 ) -> Result<ActionProposalBridgeView, String> {
     let mut store = state.store.lock().map_err(|_| "Approval bridge lock failed.".to_string())?;
-    decide_approval_record(&mut store, request)
+    let view = decide_approval_record(&mut store, request)?;
+    state.persist(&store)?;
+    Ok(view)
 }
 
 #[tauri::command]

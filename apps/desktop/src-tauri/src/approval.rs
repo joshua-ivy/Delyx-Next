@@ -140,6 +140,19 @@ impl ApprovalEngine {
         self.proposals.iter().filter(|proposal| proposal.run_id == run_id).collect()
     }
 
+    pub(crate) fn all_proposals(&self) -> &[ActionProposal] {
+        &self.proposals
+    }
+
+    pub(crate) fn from_loaded(proposals: Vec<ActionProposal>) -> Self {
+        let next_id = proposals
+            .iter()
+            .filter_map(|proposal| proposal.id.strip_prefix("prop-")?.parse::<usize>().ok())
+            .max()
+            .unwrap_or(proposals.len());
+        Self { proposals, next_id }
+    }
+
     pub fn approve(&mut self, proposal_id: &str, now: u64, note: &str) -> Result<(), ApprovalError> {
         let proposal = self.proposal_mut(proposal_id)?;
         ensure_pending(proposal)?;

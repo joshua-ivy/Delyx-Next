@@ -7,7 +7,7 @@ Last updated: 2026-06-07.
 Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
-- `cargo test --workspace`: 193 passed, 0 failed.
+- `cargo test --workspace`: 195 passed, 0 failed.
 - `npm run typecheck`, `npm test` (smoke/source-contract), and `npm run smoke:ui`: pass.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
@@ -39,7 +39,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Current Reality
 
 - PR 1-18.1 breadth is skeleton-complete.
-- SQLite is partially implemented. AgentRun save/load and Tauri thread/run session state now use a real SQLite database and migration; broader app stores are still in memory.
+- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, and recent workspace project snapshots now use a real SQLite database and migration; broader app stores are still in memory.
 - There is no full execution engine: no scheduler, executor, resume engine, repair loop, or hook runner.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
@@ -118,9 +118,11 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Added `rusqlite` with bundled SQLite for local Windows-safe storage.
   - AgentRun `save_to_path` / `load_from_path` now use the SQLite migration instead of a tab-separated text helper.
   - Tauri thread/run bridge state now saves threads, messages, run links, and AgentRun rows to SQLite and reloads them on desktop startup.
-  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, and SQLite file format.
-  - Persist projects, threads, runs, approvals, artifacts, evidence, model routes, memory, skills, automations, and release state.
-  - Next: persist approvals and workspace/project state so approval cards and project metadata survive app restart.
+  - Tauri approval bridge state now saves proposals, scope, status, decisions, and decision notes to SQLite and reloads them on desktop startup.
+  - Recent workspace project snapshots now save project metadata, rules files, approved roots, Git metadata, and indexed file names to SQLite.
+  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, and SQLite file format.
+  - Persist remaining artifacts, evidence-first stores, model routes, memory, skills, automations, and release state.
+  - Next: persist model routes and memory governance state so runtime routing and memory approvals survive app restart.
   - Add migration/repository tests that prove data survives reload.
 
 - [ ] D2 - AgentRun Execution Engine
