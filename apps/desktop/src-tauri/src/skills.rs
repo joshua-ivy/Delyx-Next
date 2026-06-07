@@ -48,6 +48,15 @@ impl SkillRegistry {
         Self::default()
     }
 
+    pub(crate) fn from_loaded(skills: Vec<SkillManifest>) -> Self {
+        let next_id = skills
+            .iter()
+            .filter_map(|skill| skill.id.strip_prefix("skill-")?.parse::<usize>().ok())
+            .max()
+            .unwrap_or(skills.len());
+        Self { next_id, skills }
+    }
+
     pub fn import_skill_file(&mut self, source: &str, contents: &str, trust: SkillTrust) -> SkillManifest {
         self.next_id += 1;
         let skill = SkillManifest {

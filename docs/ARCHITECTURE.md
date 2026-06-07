@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, and memory-store persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, and skill-registry persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -37,8 +37,10 @@ complete:
   indexed file names. Model role routes persist to SQLite and are validated
   against current provider health before becoming active. The Rust memory
   governance store persists candidates, durable records, suppression state, and
-  ID continuity, but there is no live Tauri memory bridge yet. Skills,
-  automations, and release state are not yet persisted in SQLite.
+  ID continuity, but there is no live Tauri memory bridge yet. The Rust skill
+  registry persists imported manifests, trust, permissions, status, source
+  hashes, and ID continuity, but there is no live Tauri skill bridge yet.
+  Automations and release state are not yet persisted in SQLite.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -242,6 +244,21 @@ candidate status, record suppression, source run/thread IDs, and post-reload ID
 continuity. The shipped UI still reads the frontend memory state and has no live
 Tauri memory bridge, so memory persistence is not yet an end-to-end user
 workflow.
+
+## Skills
+
+Owns:
+
+- imported skill manifests
+- source hashes
+- local vs third-party trust
+- activation, disabled, and suppressed states
+- explicit skill permissions
+
+The Rust `SkillRegistry` persists imported manifests to SQLite, including trust,
+status, permissions, source hashes, and post-reload ID continuity. The shipped UI
+still reads the frontend skill state and has no live Tauri skill bridge, so skill
+persistence is not yet an end-to-end user workflow.
 
 ## Model Layer
 

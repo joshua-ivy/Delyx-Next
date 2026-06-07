@@ -125,3 +125,15 @@ CREATE TABLE IF NOT EXISTS memory_records (
   supersedes TEXT,
   suppressed INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS skill_manifests (
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
+  source TEXT NOT NULL,
+  source_hash TEXT NOT NULL,
+  trust TEXT NOT NULL,
+  status TEXT NOT NULL,
+  can_run_scripts INTEGER NOT NULL DEFAULT 0,
+  can_edit_files INTEGER NOT NULL DEFAULT 0,
+  can_use_network INTEGER NOT NULL DEFAULT 0
+);
