@@ -5,6 +5,7 @@ import { AppShell } from "./app/AppShell";
 import "./design-system/tokens.css";
 import "./styles/cockpit.css";
 import "./styles/threads.css";
+import "./styles/workbench-details.css";
 import "./styles/workspace.css";
 
 const rootElement = document.getElementById("root");

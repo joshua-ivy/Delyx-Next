@@ -59,7 +59,9 @@ The app shell owns persistent layout:
 - command palette
 - theme provider
 
-The shell should preserve user layout preferences later, but PR 2 can use deterministic default pane sizes.
+The shell preserves theme preference locally with `ShellPreferenceController`.
+Resizable pane preferences still come later; until then the app uses
+deterministic default pane sizes.
 
 ## Core Panels
 

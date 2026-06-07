@@ -14,7 +14,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;height:100%;}
-  body{background:#000;color:var(--fg);font-family:var(--ui);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;}
   .app{
     width:1440px;height:900px;margin:0 auto;background:var(--bg);overflow:hidden;
     display:grid;grid-template-columns:60px 252px 1fr 392px;grid-template-rows:54px 1fr 150px;

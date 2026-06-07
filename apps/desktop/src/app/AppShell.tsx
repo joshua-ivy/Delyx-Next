@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-
 import { CommandPalette } from "../design-system/CommandPalette";
+import { ShellPreferenceController } from "./ShellPreferenceController";
 import { canTransition, createThread, upsertPlan } from "./appShellThreadActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { buildCockpitMarkup } from "./cockpitView";
@@ -219,6 +219,7 @@ export function AppShell() {
   return (
     <>
       <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} onRun={runPaletteCommand} open={paletteOpen} />
+      <ShellPreferenceController />
       <div dangerouslySetInnerHTML={{ __html: cockpitHtml }} />
       <ThreadOverlay
         activeThread={activeThread}

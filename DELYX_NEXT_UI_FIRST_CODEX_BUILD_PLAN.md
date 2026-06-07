@@ -696,7 +696,7 @@ Advanced mode:
 - Keyboard shortcuts
 - Resizable split panes
 - Persistent layout
-- Light/dark themes
+- ~~Light/dark themes with persisted local preference~~
 - Great empty states
 - Great loading states
 - Great error states

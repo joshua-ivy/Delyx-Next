@@ -18,7 +18,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
     <span class="pill build"><span class="dot"></span>BUILD MODE</span>
     <span class="pill ghost">No active run</span>
     <span class="ticon command-trigger" title="Command palette">K</span>
-    <span class="ticon">L</span>
+    <span class="ticon theme-trigger" title="Switch to light theme">L</span>
   </header>
 
   <aside class="side">

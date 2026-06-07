@@ -77,6 +77,22 @@
   --review-w:  392px;
   --top-h:     54px;
   --drawer-h:  150px;
+
+  /* ---- Compatibility aliases for shared React components ---- */
+  --bg-subtle: var(--surface-2);
+  --border: var(--line);
+  --radius-lg: var(--r-lg);
+  --radius-md: var(--r-md);
+  --radius-sm: var(--r-sm);
+  --shadow: var(--shadow-pop);
+  --space-1: var(--s-1);
+  --space-2: var(--s-2);
+  --space-3: var(--s-3);
+  --space-4: var(--s-4);
+  --surface-strong: var(--card-2);
+  --text: var(--fg);
+  --text-muted: var(--fg-3);
+  --text-soft: var(--fg-2);
 }
 
 /* =====================================================================
@@ -90,15 +106,16 @@
 [data-mode="review"]   { --accent: var(--mode-review);   --accent-ink:#04162e; }
 [data-mode="research"] { --accent: var(--mode-research); --accent-ink:#2e0a1e; }
 
-/* =====================================================================
-   Optional light theme hook (not part of the v1 mockup, but reserved).
-   The Cockpit direction ships dark-first; flip these if a light mode
-   is ever requested.
-   ===================================================================== */
-/*
 [data-theme="light"] {
-  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#f0f2f5;
-  --card:#ffffff; --card-2:#eef1f5; --line:#e3e6ec; --line-2:#d3d8e0;
-  --fg:#11151c; --fg-2:#4a5260; --fg-3:#828b99;
+  --bg:#f5f6f8;
+  --surface:#ffffff;
+  --surface-2:#f0f2f5;
+  --card:#ffffff;
+  --card-2:#eef1f5;
+  --line:#dbe1ea;
+  --line-2:#c8d0dc;
+  --fg:#11151c;
+  --fg-2:#4a5260;
+  --fg-3:#737d8c;
+  --shadow-pop: 0 12px 40px -18px rgb(20 24 32 / 32%);
 }
-*/
