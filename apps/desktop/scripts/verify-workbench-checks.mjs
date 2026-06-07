@@ -4,6 +4,8 @@ export const requiredChecks = [
   ["src/app/useCockpitDomBindings.ts", "activateOnKeyboard"],
   ["src/app/useCockpitDomBindings.ts", "const planEdit"],
   ["src/app/useCockpitDomBindings.ts", "planEdit?.addEventListener(\"click\", revisePlan)"],
+  ["src/app/useCockpitDomBindings.ts", "const planReviewMode"],
+  ["src/app/useCockpitDomBindings.ts", "planReviewMode?.addEventListener(\"click\", switchToReviewMode)"],
   ["src/app/AppShell.tsx", "setPaletteOpen"],
   ["src/app/useCockpitDomBindings.ts", "review-revise"],
   ["src/app/useCockpitDomBindings.ts", "useCockpitDomBindings"],

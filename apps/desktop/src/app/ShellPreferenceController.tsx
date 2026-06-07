@@ -66,7 +66,6 @@ export function ShellPreferenceController() {
       bindOutputCollapse(),
       ...bindTerminalDrawerActions(),
       bindSafeAction(".plan-question", "Ask question", "Question capture is not wired yet; no model call ran.", "warning"),
-      bindSafeAction(".plan-review-mode", "Switch to read-only review", "Read-only review selected locally; no files changed."),
       bindSafeAction(".diff-approve", "Approve apply", "Patch apply still requires approval; no file changed.", "warning"),
       bindSafeAction(".diff-reject", "Reject diff", "Diff rejected locally; no file changed."),
       bindSafeAction(".diff-revert", "Revert checkpoint", "No checkpoint was restored; a checkpoint artifact is required.", "warning"),

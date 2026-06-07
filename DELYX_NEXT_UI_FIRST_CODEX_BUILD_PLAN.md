@@ -842,6 +842,7 @@ Status update: plan panel field and action coverage implemented on 2026-06-07.
 - ~~Plan panel shows goal, understanding, files likely involved, proposed steps, risks, tests to run, and permissions needed.~~
 - ~~Plan actions include Approve Plan, Edit Plan, Ask Question, Switch to Read-Only Review, and Cancel with safe local UI behavior.~~
 - ~~Edit Plan uses the real revision-request path instead of a not-wired toast.~~
+- ~~Read-only review action moves the active thread and run into reviewing mode without edits.~~
 
 ### 12.4 Diff Review Panel
 

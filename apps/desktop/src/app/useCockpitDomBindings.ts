@@ -44,6 +44,7 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const planCreate = document.querySelector(".plan-create");
     const planApprove = document.querySelector(".plan-approve");
     const planEdit = document.querySelector(".plan-edit");
+    const planReviewMode = document.querySelector(".plan-review-mode");
     const planRevise = document.querySelector(".plan-revise");
     const planCancel = document.querySelector(".plan-cancel");
     const approvalApproveButtons = Array.from(document.querySelectorAll<HTMLElement>(".approval-approve-once[data-proposal-id]"));
@@ -98,9 +99,16 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const approvePlan = () => updatePlanDecision("approved");
     const revisePlan = () => updatePlanDecision("revision_requested");
     const cancelPlan = () => updatePlanDecision("cancelled");
+    const switchToReviewMode = () => {
+      if (!state.activeThread) {
+        state.setThreadState("empty");
+        return;
+      }
+      updateThreadAndRunStatus(state, state.activeThread, "reviewing");
+    };
     const approveProposal = (event: Event) => updateProposalStatus(state, event, "approved");
     const denyProposal = (event: Event) => updateProposalStatus(state, event, "denied");
-    bindAccessibility(commandButton, projectButton, threadButton, [planCreate, planApprove, planEdit, planRevise, planCancel]);
+    bindAccessibility(commandButton, projectButton, threadButton, [planCreate, planApprove, planEdit, planReviewMode, planRevise, planCancel]);
     commandButton?.addEventListener("click", openPalette);
     commandButton?.addEventListener("keydown", activateOnKeyboard);
     projectButton?.addEventListener("click", openProject);
@@ -113,6 +121,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     planApprove?.addEventListener("keydown", activateOnKeyboard);
     planEdit?.addEventListener("click", revisePlan);
     planEdit?.addEventListener("keydown", activateOnKeyboard);
+    planReviewMode?.addEventListener("click", switchToReviewMode);
+    planReviewMode?.addEventListener("keydown", activateOnKeyboard);
     planRevise?.addEventListener("click", revisePlan);
     planRevise?.addEventListener("keydown", activateOnKeyboard);
     planCancel?.addEventListener("click", cancelPlan);
@@ -134,6 +144,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       planApprove?.removeEventListener("keydown", activateOnKeyboard);
       planEdit?.removeEventListener("click", revisePlan);
       planEdit?.removeEventListener("keydown", activateOnKeyboard);
+      planReviewMode?.removeEventListener("click", switchToReviewMode);
+      planReviewMode?.removeEventListener("keydown", activateOnKeyboard);
       planRevise?.removeEventListener("click", revisePlan);
       planRevise?.removeEventListener("keydown", activateOnKeyboard);
       planCancel?.removeEventListener("click", cancelPlan);
@@ -210,8 +222,9 @@ function bindAccessibility(commandButton: Element | null, projectButton: Element
   planButtons[0]?.setAttribute("aria-label", "Create plan");
   planButtons[1]?.setAttribute("aria-label", "Approve plan");
   planButtons[2]?.setAttribute("aria-label", "Edit plan");
-  planButtons[3]?.setAttribute("aria-label", "Revise plan");
-  planButtons[4]?.setAttribute("aria-label", "Cancel plan");
+  planButtons[3]?.setAttribute("aria-label", "Switch to read-only review");
+  planButtons[4]?.setAttribute("aria-label", "Revise plan");
+  planButtons[5]?.setAttribute("aria-label", "Cancel plan");
   commandButton?.setAttribute("role", "button");
   commandButton?.setAttribute("tabindex", "0");
   commandButton?.setAttribute("aria-label", "Open command palette");
