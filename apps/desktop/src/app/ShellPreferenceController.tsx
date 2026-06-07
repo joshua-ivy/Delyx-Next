@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { bindTerminalDrawerActions } from "./drawerActions";
+
 type ThemePreference = "dark" | "light";
 type LayoutPreference = { drawer: number; review: number; side: number };
 type ResizeKind = keyof LayoutPreference;
@@ -62,6 +64,7 @@ export function ShellPreferenceController() {
       bindLayoutGrip(".resize-drawer", "drawer"),
       bindLogSearch(),
       bindOutputCollapse(),
+      ...bindTerminalDrawerActions(),
       bindSafeAction(".plan-edit", "Edit plan", "Plan editing is not wired yet; no plan changed.", "warning"),
       bindSafeAction(".plan-question", "Ask question", "Question capture is not wired yet; no model call ran.", "warning"),
       bindSafeAction(".plan-review-mode", "Switch to read-only review", "Read-only review selected locally; no files changed."),

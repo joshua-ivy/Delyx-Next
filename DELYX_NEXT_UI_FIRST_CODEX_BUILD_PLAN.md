@@ -955,6 +955,10 @@ Rerun command
 Approve rerun
 ```
 
+Status update: terminal drawer support controls implemented on 2026-06-07.
+
+- ~~Terminal drawer shows command history, multiple output blocks, copy output, collapse long logs, search logs, jump to error, open referenced file, rerun command, and approve rerun controls with honest empty states.~~
+
 ### 12.8 Evidence / Receipts Panel
 
 Show:

@@ -188,14 +188,20 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
       <div class="dr-tabs"><span class="on">Terminal</span><span>Logs</span><span>External agent</span></div>
       <label class="log-search-wrap"><span>Search logs</span><input class="log-search" aria-label="Search drawer logs" type="search" placeholder="Search logs" /></label>
       <button class="output-collapse" type="button" aria-pressed="false">Collapse output</button>
+      <button class="terminal-action terminal-copy" type="button">Copy output</button>
+      <button class="terminal-action terminal-jump-error" type="button">Jump to error</button>
+      <button class="terminal-action terminal-open-file" type="button">Open file</button>
+      <button class="terminal-action terminal-rerun" type="button">Rerun</button>
+      <button class="terminal-action terminal-approve-rerun" type="button">Approve rerun</button>
       <span class="pill ghost">Idle</span>
     </div>
     <div class="term" data-output-collapsed="false">
-      <div class="dm" data-log-line>No terminal command has run. Commands require an approval-backed AgentRun artifact.</div>
-      <div class="external-agent-stream">
+      <div class="dm terminal-history output-block" data-log-line><span class="pr">history &gt;</span> No command history captured.</div>
+      <div class="dm output-block" data-log-line>No terminal command has run. Commands require an approval-backed AgentRun artifact.</div>
+      <div class="external-agent-stream output-block">
         <div class="dm" data-log-line>No external agent run has been approved or captured.</div>
       </div>
-      <div data-log-line><span class="pr">delyx local &gt;</span> <span class="bk"></span></div>
+      <div class="output-block" data-log-line><span class="pr">delyx local &gt;</span> <span class="bk"></span></div>
     </div>
   </footer>
 </div>`;
