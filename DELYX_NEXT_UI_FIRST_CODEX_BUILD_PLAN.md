@@ -2380,6 +2380,7 @@ Acceptance:
 - ~~Mobile approval scope is visible.~~
 - ~~Mobile approval view filters out non-pending approval records.~~
 - ~~Mobile can review status without running full agent runtime.~~
+- ~~Mobile denial remains available for broad or high-risk requests without granting file or terminal access.~~
 
 ---
 

@@ -87,6 +87,9 @@ pub fn decide_mobile_approval(
     if !policy.allow_low_risk_approval {
         return Err(MobileError::Disabled);
     }
+    if kind == MobileDecisionKind::Deny {
+        return Ok(MobileDecision { proposal_id: proposal.id.clone(), kind, scope: proposal.scope.clone() });
+    }
     if risk_rank(policy.max_approval_risk) > risk_rank(desktop_max_risk) {
         return Err(MobileError::RiskExceedsDesktopPolicy);
     }

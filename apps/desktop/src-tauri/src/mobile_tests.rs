@@ -65,13 +65,24 @@ mod tests {
     }
 
     #[test]
+    fn mobile_can_deny_broad_requests_without_granting_access() {
+        let proposal = proposal(RiskLevel::High, RiskyAction::FileWrite);
+        let policy = MobilePolicy { allow_low_risk_approval: true, max_approval_risk: RiskLevel::Low, can_access_files: false, can_access_terminal: false };
+
+        let decision = decide_mobile_approval(&proposal, MobileDecisionKind::Deny, &policy, RiskLevel::Low).unwrap();
+
+        assert_eq!(decision.proposal_id, "prop-1");
+        assert_eq!(decision.kind, MobileDecisionKind::Deny);
+    }
+
+    #[test]
     fn mobile_has_no_broad_file_or_terminal_access_by_default() {
         let file_proposal = proposal(RiskLevel::Low, RiskyAction::FileWrite);
         let terminal_proposal = proposal(RiskLevel::Low, RiskyAction::TerminalCommand);
         let policy = MobilePolicy { allow_low_risk_approval: true, max_approval_risk: RiskLevel::Low, ..default_mobile_policy() };
 
         assert_eq!(decide_mobile_approval(&file_proposal, MobileDecisionKind::Approve, &policy, RiskLevel::Low).unwrap_err(), MobileError::BroadFileAccessDenied);
-        assert_eq!(decide_mobile_approval(&terminal_proposal, MobileDecisionKind::Deny, &policy, RiskLevel::Low).unwrap_err(), MobileError::BroadTerminalAccessDenied);
+        assert_eq!(decide_mobile_approval(&terminal_proposal, MobileDecisionKind::Approve, &policy, RiskLevel::Low).unwrap_err(), MobileError::BroadTerminalAccessDenied);
     }
 
     fn proposal(risk: RiskLevel, action: RiskyAction) -> ActionProposal {
