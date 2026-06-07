@@ -54,11 +54,18 @@ pub struct AutomationEngine {
     contracts: Vec<MissionContract>,
     next_contract_id: usize,
     next_run_id: usize,
+    scheduled_runs: Vec<ScheduledRun>,
 }
 
 impl AutomationEngine {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub(crate) fn from_loaded(contracts: Vec<MissionContract>, scheduled_runs: Vec<ScheduledRun>) -> Self {
+        let next_contract_id = next_id(&contracts, |contract| contract.id.as_str(), "mission-");
+        let next_run_id = next_id(&scheduled_runs, |run| run.id.as_str(), "scheduled-run-");
+        Self { contracts, next_contract_id, next_run_id, scheduled_runs }
     }
 
     pub fn create_contract(&mut self, input: MissionContractInput) -> MissionContract {
@@ -122,6 +129,10 @@ impl AutomationEngine {
         &self.contracts
     }
 
+    pub fn scheduled_runs(&self) -> &[ScheduledRun] {
+        &self.scheduled_runs
+    }
+
     fn contract(&self, contract_id: &str) -> Result<&MissionContract, AutomationError> {
         self.contracts.iter().find(|contract| contract.id == contract_id).ok_or(AutomationError::ContractNotFound)
     }
@@ -132,7 +143,15 @@ impl AutomationEngine {
 
     fn run(&mut self, contract_id: &str, status: ScheduledRunStatus, reason: &str, approval_id: Option<String>) -> ScheduledRun {
         self.next_run_id += 1;
-        ScheduledRun { id: format!("scheduled-run-{}", self.next_run_id), contract_id: contract_id.to_string(), status, reason: reason.to_string(), approval_id }
+        let run = ScheduledRun {
+            id: format!("scheduled-run-{}", self.next_run_id),
+            contract_id: contract_id.to_string(),
+            status,
+            reason: reason.to_string(),
+            approval_id,
+        };
+        self.scheduled_runs.push(run.clone());
+        run
     }
 }
 
@@ -150,4 +169,8 @@ pub struct MissionContractInput {
 
 fn risky_tool(tool: &str) -> bool {
     matches!(tool, "file_write" | "terminal_command" | "external_agent")
+}
+
+fn next_id<T>(items: &[T], id: impl Fn(&T) -> &str, prefix: &str) -> usize {
+    items.iter().filter_map(|item| id(item).strip_prefix(prefix)?.parse::<usize>().ok()).max().unwrap_or(items.len())
 }

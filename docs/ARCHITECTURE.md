@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, and skill-registry persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, and automation-engine persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -40,7 +40,9 @@ complete:
   ID continuity, but there is no live Tauri memory bridge yet. The Rust skill
   registry persists imported manifests, trust, permissions, status, source
   hashes, and ID continuity, but there is no live Tauri skill bridge yet.
-  Automations and release state are not yet persisted in SQLite.
+  The Rust automation engine persists mission contracts and scheduled-run
+  records, but there is no live Tauri automation bridge yet. Release state is
+  not yet persisted in SQLite.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -259,6 +261,23 @@ The Rust `SkillRegistry` persists imported manifests to SQLite, including trust,
 status, permissions, source hashes, and post-reload ID continuity. The shipped UI
 still reads the frontend skill state and has no live Tauri skill bridge, so skill
 persistence is not yet an end-to-end user workflow.
+
+## Automations
+
+Owns:
+
+- mission contracts
+- approval-gated activation
+- active hours and delivery targets
+- allowed tool scope
+- workspace drift blocking
+- scheduled-run records
+
+The Rust `AutomationEngine` persists mission contracts and scheduled runs to
+SQLite, including status, schedule shape, allowed tools, approval links,
+workspace fingerprints, and post-reload ID continuity. The shipped UI still
+reads the frontend automation state and has no live Tauri automation bridge, so
+automation persistence is not yet an end-to-end user workflow.
 
 ## Model Layer
 

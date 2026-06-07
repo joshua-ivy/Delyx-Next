@@ -137,3 +137,25 @@ CREATE TABLE IF NOT EXISTS skill_manifests (
   can_edit_files INTEGER NOT NULL DEFAULT 0,
   can_use_network INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS automation_contracts (
+  id TEXT PRIMARY KEY NOT NULL,
+  title TEXT NOT NULL,
+  status TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  allowed_tools_json TEXT NOT NULL,
+  active_start_hour INTEGER NOT NULL,
+  active_end_hour INTEGER NOT NULL,
+  timezone TEXT NOT NULL,
+  delivery_targets_json TEXT NOT NULL,
+  stop_condition TEXT NOT NULL,
+  workspace_fingerprint TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS scheduled_runs (
+  id TEXT PRIMARY KEY NOT NULL,
+  contract_id TEXT NOT NULL REFERENCES automation_contracts(id) ON DELETE CASCADE,
+  status TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  approval_id TEXT
+);
