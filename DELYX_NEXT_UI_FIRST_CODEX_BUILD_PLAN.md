@@ -705,8 +705,8 @@ Advanced mode:
 - ~~Searchable logs in the bottom drawer~~
 - ~~Collapsible long output in the bottom drawer~~
 - ~~Status pills for every state~~
-- Consistent design tokens
-- No random one-off styling
+- ~~Consistent design tokens~~
+- ~~No random one-off styling~~
 
 ### 11.5 Design Style
 

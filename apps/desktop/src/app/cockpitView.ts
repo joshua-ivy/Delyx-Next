@@ -153,7 +153,7 @@ function emptyPlanGrid() {
           <div class="pbox">
             <div class="bh">Verify and permissions</div>
             <div class="it"><span class="ix">-</span>No test command has been proposed.</div>
-            <div class="perm"><span class="pill ghost" style="font-size:10px;">no approvals pending</span></div>
+            <div class="perm"><span class="pill ghost micro">no approvals pending</span></div>
           </div>
         </div>`;
 }
@@ -170,7 +170,7 @@ function planGrid(plan: PlanView | undefined, hasThread: boolean) {
           ${planBox("Risks", plan.risks, "!")}
           ${planBox("Tests to run", plan.testsToRun, "$")}
           ${planBox("Rollback strategy", [plan.rollbackStrategy], "R")}
-          <div class="pbox"><div class="bh">Permissions needed</div><div class="perm">${plan.permissionsNeeded.map((item) => `<span class="pill ghost" style="font-size:10px;">${escapeHtml(item)}</span>`).join("")}</div><div class="it"><span class="ix">D</span>${decisionLabel(plan.decision)}</div></div>
+          <div class="pbox"><div class="bh">Permissions needed</div><div class="perm">${plan.permissionsNeeded.map((item) => `<span class="pill ghost micro">${escapeHtml(item)}</span>`).join("")}</div><div class="it"><span class="ix">D</span>${decisionLabel(plan.decision)}</div></div>
         </div>`;
 }
 
@@ -210,7 +210,7 @@ function threadCards(threads: TaskThread[], activeThreadId: string | undefined) 
 
   return threads.map((thread) => `
       <div class="tcard ${thread.id === activeThreadId ? "on" : ""}" data-thread-id="${escapeHtml(thread.id)}">
-        <div class="tt"><span class="md" style="background:${statusColor(thread.status)};"></span>${escapeHtml(thread.title)}</div>
+        <div class="tt"><span class="md ${statusMarkerClass(thread.status)}"></span>${escapeHtml(thread.title)}</div>
         <div class="tm"><span class="dt">${escapeHtml(thread.createdLabel)}</span>${statusPill(thread.status)}</div>
       </div>`).join("");
 }
@@ -224,7 +224,7 @@ function runStatusPill(run: AgentRunView | undefined) {
 }
 
 function runLabel(run: AgentRunView | undefined) {
-  return run ? ` <span class="pill build" style="font-size:10px;">${escapeHtml(run.id)}</span>` : "";
+  return run ? ` <span class="pill build micro">${escapeHtml(run.id)}</span>` : "";
 }
 
 function statusPill(status: ThreadStatus) {
@@ -246,14 +246,15 @@ function statusPill(status: ThreadStatus) {
   return `<span class="pill ${classes[status]}"><span class="dot"></span>${labels[status]}</span>`;
 }
 
-function statusColor(status: ThreadStatus) {
-  if (status === "done") {
-    return "var(--test)";
-  }
-  if (status === "blocked" || status === "failed") {
-    return "var(--danger)";
-  }
-  return "var(--build)";
+function statusMarkerClass(status: ThreadStatus) {
+  const classes: Record<ThreadStatus, string> = {
+    active: "status-active",
+    blocked: "status-blocked",
+    done: "status-done",
+    failed: "status-failed",
+    idle: "status-idle",
+  };
+  return classes[status];
 }
 
 function rulesLabel(project: WorkspaceProject) {

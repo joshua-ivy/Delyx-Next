@@ -27,7 +27,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
 
   <aside class="side">
     <div class="side-h"><h3>Threads</h3><span class="add">+</span></div>
-    <div class="scroll" style="flex:1;">
+    <div class="scroll scroll-fill">
       <div class="tcard">
         <div class="tt"><span class="md"></span>Empty: no active threads</div>
         <div class="tm"><span class="dt">Now</span><span class="pill ghost">Idle</span></div>
@@ -36,7 +36,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
     <div class="scope">
       <div class="lbl">Approved scope</div>
       <div class="pth">C:/Users/geaux/Downloads/Delyx Next</div>
-      <div style="display:flex;gap:6px;"><span class="pill ghost">Local only</span><span class="pill ghost">AGENTS.md</span></div>
+      <div class="scope-pills"><span class="pill ghost">Local only</span><span class="pill ghost">AGENTS.md</span></div>
     </div>
   </aside>
 
@@ -51,7 +51,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
       </div>
 
       <div class="hero">
-        <div class="eye">THREAD &middot; empty <span class="pill ghost" style="font-size:10px;">no AgentRun</span></div>
+        <div class="eye">THREAD &middot; empty <span class="pill ghost micro">no AgentRun</span></div>
         <h1>No active thread</h1>
         <p>Create a thread in this project to start real local work. Runtime execution, approvals, diffs, tests, and evidence stay empty until their ledgers exist.</p>
         <div class="stat-row">
@@ -63,7 +63,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
       </div>
 
       <div class="sec">
-        <div class="sec-h"><h4>Plan</h4><span class="pill ghost" style="font-size:10px;">Empty</span><span class="ln"></span><span class="btn plan-create">Create plan</span><span class="btn plan-approve">Approve</span><span class="btn plan-revise">Revise</span><span class="btn plan-cancel">Cancel</span></div>
+        <div class="sec-h"><h4>Plan</h4><span class="pill ghost micro">Empty</span><span class="ln"></span><span class="btn plan-create">Create plan</span><span class="btn plan-approve">Approve</span><span class="btn plan-revise">Revise</span><span class="btn plan-cancel">Cancel</span></div>
         <div class="plan-grid">
           <div class="pbox">
             <div class="bh">Files likely to change</div>
@@ -80,7 +80,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
           <div class="pbox">
             <div class="bh">Verify and permissions</div>
             <div class="it"><span class="ix">-</span>No test command has been proposed.</div>
-            <div class="perm"><span class="pill ghost" style="font-size:10px;">no approvals pending</span></div>
+            <div class="perm"><span class="pill ghost micro">no approvals pending</span></div>
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
     </div>
     <div class="rev-body">
       <div class="appro">
-        <div class="at"><span class="pill ghost">No proposal</span><span style="font-family:var(--mono);font-size:10px;color:var(--fg-3);">none</span></div>
+        <div class="at"><span class="pill ghost">No proposal</span><span class="meta-id">none</span></div>
         <h4>No approval requests</h4>
         <div class="kv"><span class="k">Scope</span><span class="v">No file writes, commands, connectors, memory saves, or external agents requested.</span></div>
         <div class="kv"><span class="k">Risk</span><span class="v">No risky action pending.</span></div>
@@ -130,7 +130,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
         </div>
       </div>
 
-      <div class="sec-h review-findings" style="margin:16px 0 6px;"><h4 style="font-size:12px;">Review &middot; read-only</h4><span class="ln"></span></div>
+      <div class="sec-h review-findings compact"><h4>Review &middot; read-only</h4><span class="ln"></span></div>
       <div class="rcpt review-finding"><span class="ri">R</span><div><div class="rn">No review findings</div><div class="rd">Review mode does not edit. Findings appear only after a real ReviewReport is created.</div></div></div>
 
       <div class="dfile model-settings">
@@ -175,7 +175,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
         </div>
       </div>
 
-      <div class="sec-h" style="margin:16px 0 6px;"><h4 style="font-size:12px;">Evidence &middot; 0 records</h4><span class="ln"></span></div>
+      <div class="sec-h compact"><h4>Evidence &middot; 0 records</h4><span class="ln"></span></div>
       <div class="rcpt"><span class="ri">i</span><div><div class="rn">No evidence records</div><div class="rd">Claims stay unsupported until a real EvidenceRecord is created.</div></div></div>
     </div>
   </aside>

@@ -6,7 +6,7 @@ import { escapeHtml } from "./html";
 
 export function emptyApprovalBlock() {
   return `<div class="appro">
-        <div class="at"><span class="pill ghost">No proposal</span><span style="font-family:var(--mono);font-size:10px;color:var(--fg-3);">none</span></div>
+        <div class="at"><span class="pill ghost">No proposal</span><span class="meta-id">none</span></div>
         <h4>No approval requests</h4>
         <div class="kv"><span class="k">Scope</span><span class="v">No file writes, commands, connectors, memory saves, or external agents requested.</span></div>
         <div class="kv"><span class="k">Risk</span><span class="v">No risky action pending.</span></div>
@@ -21,7 +21,7 @@ export function approvalBlock(proposals: ActionProposalView[]) {
   }
 
   return proposals.map((proposal) => `<div class="appro">
-        <div class="at"><span class="pill ${riskClass(proposal.risk)}">${escapeHtml(proposal.risk)} risk &middot; ${escapeHtml(proposal.action)}</span><span style="font-family:var(--mono);font-size:10px;color:var(--fg-3);">${escapeHtml(proposal.id)}</span></div>
+        <div class="at"><span class="pill ${riskClass(proposal.risk)}">${escapeHtml(proposal.risk)} risk &middot; ${escapeHtml(proposal.action)}</span><span class="meta-id">${escapeHtml(proposal.id)}</span></div>
         <h4>${escapeHtml(proposal.action)}</h4>
         <div class="kv"><span class="k">Scope</span><span class="v">${escapeHtml(proposal.scope)}</span></div>
         <div class="kv"><span class="k">Reason</span><span class="v">${escapeHtml(proposal.reason)}</span></div>
@@ -97,7 +97,7 @@ export function testStat(artifacts: TestArtifactView[]) {
 }
 
 export function emptyReviewBlock() {
-  return `<div class="sec-h review-findings" style="margin:16px 0 6px;"><h4 style="font-size:12px;">Review &middot; read-only</h4><span class="ln"></span></div>
+  return `<div class="sec-h review-findings compact"><h4>Review &middot; read-only</h4><span class="ln"></span></div>
       <div class="rcpt review-finding"><span class="ri">R</span><div><div class="rn">No review findings</div><div class="rd">Review mode does not edit. Findings appear only after a real ReviewReport is created.</div></div></div>`;
 }
 
@@ -109,7 +109,7 @@ export function reviewBlock(report: ReviewReportView | undefined) {
   const findings = report.findings.length > 0
     ? report.findings.map(findingBlock).join("")
     : '<div class="rcpt review-finding"><span class="ri">R</span><div><div class="rn">No review findings</div><div class="rd">No prioritized issues were recorded in this ReviewReport.</div></div></div>';
-  return `<div class="sec-h review-findings" style="margin:16px 0 6px;"><h4 style="font-size:12px;">Review &middot; ${escapeHtml(report.mode)}</h4><span class="ln"></span><span class="pill ghost">${escapeHtml(report.decision)}</span></div>
+  return `<div class="sec-h review-findings compact"><h4>Review &middot; ${escapeHtml(report.mode)}</h4><span class="ln"></span><span class="pill ghost">${escapeHtml(report.decision)}</span></div>
       <div class="rcpt"><span class="ri">S</span><div><div class="rn">${escapeHtml(report.riskSummary)}</div><div class="rd">${escapeHtml(report.testSummary)} ${escapeHtml(report.evidenceSummary)}</div></div></div>
       ${findings}`;
 }
@@ -118,7 +118,7 @@ function findingBlock(finding: ReviewFindingView) {
   return `<div class="rcpt review-finding">
         <span class="ri">${escapeHtml(finding.priority.toUpperCase())}</span>
         <div>
-          <div class="rn">${escapeHtml(finding.title)} <span class="pill blocked" style="font-size:10px;">${escapeHtml(finding.riskLabel)}</span></div>
+          <div class="rn">${escapeHtml(finding.title)} <span class="pill blocked micro">${escapeHtml(finding.riskLabel)}</span></div>
           <div class="rd">${escapeHtml(finding.filePath)} &middot; ${escapeHtml(finding.hunkLabel)}</div>
           <div class="rd">${escapeHtml(finding.detail)}</div>
           <div class="rd">Suggested fix: ${escapeHtml(finding.suggestedFix)}</div>

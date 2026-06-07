@@ -5,6 +5,12 @@ import { forbiddenRenderedDemoStrings, requiredChecks } from "./verify-workbench
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const sourceExtensions = new Set([".css", ".rs", ".ts", ".tsx"]);
+const noInlineStyleFiles = [
+  "src/app/cockpitMarkup.ts",
+  "src/app/cockpitView.ts",
+  "src/app/cockpitReview.ts",
+  "src/app/cockpitEvidence.ts",
+];
 
 const failures = [];
 
@@ -12,6 +18,13 @@ for (const [file, expected] of requiredChecks) {
   const contents = readFileSync(join(root, file), "utf8");
   if (!contents.includes(expected)) {
     failures.push(`${file} is missing ${expected}`);
+  }
+}
+
+for (const file of noInlineStyleFiles) {
+  const contents = readFileSync(join(root, file), "utf8");
+  if (contents.includes('style="')) {
+    failures.push(`${file} contains inline style attributes; use cockpit.css classes`);
   }
 }
 
