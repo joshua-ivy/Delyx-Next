@@ -25,7 +25,7 @@ import { currentResearchAnswers } from "../features/research/researchData";
 import { currentSkillState } from "../features/skills/skillData";
 import { currentTestArtifacts } from "../features/tests/testData";
 import { ThreadOverlay } from "../features/threads/ThreadOverlay";
-import { createThreadRunOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
+import { archiveThreadOverBridge, createThreadRunOverBridge, loadThreadRunSnapshot, updateThreadStatusOverBridge } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
@@ -223,8 +223,10 @@ export function AppShell() {
             setThreadState("empty");
             return;
           }
+          const now = new Date().toISOString();
+          void archiveThreadOverBridge(activeThread.id, now);
           setThreads((current) => current.map((thread) => (
-            thread.id === activeThread.id ? { ...thread, archived: true, updatedAt: new Date().toISOString() } : thread
+            thread.id === activeThread.id ? { ...thread, archived: true, updatedAt: now } : thread
           )));
           setThreadState(visibleThreads.length <= 1 ? "empty" : "ready");
         }}
@@ -261,6 +263,7 @@ export function AppShell() {
             return;
           }
           const now = new Date().toISOString();
+          void updateThreadStatusOverBridge(activeThread.id, status, now);
           setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, status, now));
           setThreads((current) => current.map((thread) => (
             thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread

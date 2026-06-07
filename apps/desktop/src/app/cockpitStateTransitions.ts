@@ -5,6 +5,7 @@ import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
 import { expirePendingProposalsForRun } from "./appShellApprovalActions";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
+import { updateThreadStatusOverBridge } from "../features/threads/threadClient";
 
 export interface CockpitTransitionState {
   activeRun: AgentRunView | undefined;
@@ -26,6 +27,7 @@ export function updateThreadAndRunStatus(
   status: ThreadStatus,
 ) {
   const now = new Date().toISOString();
+  void updateThreadStatusOverBridge(activeThread.id, status, now);
   state.setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, status, now));
   state.setThreads((current) => current.map((thread) => (
     thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread

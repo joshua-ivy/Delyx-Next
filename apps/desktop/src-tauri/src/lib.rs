@@ -22,6 +22,7 @@ pub mod runtime_bridge;
 pub mod skills;
 pub mod test_runner;
 pub mod thread_run_bridge;
+pub mod thread_run_bridge_views;
 pub mod threads;
 pub mod workspace;
 pub mod workspace_bridge;

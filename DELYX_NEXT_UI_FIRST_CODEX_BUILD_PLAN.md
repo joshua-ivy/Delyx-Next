@@ -2119,6 +2119,32 @@ Acceptance:
 
 ---
 
+### ~~PR 5.2 - Thread Session Status and Archive Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: Extended the Tauri thread/run session bridge so thread status changes
+and archive actions update the Rust ThreadManager-backed session state. Bridge
+snapshots now map the visible run status from the current thread state, while
+web preview keeps the existing local state fallback.
+
+Scope:
+
+- ~~Tauri command for thread status updates.~~
+- ~~Tauri command for archiving active threads.~~
+- ~~Bridge snapshots hide archived threads from the active list.~~
+- ~~Renderer status/archive actions notify the bridge while preserving immediate UI updates.~~
+- ~~Split bridge view mapping into a focused file to stay inside the source-size budget.~~
+
+Acceptance:
+
+- ~~Planning/building/testing/reviewing thread states restore with matching run visibility.~~
+- ~~Archived bridge threads are removed from active snapshots.~~
+- ~~Invalid status keys are rejected by the bridge.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 6 — Explore and Plan Modes~~
 
 Status: Complete on 2026-06-07.
