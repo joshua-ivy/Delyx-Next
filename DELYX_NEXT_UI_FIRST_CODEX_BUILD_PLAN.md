@@ -1307,6 +1307,10 @@ interface AgentRun {
 }
 ```
 
+Status update: frontend AgentRun core model fields implemented on 2026-06-07.
+
+- ~~AgentRun UI model carries project/thread links, parent run, goal, mode, full lifecycle status, nodes, events, artifacts, evidence, metrics, outcome, createdAt, and updatedAt.~~
+
 ### 16.4 AgentNode
 
 ```ts

@@ -8,6 +8,7 @@ import { emptyMobileBlock, mobileBlock } from "./cockpitMobile";
 import { emptyModelSettingsBlock, modelSettingsBlock, modelStatusChip } from "./cockpitModels";
 import { emptyReleaseBlock, releaseBlock } from "./cockpitRelease";
 import { approvalBlock, diffBlock, emptyApprovalBlock, emptyDiffBlock, emptyReviewBlock, emptyTestBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
+import { emptyTimelineBlock, runLabel, runStatusPill, runTimeline } from "./cockpitRuns";
 import { emptyThreadStatsBlock, threadStatsBlock } from "./cockpitStats";
 import { emptySkillBlock, skillBlock } from "./cockpitSkills";
 import { escapeHtml } from "./html";
@@ -164,20 +165,6 @@ function decisionLabel(decision: PlanView["decision"]) {
   return labels[decision];
 }
 
-function emptyTimelineBlock() {
-  return '<div class="tnode pending"><div class="tr"><span class="kd">empty</span><span class="ms">No AgentRun events have been recorded for this thread.</span><span class="ts">-</span></div></div>';
-}
-
-function runTimeline(run: AgentRunView | undefined) {
-  if (!run || run.events.length === 0) {
-    return emptyTimelineBlock();
-  }
-
-  return run.events.map((event) => (
-    `<div class="tnode done"><div class="tr"><span class="kd">${escapeHtml(event.kind)}</span><span class="ms">${escapeHtml(event.message)}</span><span class="ts">${escapeHtml(event.id)}</span></div></div>`
-  )).join("");
-}
-
 function threadCards(threads: TaskThread[], activeThreadId: string | undefined) {
   if (threads.length === 0) {
     return emptyThreadCardBlock();
@@ -188,18 +175,6 @@ function threadCards(threads: TaskThread[], activeThreadId: string | undefined) 
         <div class="tt"><span class="md ${statusMarkerClass(thread.status)}"></span>${escapeHtml(thread.title)}</div>
         <div class="tm"><span class="dt">${escapeHtml(thread.createdLabel)}</span>${statusPill(thread.status)}</div>
       </div>`).join("");
-}
-
-function runStatusPill(run: AgentRunView | undefined) {
-  if (!run) {
-    return '<span class="pill ghost">No active run</span>';
-  }
-
-  return `<span class="pill wait"><span class="dot"></span>${escapeHtml(run.status)}</span>`;
-}
-
-function runLabel(run: AgentRunView | undefined) {
-  return run ? ` <span class="pill build micro">${escapeHtml(run.id)}</span>` : "";
 }
 
 function statusPill(status: ThreadStatus) {

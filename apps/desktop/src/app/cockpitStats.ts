@@ -29,7 +29,7 @@ export function threadStatsBlock(
           ${stat(commandsRunStat(tests, run), "Commands run")}
           ${stat(pendingCount(proposals), "Approvals needed")}
           ${stat(finalAnswerStat(run), "Final answer")}
-          ${stat(run?.evidenceCount ?? 0, "Evidence receipts")}
+          ${stat(run?.metrics.evidenceCount ?? run?.evidence.length ?? 0, "Evidence receipts")}
         </div>`;
 }
 
@@ -47,15 +47,18 @@ function diffStat(patches: PatchProposalView[]) {
 
 function commandsRunStat(tests: TestArtifactView[], run: AgentRunView | undefined) {
   const commandEvents = run?.events.filter((event) => event.kind.toLowerCase().includes("command")).length ?? 0;
-  return Math.max(tests.length, commandEvents);
+  return Math.max(tests.length, commandEvents, run?.metrics.commandCount ?? 0);
 }
 
 function finalAnswerStat(run: AgentRunView | undefined) {
   if (!run) {
     return "None";
   }
-  if (run.status === "completed" && run.outcome) {
+  if (run.status === "succeeded" && run.outcome?.summary) {
     return "Ready";
   }
-  return run.status === "failed" ? "Failed" : "Pending";
+  if (run.status === "failed" || run.status === "cancelled" || run.status === "blocked") {
+    return "Failed";
+  }
+  return "Pending";
 }
