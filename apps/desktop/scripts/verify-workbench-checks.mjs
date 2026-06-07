@@ -33,6 +33,7 @@ export const requiredChecks = [
   ["src/app/appShellCommands.ts", "paletteCommands"],
   ["src/app/appShellCommands.ts", "notifyLocalAction"],
   ["src/app/appShellCommands.ts", "moveThreadAndRunToPlanning"],
+  ["src/app/appShellCommands.ts", "setActiveThreadId(undefined)"],
   ["src/app/appShellCommands.ts", "runAppShellCommand"],
   ["src/app/appShellCommands.ts", "state.workspace.loading"],
   ["src/app/cockpitMarkup.ts", "Cockpit workbench"],

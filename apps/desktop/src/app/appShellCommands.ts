@@ -25,6 +25,7 @@ export interface AppShellCommandContext {
   activePlan: PlanView | undefined;
   activeProject: WorkspaceProject;
   activeThread: TaskThread | undefined;
+  setActiveThreadId: Dispatch<SetStateAction<string | undefined>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setPlans: Dispatch<SetStateAction<PlanView[]>>;
   setThreadOpen: Dispatch<SetStateAction<boolean>>;
@@ -57,6 +58,9 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
       updatePlanDecision(context, "cancelled", "Plan cancelled in local UI state");
       break;
     case "state.threads.empty":
+      context.setActiveThreadId(undefined);
+      context.setAgentRuns([]);
+      context.setPlans([]);
       context.setThreads([]);
       context.setThreadState("empty");
       notifyLocalAction("Thread empty state shown");

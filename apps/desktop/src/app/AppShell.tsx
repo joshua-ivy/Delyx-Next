@@ -86,6 +86,7 @@ export function AppShell() {
       activePlan,
       activeProject,
       activeThread,
+      setActiveThreadId,
       setAgentRuns,
       setPlans,
       setThreadOpen,

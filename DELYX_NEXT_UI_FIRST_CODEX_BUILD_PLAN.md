@@ -1898,6 +1898,7 @@ Acceptance:
 - ~~No fake approvals, diffs, test results, evidence receipts, or terminal output render.~~
 - ~~Empty states explain what is not wired yet.~~
 - ~~Workspace scope, Git status, and rules files still render from the current local project.~~
+- ~~Command palette empty-thread state clears active thread, plans, and in-session AgentRuns.~~
 
 ---
 
