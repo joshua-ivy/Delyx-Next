@@ -4,6 +4,7 @@ import { evidenceBlock } from "./cockpitEvidence";
 import { externalAgentBlock } from "./cockpitExternalAgents";
 import { hasMemoryForRun, memoryBlock } from "./cockpitMemory";
 import { hasMobileActivity, mobileBlock } from "./cockpitMobile";
+import { hasReleaseReadiness, releaseBlock } from "./cockpitRelease";
 import { approvalBlock, diffBlock, emptyApprovalBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
 import { runLabel } from "./cockpitRuns";
 import { hasSkills, skillBlock } from "./cockpitSkills";
@@ -19,6 +20,7 @@ import type { MobileStateView } from "../features/mobile/mobileTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
+import type { ReleaseStateView } from "../features/release/releaseTypes";
 import type { ReviewReportView } from "../features/review/reviewTypes";
 import { researchAnswerFromRunEvidence } from "../features/research/runEvidence";
 import type { ResearchAnswerView } from "../features/research/researchTypes";
@@ -46,7 +48,7 @@ export function buildCockpitMarkup(
   skillState: SkillStateView,
   automationState: AutomationStateView,
   mobileState: MobileStateView,
-  _releaseState: unknown,
+  releaseState: ReleaseStateView,
   threads: TaskThread[],
   runtimeBridge: RuntimeBridgeState,
 ) {
@@ -65,6 +67,9 @@ export function buildCockpitMarkup(
     ? automationBlock(automationState)
     : undefined;
   const activeMobile = hasMobileActivity(mobileState) ? mobileBlock(mobileState) : undefined;
+  const activeRelease = hasReleaseReadiness(releaseState)
+    ? releaseBlock(releaseState)
+    : undefined;
 
   return cockpitMarkup
     .replace("__SPINE_PIPE__", spinePipeline(activeThread?.status))
@@ -91,6 +96,7 @@ export function buildCockpitMarkup(
       activeSkills,
       activeAutomations,
       activeMobile,
+      activeRelease,
       activeTests,
       activeReview,
       activeRun,
@@ -215,6 +221,7 @@ interface InspectorState {
   activeSkills: string | undefined;
   activeAutomations: string | undefined;
   activeMobile: string | undefined;
+  activeRelease: string | undefined;
   activeTests: TestArtifactView[];
   activeReview: ReviewReportView | undefined;
   activeRun: AgentRunView | undefined;
@@ -240,6 +247,7 @@ function inspectorBlock(state: InspectorState) {
     || state.activeSkills
     || state.activeAutomations
     || state.activeMobile
+    || state.activeRelease
   ) {
     return [
       state.activeEvidence ? evidenceBlock(state.activeEvidence) : "",
@@ -247,6 +255,7 @@ function inspectorBlock(state: InspectorState) {
       state.activeSkills ?? "",
       state.activeAutomations ?? "",
       state.activeMobile ?? "",
+      state.activeRelease ?? "",
     ].join("");
   }
   if (state.activeRun) {

@@ -3101,6 +3101,31 @@ Acceptance:
 
 ---
 
+### ~~PR 18.1 - Release Readiness Inspector Wiring~~
+
+Status: Complete on 2026-06-07.
+
+Update: Wired the existing release readiness state into the cockpit inspector
+only when real release smoke, support bundle, update metadata, or non-default
+signing status exists. The default unsigned-dev placeholder does not create an
+inspector panel by itself.
+
+Scope:
+
+- ~~Detect real release readiness signals from ReleaseStateView.~~
+- ~~Render release smoke, signing, support bundle, and update metadata status only when present.~~
+- ~~Keep first-run release UI from claiming unattached artifacts.~~
+- ~~Add verifier coverage for release inspector wiring.~~
+
+Acceptance:
+
+- ~~Release inspector output is based on ReleaseStateView only.~~
+- ~~Default placeholder state does not claim release artifacts.~~
+- ~~Support bundle and update metadata states remain explicit.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ## 20. Eval and Testing Strategy
 
 ### 20.1 Required Commands

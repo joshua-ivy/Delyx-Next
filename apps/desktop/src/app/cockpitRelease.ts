@@ -23,6 +23,13 @@ export function releaseBlock(state: ReleaseStateView) {
       </div>`;
 }
 
+export function hasReleaseReadiness(state: ReleaseStateView) {
+  return state.smokeStatus === "passed"
+    || state.supportBundle.exportStatus === "available"
+    || state.updateMetadata.status === "published"
+    || state.signing.status !== "unsigned_dev";
+}
+
 function releaseSmokeLabel(status: ReleaseStateView["smokeStatus"]) {
   const labels: Record<ReleaseStateView["smokeStatus"], string> = {
     not_loaded: "No release smoke artifact loaded in this UI session.",
