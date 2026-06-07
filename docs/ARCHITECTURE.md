@@ -123,6 +123,12 @@ Owns:
 - approval decision enforcement
 
 Risky actions must produce an ActionProposal before execution.
+Desktop approval proposals and approve/deny decisions are mirrored through a
+Tauri approval bridge backed by the Rust ApprovalEngine. The bridge returns the
+same UI-ready proposal shape as the renderer, rejects unsupported non-risky
+approval actions, deduplicates repeated plan-approval requests by client ID, and
+keeps expired decisions visible instead of moving a run forward. Web preview
+retains the local renderer fallback.
 
 ## Tool Layer
 

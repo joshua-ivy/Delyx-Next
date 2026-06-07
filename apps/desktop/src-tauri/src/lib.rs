@@ -1,6 +1,7 @@
 pub mod agent_run;
 pub mod agent_run_persistence;
 pub mod approval;
+pub mod approval_bridge;
 pub mod automation;
 pub mod external_agent;
 mod external_agent_adapters;
@@ -29,6 +30,7 @@ pub mod workspace_bridge;
 mod workspace_git;
 pub mod workbench_modes;
 mod agent_run_tests;
+mod approval_bridge_tests;
 mod approval_tests;
 mod automation_tests;
 mod external_agent_command_contracts_tests;

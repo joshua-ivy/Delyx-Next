@@ -10,6 +10,7 @@ import {
 } from "./appShellRunActions";
 import { createPlanWithOllama } from "./appShellOllamaPlanActions";
 import { expireRunProposals, updateThreadAndRunStatus } from "./cockpitStateTransitions";
+import { proposeApprovalOverBridge } from "../features/approvals/approvalClient";
 import type { PlanDecision } from "../features/plans/planTypes";
 
 type KeyboardActivator = (event: Event) => void;
@@ -83,14 +84,23 @@ function updatePlanDecision(state: CockpitDomBindingState, decision: PlanDecisio
   )));
   const activeThread = state.activeThread;
   if (decision === "approved" && activeThread) {
-    const proposal = createPlanApprovalProposal(state.activePlan, activeThread, state.activeRun, state.activeProject);
-    state.setActionProposals((current) => upsertActionProposal(current, proposal));
-    state.setAgentRuns((current) => recordApprovalProposalForRun(current, activeThread, proposal, new Date().toISOString()));
+    void queueBuildApprovalProposal(state, activeThread);
     updateThreadAndRunStatus(state, activeThread, "waiting_for_approval");
   } else if (activeThread) {
     expireRunProposals(state, activeThread);
     updateThreadAndRunStatus(state, activeThread, decision === "cancelled" ? "blocked" : "planning");
   }
+}
+
+async function queueBuildApprovalProposal(state: CockpitDomBindingState, activeThread: NonNullable<CockpitDomBindingState["activeThread"]>) {
+  if (!state.activePlan) {
+    return;
+  }
+  const fallback = createPlanApprovalProposal(state.activePlan, activeThread, state.activeRun, state.activeProject);
+  const proposal = await proposeApprovalOverBridge(fallback) ?? fallback;
+  const now = new Date().toISOString();
+  state.setActionProposals((current) => upsertActionProposal(current, proposal));
+  state.setAgentRuns((current) => recordApprovalProposalForRun(current, activeThread, proposal, now));
 }
 
 function controls(selector: string) {

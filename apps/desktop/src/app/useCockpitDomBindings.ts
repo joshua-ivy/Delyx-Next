@@ -5,6 +5,7 @@ import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
+import { decideApprovalOverBridge } from "../features/approvals/approvalClient";
 import { notifyLocalAction } from "./ShellPreferenceController";
 import { recordApprovalDecisionForRun } from "./appShellRunActions";
 import { bindComposerForm } from "./cockpitComposerBindings";
@@ -60,8 +61,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
         (event.currentTarget as HTMLElement).click();
       }
     };
-    const approveProposal = (event: Event) => updateProposalStatus(state, event, "approved");
-    const denyProposal = (event: Event) => updateProposalStatus(state, event, "denied");
+    const approveProposal = (event: Event) => { void updateProposalStatus(state, event, "approved"); };
+    const denyProposal = (event: Event) => { void updateProposalStatus(state, event, "denied"); };
     const cleanupPlanControls = bindPlanControls(state, activateOnKeyboard);
     const cleanupComposer = bindComposerForm(state, composerForm);
     const cleanupTerminal = bindTerminalToggle(terminalButton);
@@ -140,7 +141,7 @@ function bindDiffTabs(tabs: HTMLElement[], activateOnKeyboard: (event: Event) =>
   });
 }
 
-function updateProposalStatus(state: CockpitDomBindingState, event: Event, status: "approved" | "denied") {
+async function updateProposalStatus(state: CockpitDomBindingState, event: Event, status: "approved" | "denied") {
   const proposalId = (event.currentTarget as HTMLElement).dataset.proposalId;
   if (!proposalId) {
     return;
@@ -161,16 +162,21 @@ function updateProposalStatus(state: CockpitDomBindingState, event: Event, statu
     notifyLocalAction("Approval proposal is expired; request a fresh approval", "warning");
     return;
   }
-  const decidedProposal = proposal ? { ...proposal, status } : undefined;
+  const decidedAtMs = Date.now();
+  const decidedProposal = await decideApprovalOverBridge(proposalId, status, decidedAtMs) ?? { ...proposal, status };
   state.setActionProposals((current) => current.map((proposal) => (
-    proposal.id === proposalId ? { ...proposal, status } : proposal
+    proposal.id === proposalId ? decidedProposal : proposal
   )));
   const activeThread = state.activeThread;
-  if (activeThread && decidedProposal) {
-    state.setAgentRuns((current) => recordApprovalDecisionForRun(current, activeThread, decidedProposal, new Date().toISOString()));
-    updateThreadAndRunStatus(state, activeThread, status === "approved" ? "building" : "blocked");
+  if (decidedProposal.status === "expired") {
+    notifyLocalAction("Approval proposal is expired; request a fresh approval", "warning");
+    return;
   }
-  notifyLocalAction(status === "approved" ? "Approval granted for this run" : "Approval denied; run blocked", status === "approved" ? "success" : "warning");
+  if (activeThread) {
+    state.setAgentRuns((current) => recordApprovalDecisionForRun(current, activeThread, decidedProposal, new Date(decidedAtMs).toISOString()));
+    updateThreadAndRunStatus(state, activeThread, decidedProposal.status === "approved" ? "building" : "blocked");
+  }
+  notifyLocalAction(decidedProposal.status === "approved" ? "Approval granted for this run" : "Approval denied; run blocked", decidedProposal.status === "approved" ? "success" : "warning");
 }
 
 function isExpired(expiresAt: string) {

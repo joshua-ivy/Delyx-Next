@@ -10,6 +10,7 @@ import { previewExternalAgentContractForRun } from "./appShellExternalAgentActio
 import { recordApprovalProposalForRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { createPlanWithOllama } from "./appShellOllamaPlanActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
+import { proposeApprovalOverBridge } from "../features/approvals/approvalClient";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
 import { refreshOllamaSettings } from "../features/models/ollamaClient";
@@ -109,15 +110,24 @@ function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecis
   )));
   const activeThread = context.activeThread;
   if (decision === "approved" && activeThread) {
-    const proposal = createPlanApprovalProposal(context.activePlan, activeThread, context.activeRun, context.activeProject);
-    context.setActionProposals((current) => upsertActionProposal(current, proposal));
-    context.setAgentRuns((current) => recordApprovalProposalForRun(current, activeThread, proposal, new Date().toISOString()));
+    void queueBuildApprovalProposal(context, activeThread);
     moveThreadAndRun(context, activeThread, "waiting_for_approval");
   } else if (activeThread) {
     expireRunProposals(context, activeThread);
     moveThreadAndRun(context, activeThread, decision === "cancelled" ? "blocked" : "planning");
   }
   notifyLocalAction(message, "success");
+}
+
+async function queueBuildApprovalProposal(context: AppShellCommandContext, activeThread: TaskThread) {
+  if (!context.activePlan) {
+    return;
+  }
+  const fallback = createPlanApprovalProposal(context.activePlan, activeThread, context.activeRun, context.activeProject);
+  const proposal = await proposeApprovalOverBridge(fallback) ?? fallback;
+  const now = new Date().toISOString();
+  context.setActionProposals((current) => upsertActionProposal(current, proposal));
+  context.setAgentRuns((current) => recordApprovalProposalForRun(current, activeThread, proposal, now));
 }
 
 function expireRunProposals(context: AppShellCommandContext, activeThread: TaskThread) {

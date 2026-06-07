@@ -2254,6 +2254,47 @@ Acceptance:
 
 ---
 
+### ~~PR 7.1 - Tauri Approval Session Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: Desktop approval proposal creation and approve/deny decisions now flow
+through a Tauri `ApprovalBridgeState` backed by the Rust `ApprovalEngine`.
+The bridge returns the same UI-ready proposal shape as the renderer, dedupes
+repeated plan-approval requests by client ID, rejects unsupported non-risky
+approval actions, keeps expired decisions visible, and preserves the web
+preview fallback. This does not execute file writes, terminal commands,
+connectors, durable memory saves, scheduled work, or external agents.
+
+Scope:
+
+- ~~Expose `approval_propose`, `approval_decide`, and `approval_snapshot` Tauri commands.~~
+- ~~Map frontend risky-action and risk labels into the Rust ApprovalEngine.~~
+- ~~Wire plan approval requests through the bridge before showing the proposal.~~
+- ~~Wire approval drawer approve/deny decisions through the bridge before moving thread/run state.~~
+- ~~Keep web preview using the renderer fallback when no Tauri runtime exists.~~
+- ~~Add deterministic Rust tests and verifier markers.~~
+
+Acceptance:
+
+- ~~Desktop approval proposals are recorded in the Rust approval gate.~~
+- ~~Duplicate plan approval clicks do not create duplicate bridge proposals.~~
+- ~~Expired approval decisions stay visible as expired instead of moving the run forward.~~
+- ~~Unsupported non-risky read approvals are rejected by the bridge.~~
+- ~~Source files stay within the line-budget rule.~~
+
+Validation:
+
+- ~~`npm run typecheck` passed.~~
+- ~~`cargo test --workspace` passed with 166 Rust tests.~~
+- ~~`npm test` passed.~~
+- ~~`npm run build` passed.~~
+- ~~`npm run smoke:ui` passed.~~
+- ~~`npm run smoke:tauri` passed.~~
+- ~~`git diff --check` passed with only existing CRLF normalization warnings.~~
+
+---
+
 ### ~~PR 8 — Patch Proposal and Checkpoints~~
 
 Status: Complete on 2026-06-07.
