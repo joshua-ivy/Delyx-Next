@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CommandPalette } from "../design-system/CommandPalette";
 import { ShellPreferenceController } from "./ShellPreferenceController";
-import { createRunForThread, threadWithRun } from "./appShellRunActions";
+import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { canTransition, createThread, modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { buildCockpitMarkup } from "./cockpitView";
@@ -253,8 +253,10 @@ export function AppShell() {
             setThreadState("error");
             return;
           }
+          const now = new Date().toISOString();
+          setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, status, now));
           setThreads((current) => current.map((thread) => (
-            thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: new Date().toISOString() } : thread
+            thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread
           )));
           setThreadState("ready");
         }}

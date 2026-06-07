@@ -1938,6 +1938,7 @@ Acceptance:
 - ~~Link run to thread.~~
 - ~~Timeline shows real run events when ledger data exists.~~
 - ~~User-created in-session threads attach a real local AgentRun entry and set activeRunId/runIds without seeding fake first-run data.~~
+- ~~Thread status changes update the attached in-session AgentRun status, mode, updatedAt, metrics, and timeline event.~~
 
 Architectural rule:
 
