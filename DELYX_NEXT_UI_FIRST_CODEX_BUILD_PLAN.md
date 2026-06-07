@@ -2755,6 +2755,29 @@ Acceptance:
 
 ---
 
+### ~~PR 12.5 - External Agent Command Array Rendering~~
+
+Status: Complete on 2026-06-07.
+
+Update: Contract previews now render the command program and `args[]` entries
+separately instead of flattening the command array into a shell-like string.
+This keeps task prompts, flags, and sandbox arguments inspectable before any
+approval or execution path.
+
+Scope:
+
+- ~~Render external-agent command `program` separately from `args[]`.~~
+- ~~Preserve each argument as an indexed UI item.~~
+- ~~Add verifier coverage for array rendering.~~
+
+Acceptance:
+
+- ~~Command contracts remain inspectable as arrays before execution.~~
+- ~~Flattened command strings are not the only visible contract form.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 13 — Source-Backed Research MVP~~
 
 Status: Complete on 2026-06-07.

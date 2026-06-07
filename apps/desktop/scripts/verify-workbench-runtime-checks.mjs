@@ -37,6 +37,8 @@ export const runtimeChecks = [
   ["src/app/AppShell.tsx", "setExternalAgentState"],
   ["src/app/cockpitExternalAgents.ts", "No external agent command contract has been proposed or approved"],
   ["src/app/cockpitExternalAgents.ts", "contractBlock"],
+  ["src/app/cockpitExternalAgents.ts", "args[] &gt;"],
+  ["src/app/cockpitExternalAgents.ts", "argsList"],
   ["src/app/cockpitView.ts", "externalAgentBlock(externalAgents"],
   ["src-tauri/src/external_agent_contract_bridge.rs", "external_agent_contract_preview"],
   ["src-tauri/src/external_agent_contract_bridge.rs", "preview_external_agent_contract"],

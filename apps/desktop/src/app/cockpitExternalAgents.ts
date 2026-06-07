@@ -26,14 +26,21 @@ export function externalAgentBlock(state: ExternalAgentStateView, runId: string 
 }
 
 function contractBlock(contract: ExternalAgentCommandContractView) {
-  const args = contract.args.join(" ");
   return `<div class="banner" data-log-line>Command contract ${escapeHtml(contract.adapterId)} &middot; ${escapeHtml(contract.status)}</div>
       <div data-log-line><span class="pr">permission &gt;</span> ${permissionLabel(contract)}</div>
-      <div data-log-line><span class="pr">command &gt;</span> ${escapeHtml(contract.program)} ${escapeHtml(args)}</div>
+      <div data-log-line><span class="pr">program &gt;</span> ${escapeHtml(contract.program)}</div>
+      <div data-log-line><span class="pr">args[] &gt;</span> ${argsList(contract.args)}</div>
       <div data-log-line><span class="pr">cwd &gt;</span> ${escapeHtml(contract.workingDirectory)}</div>
       <div data-log-line><span class="pr">transcript &gt;</span> ${escapeHtml(contract.transcriptFormat)}</div>
       <div data-log-line><span class="pr">tools &gt;</span> ${escapeHtml(contract.requiredDelyxTools.join(", "))}</div>
       <div data-log-line><span class="pr">safety &gt;</span> ${escapeHtml(contract.safetySummary)}</div>`;
+}
+
+function argsList(args: string[]) {
+  if (args.length === 0) {
+    return "[]";
+  }
+  return args.map((arg, index) => `[${index}] ${escapeHtml(arg)}`).join(" ");
 }
 
 function artifactBlock(artifact: ExternalAgentRunArtifactView) {
