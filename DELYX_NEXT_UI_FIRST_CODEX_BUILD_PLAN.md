@@ -1417,6 +1417,10 @@ interface EvidenceRecord {
 }
 ```
 
+Status update: frontend EvidenceRecord is shared by AgentRun and research receipts as of 2026-06-07.
+
+- ~~Evidence receipts use the shared EvidenceRecord fields: sourceKind, sourceId, title, uri, quote, hash, retrievedAt, and relevance.~~
+
 ### 16.7 Test Run Artifact
 
 ```ts

@@ -24,8 +24,9 @@ function receiptBlock(receipt: EvidenceReceiptView) {
   const stance = receipt.stance === "supports" ? "supports" : "contradicts";
   return `<div class="rcpt">
         <span class="ri">${escapeHtml(sourceLabel(receipt.sourceKind))}</span>
-        <div><div class="rn">${escapeHtml(receipt.title)} <span class="pill ghost micro">${stance}</span></div>
-        <div class="rd">${escapeHtml(receipt.locator)}</div><div class="rd">${escapeHtml(receipt.excerpt)}</div></div>
+        <div><div class="rn">${escapeHtml(receipt.title ?? receipt.sourceId)} <span class="pill ghost micro">${stance}</span></div>
+        <div class="rd">${escapeHtml(receipt.uri ?? receipt.sourceId)}</div><div class="rd">${escapeHtml(evidenceQuote(receipt))}</div>
+        ${relevanceLine(receipt)}</div>
       </div>`;
 }
 
@@ -80,4 +81,16 @@ function sourceLabel(sourceKind: EvidenceReceiptView["sourceKind"]) {
     web: "W",
   };
   return labels[sourceKind];
+}
+
+function evidenceQuote(receipt: EvidenceReceiptView) {
+  return receipt.quote ?? "No quoted evidence text captured.";
+}
+
+function relevanceLine(receipt: EvidenceReceiptView) {
+  if (!receipt.relevance) {
+    return "";
+  }
+  const detail = `${receipt.relevance.relationship} (${receipt.relevance.score}): ${receipt.relevance.reason}`;
+  return `<div class="rd">${escapeHtml(detail)}</div>`;
 }
