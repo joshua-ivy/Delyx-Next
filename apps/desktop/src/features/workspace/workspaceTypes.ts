@@ -22,8 +22,11 @@ export interface WorkspaceProject {
   name: string;
   path: string;
   approvedRoots: string[];
+  approvalPolicy: string;
   git: WorkspaceGitState;
   isolation: WorkspaceIsolationState;
+  lastOpenedLabel: string;
+  pinned: boolean;
   rulesFiles: WorkspaceRulesFile[];
   indexedFiles: string[];
 }

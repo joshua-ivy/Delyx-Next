@@ -24,7 +24,6 @@ import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes"
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
-
 export function AppShell() {
   const [activeThreadId, setActiveThreadId] = useState<string | undefined>();
   const [plans, setPlans] = useState<PlanView[]>([]);
@@ -273,6 +272,7 @@ export function AppShell() {
         threads={threads}
       />
       <WorkspaceOverlay
+        activeThreadCount={visibleThreads.length}
         onAddProject={(path) => {
           if (path.trim() === currentWorkspaceProject.path) {
             setProjects([currentWorkspaceProject]);

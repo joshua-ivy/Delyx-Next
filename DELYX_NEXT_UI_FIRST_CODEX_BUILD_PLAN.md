@@ -744,16 +744,16 @@ Choose the repo/folder/workspace Delyx is allowed to work in.
 
 Show:
 
-- Recent projects
-- Pinned projects
-- Add project
-- Project health
-- Git status
-- Allowed workspace scope
-- Model profile
-- Rules files found
-- Last run status
-- Active threads
+- ~~Recent projects~~
+- ~~Pinned projects~~
+- ~~Add project~~
+- ~~Project health~~
+- ~~Git status~~
+- ~~Allowed workspace scope~~
+- ~~Model profile~~
+- ~~Rules files found~~
+- ~~Last run status~~
+- ~~Active threads~~
 
 Project card fields:
 
@@ -769,10 +769,12 @@ Approval policy
 ```
 
 Status update: top-bar Git/isolation truth slice implemented on 2026-06-07.
+Status update: workspace manager project surface implemented on 2026-06-07.
 
 - ~~Git UI shows the current `main` branch from real local project facts.~~
 - ~~Uncommitted count is not faked; the UI says changes are not loaded until a real dirty-count artifact exists.~~
 - ~~Checkpoint/worktree isolation has its own visible chip and starts as no active isolation.~~
+- ~~Project card shows name, path, Git status, active threads, last run, provider/model health, and approval policy from real local state or honest empty state.~~
 
 ### 12.2 Thread View
 

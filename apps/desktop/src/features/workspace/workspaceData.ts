@@ -5,6 +5,7 @@ export const currentWorkspaceProject: WorkspaceProject = {
   name: "delyx-next",
   path: "C:/Users/geaux/Downloads/Delyx Next",
   approvedRoots: ["C:/Users/geaux/Downloads/Delyx Next"],
+  approvalPolicy: "Approval required for file writes, terminal commands, memory saves, connector writes, and external agents.",
   git: {
     isRepo: true,
     branch: "main",
@@ -15,6 +16,8 @@ export const currentWorkspaceProject: WorkspaceProject = {
     label: "No active isolation",
     mode: "none",
   },
+  lastOpenedLabel: "Current local session",
+  pinned: false,
   rulesFiles: [
     {
       path: "AGENTS.md",

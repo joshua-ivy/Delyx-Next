@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react";
 
+import { currentModelSettings } from "../models/modelData";
+import { currentAgentRuns } from "../runs/agentRunData";
 import type { WorkspaceProject, WorkspaceUiState } from "./workspaceTypes";
 
 interface WorkspaceOverlayProps {
+  activeThreadCount: number;
   open: boolean;
   project: WorkspaceProject;
   projects: WorkspaceProject[];
@@ -16,6 +19,7 @@ interface WorkspaceOverlayProps {
 }
 
 export function WorkspaceOverlay({
+  activeThreadCount,
   onAddProject,
   onClose,
   onRemoveProject,
@@ -33,6 +37,7 @@ export function WorkspaceOverlay({
     () => project.indexedFiles.filter((file) => file.toLowerCase().includes(query.toLowerCase())),
     [project.indexedFiles, query],
   );
+  const pinnedProjects = projects.filter((item) => item.pinned);
 
   if (!open) {
     return null;
@@ -61,12 +66,31 @@ export function WorkspaceOverlay({
           </section>
 
           <section className="workspace-card">
+            <h3>Recent projects</h3>
+            <ul className="workspace-projects">
+              {projects.map((item) => (
+                <li className={item.id === project.id ? "active" : ""} key={item.id}>
+                  <strong>{item.name}</strong>
+                  <span>{item.path}</span>
+                  <small>{item.pinned ? "Pinned project" : "Recent local project"} · {item.lastOpenedLabel}</small>
+                </li>
+              ))}
+              {projects.length === 0 && <li className="workspace-empty-row">No recent projects linked.</li>}
+            </ul>
+            <p className="workspace-meta">Pinned projects: {pinnedProjects.length === 0 ? "none" : pinnedProjects.map((item) => item.name).join(", ")}</p>
+          </section>
+
+          <section className="workspace-card">
             <h3>Project health</h3>
             <dl>
               <InfoRow label="Approved root" value={project.approvedRoots[0]} />
               <InfoRow label="Git branch" value={project.git.isRepo ? project.git.branch : "not a repo"} />
               <InfoRow label="Uncommitted" value={gitChangesLabel(project)} />
               <InfoRow label="Isolation" value={`${project.isolation.label}: ${project.isolation.detail}`} />
+              <InfoRow label="Model profile" value={modelProfileLabel()} />
+              <InfoRow label="Last run status" value={lastRunStatusLabel()} />
+              <InfoRow label="Active threads" value={`${activeThreadCount}`} />
+              <InfoRow label="Approval policy" value={project.approvalPolicy} />
               <InfoRow label="Rules files" value={project.rulesFiles.map((file) => file.path).join(", ") || "none"} />
             </dl>
           </section>
@@ -102,6 +126,21 @@ function gitChangesLabel(project: WorkspaceProject) {
     return "not a repo";
   }
   return project.git.uncommittedChanges === null ? "changes not loaded" : `${project.git.uncommittedChanges}`;
+}
+
+function modelProfileLabel() {
+  const provider = currentModelSettings.providers.find((item) => item.id === currentModelSettings.selectedProviderId);
+  const codingRoute = currentModelSettings.routes.find((route) => route.role === "coding");
+  if (!provider) {
+    return "No provider selected";
+  }
+  const route = codingRoute ? ` · coding ${codingRoute.modelId}` : "";
+  return `${provider.label} · ${provider.status}${route}`;
+}
+
+function lastRunStatusLabel() {
+  const run = currentAgentRuns[0];
+  return run ? `${run.status} · ${run.id}` : "No AgentRun ledger entries";
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
