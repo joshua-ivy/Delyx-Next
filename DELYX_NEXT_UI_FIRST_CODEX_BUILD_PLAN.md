@@ -1656,6 +1656,7 @@ The product promise:
 Status update: AppShell cockpit DOM bindings were extracted into a focused hook on 2026-06-07 to preserve the source file budget.
 
 - ~~AppShell remains under the 300-line target while cockpit DOM bindings live in a focused hook.~~
+- ~~Plan-action DOM bindings are split into a focused module before the cockpit hook approaches the 300-line target.~~
 
 ## UI Rules
 

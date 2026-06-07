@@ -1,25 +1,15 @@
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
-import { createPlanFromThread } from "../features/plans/planBuilder";
-import type { PlanDecision, PlanView } from "../features/plans/planTypes";
-import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
+import type { PlanView } from "../features/plans/planTypes";
+import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { notifyLocalAction } from "./ShellPreferenceController";
-import {
-  createPlanApprovalProposal,
-  expirePendingProposalsForRun,
-  upsertActionProposal,
-} from "./appShellApprovalActions";
-import {
-  recordApprovalDecisionForRun,
-  recordApprovalProposalForRun,
-  recordPlanQuestionForRun,
-  updateRunsForThreadStatus,
-} from "./appShellRunActions";
-import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
+import { recordApprovalDecisionForRun } from "./appShellRunActions";
+import { bindPlanControls, requestPlanRevision } from "./cockpitPlanBindings";
+import { updateThreadAndRunStatus } from "./cockpitStateTransitions";
 
-interface CockpitDomBindingState {
+export interface CockpitDomBindingState {
   activePlan: PlanView | undefined;
   activeProject: WorkspaceProject;
   activeRun: AgentRunView | undefined;
@@ -42,13 +32,6 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const commandButton = document.querySelector(".command-trigger");
     const projectButton = document.querySelector('.rail .rnav[title="Projects"]');
     const threadButton = document.querySelector(".side-h .add");
-    const planCreate = document.querySelector(".plan-create");
-    const planApprove = document.querySelector(".plan-approve");
-    const planEdit = document.querySelector(".plan-edit");
-    const planQuestion = document.querySelector(".plan-question");
-    const planReviewMode = document.querySelector(".plan-review-mode");
-    const planRevise = document.querySelector(".plan-revise");
-    const planCancel = document.querySelector(".plan-cancel");
     const approvalApproveButtons = Array.from(document.querySelectorAll<HTMLElement>(".approval-approve-once[data-proposal-id]"));
     const approvalDenyButtons = Array.from(document.querySelectorAll<HTMLElement>(".approval-deny[data-proposal-id]"));
     const reviewReviseButtons = Array.from(document.querySelectorAll(".review-revise"));
@@ -56,34 +39,6 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const openProject = () => state.setWorkspaceOpen(true);
     const openThread = () => state.setThreadOpen(true);
     const openPalette = () => state.setPaletteOpen(true);
-    const createPlan = () => {
-      const activeThread = state.activeThread;
-      if (!activeThread) {
-        state.setThreadState("empty");
-        return;
-      }
-      state.setPlans((current) => upsertPlan(current, createPlanFromThread(activeThread, state.activeProject)));
-      updateThreadAndRunStatus(state, activeThread, "planning");
-    };
-    const updatePlanDecision = (decision: PlanDecision) => {
-      if (!state.activePlan) {
-        state.setThreadState(state.activeThread ? "ready" : "empty");
-        return;
-      }
-      state.setPlans((current) => current.map((plan) => (
-        plan.threadId === state.activePlan?.threadId ? { ...plan, decision } : plan
-      )));
-      const activeThread = state.activeThread;
-      if (decision === "approved" && activeThread) {
-        const proposal = createPlanApprovalProposal(state.activePlan, activeThread, state.activeRun, state.activeProject);
-        state.setActionProposals((current) => upsertActionProposal(current, proposal));
-        state.setAgentRuns((current) => recordApprovalProposalForRun(current, activeThread, proposal, new Date().toISOString()));
-        updateThreadAndRunStatus(state, activeThread, "waiting_for_approval");
-      } else if (activeThread) {
-        expireRunProposals(state, activeThread);
-        updateThreadAndRunStatus(state, activeThread, decision === "cancelled" ? "blocked" : "planning");
-      }
-    };
     const selectThread = (event: Event) => {
       const threadId = (event.currentTarget as HTMLElement).dataset.threadId;
       if (threadId) {
@@ -98,53 +53,20 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
         (event.currentTarget as HTMLElement).click();
       }
     };
-    const approvePlan = () => updatePlanDecision("approved");
-    const revisePlan = () => updatePlanDecision("revision_requested");
-    const cancelPlan = () => updatePlanDecision("cancelled");
-    const switchToReviewMode = () => {
-      if (!state.activeThread) {
-        state.setThreadState("empty");
-        return;
-      }
-      updateThreadAndRunStatus(state, state.activeThread, "reviewing");
-    };
-    const askPlanQuestion = () => {
-      const activeThread = state.activeThread;
-      if (!activeThread) {
-        state.setThreadState("empty");
-        return;
-      }
-      const now = new Date().toISOString();
-      state.setAgentRuns((current) => recordPlanQuestionForRun(current, activeThread, now));
-      updateThreadAndRunStatus(state, activeThread, "planning");
-      notifyLocalAction("Question request recorded locally; no model call ran.", "success");
-    };
     const approveProposal = (event: Event) => updateProposalStatus(state, event, "approved");
     const denyProposal = (event: Event) => updateProposalStatus(state, event, "denied");
-    bindAccessibility(commandButton, projectButton, threadButton, [planCreate, planApprove, planEdit, planQuestion, planReviewMode, planRevise, planCancel]);
+    const cleanupPlanControls = bindPlanControls(state, activateOnKeyboard);
+    const requestReviewRevision = () => requestPlanRevision(state);
+    bindAccessibility(commandButton, projectButton, threadButton);
     commandButton?.addEventListener("click", openPalette);
     commandButton?.addEventListener("keydown", activateOnKeyboard);
     projectButton?.addEventListener("click", openProject);
     projectButton?.addEventListener("keydown", activateOnKeyboard);
     threadButton?.addEventListener("click", openThread);
     threadButton?.addEventListener("keydown", activateOnKeyboard);
-    planCreate?.addEventListener("click", createPlan);
-    planCreate?.addEventListener("keydown", activateOnKeyboard);
-    planApprove?.addEventListener("click", approvePlan);
-    planApprove?.addEventListener("keydown", activateOnKeyboard);
-    planEdit?.addEventListener("click", revisePlan);
-    planEdit?.addEventListener("keydown", activateOnKeyboard);
-    planQuestion?.addEventListener("click", askPlanQuestion);
-    planQuestion?.addEventListener("keydown", activateOnKeyboard);
-    planReviewMode?.addEventListener("click", switchToReviewMode);
-    planReviewMode?.addEventListener("keydown", activateOnKeyboard);
-    planRevise?.addEventListener("click", revisePlan);
-    planRevise?.addEventListener("keydown", activateOnKeyboard);
-    planCancel?.addEventListener("click", cancelPlan);
-    planCancel?.addEventListener("keydown", activateOnKeyboard);
     bindProposalButtons(approvalApproveButtons, approveProposal, activateOnKeyboard);
     bindProposalButtons(approvalDenyButtons, denyProposal, activateOnKeyboard);
-    bindReviewButtons(reviewReviseButtons, revisePlan, activateOnKeyboard);
+    bindReviewButtons(reviewReviseButtons, requestReviewRevision, activateOnKeyboard);
     bindThreadCards(cards, selectThread, activateOnKeyboard);
     return () => {
       commandButton?.removeEventListener("click", openPalette);
@@ -153,23 +75,10 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       projectButton?.removeEventListener("keydown", activateOnKeyboard);
       threadButton?.removeEventListener("click", openThread);
       threadButton?.removeEventListener("keydown", activateOnKeyboard);
-      planCreate?.removeEventListener("click", createPlan);
-      planCreate?.removeEventListener("keydown", activateOnKeyboard);
-      planApprove?.removeEventListener("click", approvePlan);
-      planApprove?.removeEventListener("keydown", activateOnKeyboard);
-      planEdit?.removeEventListener("click", revisePlan);
-      planEdit?.removeEventListener("keydown", activateOnKeyboard);
-      planQuestion?.removeEventListener("click", askPlanQuestion);
-      planQuestion?.removeEventListener("keydown", activateOnKeyboard);
-      planReviewMode?.removeEventListener("click", switchToReviewMode);
-      planReviewMode?.removeEventListener("keydown", activateOnKeyboard);
-      planRevise?.removeEventListener("click", revisePlan);
-      planRevise?.removeEventListener("keydown", activateOnKeyboard);
-      planCancel?.removeEventListener("click", cancelPlan);
-      planCancel?.removeEventListener("keydown", activateOnKeyboard);
+      cleanupPlanControls();
       unbindProposalButtons(approvalApproveButtons, approveProposal, activateOnKeyboard);
       unbindProposalButtons(approvalDenyButtons, denyProposal, activateOnKeyboard);
-      unbindReviewButtons(reviewReviseButtons, revisePlan, activateOnKeyboard);
+      unbindReviewButtons(reviewReviseButtons, requestReviewRevision, activateOnKeyboard);
       unbindThreadCards(cards, selectThread, activateOnKeyboard);
     };
   }, [state]);
@@ -193,21 +102,6 @@ function updateProposalStatus(state: CockpitDomBindingState, event: Event, statu
   notifyLocalAction(status === "approved" ? "Approval granted for this run" : "Approval denied; run blocked", status === "approved" ? "success" : "warning");
 }
 
-function expireRunProposals(state: CockpitDomBindingState, activeThread: TaskThread) {
-  const runId = state.activeRun?.id ?? activeThread.activeRunId;
-  if (runId) {
-    state.setActionProposals((current) => expirePendingProposalsForRun(current, runId));
-  }
-}
-
-function updateThreadAndRunStatus(state: CockpitDomBindingState, activeThread: TaskThread, status: ThreadStatus) {
-  const now = new Date().toISOString();
-  state.setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, status, now));
-  state.setThreads((current) => current.map((thread) => (
-    thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread
-  )));
-}
-
 function bindProposalButtons(buttons: HTMLElement[], updateStatus: (event: Event) => void, activateOnKeyboard: (event: Event) => void) {
   buttons.forEach((button) => {
     button.setAttribute("role", "button");
@@ -225,24 +119,13 @@ function unbindProposalButtons(buttons: HTMLElement[], updateStatus: (event: Eve
   });
 }
 
-function bindAccessibility(commandButton: Element | null, projectButton: Element | null, threadButton: Element | null, planButtons: (Element | null)[]) {
+function bindAccessibility(commandButton: Element | null, projectButton: Element | null, threadButton: Element | null) {
   projectButton?.setAttribute("role", "button");
   projectButton?.setAttribute("tabindex", "0");
   projectButton?.setAttribute("aria-label", "Open workspace manager");
   threadButton?.setAttribute("role", "button");
   threadButton?.setAttribute("tabindex", "0");
   threadButton?.setAttribute("aria-label", "Open thread manager");
-  planButtons.forEach((button) => {
-    button?.setAttribute("role", "button");
-    button?.setAttribute("tabindex", "0");
-  });
-  planButtons[0]?.setAttribute("aria-label", "Create plan");
-  planButtons[1]?.setAttribute("aria-label", "Approve plan");
-  planButtons[2]?.setAttribute("aria-label", "Edit plan");
-  planButtons[3]?.setAttribute("aria-label", "Ask question");
-  planButtons[4]?.setAttribute("aria-label", "Switch to read-only review");
-  planButtons[5]?.setAttribute("aria-label", "Revise plan");
-  planButtons[6]?.setAttribute("aria-label", "Cancel plan");
   commandButton?.setAttribute("role", "button");
   commandButton?.setAttribute("tabindex", "0");
   commandButton?.setAttribute("aria-label", "Open command palette");
