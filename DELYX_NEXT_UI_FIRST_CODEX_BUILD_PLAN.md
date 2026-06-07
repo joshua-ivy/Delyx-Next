@@ -2302,6 +2302,7 @@ Acceptance:
 - ~~User can suppress memory.~~
 - ~~Promoted memory candidates cannot be re-suppressed as pending candidates.~~
 - ~~Memory shows source run/thread.~~
+- ~~Durable memory approvals are bound to the specific candidate node so one save approval cannot promote another candidate from the same run.~~
 
 ---
 

@@ -7,10 +7,10 @@ mod tests {
 
     #[test]
     fn memory_candidate_requires_approval_before_promotion() {
-        let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(memory_save_input());
         let mut store = MemoryStore::new();
         let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(memory_save_input(&candidate.id));
 
         let result = store.promote_approved(&candidate.id, &approval.id, 10, &approvals, SourceRunStatus::Completed);
 
@@ -19,11 +19,11 @@ mod tests {
 
     #[test]
     fn failed_run_cannot_auto_promote_memory() {
-        let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(memory_save_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let mut store = MemoryStore::new();
         let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(memory_save_input(&candidate.id));
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
 
         let result = store.promote_approved(&candidate.id, &approval.id, 10, &approvals, SourceRunStatus::Failed);
 
@@ -32,11 +32,11 @@ mod tests {
 
     #[test]
     fn memory_promotion_requires_memory_save_approval_action() {
-        let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(ProposalInput { action: RiskyAction::FileWrite, ..memory_save_input() });
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let mut store = MemoryStore::new();
         let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { action: RiskyAction::FileWrite, ..memory_save_input(&candidate.id) });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
 
         let result = store.promote_approved(&candidate.id, &approval.id, 10, &approvals, SourceRunStatus::Completed);
 
@@ -52,11 +52,11 @@ mod tests {
 
     #[test]
     fn memory_promotion_requires_same_run_approval() {
-        let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(ProposalInput { run_id: "run-2".to_string(), ..memory_save_input() });
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let mut store = MemoryStore::new();
         let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { run_id: "run-2".to_string(), ..memory_save_input(&candidate.id) });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
 
         let result = store.promote_approved(&candidate.id, &approval.id, 10, &approvals, SourceRunStatus::Completed);
 
@@ -65,6 +65,27 @@ mod tests {
             MemoryError::Approval(ApprovalError::RunMismatch {
                 expected: "run-1".to_string(),
                 actual: "run-2".to_string(),
+            })
+        );
+        assert!(store.records().is_empty());
+    }
+
+    #[test]
+    fn memory_promotion_requires_matching_candidate_approval() {
+        let mut store = MemoryStore::new();
+        let first = store.propose_candidate(candidate_input("style", "Prefer small files."));
+        let second = store.propose_candidate(candidate_input("style", "Prefer files under 300 lines."));
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(memory_save_input(&first.id));
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+
+        let result = store.promote_approved(&second.id, &approval.id, 10, &approvals, SourceRunStatus::Completed);
+
+        assert_eq!(
+            result.unwrap_err(),
+            MemoryError::Approval(ApprovalError::NodeMismatch {
+                expected: second.id,
+                actual: first.id,
             })
         );
         assert!(store.records().is_empty());
@@ -82,11 +103,11 @@ mod tests {
 
     #[test]
     fn promoted_candidate_cannot_be_suppressed_as_pending() {
-        let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(memory_save_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let mut store = MemoryStore::new();
         let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(memory_save_input(&candidate.id));
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
 
         store.promote_approved(&candidate.id, &approval.id, 10, &approvals, SourceRunStatus::Completed).unwrap();
 
@@ -96,11 +117,11 @@ mod tests {
 
     #[test]
     fn promoted_memory_shows_source_run_and_thread() {
-        let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(memory_save_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let mut store = MemoryStore::new();
         let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(memory_save_input(&candidate.id));
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
 
         let record = store.promote_approved(&candidate.id, &approval.id, 10, &approvals, SourceRunStatus::Completed).unwrap();
 
@@ -111,15 +132,17 @@ mod tests {
 
     #[test]
     fn superseding_memory_suppresses_previous_record() {
-        let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(memory_save_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let mut store = MemoryStore::new();
         let first = store.propose_candidate(candidate_input("style", "Prefer small files."));
-        let first_record = store.promote_approved(&first.id, &approval.id, 10, &approvals, SourceRunStatus::Completed).unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let first_approval = approvals.propose(memory_save_input(&first.id));
+        approvals.approve(&first_approval.id, 10, "approved in test").unwrap();
+        let first_record = store.promote_approved(&first.id, &first_approval.id, 10, &approvals, SourceRunStatus::Completed).unwrap();
         let second = store.propose_candidate(candidate_input("style", "Prefer files under 300 lines."));
+        let second_approval = approvals.propose(memory_save_input(&second.id));
+        approvals.approve(&second_approval.id, 11, "approved in test").unwrap();
 
-        let second_record = store.promote_approved(&second.id, &approval.id, 10, &approvals, SourceRunStatus::Completed).unwrap();
+        let second_record = store.promote_approved(&second.id, &second_approval.id, 11, &approvals, SourceRunStatus::Completed).unwrap();
 
         assert_eq!(second_record.supersedes.as_deref(), Some(first_record.id.as_str()));
         assert!(store.records()[0].suppressed);
@@ -135,12 +158,12 @@ mod tests {
         }
     }
 
-    fn memory_save_input() -> ProposalInput {
+    fn memory_save_input(node_id: &str) -> ProposalInput {
         ProposalInput {
             action: RiskyAction::DurableMemorySave,
             expires_at: 30,
             expected_result: "Persist selected memory after review.".to_string(),
-            node_id: "node-memory".to_string(),
+            node_id: node_id.to_string(),
             reason: "Deterministic memory governance test.".to_string(),
             risk: RiskLevel::Medium,
             rollback_plan: "Suppress or supersede the memory record.".to_string(),

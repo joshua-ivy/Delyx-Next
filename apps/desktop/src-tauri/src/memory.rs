@@ -89,12 +89,14 @@ impl MemoryStore {
         source_status: SourceRunStatus,
     ) -> Result<MemoryRecord, MemoryError> {
         let index = self.candidate_index(candidate_id)?;
+        let candidate = self.candidates[index].clone();
         approvals
-            .assert_can_execute_action_for_run(
+            .assert_can_execute_action_for_run_node(
                 approval_id,
                 now,
                 RiskyAction::DurableMemorySave,
-                &self.candidates[index].source_run_id,
+                &candidate.source_run_id,
+                &candidate.id,
             )
             .map_err(MemoryError::Approval)?;
         if source_status != SourceRunStatus::Completed {
@@ -104,7 +106,6 @@ impl MemoryStore {
             return Err(MemoryError::NotPending);
         }
 
-        let candidate = self.candidates[index].clone();
         let supersedes = self.suppress_matching_record(candidate.scope, &candidate.key);
         self.next_record_id += 1;
         let record = MemoryRecord {

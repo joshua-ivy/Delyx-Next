@@ -75,6 +75,29 @@ mod tests {
     }
 
     #[test]
+    fn approved_node_must_match_execution_request() {
+        let mut engine = ApprovalEngine::new();
+        let proposal = engine.propose(input(RiskyAction::DurableMemorySave, 100));
+        engine.approve(&proposal.id, 50, "approved once").unwrap();
+
+        let result = engine.assert_can_execute_action_for_run_node(
+            &proposal.id,
+            60,
+            RiskyAction::DurableMemorySave,
+            "run-1",
+            "node-2",
+        );
+
+        assert_eq!(
+            result.unwrap_err(),
+            ApprovalError::NodeMismatch {
+                expected: "node-2".to_string(),
+                actual: "node-1".to_string(),
+            }
+        );
+    }
+
+    #[test]
     fn denial_blocks_execution() {
         let mut engine = ApprovalEngine::new();
         let proposal = engine.propose(input(RiskyAction::ExternalAgentExecution, 100));

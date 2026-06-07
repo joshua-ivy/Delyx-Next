@@ -136,6 +136,7 @@ No approved test command was executed.
 ## Memory Governance
 
 Durable memory saves require approval.
+Promotion approvals are bound to the reviewed memory candidate, not only the source run.
 
 Memory records should include:
 
@@ -192,4 +193,3 @@ Automation contracts must define:
 - delivery targets
 
 Risky scheduled actions should create approvals instead of executing silently.
-
