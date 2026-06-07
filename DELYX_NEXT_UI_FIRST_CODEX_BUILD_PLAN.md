@@ -2045,6 +2045,7 @@ Acceptance:
 - ~~Risky action creates approval proposal.~~
 - ~~Approving a real in-session plan queues a scoped edit_file ActionProposal and moves the thread/run to waiting_for_approval instead of executing build work.~~
 - ~~Approval changes proposal status.~~
+- ~~Approval drawer Approve once and Deny controls update in-session proposal status and move the thread/run to building or blocked without executing tools.~~
 - ~~Denial blocks node.~~
 - ~~Expired proposal blocks node.~~
 - ~~UI shows risk, scope, reason, expected result, and expiration when real proposals exist.~~

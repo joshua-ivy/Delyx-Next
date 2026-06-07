@@ -5,6 +5,7 @@ import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
 import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
+import { notifyLocalAction } from "./ShellPreferenceController";
 import { createPlanApprovalProposal, upsertActionProposal } from "./appShellApprovalActions";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
@@ -35,6 +36,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const planApprove = document.querySelector(".plan-approve");
     const planRevise = document.querySelector(".plan-revise");
     const planCancel = document.querySelector(".plan-cancel");
+    const approvalApproveButtons = Array.from(document.querySelectorAll<HTMLElement>(".approval-approve-once[data-proposal-id]"));
+    const approvalDenyButtons = Array.from(document.querySelectorAll<HTMLElement>(".approval-deny[data-proposal-id]"));
     const reviewReviseButtons = Array.from(document.querySelectorAll(".review-revise"));
     const cards = Array.from(document.querySelectorAll<HTMLElement>(".tcard[data-thread-id]"));
     const openProject = () => state.setWorkspaceOpen(true);
@@ -80,6 +83,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const approvePlan = () => updatePlanDecision("approved");
     const revisePlan = () => updatePlanDecision("revision_requested");
     const cancelPlan = () => updatePlanDecision("cancelled");
+    const approveProposal = (event: Event) => updateProposalStatus(state, event, "approved");
+    const denyProposal = (event: Event) => updateProposalStatus(state, event, "denied");
     bindAccessibility(commandButton, projectButton, threadButton, [planCreate, planApprove, planRevise, planCancel]);
     commandButton?.addEventListener("click", openPalette);
     commandButton?.addEventListener("keydown", activateOnKeyboard);
@@ -95,6 +100,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     planRevise?.addEventListener("keydown", activateOnKeyboard);
     planCancel?.addEventListener("click", cancelPlan);
     planCancel?.addEventListener("keydown", activateOnKeyboard);
+    bindProposalButtons(approvalApproveButtons, approveProposal, activateOnKeyboard);
+    bindProposalButtons(approvalDenyButtons, denyProposal, activateOnKeyboard);
     bindReviewButtons(reviewReviseButtons, revisePlan, activateOnKeyboard);
     bindThreadCards(cards, selectThread, activateOnKeyboard);
     return () => {
@@ -112,10 +119,26 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       planRevise?.removeEventListener("keydown", activateOnKeyboard);
       planCancel?.removeEventListener("click", cancelPlan);
       planCancel?.removeEventListener("keydown", activateOnKeyboard);
+      unbindProposalButtons(approvalApproveButtons, approveProposal, activateOnKeyboard);
+      unbindProposalButtons(approvalDenyButtons, denyProposal, activateOnKeyboard);
       unbindReviewButtons(reviewReviseButtons, revisePlan, activateOnKeyboard);
       unbindThreadCards(cards, selectThread, activateOnKeyboard);
     };
   }, [state]);
+}
+
+function updateProposalStatus(state: CockpitDomBindingState, event: Event, status: "approved" | "denied") {
+  const proposalId = (event.currentTarget as HTMLElement).dataset.proposalId;
+  if (!proposalId) {
+    return;
+  }
+  state.setActionProposals((current) => current.map((proposal) => (
+    proposal.id === proposalId ? { ...proposal, status } : proposal
+  )));
+  if (state.activeThread) {
+    updateThreadAndRunStatus(state, state.activeThread, status === "approved" ? "building" : "blocked");
+  }
+  notifyLocalAction(status === "approved" ? "Approval granted for this run" : "Approval denied; run blocked", status === "approved" ? "success" : "warning");
 }
 
 function updateThreadAndRunStatus(state: CockpitDomBindingState, activeThread: TaskThread, status: ThreadStatus) {
@@ -124,6 +147,20 @@ function updateThreadAndRunStatus(state: CockpitDomBindingState, activeThread: T
   state.setThreads((current) => current.map((thread) => (
     thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread
   )));
+}
+
+function bindProposalButtons(buttons: HTMLElement[], updateStatus: (event: Event) => void, activateOnKeyboard: (event: Event) => void) {
+  buttons.forEach((button) => {
+    button.addEventListener("click", updateStatus);
+    button.addEventListener("keydown", activateOnKeyboard);
+  });
+}
+
+function unbindProposalButtons(buttons: HTMLElement[], updateStatus: (event: Event) => void, activateOnKeyboard: (event: Event) => void) {
+  buttons.forEach((button) => {
+    button.removeEventListener("click", updateStatus);
+    button.removeEventListener("keydown", activateOnKeyboard);
+  });
 }
 
 function bindAccessibility(commandButton: Element | null, projectButton: Element | null, threadButton: Element | null, planButtons: (Element | null)[]) {

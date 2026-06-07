@@ -72,8 +72,6 @@ export function ShellPreferenceController() {
       bindSafeAction(".diff-reject", "Reject diff", "Diff rejected locally; no file changed."),
       bindSafeAction(".diff-revert", "Revert checkpoint", "No checkpoint was restored; a checkpoint artifact is required.", "warning"),
       bindSafeAction(".diff-revise", "Ask for revision", "Revision request stayed local; no file changed."),
-      bindSafeAction(".approval-approve-once", "Approve once", "Approval execution is not wired in this UI surface yet.", "warning"),
-      bindSafeAction(".approval-deny", "Deny approval", "Approval denial is not wired in this UI surface yet.", "warning"),
       bindSafeAction(".approval-always", "Always allow later", "Persistent allow rules are not wired; no policy changed.", "warning"),
       bindSafeAction(".approval-scope", "Edit approval scope", "Scope editing is not wired yet; no approval changed.", "warning"),
     ];

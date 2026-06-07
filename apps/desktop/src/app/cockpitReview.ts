@@ -31,7 +31,7 @@ export function approvalBlock(proposals: ActionProposalView[]) {
         <div class="kv"><span class="k">Policy</span><span class="v">${escapeHtml(riskPolicyLabel(proposal.actionType))}</span></div>
         <div class="kv"><span class="k">Rollback</span><span class="v">${escapeHtml(proposal.rollbackPlan ?? "No rollback plan recorded.")}</span></div>
         <div class="exp">Run ${escapeHtml(proposal.runId)} &middot; Node ${escapeHtml(proposal.nodeId)} &middot; Expires ${escapeHtml(proposal.expiresAt)} &middot; ${escapeHtml(proposal.status)}</div>
-        <div class="approval-actions"><span class="btn approval-approve-once">Approve once</span><span class="btn approval-deny">Deny</span><span class="btn approval-always">Always allow for this project later</span><span class="btn approval-scope">Edit scope</span></div>
+        <div class="approval-actions"><span class="btn approval-approve-once" data-proposal-id="${escapeHtml(proposal.id)}">Approve once</span><span class="btn approval-deny" data-proposal-id="${escapeHtml(proposal.id)}">Deny</span><span class="btn approval-always">Always allow for this project later</span><span class="btn approval-scope">Edit scope</span></div>
       </div>`).join("");
 }
 
