@@ -1777,19 +1777,19 @@ Acceptance:
 
 Status: Complete on 2026-06-06.
 
-Update: Replaced the initial PR 2 mock shell with the provided `delyx-next.zip`
-Cockpit UI handoff as the exact visual reference. The app now uses the Cockpit
-tokens, fixed 1440x900 workbench canvas, mode-colored accent system, mode
-pipeline hero, review/approval panel, and terminal drawer from the handoff.
+Update: Replaced the initial PR 2 mock shell with the provided Command Deck
+handoff as the exact visual reference. The app now uses the shared mode-tinted
+tokens, spine, command bar, work pane, contextual inspector, pinned composer,
+and hint bar from the handoff without copying the prototype scenario data.
 
 Scope:
 
 - ~~Tauri + React + TypeScript + Rust skeleton~~
 - ~~App shell with split panes~~
-- ~~Left project/thread sidebar~~
-- ~~Center active task thread~~
-- ~~Right review panel~~
-- ~~Bottom terminal/log drawer~~
+- ~~Mode spine with project/thread entry points~~
+- ~~Work pane with active task thread~~
+- ~~Contextual inspector for approvals, diffs, tests, review, and receipts~~
+- ~~Terminal/log controls inside the work pane without fake command history~~
 - ~~Command palette placeholder~~
 - ~~Light/dark theme tokens~~
 - ~~Reusable design-system components~~
@@ -1811,8 +1811,9 @@ Acceptance:
 - ~~npm run build passes~~
 - ~~cargo test --workspace passes~~
 - ~~app opens to realistic Delyx workbench UI~~
-- ~~user can click Project -> Thread -> Plan -> Approval -> Diff -> Test -> Evidence using mock data~~
+- ~~user can click Project -> Thread -> Plan -> Approval -> Diff -> Test -> Evidence using real in-session state or honest empty states~~
 - ~~blocked, failed, waiting_for_approval, testing, and done states are visible~~
+- ~~Command Deck shell uses real local state or truthful empty states only; the prototype scenario data is not rendered.~~
 
 Important:
 

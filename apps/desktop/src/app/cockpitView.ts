@@ -1,16 +1,16 @@
 import { cockpitMarkup } from "./cockpitMarkup";
-import { automationBlock, emptyAutomationBlock } from "./cockpitAutomations";
-import { emptyEvidenceBlock, evidenceBlock } from "./cockpitEvidence";
-import { emptyExternalAgentBlock, externalAgentBlock } from "./cockpitExternalAgents";
-import { emptyMemoryBlock, memoryBlock } from "./cockpitMemory";
-import { emptyPipelineBlock, modePill, pipelineBlock } from "./cockpitModes";
-import { emptyMobileBlock, mobileBlock } from "./cockpitMobile";
-import { emptyModelSettingsBlock, modelSettingsBlock, modelStatusChip } from "./cockpitModels";
-import { emptyReleaseBlock, releaseBlock } from "./cockpitRelease";
-import { approvalBlock, diffBlock, emptyApprovalBlock, emptyDiffBlock, emptyReviewBlock, emptyTestBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
-import { emptyTimelineBlock, runLabel, runStatusPill, runTimeline } from "./cockpitRuns";
-import { emptyThreadStatsBlock, threadStatsBlock } from "./cockpitStats";
-import { emptySkillBlock, skillBlock } from "./cockpitSkills";
+import { automationBlock } from "./cockpitAutomations";
+import { evidenceBlock } from "./cockpitEvidence";
+import { externalAgentBlock } from "./cockpitExternalAgents";
+import { memoryBlock } from "./cockpitMemory";
+import { modePill } from "./cockpitModes";
+import { mobileBlock } from "./cockpitMobile";
+import { modelSettingsBlock } from "./cockpitModels";
+import { releaseBlock } from "./cockpitRelease";
+import { approvalBlock, diffBlock, emptyApprovalBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
+import { runLabel, runStatusPill, runTimeline } from "./cockpitRuns";
+import { threadStatsBlock } from "./cockpitStats";
+import { skillBlock } from "./cockpitSkills";
 import { escapeHtml } from "./html";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { AutomationStateView } from "../features/automations/automationTypes";
@@ -28,6 +28,8 @@ import type { SkillStateView } from "../features/skills/skillTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
+
+const workflow = ["explore", "plan", "build", "test", "review"] as const;
 
 export function buildCockpitMarkup(
   project: WorkspaceProject,
@@ -53,101 +55,126 @@ export function buildCockpitMarkup(
   const activeTests = activeRun ? tests.filter((artifact) => artifact.runId === activeRun.id) : [];
   const activeReview = activeRun ? reviews.find((report) => report.runId === activeRun.id) : undefined;
   const activeResearch = activeRun ? researchAnswers.find((answer) => answer.runId === activeRun.id) : undefined;
+
   return cockpitMarkup
-    .replace("/ no-thread", `/ ${activeThread?.id ?? "no-thread"}`)
-    .replace('<span class="chip"><span class="k">runtime</span><b>not connected</b> local only</span>', modelStatusChip(modelSettings))
-    .replace('<span class="pill build"><span class="dot"></span>BUILD MODE</span>', modePill(activeThread?.status))
-    .replace(emptyPipelineBlock(), pipelineBlock(activeThread?.status))
-    .replace('<span class="pill ghost">No active run</span>', runStatusPill(activeRun))
-    .replace(emptyThreadCardBlock(), threadCards(threads, activeThread?.id))
-    .replace("<span class=\"chip\"><span class=\"k\">git</span><b>0</b> uncommitted</span>", gitChip(project))
-    .replace("<span class=\"chip\"><span class=\"k\">isolation</span><b>none</b> no checkpoint/worktree</span>", isolationChip(project))
-    .replace("C:/Users/geaux/Downloads/Delyx Next", project.approvedRoots[0])
-    .replace("THREAD &middot; empty", `THREAD &middot; ${escapeHtml(activeThread?.id ?? "empty")}${runLabel(activeRun)}`)
-    .replace("No active thread", escapeHtml(activeThread?.title ?? "No active thread"))
-    .replace(emptyThreadGoal(), escapeHtml(activeThread?.goal ?? "Empty: create a thread inside this project to begin."))
-    .replace(emptyThreadStatsBlock(), threadStatsBlock(activePatches, activeTests, activeProposals, activeRun))
-    .replace(emptyPlanGrid(), planGrid(activePlan, Boolean(activeThread)))
-    .replace("0 pending", `${pendingCount(activeProposals)} pending`)
-    .replace('<span class="rtab">Approvals<span class="c">0</span></span>', `<span class="rtab">Approvals<span class="c">${pendingCount(activeProposals)}</span></span>`)
-    .replace(emptyApprovalBlock(), approvalBlock(activeProposals))
-    .replace(emptyDiffBlock(), diffBlock(activePatches))
-    .replace(emptyTestBlock(), testBlock(activeTests))
-    .replace(emptyReviewBlock(), reviewBlock(activeReview))
-    .replace(emptyModelSettingsBlock(), modelSettingsBlock(modelSettings))
-    .replace(emptyMemoryBlock(), memoryBlock(memoryState, activeRun?.id))
-    .replace(emptySkillBlock(), skillBlock(skillState))
-    .replace(emptyAutomationBlock(), automationBlock(automationState))
-    .replace(emptyMobileBlock(), mobileBlock(mobileState))
-    .replace(emptyReleaseBlock(), releaseBlock(releaseState))
-    .replace(emptyExternalAgentBlock(), externalAgentBlock(externalAgents, activeRun?.id))
-    .replace(emptyTimelineBlock(), runTimeline(activeRun))
-    .replace(emptyEvidenceBlock(), evidenceBlock(activeResearch))
-    .replace("Local only</span><span class=\"pill ghost\">AGENTS.md", `Local only</span><span class="pill ghost">${rulesLabel(project)}`);
+    .replace("__SPINE_PIPE__", spinePipeline(activeThread?.status))
+    .replace("__MODE_LABEL__", modeLabel(activeThread?.mode))
+    .replace("__STATUS_PILL__", `${modePill(activeThread?.status)}${runStatusPill(activeRun)}`)
+    .replace("__CONTEXT_CHIPS__", contextChips(project, modelSettings, threads.length))
+    .replace("__THREAD_ID__", escapeHtml(activeThread?.id ?? "empty"))
+    .replace("__RUN_LABEL__", runLabel(activeRun))
+    .replace("__THREAD_TITLE__", escapeHtml(activeThread?.title ?? "No active thread"))
+    .replace("__THREAD_DESC__", escapeHtml(activeThread?.goal ?? emptyThreadGoal()))
+    .replace("__CONVERSATION__", conversationBlock(activeThread))
+    .replace("__THREAD_STATS__", threadStatsBlock(activePatches, activeTests, activeProposals, activeRun))
+    .replace("__PLAN_STATE__", escapeHtml(activePlan?.decision ?? "Empty"))
+    .replace("__PLAN_GRID__", planGrid(activePlan, Boolean(activeThread)))
+    .replace("__TIMELINE__", runTimeline(activeRun))
+    .replace("__INSPECTOR_STATUS__", inspectorStatus(activeProposals, activeRun))
+    .replace("__INSPECTOR__", inspectorBlock({
+      activeProposals,
+      activePatches,
+      activeTests,
+      activeReview,
+      activeResearch,
+      activeRun,
+      automationState,
+      externalAgents,
+      memoryState,
+      mobileState,
+      modelSettings,
+      releaseState,
+      skillState,
+    }));
 }
 
-function gitChip(project: WorkspaceProject) {
-  if (!project.git.isRepo) {
-    return "<span class=\"chip\"><span class=\"k\">git</span><b>not repo</b></span>";
+function contextChips(project: WorkspaceProject, modelSettings: ModelSettingsView, activeThreads: number) {
+  const provider = modelSettings.providers.find((item) => item.id === modelSettings.selectedProviderId);
+  const git = project.git.isRepo ? `${project.git.branch} / ${gitChanges(project)}` : "not a Git repo";
+  return [
+    `<span class="deck-ctx-chip"><strong>${escapeHtml(project.name)}</strong> ${escapeHtml(git)}</span>`,
+    `<span class="deck-ctx-chip"><strong>${activeThreads}</strong> active threads</span>`,
+    `<span class="deck-ctx-chip"><strong>${escapeHtml(provider?.label ?? "No provider")}</strong> ${escapeHtml(provider?.status ?? "not_configured")}</span>`,
+  ].join("");
+}
+
+function gitChanges(project: WorkspaceProject) {
+  return project.git.uncommittedChanges === null ? "changes not loaded" : `${project.git.uncommittedChanges} changes`;
+}
+
+function spinePipeline(status: ThreadStatus | undefined) {
+  const active = activeStepIndex(status);
+  return workflow.map((step, index) => {
+    const state = spineState(index, active, status);
+    return `<span class="deck-spine-dot ${state}" title="${step}"></span>`;
+  }).join("");
+}
+
+function spineState(index: number, active: number, status: ThreadStatus | undefined) {
+  if (status === "done") {
+    return "done";
   }
-
-  const changes = project.git.uncommittedChanges === null
-    ? "changes not loaded"
-    : `${project.git.uncommittedChanges} uncommitted`;
-  return `<span class="chip"><span class="k">git</span><b>${escapeHtml(project.git.branch)}</b> ${escapeHtml(changes)}</span>`;
+  if (active < 0) {
+    return "";
+  }
+  if (index < active) {
+    return "done";
+  }
+  return index === active ? "active" : index === active + 1 ? "ready" : "";
 }
 
-function isolationChip(project: WorkspaceProject) {
-  return `<span class="chip"><span class="k">isolation</span><b>${escapeHtml(project.isolation.mode)}</b> ${escapeHtml(project.isolation.label)}</span>`;
+function activeStepIndex(status: ThreadStatus | undefined) {
+  const active: Partial<Record<ThreadStatus, number>> = {
+    building: 2,
+    exploring: 0,
+    planning: 1,
+    reviewing: 4,
+    testing: 3,
+    waiting_for_approval: 1,
+  };
+  return status ? active[status] ?? -1 : -1;
 }
 
-function emptyThreadCardBlock() {
-  return `      <div class="tcard">
-        <div class="tt"><span class="md"></span>Empty: no active threads</div>
-        <div class="tm"><span class="dt">Now</span><span class="pill ghost">Idle</span></div>
-      </div>`;
+function modeLabel(mode: TaskThread["mode"] | undefined) {
+  return (mode ?? "local").toUpperCase();
+}
+
+function conversationBlock(thread: TaskThread | undefined) {
+  if (!thread) {
+    return `<div class="deck-msg system"><div class="deck-msg-bub">Create a thread to start a real local conversation. No model response has been generated.</div></div>`;
+  }
+  const messages = thread.messages.map((message) => {
+    const role = message.role === "user" ? "you" : message.role === "assistant" ? "delyx" : "system";
+    const avatar = role === "delyx" ? '<span class="deck-msg-av">D</span>' : "";
+    return `<div class="deck-msg ${role}">${avatar}<div class="deck-msg-bub">${escapeHtml(message.body)}</div></div>`;
+  }).join("");
+  const hasAssistant = thread.messages.some((message) => message.role === "assistant");
+  const assistantState = hasAssistant ? "" : `<div class="deck-msg system"><div class="deck-msg-bub">No assistant message has been generated for this thread yet.</div></div>`;
+  return `${messages}${assistantState}`;
 }
 
 function emptyThreadGoal() {
   return "Create a thread in this project to start real local work. Runtime execution, approvals, diffs, tests, and evidence stay empty until their ledgers exist.";
 }
 
-function emptyPlanGrid() {
-  return `<div class="plan-grid">
-          <div class="pbox">
-            <div class="bh">Files likely to change</div>
-            <div class="it"><span class="ix">-</span>No plan has been created.</div>
-          </div>
-          <div class="pbox">
-            <div class="bh">Proposed steps</div>
-            <div class="it"><span class="ix">-</span>Create a thread before planning.</div>
-          </div>
-          <div class="pbox risk">
-            <div class="bh">Risks</div>
-            <div class="it"><span class="ix">!</span>No risky action has been proposed.</div>
-          </div>
-          <div class="pbox">
-            <div class="bh">Verify and permissions</div>
-            <div class="it"><span class="ix">-</span>No test command has been proposed.</div>
-            <div class="perm"><span class="pill ghost micro">no approvals pending</span></div>
-          </div>
-        </div>`;
-}
-
 function planGrid(plan: PlanView | undefined, hasThread: boolean) {
   if (!plan) {
-    return emptyPlanGrid().replace("Create a thread before planning.", hasThread ? "Create a plan from the active thread." : "Create a thread before planning.");
+    return `<div class="plan-grid">
+      ${planBox("Files likely to change", ["No plan has been created."], "-")}
+      ${planBox("Proposed steps", [hasThread ? "Create a plan from the active thread." : "Create a thread before planning."], "-")}
+      ${planBox("Risks", ["No risky action has been proposed."], "!")}
+      ${planBox("Verify and permissions", ["No test command has been proposed."], "-")}
+    </div>`;
   }
-
   return `<div class="plan-grid">
-          ${planBox("Goal understanding", [plan.goalUnderstanding], "-")}
-          ${planBox("Files likely involved", plan.filesLikelyInvolved, "F")}
-          ${planBox("Steps", plan.steps, "S")}
-          ${planBox("Risks", plan.risks, "!")}
-          ${planBox("Tests to run", plan.testsToRun, "$")}
-          ${planBox("Rollback strategy", [plan.rollbackStrategy], "R")}
-          <div class="pbox"><div class="bh">Permissions needed</div><div class="perm">${plan.permissionsNeeded.map((item) => `<span class="pill ghost micro">${escapeHtml(item)}</span>`).join("")}</div><div class="it"><span class="ix">D</span>${decisionLabel(plan.decision)}</div></div>
-        </div>`;
+    ${planBox("Goal understanding", [plan.goalUnderstanding], "-")}
+    ${planBox("Files likely involved", plan.filesLikelyInvolved, "F")}
+    ${planBox("Steps", plan.steps, "S")}
+    ${planBox("Risks", plan.risks, "!")}
+    ${planBox("Tests to run", plan.testsToRun, "$")}
+    ${planBox("Rollback strategy", [plan.rollbackStrategy], "R")}
+    <div class="pbox"><div class="bh">Permissions needed</div><div class="perm">${plan.permissionsNeeded.map((item) => `<span class="pill ghost micro">${escapeHtml(item)}</span>`).join("")}</div><div class="it"><span class="ix">D</span>${decisionLabel(plan.decision)}</div></div>
+  </div>`;
 }
 
 function planBox(title: string, items: string[], marker: string) {
@@ -165,63 +192,43 @@ function decisionLabel(decision: PlanView["decision"]) {
   return labels[decision];
 }
 
-function threadCards(threads: TaskThread[], activeThreadId: string | undefined) {
-  if (threads.length === 0) {
-    return emptyThreadCardBlock();
+function inspectorStatus(proposals: ActionProposalView[], run: AgentRunView | undefined) {
+  const pending = pendingCount(proposals);
+  if (pending > 0) {
+    return `${pending} pending`;
   }
-
-  return threads.map((thread) => `
-      <div class="tcard ${thread.id === activeThreadId ? "on" : ""}" data-thread-id="${escapeHtml(thread.id)}">
-        <div class="tt"><span class="md ${statusMarkerClass(thread.status)}"></span>${escapeHtml(thread.title)}</div>
-        <div class="tm"><span class="dt">${escapeHtml(thread.createdLabel)}</span>${statusPill(thread.status)}</div>
-      </div>`).join("");
+  return run ? escapeHtml(run.status) : "idle";
 }
 
-function statusPill(status: ThreadStatus) {
-  const labels: Record<ThreadStatus, string> = {
-    blocked: "Blocked",
-    building: "Building",
-    done: "Done",
-    exploring: "Exploring",
-    failed: "Failed",
-    idle: "Idle",
-    planning: "Planning",
-    reviewing: "Reviewing",
-    testing: "Testing",
-    waiting_for_approval: "Waiting",
-  };
-  const classes: Record<ThreadStatus, string> = {
-    blocked: "blocked",
-    building: "wait",
-    done: "done",
-    exploring: "wait",
-    failed: "failed",
-    idle: "ghost",
-    planning: "wait",
-    reviewing: "wait",
-    testing: "wait",
-    waiting_for_approval: "blocked",
-  };
-
-  return `<span class="pill ${classes[status]}"><span class="dot"></span>${labels[status]}</span>`;
+interface InspectorState {
+  activeProposals: ActionProposalView[];
+  activePatches: PatchProposalView[];
+  activeTests: TestArtifactView[];
+  activeReview: ReviewReportView | undefined;
+  activeResearch: ResearchAnswerView | undefined;
+  activeRun: AgentRunView | undefined;
+  automationState: AutomationStateView;
+  externalAgents: ExternalAgentStateView;
+  memoryState: MemoryStateView;
+  mobileState: MobileStateView;
+  modelSettings: ModelSettingsView;
+  releaseState: ReleaseStateView;
+  skillState: SkillStateView;
 }
 
-function statusMarkerClass(status: ThreadStatus) {
-  const classes: Record<ThreadStatus, string> = {
-    blocked: "status-blocked",
-    building: "status-active",
-    done: "status-done",
-    exploring: "status-active",
-    failed: "status-failed",
-    idle: "status-idle",
-    planning: "status-active",
-    reviewing: "status-active",
-    testing: "status-active",
-    waiting_for_approval: "status-blocked",
-  };
-  return classes[status];
-}
-
-function rulesLabel(project: WorkspaceProject) {
-  return escapeHtml(project.rulesFiles.map((file) => file.path).join(", ") || "no rules file");
+function inspectorBlock(state: InspectorState) {
+  return [
+    state.activeProposals.length > 0 ? approvalBlock(state.activeProposals) : emptyApprovalBlock(),
+    diffBlock(state.activePatches),
+    testBlock(state.activeTests),
+    reviewBlock(state.activeReview),
+    modelSettingsBlock(state.modelSettings),
+    memoryBlock(state.memoryState, state.activeRun?.id),
+    skillBlock(state.skillState),
+    automationBlock(state.automationState),
+    mobileBlock(state.mobileState),
+    releaseBlock(state.releaseState),
+    externalAgentBlock(state.externalAgents, state.activeRun?.id),
+    evidenceBlock(state.activeResearch),
+  ].join("");
 }

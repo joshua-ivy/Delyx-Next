@@ -49,33 +49,33 @@ Only create folders and modules needed by the current milestone. Keep the target
 
 ## App Shell
 
-The app shell owns persistent layout:
+The app shell owns the Command Deck layout:
 
-- top bar
-- left sidebar
-- center task thread area
-- right review panel
-- bottom drawer
+- mode-tinted spine
+- command bar
+- work pane with active thread, plan, timeline, terminal/log controls, and composer
+- contextual inspector for approvals, diffs, tests, review, and receipts
+- hint bar
 - command palette
 - theme provider
 
 The shell preserves theme and pane-size preferences locally with
-`ShellPreferenceController`. Sidebar width, review width, and drawer height use
-CSS variables so the UI can resize without changing runtime state.
+`ShellPreferenceController`. Inspector width and terminal output height use CSS
+variables so the UI can resize without changing runtime state.
 
 Local toasts are for confirmed UI-state changes only. They are not evidence
 that runtime work, tool execution, or tests happened.
 
-The bottom drawer supports client-side search and long-output collapse across
-real terminal, log, and external-agent lines. Filtering changes visibility only;
-it does not alter artifacts.
+The terminal/log section supports client-side search and long-output collapse
+across real terminal, log, and external-agent lines. Filtering changes
+visibility only; it does not alter artifacts.
 
 Dialogs and drawers must expose explicit accessible names. Icon-only controls
 must keep labels even when the visual surface is compact.
 
 ## Core Panels
 
-### Top Bar
+### Command Bar
 
 Shows:
 
@@ -90,15 +90,14 @@ The Git chip must not show a fake dirty count. If no real dirty-count artifact
 exists, the UI says changes are not loaded. Checkpoint/worktree isolation is a
 separate visible state and starts as no active isolation.
 
-### Left Sidebar
+### Mode Spine
 
 Shows:
 
-- project list
-- thread list
-- active project health
-- pinned or recent projects
-- navigation to skills, automations later, memory, and settings
+- workflow progress
+- active mode color
+- project manager entry point
+- thread manager entry point
 
 ### Center Panel
 
@@ -112,7 +111,7 @@ Shows:
 - step timeline
 - current blockers
 
-### Right Review Panel
+### Contextual Inspector
 
 Uses tabs or a segmented control for:
 
@@ -122,7 +121,7 @@ Uses tabs or a segmented control for:
 - Evidence
 - Findings
 
-### Bottom Drawer
+### Terminal Section
 
 Shows:
 

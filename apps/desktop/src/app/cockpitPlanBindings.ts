@@ -16,13 +16,13 @@ import type { PlanDecision } from "../features/plans/planTypes";
 type KeyboardActivator = (event: Event) => void;
 
 export function bindPlanControls(state: CockpitDomBindingState, activateOnKeyboard: KeyboardActivator) {
-  const planCreate = document.querySelector(".plan-create");
-  const planApprove = document.querySelector(".plan-approve");
-  const planEdit = document.querySelector(".plan-edit");
-  const planQuestion = document.querySelector(".plan-question");
-  const planReviewMode = document.querySelector(".plan-review-mode");
-  const planRevise = document.querySelector(".plan-revise");
-  const planCancel = document.querySelector(".plan-cancel");
+  const planCreate = controls(".plan-create");
+  const planApprove = controls(".plan-approve");
+  const planEdit = controls(".plan-edit");
+  const planQuestion = controls(".plan-question");
+  const planReviewMode = controls(".plan-review-mode");
+  const planRevise = controls(".plan-revise");
+  const planCancel = controls(".plan-cancel");
   const createPlan = () => {
     const activeThread = state.activeThread;
     if (!activeThread) {
@@ -56,8 +56,8 @@ export function bindPlanControls(state: CockpitDomBindingState, activateOnKeyboa
     updateThreadAndRunStatus(state, activeThread, "planning");
     notifyLocalAction("Question request recorded locally; no model call ran.", "success");
   };
-  const controls = [planCreate, planApprove, planEdit, planQuestion, planReviewMode, planRevise, planCancel];
-  bindPlanAccessibility(controls);
+  const allControls = [planCreate, planApprove, planEdit, planQuestion, planReviewMode, planRevise, planCancel];
+  bindPlanAccessibility(allControls);
   bindPlanButton(planCreate, createPlan, activateOnKeyboard);
   bindPlanButton(planApprove, approvePlan, activateOnKeyboard);
   bindPlanButton(planEdit, revisePlan, activateOnKeyboard);
@@ -101,21 +101,29 @@ function updatePlanDecision(state: CockpitDomBindingState, decision: PlanDecisio
   }
 }
 
-function bindPlanAccessibility(planButtons: (Element | null)[]) {
+function controls(selector: string) {
+  return Array.from(document.querySelectorAll(selector));
+}
+
+function bindPlanAccessibility(planButtons: Element[][]) {
   const labels = ["Create plan", "Approve plan", "Edit plan", "Ask question", "Switch to read-only review", "Revise plan", "Cancel plan"];
-  planButtons.forEach((button, index) => {
+  planButtons.forEach((buttons, index) => buttons.forEach((button) => {
     button?.setAttribute("role", "button");
     button?.setAttribute("tabindex", "0");
     button?.setAttribute("aria-label", labels[index]);
+  }));
+}
+
+function bindPlanButton(buttons: Element[], run: () => void, activateOnKeyboard: KeyboardActivator) {
+  buttons.forEach((button) => {
+    button.addEventListener("click", run);
+    button.addEventListener("keydown", activateOnKeyboard);
   });
 }
 
-function bindPlanButton(button: Element | null, run: () => void, activateOnKeyboard: KeyboardActivator) {
-  button?.addEventListener("click", run);
-  button?.addEventListener("keydown", activateOnKeyboard);
-}
-
-function unbindPlanButton(button: Element | null, run: () => void, activateOnKeyboard: KeyboardActivator) {
-  button?.removeEventListener("click", run);
-  button?.removeEventListener("keydown", activateOnKeyboard);
+function unbindPlanButton(buttons: Element[], run: () => void, activateOnKeyboard: KeyboardActivator) {
+  buttons.forEach((button) => {
+    button.removeEventListener("click", run);
+    button.removeEventListener("keydown", activateOnKeyboard);
+  });
 }

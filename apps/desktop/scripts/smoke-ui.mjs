@@ -12,6 +12,7 @@ const builtOutput = existsSync(indexPath)
   : "";
 const source = [
   "src/app/cockpitMarkup.ts",
+  "src/app/cockpitStats.ts",
   "src/features/workspace/WorkspaceOverlay.tsx",
   "src/features/threads/ThreadOverlay.tsx",
   "src/app/cockpitReview.ts",
@@ -32,7 +33,7 @@ for (const action of ["Create plan", "Approve", "Revise", "Cancel"]) {
   check(source.includes(action), `primary workflow action must include ${action}`);
 }
 for (const marker of [
-  "Cockpit workbench",
+  "Command Deck workbench",
   "No active thread",
   "No approval requests",
   "No patch or file change has been proposed",

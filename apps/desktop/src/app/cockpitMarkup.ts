@@ -1,209 +1,89 @@
-export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cockpit workbench">
-  <div class="resize-grip resize-side" title="Resize sidebar"></div>
-  <div class="resize-grip resize-review" title="Resize review panel"></div>
-  <div class="resize-grip resize-drawer" title="Resize terminal drawer"></div>
-  <nav class="rail">
-    <div class="logo">D</div>
-    <div class="rnav" title="Projects">P</div>
-    <div class="rnav on" title="Threads">T</div>
-    <div class="rnav" title="Skills">S</div>
-    <div class="rnav" title="Memory">M</div>
-    <div class="rnav" title="Automations">A</div>
-    <div class="sp"></div>
-    <div class="rnav" title="Control Center">C</div>
-  </nav>
+export const cockpitMarkup = String.raw`<div class="delyx deckC" data-screen-label="Command Deck workbench">
+  <div class="resize-grip resize-review" title="Resize inspector"></div>
+  <div class="resize-grip resize-drawer" title="Resize terminal output"></div>
 
-  <header class="top">
-    <div class="tcrumb"><span class="nm">delyx-next</span><span class="sub">/ no-thread</span></div>
-    <span class="chip"><span class="k">runtime</span><b>not connected</b> local only</span>
-    <span class="chip"><span class="k">git</span><b>0</b> uncommitted</span>
-    <span class="chip"><span class="k">isolation</span><b>none</b> no checkpoint/worktree</span>
-    <span class="grow"></span>
-    <span class="pill build"><span class="dot"></span>BUILD MODE</span>
-    <span class="pill ghost">No active run</span>
-    <span class="ticon command-trigger" title="Command palette">K</span>
-    <span class="ticon theme-trigger" title="Switch to light theme">L</span>
+  <aside class="deck-spine" aria-label="Command Deck spine">
+    <button class="deck-spine-logo project-trigger" title="Projects" type="button">D</button>
+    <div class="deck-spine-pipe" aria-label="Agent workflow">__SPINE_PIPE__</div>
+    <button class="deck-spine-action thread-trigger" title="Threads" type="button">+</button>
+    <span class="deck-spine-mode mono">__MODE_LABEL__</span>
+  </aside>
+
+  <header class="deck-bar">
+    <button class="deck-cmd command-trigger" type="button">
+      <span class="deck-cmd-k mono">Ctrl K</span>
+      <span class="deck-cmd-ph">Type a command, open a manager, or steer the active run</span>
+    </button>
+    __STATUS_PILL__
+    <div class="deck-bar-ctx mono">__CONTEXT_CHIPS__</div>
+    <button class="deck-icon-btn theme-trigger" title="Switch to light theme" type="button">L</button>
   </header>
 
-  <aside class="side">
-    <div class="side-h"><h3>Threads</h3><span class="add">+</span></div>
-    <div class="scroll scroll-fill">
-      <div class="tcard">
-        <div class="tt"><span class="md"></span>Empty: no active threads</div>
-        <div class="tm"><span class="dt">Now</span><span class="pill ghost">Idle</span></div>
-      </div>
-    </div>
-    <div class="scope">
-      <div class="lbl">Approved scope</div>
-      <div class="pth">C:/Users/geaux/Downloads/Delyx Next</div>
-      <div class="scope-pills"><span class="pill ghost">Local only</span><span class="pill ghost">AGENTS.md</span></div>
-    </div>
-  </aside>
+  <main class="deck-work">
+    <div class="deck-work-scroll">
+      <div class="ey">THREAD &middot; __THREAD_ID__ __RUN_LABEL__</div>
+      <h1 class="deck-title disp">__THREAD_TITLE__</h1>
+      <p class="deck-desc">__THREAD_DESC__</p>
 
-  <section class="center">
-    <div class="scroll">
-      <div class="pipe">
-        <div class="pstep pending"><div class="pn">01</div><div class="ps">Explore</div><span class="pc">-</span></div>
-        <div class="pstep pending"><div class="pn">02</div><div class="ps">Plan</div><span class="pc">-</span></div>
-        <div class="pstep pending"><div class="pn">03</div><div class="ps">Build</div><span class="pc">-</span></div>
-        <div class="pstep pending"><div class="pn">04</div><div class="ps">Test</div><span class="pc">-</span></div>
-        <div class="pstep pending"><div class="pn">05</div><div class="ps">Review</div><span class="pc">-</span></div>
-      </div>
+      <div class="deck-conv" aria-label="Thread conversation">__CONVERSATION__</div>
 
-      <div class="hero">
-        <div class="eye">THREAD &middot; empty <span class="pill ghost micro">no AgentRun</span></div>
-        <h1>No active thread</h1>
-        <p>Create a thread in this project to start real local work. Runtime execution, approvals, diffs, tests, and evidence stay empty until their ledgers exist.</p>
-        <div class="stat-row">
-          <div class="stat"><div class="sv">0</div><div class="sk">Files touched</div></div>
-          <div class="stat"><div class="sv">None</div><div class="sk">Diff</div></div>
-          <div class="stat"><div class="sv">Not run</div><div class="sk">Tests</div></div>
-          <div class="stat"><div class="sv">0</div><div class="sk">Commands run</div></div>
-          <div class="stat"><div class="sv">0</div><div class="sk">Approvals needed</div></div>
-          <div class="stat"><div class="sv">None</div><div class="sk">Final answer</div></div>
-          <div class="stat"><div class="sv">0</div><div class="sk">Evidence receipts</div></div>
-        </div>
-      </div>
+      __THREAD_STATS__
 
-      <div class="sec">
-        <div class="sec-h"><h4>Plan</h4><span class="pill ghost micro">Empty</span><span class="ln"></span><span class="btn plan-create">Create plan</span><span class="btn plan-approve">Approve</span><span class="btn plan-edit">Edit plan</span><span class="btn plan-question">Ask question</span><span class="btn plan-review-mode">Read-only review</span><span class="btn plan-revise">Revise</span><span class="btn plan-cancel">Cancel</span></div>
-        <div class="plan-grid">
-          <div class="pbox">
-            <div class="bh">Files likely to change</div>
-            <div class="it"><span class="ix">-</span>No plan has been created.</div>
-          </div>
-          <div class="pbox">
-            <div class="bh">Proposed steps</div>
-            <div class="it"><span class="ix">-</span>Create a thread before planning.</div>
-          </div>
-          <div class="pbox risk">
-            <div class="bh">Risks</div>
-            <div class="it"><span class="ix">!</span>No risky action has been proposed.</div>
-          </div>
-          <div class="pbox">
-            <div class="bh">Verify and permissions</div>
-            <div class="it"><span class="ix">-</span>No test command has been proposed.</div>
-            <div class="perm"><span class="pill ghost micro">no approvals pending</span></div>
-          </div>
-        </div>
-      </div>
+      <section class="deck-section">
+        <div class="sec-h"><h4>Plan</h4><span class="pill ghost micro">__PLAN_STATE__</span><span class="ln"></span><span class="btn plan-create">Create plan</span><span class="btn plan-approve">Approve</span><span class="btn plan-edit">Edit plan</span><span class="btn plan-question">Ask question</span><span class="btn plan-review-mode">Read-only review</span><span class="btn plan-revise">Revise</span><span class="btn plan-cancel">Cancel</span></div>
+        __PLAN_GRID__
+      </section>
 
-      <div class="sec">
+      <section class="deck-section">
         <div class="sec-h"><h4>Run timeline</h4><span class="ln"></span></div>
-        <div class="tl">
-          <div class="tnode pending"><div class="tr"><span class="kd">empty</span><span class="ms">No AgentRun events have been recorded for this thread.</span><span class="ts">-</span></div></div>
+        <div class="tl">__TIMELINE__</div>
+      </section>
+
+      <section aria-label="Terminal, logs, and external agent drawer" class="deck-section deck-terminal-panel">
+        <div class="deck-term-head">
+          <div class="dr-tabs"><span class="on">Terminal</span><span>Logs</span><span>External agent</span></div>
+          <label class="log-search-wrap"><span>Search logs</span><input class="log-search" aria-label="Search drawer logs" type="search" placeholder="Search logs" /></label>
+          <button class="output-collapse" type="button" aria-pressed="false">Collapse output</button>
+          <button class="terminal-action terminal-copy" type="button">Copy output</button>
+          <button aria-disabled="true" class="terminal-action terminal-jump-error" disabled title="Requires a captured error artifact" type="button">Jump to error</button>
+          <button aria-disabled="true" class="terminal-action terminal-open-file" disabled title="Requires a referenced file artifact" type="button">Open file</button>
+          <button aria-disabled="true" class="terminal-action terminal-rerun" disabled title="Requires a captured command artifact" type="button">Rerun</button>
+          <button aria-disabled="true" class="terminal-action terminal-approve-rerun" disabled title="Requires a pending rerun approval" type="button">Approve rerun</button>
         </div>
-      </div>
+        <div class="term mono" data-output-collapsed="false">
+          <div class="dm terminal-history output-block" data-log-line><span class="pr">history &gt;</span> No command history captured.</div>
+          <div class="dm output-block" data-log-line>No terminal command has run. Commands require an approval-backed AgentRun artifact.</div>
+          <div class="external-agent-stream output-block">
+            <div class="dm" data-log-line>No external agent run has been approved or captured.</div>
+          </div>
+          <div class="output-block" data-log-line><span class="pr">delyx local &gt;</span> <span class="bk"></span></div>
+        </div>
+      </section>
     </div>
-    <div class="composer">
-      <span class="ph">Create a thread before asking Delyx to act...</span>
-      <span class="mode-tag">Local</span>
-      <span class="send">Send</span>
-    </div>
-  </section>
 
-  <aside class="review">
-    <div class="rev-h"><h3>Review &amp; receipts</h3><span class="pill ghost">0 pending</span></div>
-    <div class="rtabs">
-      <span class="rtab on">Diff</span>
-      <span class="rtab">Tests</span>
-      <span class="rtab">Approvals<span class="c">0</span></span>
-      <span class="rtab">Evidence</span>
-    </div>
-    <div class="rev-body">
-      <div class="appro">
-        <div class="at"><span class="pill ghost">No proposal</span><span class="meta-id">none</span></div>
-        <h4>No approval requests</h4>
-        <div class="kv"><span class="k">Scope</span><span class="v">No file writes, commands, connectors, memory saves, or external agents requested.</span></div>
-        <div class="kv"><span class="k">Risk</span><span class="v">No risky action pending.</span></div>
-        <div class="kv"><span class="k">Policy</span><span class="v">Risk taxonomy active; risky actions keep their minimum risk floor.</span></div>
-        <div class="kv"><span class="k">Rollback</span><span class="v">No checkpoint exists yet.</span></div>
+    <form class="deck-composer deck-comp-form">
+      <div class="deck-quicks">
+        <button class="deck-quick plan-create" type="button">Create plan</button>
+        <button class="deck-quick plan-question" type="button">Ask question</button>
+        <button class="deck-quick plan-review-mode" type="button">Read-only review</button>
       </div>
-
-      <div class="dfile">
-        <div class="dh"><span class="fn">Unified diff artifact</span><span class="dst">empty</span></div>
-        <div class="dc">
-          <div class="dr"><span class="g">-</span><span class="x">No patch or file change has been proposed.</span></div>
-        </div>
-        <div class="diff-actions diff-empty-actions"><span class="pill ghost micro">No patch actions available until a PatchProposal exists.</span></div>
+      <div class="deck-comp-row">
+        <textarea class="deck-comp-input" rows="1" placeholder="Message Delyx with a real local instruction"></textarea>
+        <span class="deck-comp-mode pill accent"><span class="dot"></span>Local</span>
+        <button class="btn acc deck-comp-send" type="submit">Send</button>
       </div>
+    </form>
+  </main>
 
-      <div class="dfile test-artifact">
-        <div class="dh"><span class="fn">Test artifact</span><span class="dst">not run</span></div>
-        <div class="dc">
-          <div class="dr"><span class="g">$</span><span class="x">No test command artifact has been captured.</span></div>
-        </div>
-      </div>
-
-      <div class="sec-h review-findings compact"><h4>Review &middot; read-only</h4><span class="ln"></span></div>
-      <div class="rcpt review-finding"><span class="ri">R</span><div><div class="rn">No review findings</div><div class="rd">Review mode does not edit. Findings appear only after a real ReviewReport is created.</div></div></div>
-
-      <div class="dfile model-settings">
-        <div class="dh"><span class="fn">Model routing</span><span class="dst">empty</span></div>
-        <div class="dc">
-          <div class="dr"><span class="g">-</span><span class="x">No provider settings have been loaded.</span></div>
-        </div>
-      </div>
-
-      <div class="dfile memory-review">
-        <div class="dh"><span class="fn">Memory review</span><span class="dst">empty</span></div>
-        <div class="dc">
-          <div class="dr"><span class="g">-</span><span class="x">No memory candidates or durable memories exist.</span></div>
-        </div>
-      </div>
-
-      <div class="dfile skill-review">
-        <div class="dh"><span class="fn">Skills</span><span class="dst">inactive</span></div>
-        <div class="dc">
-          <div class="dr"><span class="g">-</span><span class="x">No skills imported. Third-party skills never auto-activate.</span></div>
-        </div>
-      </div>
-
-      <div class="dfile automation-review">
-        <div class="dh"><span class="fn">Automations</span><span class="dst">paused</span></div>
-        <div class="dc">
-          <div class="dr"><span class="g">-</span><span class="x">No automation mission contracts. Recurring work starts paused until approved.</span></div>
-        </div>
-      </div>
-
-      <div class="dfile mobile-review">
-        <div class="dh"><span class="fn">Mobile companion</span><span class="dst">not paired</span></div>
-        <div class="dc">
-          <div class="dr"><span class="g">-</span><span class="x">No mobile companion paired. Mobile cannot access files or terminal by default.</span></div>
-        </div>
-      </div>
-
-      <div class="dfile release-review">
-        <div class="dh"><span class="fn">Release readiness</span><span class="dst">pending</span></div>
-        <div class="dc">
-          <div class="dr"><span class="g">-</span><span class="x">No release smoke artifact or support bundle export loaded.</span></div>
-        </div>
-      </div>
-
-      <div class="sec-h compact"><h4>Evidence &middot; 0 records</h4><span class="ln"></span></div>
-      <div class="rcpt"><span class="ri">i</span><div><div class="rn">No evidence records</div><div class="rd">Claims stay unsupported until a real EvidenceRecord is created.</div></div></div>
-    </div>
+  <aside class="deck-inspect">
+    <div class="deck-ins-head"><span class="ey">Needs you now</span><span class="deck-ins-exp mono">__INSPECTOR_STATUS__</span></div>
+    __INSPECTOR__
   </aside>
 
-  <footer aria-label="Terminal, logs, and external agent drawer" class="drawer">
-    <div class="dr-h">
-      <div class="dr-tabs"><span class="on">Terminal</span><span>Logs</span><span>External agent</span></div>
-      <label class="log-search-wrap"><span>Search logs</span><input class="log-search" aria-label="Search drawer logs" type="search" placeholder="Search logs" /></label>
-      <button class="output-collapse" type="button" aria-pressed="false">Collapse output</button>
-      <button class="terminal-action terminal-copy" type="button">Copy output</button>
-      <button aria-disabled="true" class="terminal-action terminal-jump-error" disabled title="Requires a captured error artifact" type="button">Jump to error</button>
-      <button aria-disabled="true" class="terminal-action terminal-open-file" disabled title="Requires a referenced file artifact" type="button">Open file</button>
-      <button aria-disabled="true" class="terminal-action terminal-rerun" disabled title="Requires a captured command artifact" type="button">Rerun</button>
-      <button aria-disabled="true" class="terminal-action terminal-approve-rerun" disabled title="Requires a pending rerun approval" type="button">Approve rerun</button>
-      <span class="pill ghost">Idle</span>
-    </div>
-    <div class="term" data-output-collapsed="false">
-      <div class="dm terminal-history output-block" data-log-line><span class="pr">history &gt;</span> No command history captured.</div>
-      <div class="dm output-block" data-log-line>No terminal command has run. Commands require an approval-backed AgentRun artifact.</div>
-      <div class="external-agent-stream output-block">
-        <div class="dm" data-log-line>No external agent run has been approved or captured.</div>
-      </div>
-      <div class="output-block" data-log-line><span class="pr">delyx local &gt;</span> <span class="bk"></span></div>
-    </div>
-  </footer>
+  <div class="deck-hintbar mono">
+    <span><b>Ctrl K</b> commands</span>
+    <span><b>Enter</b> send</span>
+    <span><b>Alt T</b> terminal</span>
+    <span><b>Esc</b> close palette</span>
+  </div>
 </div>`;

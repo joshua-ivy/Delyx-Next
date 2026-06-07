@@ -66,8 +66,8 @@ export function AppShell() {
     [actionProposals, activePlan, activeProject, activeRun, activeThread, visibleThreads],
   );
   useEffect(() => {
-    document.documentElement.dataset.mode = "build";
-  }, []);
+    document.documentElement.dataset.mode = activeThread?.mode ?? "build";
+  }, [activeThread?.mode]);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
@@ -97,6 +97,7 @@ export function AppShell() {
     setThreadState,
     setThreads,
     setWorkspaceOpen,
+    threads,
   });
   const runPaletteCommand = (commandId: string) => {
     runAppShellCommand(commandId, {

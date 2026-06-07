@@ -5,7 +5,8 @@ import type { PlanView } from "../features/plans/planTypes";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { notifyLocalAction } from "./ShellPreferenceController";
-import { recordApprovalDecisionForRun } from "./appShellRunActions";
+import { createRunForThread, recordApprovalDecisionForRun, threadWithRun } from "./appShellRunActions";
+import { createThread } from "./appShellThreadActions";
 import { bindPlanControls, requestPlanRevision } from "./cockpitPlanBindings";
 import { updateThreadAndRunStatus } from "./cockpitStateTransitions";
 
@@ -25,13 +26,15 @@ export interface CockpitDomBindingState {
   setThreadOpen: Dispatch<SetStateAction<boolean>>;
   setThreadState: Dispatch<SetStateAction<ThreadUiState>>;
   setWorkspaceOpen: Dispatch<SetStateAction<boolean>>;
+  threads: TaskThread[];
 }
 
 export function useCockpitDomBindings(state: CockpitDomBindingState) {
   useEffect(() => {
     const commandButton = document.querySelector(".command-trigger");
-    const projectButton = document.querySelector('.rail .rnav[title="Projects"]');
-    const threadButton = document.querySelector(".side-h .add");
+    const projectButton = document.querySelector(".project-trigger") ?? document.querySelector('.rail .rnav[title="Projects"]');
+    const threadButton = document.querySelector(".thread-trigger") ?? document.querySelector(".side-h .add");
+    const composerForm = document.querySelector(".deck-comp-form");
     const approvalApproveButtons = Array.from(document.querySelectorAll<HTMLElement>(".approval-approve-once[data-proposal-id]"));
     const approvalDenyButtons = Array.from(document.querySelectorAll<HTMLElement>(".approval-deny[data-proposal-id]"));
     const reviewReviseButtons = Array.from(document.querySelectorAll(".review-revise"));
@@ -56,6 +59,7 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const approveProposal = (event: Event) => updateProposalStatus(state, event, "approved");
     const denyProposal = (event: Event) => updateProposalStatus(state, event, "denied");
     const cleanupPlanControls = bindPlanControls(state, activateOnKeyboard);
+    const cleanupComposer = bindComposerForm(state, composerForm);
     const requestReviewRevision = () => requestPlanRevision(state);
     bindAccessibility(commandButton, projectButton, threadButton);
     commandButton?.addEventListener("click", openPalette);
@@ -76,12 +80,69 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       threadButton?.removeEventListener("click", openThread);
       threadButton?.removeEventListener("keydown", activateOnKeyboard);
       cleanupPlanControls();
+      cleanupComposer();
       unbindProposalButtons(approvalApproveButtons, approveProposal, activateOnKeyboard);
       unbindProposalButtons(approvalDenyButtons, denyProposal, activateOnKeyboard);
       unbindReviewButtons(reviewReviseButtons, requestReviewRevision, activateOnKeyboard);
       unbindThreadCards(cards, selectThread, activateOnKeyboard);
     };
   }, [state]);
+}
+
+function bindComposerForm(state: CockpitDomBindingState, form: Element | null) {
+  if (!(form instanceof HTMLFormElement)) {
+    return () => undefined;
+  }
+  const input = form.querySelector(".deck-comp-input");
+  if (!(input instanceof HTMLTextAreaElement)) {
+    return () => undefined;
+  }
+  const submit = (event: Event) => {
+    event.preventDefault();
+    const text = input.value.trim();
+    if (!text) {
+      notifyLocalAction("Type a local instruction before sending", "warning");
+      return;
+    }
+    input.value = "";
+    if (!state.activeThread) {
+      createThreadFromComposer(state, text);
+      return;
+    }
+    appendThreadMessage(state, text);
+  };
+  form.addEventListener("submit", submit);
+  return () => form.removeEventListener("submit", submit);
+}
+
+function createThreadFromComposer(state: CockpitDomBindingState, goal: string) {
+  const thread = createThread(goal, state.activeProject.id, state.threads.length + 1);
+  if (!thread) {
+    state.setThreadState("error");
+    notifyLocalAction("Thread goal was empty", "warning");
+    return;
+  }
+  const run = createRunForThread(thread, state.activeProject.id, state.threads.length + 1);
+  const runnableThread = threadWithRun(thread, run);
+  state.setAgentRuns((current) => [run, ...current]);
+  state.setThreads((current) => [runnableThread, ...current]);
+  state.setActiveThreadId(runnableThread.id);
+  state.setThreadState("ready");
+  notifyLocalAction("Thread created from composer", "success");
+}
+
+function appendThreadMessage(state: CockpitDomBindingState, body: string) {
+  const activeThread = state.activeThread;
+  if (!activeThread) {
+    return;
+  }
+  const now = new Date().toISOString();
+  state.setThreads((current) => current.map((thread) => (
+    thread.id === activeThread.id
+      ? { ...thread, messages: [...thread.messages, { role: "user", body }], updatedAt: now }
+      : thread
+  )));
+  notifyLocalAction("Message recorded locally; no model call ran.", "success");
 }
 
 function updateProposalStatus(state: CockpitDomBindingState, event: Event, status: "approved" | "denied") {

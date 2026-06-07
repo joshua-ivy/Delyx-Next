@@ -5,14 +5,14 @@ import type { TestArtifactView } from "../features/tests/testTypes";
 import { pendingCount, testStat } from "./cockpitReview";
 
 export function emptyThreadStatsBlock() {
-  return `<div class="stat-row">
-          <div class="stat"><div class="sv">0</div><div class="sk">Files touched</div></div>
-          <div class="stat"><div class="sv">None</div><div class="sk">Diff</div></div>
-          <div class="stat"><div class="sv">Not run</div><div class="sk">Tests</div></div>
-          <div class="stat"><div class="sv">0</div><div class="sk">Commands run</div></div>
-          <div class="stat"><div class="sv">0</div><div class="sk">Approvals needed</div></div>
-          <div class="stat"><div class="sv">None</div><div class="sk">Final answer</div></div>
-          <div class="stat"><div class="sv">0</div><div class="sk">Evidence receipts</div></div>
+  return `<div class="deck-stats">
+          <div class="deck-stat"><div class="deck-stat-v">0</div><div class="deck-stat-k">Files touched</div></div>
+          <div class="deck-stat"><div class="deck-stat-v">None</div><div class="deck-stat-k">Diff</div></div>
+          <div class="deck-stat"><div class="deck-stat-v">Not run</div><div class="deck-stat-k">Tests</div></div>
+          <div class="deck-stat"><div class="deck-stat-v">0</div><div class="deck-stat-k">Commands run</div></div>
+          <div class="deck-stat"><div class="deck-stat-v">0</div><div class="deck-stat-k">Approvals needed</div></div>
+          <div class="deck-stat"><div class="deck-stat-v">None</div><div class="deck-stat-k">Final answer</div></div>
+          <div class="deck-stat"><div class="deck-stat-v">0</div><div class="deck-stat-k">Evidence receipts</div></div>
         </div>`;
 }
 
@@ -22,7 +22,7 @@ export function threadStatsBlock(
   proposals: ActionProposalView[],
   run: AgentRunView | undefined,
 ) {
-  return `<div class="stat-row">
+  return `<div class="deck-stats">
           ${stat(filesTouchedStat(patches), "Files touched")}
           ${stat(diffStat(patches), "Diff")}
           ${stat(testStat(tests), "Tests")}
@@ -34,7 +34,7 @@ export function threadStatsBlock(
 }
 
 function stat(value: number | string, label: string) {
-  return `<div class="stat"><div class="sv">${value}</div><div class="sk">${label}</div></div>`;
+  return `<div class="deck-stat"><div class="deck-stat-v">${value}</div><div class="deck-stat-k">${label}</div></div>`;
 }
 
 function filesTouchedStat(patches: PatchProposalView[]) {

@@ -2,6 +2,11 @@
 
 Delyx Next is a local-first, UI-first AI workbench for project threads, plans, approvals, diffs, tests, evidence, and later external agent orchestration.
 
+The desktop UI now follows the Command Deck direction: a mode-tinted spine,
+command bar, real work pane, contextual inspector, pinned composer, and hint
+bar. Prototype scenario data is intentionally not shipped; the app renders
+real local state or truthful empty states only.
+
 Start with the source of truth:
 
 - `DELYX_NEXT_UI_FIRST_CODEX_BUILD_PLAN.md`
