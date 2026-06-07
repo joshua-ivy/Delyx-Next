@@ -65,7 +65,8 @@ export function WorkspaceOverlay({
             <dl>
               <InfoRow label="Approved root" value={project.approvedRoots[0]} />
               <InfoRow label="Git branch" value={project.git.isRepo ? project.git.branch : "not a repo"} />
-              <InfoRow label="Uncommitted" value={`${project.git.uncommittedChanges}`} />
+              <InfoRow label="Uncommitted" value={gitChangesLabel(project)} />
+              <InfoRow label="Isolation" value={`${project.isolation.label}: ${project.isolation.detail}`} />
               <InfoRow label="Rules files" value={project.rulesFiles.map((file) => file.path).join(", ") || "none"} />
             </dl>
           </section>
@@ -94,6 +95,13 @@ export function WorkspaceOverlay({
       </section>
     </div>
   );
+}
+
+function gitChangesLabel(project: WorkspaceProject) {
+  if (!project.git.isRepo) {
+    return "not a repo";
+  }
+  return project.git.uncommittedChanges === null ? "changes not loaded" : `${project.git.uncommittedChanges}`;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {

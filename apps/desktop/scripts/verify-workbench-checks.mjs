@@ -45,6 +45,8 @@ export const requiredChecks = [
   ["src/features/workspace/workspaceData.ts", "No active isolation"],
   ["src/features/workspace/workspaceData.ts", "AGENTS.md"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Show denied read"],
+  ["src/features/workspace/WorkspaceOverlay.tsx", "gitChangesLabel"],
+  ["src/features/workspace/WorkspaceOverlay.tsx", "Isolation"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Loading state"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Error state"],
   ["src/features/threads/ThreadOverlay.tsx", "Create thread"],
