@@ -1,16 +1,29 @@
-export type TestStatus = "passed" | "failed";
+export type TestStatus = "passed" | "failed" | "not_run";
 
-export interface TestArtifactView {
+export interface ParsedFailure {
+  id: string;
+  message: string;
+  filePath?: string;
+  line?: number;
+  assertion?: string;
+}
+
+export interface TestRunArtifact {
   id: string;
   runId: string;
-  approvalId: string;
   command: string;
-  workingDirectory: string;
+  cwd: string;
   exitCode: number | null;
   durationMs: number;
   stdout: string;
   stderr: string;
-  status: TestStatus;
+  parsedFailures?: ParsedFailure[];
+  startedAt: string;
+  completedAt: string;
+  approvalId?: string;
+}
+
+export interface TestArtifactView extends TestRunArtifact {
+  status?: TestStatus;
   failureSummary?: string;
-  createdAt: string;
 }

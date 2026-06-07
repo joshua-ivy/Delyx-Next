@@ -1440,6 +1440,10 @@ interface TestRunArtifact {
 }
 ```
 
+Status update: frontend TestRunArtifact core model fields implemented on 2026-06-07.
+
+- ~~TestRunArtifact UI model uses command, cwd, exitCode, durationMs, stdout, stderr, parsedFailures, startedAt, completedAt, and optional approvalId.~~
+
 ---
 
 ## 17. Repository Structure

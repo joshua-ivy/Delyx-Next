@@ -1,7 +1,7 @@
 import { riskPolicyLabel, scopeArtifactLabel, scopeLabel, type ActionProposalView } from "../features/approvals/approvalTypes";
 import type { DiffLineView, PatchProposalView } from "../features/patches/patchTypes";
 import type { ReviewFindingView, ReviewReportView } from "../features/review/reviewTypes";
-import type { TestArtifactView } from "../features/tests/testTypes";
+import type { TestArtifactView, TestStatus } from "../features/tests/testTypes";
 import { escapeHtml } from "./html";
 
 export function emptyApprovalBlock() {
@@ -95,12 +95,13 @@ export function testBlock(artifacts: TestArtifactView[]) {
         <div class="dc">
           <div class="dr"><span class="g">artifact</span><span class="x">${escapeHtml(artifact.id)}</span></div>
           <div class="dr"><span class="g">run</span><span class="x">${escapeHtml(artifact.runId)}</span></div>
-          <div class="dr"><span class="g">approval</span><span class="x">${escapeHtml(artifact.approvalId)}</span></div>
-          <div class="dr"><span class="g">time</span><span class="x">${escapeHtml(artifact.createdAt)}</span></div>
-          <div class="dr"><span class="g">cwd</span><span class="x">${escapeHtml(artifact.workingDirectory)}</span></div>
+          <div class="dr"><span class="g">approval</span><span class="x">${escapeHtml(artifact.approvalId ?? "No approval linked")}</span></div>
+          <div class="dr"><span class="g">started</span><span class="x">${escapeHtml(artifact.startedAt)}</span></div>
+          <div class="dr"><span class="g">completed</span><span class="x">${escapeHtml(artifact.completedAt)}</span></div>
+          <div class="dr"><span class="g">cwd</span><span class="x">${escapeHtml(artifact.cwd)}</span></div>
           ${failureLine(artifact)}
           ${streamLines("out", artifact.stdout, "")}
-          ${streamLines("err", artifact.stderr, artifact.status === "failed" ? "m" : "")}
+          ${streamLines("err", artifact.stderr, statusForArtifact(artifact) === "failed" ? "m" : "")}
         </div>
       </div>`).join("");
 }
@@ -110,7 +111,8 @@ export function testStat(artifacts: TestArtifactView[]) {
   if (!latest) {
     return "Not run";
   }
-  return latest.status === "passed" ? "Passed" : "Failed";
+  const status = statusForArtifact(latest);
+  return status === "passed" ? "Passed" : status === "failed" ? "Failed" : "Not run";
 }
 
 export function emptyReviewBlock() {
@@ -145,15 +147,16 @@ function findingBlock(finding: ReviewFindingView) {
 }
 
 function testStatus(artifact: TestArtifactView) {
-  const label = artifact.status === "passed" ? "passed" : "failed";
+  const label = statusForArtifact(artifact).replace("_", " ");
   return `${label} &middot; exit ${artifact.exitCode ?? "unknown"}`;
 }
 
 function failureLine(artifact: TestArtifactView) {
-  if (!artifact.failureSummary) {
+  const failure = artifact.failureSummary ?? artifact.parsedFailures?.[0]?.message;
+  if (!failure) {
     return "";
   }
-  return `<div class="dr m"><span class="g">fail</span><span class="x">${escapeHtml(artifact.failureSummary)}</span></div>`;
+  return `<div class="dr m"><span class="g">fail</span><span class="x">${escapeHtml(failure)}</span></div>`;
 }
 
 function streamLines(label: string, text: string, klass: string) {
@@ -172,4 +175,14 @@ function diffLine(line: DiffLineView) {
 
 function riskClass(risk: ActionProposalView["riskLabel"]) {
   return risk === "low" ? "ghost" : risk === "medium" ? "wait" : "blocked";
+}
+
+function statusForArtifact(artifact: TestArtifactView): TestStatus {
+  if (artifact.status) {
+    return artifact.status;
+  }
+  if (artifact.exitCode === null) {
+    return "not_run";
+  }
+  return artifact.exitCode === 0 ? "passed" : "failed";
 }
