@@ -1,15 +1,36 @@
 export type RiskyAction =
-  | "file_write"
-  | "terminal_command"
-  | "dependency_install"
-  | "connector_write"
-  | "durable_memory_save"
-  | "scheduled_risky_action"
-  | "external_agent_execution"
+  | "read_file"
+  | "write_file"
+  | "edit_file"
+  | "run_terminal"
+  | "install_dependency"
+  | "save_memory"
+  | "use_connector"
+  | "schedule_work"
+  | "external_agent"
   | "external_send";
 
 export type RiskLevel = "low" | "medium" | "high" | "dangerous";
 export type ProposalStatus = "pending" | "approved" | "denied" | "expired";
+export type PermissionScopeKind =
+  | "workspace"
+  | "file"
+  | "terminal"
+  | "dependency"
+  | "connector"
+  | "memory"
+  | "automation"
+  | "external_agent";
+
+export interface PermissionScope {
+  kind: PermissionScopeKind;
+  summary: string;
+  projectId?: string;
+  root?: string;
+  paths?: string[];
+  commands?: string[];
+  connectorId?: string;
+}
 
 export interface RiskTaxonomyEntryView {
   minimumRisk: RiskLevel;
@@ -18,37 +39,47 @@ export interface RiskTaxonomyEntryView {
 }
 
 export const riskTaxonomy: Record<RiskyAction, RiskTaxonomyEntryView> = {
-  file_write: {
+  read_file: {
+    minimumRisk: "low",
+    rollbackRequired: false,
+    summary: "file reads must stay inside approved roots",
+  },
+  write_file: {
     minimumRisk: "high",
     rollbackRequired: true,
     summary: "file writes require checkpoint scope",
   },
-  terminal_command: {
+  edit_file: {
+    minimumRisk: "high",
+    rollbackRequired: true,
+    summary: "file edits require checkpoint scope",
+  },
+  run_terminal: {
     minimumRisk: "medium",
     rollbackRequired: false,
     summary: "terminal commands require captured artifacts",
   },
-  dependency_install: {
+  install_dependency: {
     minimumRisk: "high",
     rollbackRequired: true,
     summary: "dependency installs mutate the project",
   },
-  connector_write: {
+  use_connector: {
     minimumRisk: "high",
     rollbackRequired: true,
     summary: "connector writes leave the local trust boundary",
   },
-  durable_memory_save: {
+  save_memory: {
     minimumRisk: "medium",
     rollbackRequired: true,
     summary: "durable memory changes future runs",
   },
-  scheduled_risky_action: {
+  schedule_work: {
     minimumRisk: "dangerous",
     rollbackRequired: true,
     summary: "scheduled risky actions can run later without attention",
   },
-  external_agent_execution: {
+  external_agent: {
     minimumRisk: "high",
     rollbackRequired: true,
     summary: "external agents run inside bounded scope only",
@@ -66,16 +97,28 @@ export function riskPolicyLabel(action: RiskyAction) {
   return `${entry.minimumRisk} minimum; ${rollback}; ${entry.summary}`;
 }
 
-export interface ActionProposalView {
+export function scopeLabel(scope: PermissionScope) {
+  return [scope.summary, scope.root, scope.connectorId].filter(Boolean).join(" - ") || scope.kind;
+}
+
+export function scopeArtifactLabel(scope: PermissionScope) {
+  const scopedItems = [...(scope.paths ?? []), ...(scope.commands ?? [])];
+  return scopedItems.length > 0 ? scopedItems.join(", ") : "No file or command scope listed.";
+}
+
+export interface ActionProposal {
   id: string;
   runId: string;
   nodeId: string;
-  action: RiskyAction;
-  risk: RiskLevel;
-  scope: string;
-  reason: string;
+  actionType: RiskyAction;
+  riskLabel: RiskLevel;
+  requiredPermission: string;
+  rationale: string;
   expectedResult: string;
-  rollbackPlan: string;
+  rollbackPlan?: string;
+  scope: PermissionScope;
   expiresAt: string;
   status: ProposalStatus;
 }
+
+export type ActionProposalView = ActionProposal;

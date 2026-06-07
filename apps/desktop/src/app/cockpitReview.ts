@@ -1,4 +1,4 @@
-import { riskPolicyLabel, type ActionProposalView } from "../features/approvals/approvalTypes";
+import { riskPolicyLabel, scopeArtifactLabel, scopeLabel, type ActionProposalView } from "../features/approvals/approvalTypes";
 import type { DiffLineView, PatchProposalView } from "../features/patches/patchTypes";
 import type { ReviewFindingView, ReviewReportView } from "../features/review/reviewTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
@@ -21,14 +21,15 @@ export function approvalBlock(proposals: ActionProposalView[]) {
   }
 
   return proposals.map((proposal) => `<div class="appro">
-        <div class="at"><span class="pill ${riskClass(proposal.risk)}">${escapeHtml(proposal.risk)} risk &middot; ${escapeHtml(proposal.action)}</span><span class="meta-id">${escapeHtml(proposal.id)}</span></div>
-        <h4>${escapeHtml(proposal.action)}</h4>
-        <div class="kv"><span class="k">Scope</span><span class="v">${escapeHtml(proposal.scope)}</span></div>
-        <div class="kv"><span class="k">Files/commands</span><span class="v">${escapeHtml(proposal.scope)}</span></div>
-        <div class="kv"><span class="k">Reason</span><span class="v">${escapeHtml(proposal.reason)}</span></div>
+        <div class="at"><span class="pill ${riskClass(proposal.riskLabel)}">${escapeHtml(proposal.riskLabel)} risk &middot; ${escapeHtml(proposal.actionType)}</span><span class="meta-id">${escapeHtml(proposal.id)}</span></div>
+        <h4>${escapeHtml(proposal.actionType)}</h4>
+        <div class="kv"><span class="k">Scope</span><span class="v">${escapeHtml(scopeLabel(proposal.scope))}</span></div>
+        <div class="kv"><span class="k">Files/commands</span><span class="v">${escapeHtml(scopeArtifactLabel(proposal.scope))}</span></div>
+        <div class="kv"><span class="k">Permission</span><span class="v">${escapeHtml(proposal.requiredPermission)}</span></div>
+        <div class="kv"><span class="k">Reason</span><span class="v">${escapeHtml(proposal.rationale)}</span></div>
         <div class="kv"><span class="k">Expected</span><span class="v">${escapeHtml(proposal.expectedResult)}</span></div>
-        <div class="kv"><span class="k">Policy</span><span class="v">${escapeHtml(riskPolicyLabel(proposal.action))}</span></div>
-        <div class="kv"><span class="k">Rollback</span><span class="v">${escapeHtml(proposal.rollbackPlan)}</span></div>
+        <div class="kv"><span class="k">Policy</span><span class="v">${escapeHtml(riskPolicyLabel(proposal.actionType))}</span></div>
+        <div class="kv"><span class="k">Rollback</span><span class="v">${escapeHtml(proposal.rollbackPlan ?? "No rollback plan recorded.")}</span></div>
         <div class="exp">Run ${escapeHtml(proposal.runId)} &middot; Node ${escapeHtml(proposal.nodeId)} &middot; Expires ${escapeHtml(proposal.expiresAt)} &middot; ${escapeHtml(proposal.status)}</div>
         <div class="approval-actions"><span class="btn approval-approve-once">Approve once</span><span class="btn approval-deny">Deny</span><span class="btn approval-always">Always allow for this project later</span><span class="btn approval-scope">Edit scope</span></div>
       </div>`).join("");
@@ -169,6 +170,6 @@ function diffLine(line: DiffLineView) {
   return `<div class="dr ${klass}"><span class="g">${sign}</span><span class="x">${escapeHtml(line.text)}</span></div>`;
 }
 
-function riskClass(risk: ActionProposalView["risk"]) {
+function riskClass(risk: ActionProposalView["riskLabel"]) {
   return risk === "low" ? "ghost" : risk === "medium" ? "wait" : "blocked";
 }

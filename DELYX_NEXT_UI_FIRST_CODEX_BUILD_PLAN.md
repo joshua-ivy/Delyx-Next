@@ -1376,6 +1376,10 @@ interface ActionProposal {
 }
 ```
 
+Status update: frontend ActionProposal core model fields implemented on 2026-06-07.
+
+- ~~ActionProposal UI model uses actionType, riskLabel, requiredPermission, rationale, PermissionScope, expiration, status, and optional rollback plan.~~
+
 ### 16.6 Evidence Record
 
 ```ts
