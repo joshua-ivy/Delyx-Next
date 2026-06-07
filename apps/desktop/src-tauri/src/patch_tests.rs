@@ -102,6 +102,27 @@ mod tests {
     }
 
     #[test]
+    fn duplicate_patch_paths_are_rejected() {
+        let root = temp_workspace("duplicate-patch-path");
+        let file = root.join("plan.md");
+        fs::write(&file, "before\n").unwrap();
+        let mut engine = PatchEngine::new(vec![root]).unwrap();
+        let input = PatchInput {
+            run_id: "run-1".to_string(),
+            approval_id: "prop-1".to_string(),
+            files: vec![
+                PatchFileInput { path: file.clone(), after: "after one\n".to_string() },
+                PatchFileInput { path: file, after: "after two\n".to_string() },
+            ],
+        };
+
+        let result = engine.propose_patch(input);
+
+        assert_eq!(result.unwrap_err(), PatchError::DuplicatePath);
+        assert!(engine.list_proposals("run-1").is_empty());
+    }
+
+    #[test]
     fn restore_checkpoint_restores_original_contents() {
         let root = temp_workspace("restore");
         let file = root.join("copy.txt");

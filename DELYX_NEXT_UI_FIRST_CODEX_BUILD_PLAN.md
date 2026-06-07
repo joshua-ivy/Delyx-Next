@@ -2099,6 +2099,7 @@ Acceptance:
 - ~~Empty diff state hides patch action controls until a real PatchProposal exists.~~
 - ~~Patch action controls without execution/state bindings render unavailable instead of clickable no-ops.~~
 - ~~Restored checkpoints cannot be reused to overwrite later local changes.~~
+- ~~Patch proposals reject duplicate normalized file paths so diff/checkpoint artifacts stay unambiguous.~~
 
 ---
 

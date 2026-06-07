@@ -1,4 +1,5 @@
 use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -60,6 +61,7 @@ pub enum PatchError {
     AlreadyRestored,
     Approval(ApprovalError),
     CheckpointNotFound,
+    DuplicatePath,
     EmptyPatch,
     Io(String),
     OutsideApprovedRoot,
@@ -96,8 +98,12 @@ impl PatchEngine {
         }
 
         let mut files = Vec::new();
+        let mut seen_paths = HashSet::new();
         for file in input.files {
             let path = self.checked_path(&file.path)?;
+            if !seen_paths.insert(path.clone()) {
+                return Err(PatchError::DuplicatePath);
+            }
             let before = read_text(&path)?;
             let diff = build_diff(&before, &file.after);
             files.push(PatchFile { path, before, after: file.after, diff });
