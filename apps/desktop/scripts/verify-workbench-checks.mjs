@@ -1,9 +1,10 @@
 export const requiredChecks = [
   ["src/app/AppShell.tsx", "document.documentElement.dataset.mode"],
   ["src/app/AppShell.tsx", "ctrlKey"],
-  ["src/app/AppShell.tsx", "activateOnKeyboard"],
+  ["src/app/useCockpitDomBindings.ts", "activateOnKeyboard"],
   ["src/app/AppShell.tsx", "setPaletteOpen"],
-  ["src/app/AppShell.tsx", "review-revise"],
+  ["src/app/useCockpitDomBindings.ts", "review-revise"],
+  ["src/app/useCockpitDomBindings.ts", "useCockpitDomBindings"],
   ["src/app/ShellPreferenceController.tsx", "delyx-next.theme"],
   ["src/app/ShellPreferenceController.tsx", "delyx-next.layout"],
   ["src/app/ShellPreferenceController.tsx", "bindLayoutGrip"],

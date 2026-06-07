@@ -1650,6 +1650,10 @@ The product promise:
 13. Do not mark a milestone done without tests, trace markers, or analyzer artifacts.
 14. Keep source files focused: aim for 300 lines or fewer, split/review around 400 lines, and treat 500 lines as a hard cap unless the file is generated, declarative config, or has a documented exception.
 
+Status update: AppShell cockpit DOM bindings were extracted into a focused hook on 2026-06-07 to preserve the source file budget.
+
+- ~~AppShell remains under the 300-line target while cockpit DOM bindings live in a focused hook.~~
+
 ## UI Rules
 
 - The UI is the product and trust layer.
