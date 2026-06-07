@@ -20,6 +20,11 @@ artifact-first.
   - Requires both `external_agent` and `run_terminal` approvals.
   - Captures stdout, stderr, exit status, duration, transcript events, and UI artifacts.
   - Write-capable launch remains blocked until real checkpoint/worktree isolation exists.
+- Command execution artifact shape from app-server protocol ideas.
+  - Implemented locally as `command_exec`.
+  - Used by approved test commands and approved external terminal workers.
+  - Captures command label, cwd, run/approval IDs, timeout, exit status, duration, capped stdout/stderr, truncation flags, and timeline events.
+  - No new dependency; approval checks stay in the caller before execution.
 
 ## Best Phase 2 Picks
 

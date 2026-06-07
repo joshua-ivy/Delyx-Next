@@ -1,9 +1,10 @@
 use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
+use crate::command_exec::{
+    run_command_exec, CommandExecArtifact, CommandExecError, CommandExecEvent, CommandExecRequest,
+    CommandExecStatus,
+};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-use std::thread::sleep;
-use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestArtifact {
@@ -19,6 +20,8 @@ pub struct TestArtifact {
     pub status: TestStatus,
     pub failure_summary: Option<String>,
     pub created_at: u64,
+    pub output_truncated: bool,
+    pub exec_events: Vec<CommandExecEvent>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,43 +76,35 @@ impl TestRunner {
             return Err(TestRunnerError::Timeout);
         }
 
-        let started = Instant::now();
-        let mut child = Command::new(&input.program)
-            .args(&input.args)
-            .current_dir(&working_directory)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(io_error)?;
-        let output = loop {
-            if child.try_wait().map_err(io_error)?.is_some() {
-                break child.wait_with_output().map_err(io_error)?;
-            }
-            if started.elapsed() >= Duration::from_millis(input.timeout_ms) {
-                let _ = child.kill();
-                let _ = child.wait();
-                return Err(TestRunnerError::Timeout);
-            }
-            sleep(Duration::from_millis(10));
-        };
-        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-        let status = if output.status.success() { TestStatus::Passed } else { TestStatus::Failed };
+        let execution = run_command_exec(CommandExecRequest {
+            approval_id: input.approval_id.clone(),
+            args: input.args.clone(),
+            prepare_terminal: false,
+            program: input.program.clone(),
+            run_id: input.run_id.clone(),
+            started_at_ms: now,
+            timeout_ms: input.timeout_ms,
+            working_directory: working_directory.clone(),
+        })
+        .map_err(command_exec_error)?;
+        let status = test_status(&execution);
 
         self.next_artifact_id += 1;
         let artifact = TestArtifact {
             id: format!("test-artifact-{}", self.next_artifact_id),
             run_id: input.run_id,
             approval_id: input.approval_id,
-            command: command_label(&input.program, &input.args),
+            command: execution.command,
             working_directory,
-            exit_code: output.status.code(),
-            duration_ms: started.elapsed().as_millis() as u64,
-            failure_summary: failure_summary(status, &stdout, &stderr),
-            stdout,
-            stderr,
+            exit_code: execution.exit_code,
+            duration_ms: execution.duration_ms,
+            failure_summary: failure_summary(status, &execution.stdout, &execution.stderr),
+            stdout: execution.stdout,
+            stderr: execution.stderr,
             status,
             created_at: now,
+            output_truncated: execution.stdout_truncated || execution.stderr_truncated,
+            exec_events: execution.events,
         };
         self.artifacts.push(artifact.clone());
         Ok(artifact)
@@ -171,10 +166,6 @@ fn failure_summary(status: TestStatus, stdout: &str, stderr: &str) -> Option<Str
         .or_else(|| Some("Command exited with non-zero status.".to_string()))
 }
 
-fn command_label(program: &str, args: &[String]) -> String {
-    std::iter::once(program.to_string()).chain(args.iter().cloned()).collect::<Vec<_>>().join(" ")
-}
-
 fn normalized_program_name(program: &str) -> String {
     let mut name = Path::new(program)
         .file_name()
@@ -212,4 +203,19 @@ fn shorten(line: &str) -> String {
 
 fn io_error(error: std::io::Error) -> TestRunnerError {
     TestRunnerError::Io(error.to_string())
+}
+
+fn command_exec_error(error: CommandExecError) -> TestRunnerError {
+    match error {
+        CommandExecError::EmptyCommand => TestRunnerError::EmptyCommand,
+        CommandExecError::Io(message) => TestRunnerError::Io(message),
+        CommandExecError::Timeout => TestRunnerError::Timeout,
+    }
+}
+
+fn test_status(execution: &CommandExecArtifact) -> TestStatus {
+    match execution.status {
+        CommandExecStatus::Succeeded => TestStatus::Passed,
+        CommandExecStatus::Failed => TestStatus::Failed,
+    }
 }

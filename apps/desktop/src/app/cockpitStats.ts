@@ -2,18 +2,16 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
-import { pendingCount, testStat } from "./cockpitReview";
+import { pendingCount } from "./cockpitReview";
+import { escapeHtml } from "./html";
 
 export function emptyThreadStatsBlock() {
-  return `<div class="deck-stats">
-          <div class="deck-stat"><div class="deck-stat-v">0</div><div class="deck-stat-k">Files touched</div></div>
-          <div class="deck-stat"><div class="deck-stat-v">None</div><div class="deck-stat-k">Diff</div></div>
-          <div class="deck-stat"><div class="deck-stat-v">Not run</div><div class="deck-stat-k">Tests</div></div>
-          <div class="deck-stat"><div class="deck-stat-v">0</div><div class="deck-stat-k">Commands run</div></div>
-          <div class="deck-stat"><div class="deck-stat-v">0</div><div class="deck-stat-k">Approvals needed</div></div>
-          <div class="deck-stat"><div class="deck-stat-v">None</div><div class="deck-stat-k">Final answer</div></div>
-          <div class="deck-stat"><div class="deck-stat-v">0</div><div class="deck-stat-k">Evidence receipts</div></div>
-        </div>`;
+  return `<section class="run-activity">
+    <div class="run-activity-main">
+      <span class="activity-dot idle"></span>
+      <div><strong>Idle</strong><span>Create a thread to start a real run.</span></div>
+    </div>
+  </section>`;
 }
 
 export function threadStatsBlock(
@@ -22,43 +20,64 @@ export function threadStatsBlock(
   proposals: ActionProposalView[],
   run: AgentRunView | undefined,
 ) {
-  return `<div class="deck-stats">
-          ${stat(filesTouchedStat(patches), "Files touched")}
-          ${stat(diffStat(patches), "Diff")}
-          ${stat(testStat(tests), "Tests")}
-          ${stat(commandsRunStat(tests, run), "Commands run")}
-          ${stat(pendingCount(proposals), "Approvals needed")}
-          ${stat(finalAnswerStat(run), "Final answer")}
-          ${stat(run?.metrics.evidenceCount ?? run?.evidence.length ?? 0, "Evidence receipts")}
-        </div>`;
+  if (!run) {
+    return emptyThreadStatsBlock();
+  }
+  const pending = pendingCount(proposals);
+  const latestEvent = run.events.at(-1)?.message ?? "Run created. Waiting for the next real action.";
+  return `<section class="run-activity">
+    <div class="run-activity-main">
+      <span class="activity-dot ${activityTone(run.status, pending)}"></span>
+      <div><strong>${escapeHtml(activityTitle(run.status, pending))}</strong><span>${escapeHtml(latestEvent)}</span></div>
+    </div>
+    <div class="run-activity-meta">
+      ${activityMeta("Plan", run.mode.replaceAll("_", " "))}
+      ${activityMeta("Approval", pending > 0 ? `${pending} waiting` : "clear")}
+      ${activityMeta("Diff", patches.length > 0 ? `${changedFileCount(patches)} file(s)` : "none")}
+      ${activityMeta("Tests", tests.length > 0 ? latestTestStatus(tests) : "not run")}
+    </div>
+  </section>`;
 }
 
-function stat(value: number | string, label: string) {
-  return `<div class="deck-stat"><div class="deck-stat-v">${value}</div><div class="deck-stat-k">${label}</div></div>`;
+function activityMeta(label: string, value: string) {
+  return `<span><b>${escapeHtml(label)}</b>${escapeHtml(value)}</span>`;
 }
 
-function filesTouchedStat(patches: PatchProposalView[]) {
+function changedFileCount(patches: PatchProposalView[]) {
   return patches.reduce((count, patch) => count + patch.files.length, 0);
 }
 
-function diffStat(patches: PatchProposalView[]) {
-  return patches.some((patch) => patch.files.length > 0) ? "Ready" : "None";
+function latestTestStatus(tests: TestArtifactView[]) {
+  const latest = tests.at(-1);
+  if (!latest) {
+    return "not run";
+  }
+  return latest.status ?? (latest.exitCode === 0 ? "passed" : "failed");
 }
 
-function commandsRunStat(tests: TestArtifactView[], run: AgentRunView | undefined) {
-  const commandEvents = run?.events.filter((event) => event.kind.toLowerCase().includes("command")).length ?? 0;
-  return Math.max(tests.length, commandEvents, run?.metrics.commandCount ?? 0);
+function activityTitle(status: AgentRunView["status"], pending: number) {
+  if (pending > 0) {
+    return "Waiting for your approval";
+  }
+  const labels: Record<AgentRunView["status"], string> = {
+    blocked: "Blocked",
+    cancelled: "Cancelled",
+    created: "Ready",
+    failed: "Failed",
+    repairing: "Repairing",
+    running: "Working",
+    succeeded: "Done",
+    waiting_for_approval: "Waiting for your approval",
+  };
+  return labels[status];
 }
 
-function finalAnswerStat(run: AgentRunView | undefined) {
-  if (!run) {
-    return "None";
+function activityTone(status: AgentRunView["status"], pending: number) {
+  if (pending > 0 || status === "waiting_for_approval") {
+    return "wait";
   }
-  if (run.status === "succeeded" && run.outcome?.summary) {
-    return "Ready";
+  if (status === "failed" || status === "blocked" || status === "cancelled") {
+    return "bad";
   }
-  if (run.status === "failed" || run.status === "cancelled" || run.status === "blocked") {
-    return "Failed";
-  }
-  return "Pending";
+  return status === "succeeded" ? "done" : "live";
 }

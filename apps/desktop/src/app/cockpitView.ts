@@ -11,6 +11,7 @@ import { hasSkills, skillBlock } from "./cockpitSkills";
 import { threadStatsBlock } from "./cockpitStats";
 import { buildProgressBlock, composerMode, terminalLabel, workDiffBlock } from "./cockpitWorkPane";
 import { escapeHtml } from "./html";
+import { conversationBlock, threadGoalBlock } from "./cockpitMessageFormat";
 import type { RuntimeBridgeState } from "./runtimeBridge";
 import { riskTaxonomy, type ActionProposalView, type RiskTaxonomySnapshotView } from "../features/approvals/approvalTypes";
 import type { AutomationStateView } from "../features/automations/automationTypes";
@@ -80,7 +81,7 @@ export function buildCockpitMarkup(
     .replace("__THREAD_ID__", escapeHtml(activeThread?.id ?? "empty"))
     .replace("__RUN_LABEL__", runLabel(activeRun))
     .replace("__THREAD_TITLE__", escapeHtml(activeThread?.title ?? "No active thread"))
-    .replace("__THREAD_DESC__", escapeHtml(activeThread?.goal ?? emptyThreadGoal()))
+    .replace("__THREAD_DESC__", threadGoalBlock(activeThread))
     .replace("__CONVERSATION__", conversationBlock(activeThread))
     .replace("__THREAD_STATS__", threadStatsBlock(activePatches, activeTests, activeProposals, activeRun))
     .replace("__BUILD_PROGRESS__", buildProgressBlock(activePlan, activeThread))
@@ -88,6 +89,7 @@ export function buildCockpitMarkup(
     .replace("__TERMINAL_LABEL__", terminalLabel(activeRun))
     .replace("__EXTERNAL_AGENT_STREAM__", externalAgentBlock(externalAgents, activeRun?.id))
     .replace("__COMPOSER_MODE__", composerMode(activeThread?.mode))
+    .replace("__INSPECTOR_LABEL__", inspectorLabel(activeProposals, activeRun))
     .replace("__INSPECTOR_STATUS__", inspectorStatus(activeProposals, activeRun))
     .replace("__INSPECTOR__", inspectorBlock({
       activeProposals,
@@ -189,30 +191,19 @@ function modeLabel(mode: TaskThread["mode"] | undefined) {
   return (mode ?? "build").toUpperCase();
 }
 
-function conversationBlock(thread: TaskThread | undefined) {
-  if (!thread) {
-    return `<div class="deck-msg system"><div class="deck-msg-bub">Create a thread to start a real local conversation. No model response has been generated.</div></div>`;
-  }
-  const messages = thread.messages.map((message) => {
-    const role = message.role === "user" ? "you" : message.role === "assistant" ? "delyx" : "system";
-    const avatar = role === "delyx" ? '<span class="deck-msg-av">D</span>' : "";
-    return `<div class="deck-msg ${role}">${avatar}<div class="deck-msg-bub">${escapeHtml(message.body)}</div></div>`;
-  }).join("");
-  const hasAssistant = thread.messages.some((message) => message.role === "assistant");
-  const assistantState = hasAssistant ? "" : `<div class="deck-msg system"><div class="deck-msg-bub">No assistant message has been generated for this thread yet.</div></div>`;
-  return `${messages}${assistantState}`;
-}
-
-function emptyThreadGoal() {
-  return "Create a thread in this project to start real local work. Runtime execution, approvals, diffs, tests, and evidence stay empty until their ledgers exist.";
-}
-
 function inspectorStatus(proposals: ActionProposalView[], run: AgentRunView | undefined) {
   const pending = pendingCount(proposals);
   if (pending > 0) {
     return `${pending} pending`;
   }
   return run ? escapeHtml(run.status) : "idle";
+}
+
+function inspectorLabel(proposals: ActionProposalView[], run: AgentRunView | undefined) {
+  if (pendingCount(proposals) > 0) {
+    return "Needs you now";
+  }
+  return run ? "Run state" : "Inspector";
 }
 
 interface InspectorState {
@@ -262,13 +253,29 @@ function inspectorBlock(state: InspectorState) {
     ].join("");
   }
   if (state.activeRun) {
+    const latest = state.activeRun.events.at(-1)?.message ?? "Run created. Waiting for the next real action.";
     return `<div class="appro">
-        <div class="at"><span class="pill accent">Next action</span><span class="meta-id">${escapeHtml(state.activeRun.id)}</span></div>
+        <div class="at"><span class="pill accent">Run activity</span><span class="meta-id">${escapeHtml(state.activeRun.id)}</span></div>
         <h4>${escapeHtml(state.activeRun.status.replaceAll("_", " "))}</h4>
-        <div class="kv"><span class="k">Run</span><span class="v">${escapeHtml(state.activeRun.goal)}</span></div>
-        <div class="kv"><span class="k">Commands</span><span class="v">${state.activeRun.metrics.commandCount}</span></div>
-        <div class="kv"><span class="k">Evidence</span><span class="v">${state.activeRun.metrics.evidenceCount}</span></div>
+        <div class="kv"><span class="k">Now</span><span class="v">${escapeHtml(latest)}</span></div>
+        <div class="kv"><span class="k">Next</span><span class="v">${escapeHtml(nextRunHint(state.activeRun))}</span></div>
       </div>`;
   }
   return emptyApprovalBlock(state.riskPolicy);
+}
+
+function nextRunHint(run: AgentRunView) {
+  if (run.status === "running" && run.events.at(-1)?.kind === "model_call.started") {
+    return "Waiting for the local model response.";
+  }
+  if (run.status === "created") {
+    return "Create a plan or send another instruction.";
+  }
+  if (run.status === "waiting_for_approval") {
+    return "Review the approval request.";
+  }
+  if (run.status === "succeeded") {
+    return "Review receipts before making final claims.";
+  }
+  return "Check the active work pane for the next available action.";
 }

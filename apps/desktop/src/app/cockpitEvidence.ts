@@ -41,23 +41,33 @@ function evidenceCoverageBlock(answer: ResearchAnswerView | undefined) {
   const audits = answer?.audits ?? [];
   const testCount = countKind(receipts, "test");
   const needsReview = audits.filter((audit) => audit.status !== "supported").length + (answer?.contradictions.length ?? 0);
-  const rows: [string, string][] = [
-    ["Why Delyx believes this", `${audits.filter((audit) => audit.status === "supported").length} supported claim(s)`],
-    ["What Delyx changed", `${countKind(receipts, "diff")} diff receipt(s)`],
-    ["What Delyx tested", `${testCount} test receipt(s)`],
-    ["What Delyx did not test", testCount === 0 ? "not tested" : "test receipts present"],
-    ["What still needs review", `${needsReview} item(s)`],
-    ["Files read", `${countKind(receipts, "local_file")} file receipt(s)`],
-    ["Symbols inspected", `${countKind(receipts, "repo_symbol")} symbol receipt(s)`],
-    ["Commands run", `${countKind(receipts, "terminal")} terminal receipt(s)`],
-    ["Diffs produced", `${countKind(receipts, "diff")} diff receipt(s)`],
-    ["Sources cited", `${countKind(receipts, "web")} web receipt(s)`],
-    ["Memory used", `${countKind(receipts, "memory")} memory receipt(s)`],
-    ["External agent transcript", `${countKind(receipts, "external_agent")} external receipt(s)`],
-    ["Model calls", `${countKind(receipts, "model_call")} model receipt(s)`],
-    ["Approvals granted", "not recorded as EvidenceRecord yet"],
-  ];
+  const rows = compactCoverageRows(receipts, audits.filter((audit) => audit.status === "supported").length, testCount, needsReview);
   return `<div class="evidence-coverage">${rows.map(coverageRow).join("")}</div>`;
+}
+
+function compactCoverageRows(
+  receipts: EvidenceReceiptView[],
+  supportedClaims: number,
+  testCount: number,
+  needsReview: number,
+): [string, string][] {
+  const rows: [string, string][] = [
+    ["Supported claims", `${supportedClaims}`],
+    ["Tests", testCount === 0 ? "not tested" : `${testCount} receipt(s)`],
+  ];
+  const maybeRows: [string, number, string][] = [
+    ["Files read", countKind(receipts, "local_file"), "file receipt(s)"],
+    ["Commands run", countKind(receipts, "terminal"), "terminal receipt(s)"],
+    ["Diffs", countKind(receipts, "diff"), "diff receipt(s)"],
+    ["Model calls", countKind(receipts, "model_call"), "model receipt(s)"],
+    ["External agents", countKind(receipts, "external_agent"), "external receipt(s)"],
+    ["Web sources", countKind(receipts, "web"), "web receipt(s)"],
+  ];
+  rows.push(...maybeRows.filter(([, count]) => count > 0).map(([label, count, suffix]) => [label, `${count} ${suffix}`] as [string, string]));
+  if (needsReview > 0) {
+    rows.push(["Needs review", `${needsReview}`]);
+  }
+  return rows;
 }
 
 function countKind(receipts: EvidenceReceiptView[], kind: EvidenceReceiptView["sourceKind"]) {

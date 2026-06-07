@@ -21,7 +21,7 @@ export const cockpitMarkup = String.raw`<div class="delyx deckC" data-screen-lab
     <div class="deck-work-scroll">
       <div class="ey">THREAD &middot; __THREAD_ID__ __RUN_LABEL__</div>
       <h1 class="deck-title disp">__THREAD_TITLE__</h1>
-      <p class="deck-desc">__THREAD_DESC__</p>
+      <div class="deck-desc">__THREAD_DESC__</div>
 
       <div class="deck-conv" aria-label="Thread conversation">__CONVERSATION__</div>
 
@@ -62,7 +62,7 @@ export const cockpitMarkup = String.raw`<div class="delyx deckC" data-screen-lab
   </main>
 
   <aside class="deck-inspect">
-    <div class="deck-ins-head"><span class="ey">Needs you now</span><span class="deck-ins-exp mono">__INSPECTOR_STATUS__</span></div>
+    <div class="deck-ins-head"><span class="ey">__INSPECTOR_LABEL__</span><span class="deck-ins-exp mono">__INSPECTOR_STATUS__</span></div>
     __INSPECTOR__
   </aside>
 

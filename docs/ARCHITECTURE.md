@@ -50,7 +50,10 @@ complete:
   component/interaction tests.
 - The Command Deck cockpit currently uses `buildCockpitMarkup` string rendering
   plus manual DOM bindings. That is a Phase 1 implementation choice awaiting an
-  explicit architecture decision or migration.
+  explicit architecture decision or migration. Current cockpit rendering avoids
+  shipped fake data, formats long messages/readable lists, shows a compact live
+  activity strip for real run events, and keeps evidence coverage compact instead
+  of rendering empty zero-count dashboards.
 
 ## Codex Reference Integration
 
@@ -71,6 +74,11 @@ Current Codex-inspired local adaptation:
 - `terminal_command_prep` applies best-effort PowerShell UTF-8 output setup for
   approved external worker commands without changing the visible approved
   command label.
+- `command_exec` adapts Codex app-server command execution protocol ideas into
+  a small local `CommandExecArtifact`: command label, cwd, approval/run IDs,
+  timeout, exit status, duration, capped stdout/stderr, truncation flags, and
+  timeline events. It is used only after Delyx approval gates have already
+  authorized the test command or external terminal worker.
 
 ## Source File Size Budget
 
@@ -218,8 +226,8 @@ runtime actions.
 The Tauri `test_run_approved` bridge exposes approved test-command execution
 through the Rust TestRunner. It reads the same Rust ApprovalEngine owned by the
 approval bridge, rejects pending or mismatched approvals, captures stdout,
-stderr, exit code, duration, and failure summary, and stores UI-ready
-TestArtifactView records by run.
+stderr, exit code, duration, output truncation state, command execution events,
+and failure summary, and stores UI-ready TestArtifactView records by run.
 The Tauri `review_create` bridge exposes the read-only Rust ReviewAgent for
 real patch and test artifacts. It returns UI-ready ReviewReportView findings
 without write capability and rejects not-run test artifacts so review cannot
@@ -229,6 +237,9 @@ command contracts produce visible `codex exec` and `claude -p` command arrays
 with explicit permission mode, transcript format, working directory, and Delyx
 tool requirements. Codex CLI read-only launch now flows through external-agent
 approval, terminal-command approval, captured output, and UI-visible artifacts.
+Approved external terminal workers use the shared command execution artifact so
+their transcript events, stdout/stderr, exit status, and duration follow the
+same receipt shape as tests.
 Codex write-capable launch and any diff-capturing external run still require a
 real checkpoint or isolated worktree. Claude launch remains preview-only.
 

@@ -1,5 +1,6 @@
 use crate::approval::ApprovalEngine;
 use crate::approval_bridge::ApprovalBridgeState;
+use crate::command_exec::{CommandExecEvent, CommandExecEventKind};
 use crate::test_runner::{TestCommandInput, TestRunner, TestStatus};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -47,6 +48,8 @@ pub struct TestArtifactView {
     pub approval_id: Option<String>,
     pub status: String,
     pub failure_summary: Option<String>,
+    pub output_truncated: bool,
+    pub exec_events: Vec<CommandExecEventView>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -54,6 +57,14 @@ pub struct TestArtifactView {
 pub struct ParsedFailureView {
     pub id: String,
     pub message: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandExecEventView {
+    pub kind: String,
+    pub message: String,
+    pub timestamp_ms: u64,
 }
 
 #[tauri::command]
@@ -143,6 +154,8 @@ fn artifact_view(
         status: status_key(artifact.status).to_string(),
         stderr: artifact.stderr.clone(),
         stdout: artifact.stdout.clone(),
+        output_truncated: artifact.output_truncated,
+        exec_events: artifact.exec_events.iter().map(exec_event_view).collect(),
     }
 }
 
@@ -150,5 +163,23 @@ fn status_key(status: TestStatus) -> &'static str {
     match status {
         TestStatus::Failed => "failed",
         TestStatus::Passed => "passed",
+    }
+}
+
+fn exec_event_view(event: &CommandExecEvent) -> CommandExecEventView {
+    CommandExecEventView {
+        kind: exec_event_kind_key(event.kind).to_string(),
+        message: event.message.clone(),
+        timestamp_ms: event.timestamp_ms,
+    }
+}
+
+fn exec_event_kind_key(kind: CommandExecEventKind) -> &'static str {
+    match kind {
+        CommandExecEventKind::Started => "started",
+        CommandExecEventKind::Stdout => "stdout",
+        CommandExecEventKind::Stderr => "stderr",
+        CommandExecEventKind::Completed => "completed",
+        CommandExecEventKind::Failed => "failed",
     }
 }

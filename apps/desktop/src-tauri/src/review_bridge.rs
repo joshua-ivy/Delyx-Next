@@ -181,6 +181,8 @@ fn test_input(input: TestReviewInput) -> Result<TestArtifact, String> {
         exit_code: input.exit_code,
         failure_summary: input.failure_summary,
         id: input.id,
+        exec_events: Vec::new(),
+        output_truncated: false,
         run_id: input.run_id,
         status: test_status(input.status.as_deref(), input.exit_code)?,
         stderr: input.stderr,

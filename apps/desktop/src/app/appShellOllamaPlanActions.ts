@@ -8,7 +8,7 @@ import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { appendThreadMessageOverBridge } from "../features/threads/threadClient";
 import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
-import { recordModelCallFailure, recordModelCallResult } from "./appShellModelRunActions";
+import { recordModelCallFailure, recordModelCallResult, recordModelCallStarted } from "./appShellModelRunActions";
 import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
@@ -69,9 +69,10 @@ function ensureRun(state: OllamaPlanState, thread: TaskThread) {
 }
 
 function startOllamaPlan(state: OllamaPlanState, thread: TaskThread, model: string) {
+  const now = new Date().toISOString();
   appendMessage(state, thread.id, { role: "system", body: `Ollama PlanAgent is drafting with ${model}.` }, "planning");
   state.setThreadState("ready");
-  state.setAgentRuns((current) => updateRunsForThreadStatus(current, thread, "planning", new Date().toISOString()));
+  state.setAgentRuns((current) => recordModelCallStarted(updateRunsForThreadStatus(current, thread, "planning", now), thread, model, now));
 }
 
 function recordOllamaPlanFailure(state: OllamaPlanState, thread: TaskThread, model: string, message: string) {

@@ -21,9 +21,17 @@ export interface TestRunArtifact {
   startedAt: string;
   completedAt: string;
   approvalId?: string;
+  outputTruncated?: boolean;
+  execEvents?: CommandExecEvent[];
 }
 
 export interface TestArtifactView extends TestRunArtifact {
   status?: TestStatus;
   failureSummary?: string;
+}
+
+export interface CommandExecEvent {
+  kind: "started" | "stdout" | "stderr" | "completed" | "failed";
+  message: string;
+  timestampMs: number;
 }

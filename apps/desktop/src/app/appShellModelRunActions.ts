@@ -1,6 +1,20 @@
 import type { AgentRunStatus, AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 
+export function recordModelCallStarted(
+  runs: AgentRunView[],
+  thread: TaskThread,
+  modelId: string,
+  createdAt: string,
+) {
+  if (!thread.activeRunId) {
+    return runs;
+  }
+  return runs.map((run) => (
+    run.id === thread.activeRunId ? runWithModelCallStarted(run, modelId, createdAt) : run
+  ));
+}
+
 export function recordModelCallResult(
   runs: AgentRunView[],
   thread: TaskThread,
@@ -32,6 +46,18 @@ export function recordModelCallFailure(
   return runs.map((run) => (
     run.id === thread.activeRunId ? runWithModelCallFailure(run, modelId, error, createdAt, nextStatus) : run
   ));
+}
+
+function runWithModelCallStarted(run: AgentRunView, modelId: string, createdAt: string): AgentRunView {
+  const nodeId = `${run.id}-model-call-${modelCallIndex(run)}`;
+  const events = [...run.events, modelEvent(run, nodeId, "model_call.started", `Ollama request sent to ${modelId}.`, { modelId }, createdAt)];
+  return {
+    ...run,
+    events,
+    metrics: { ...run.metrics, eventCount: events.length },
+    status: "running",
+    updatedAt: createdAt,
+  };
 }
 
 function runWithModelCallResult(

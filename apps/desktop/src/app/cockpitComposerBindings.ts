@@ -4,7 +4,7 @@ import type { ModelSettingsView, ThreadRoleMessage } from "../features/models/mo
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
-import { recordModelCallFailure, recordModelCallResult } from "./appShellModelRunActions";
+import { recordModelCallFailure, recordModelCallResult, recordModelCallStarted } from "./appShellModelRunActions";
 import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { createThread, modeForThreadStatus } from "./appShellThreadActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
@@ -101,6 +101,7 @@ async function requestOllamaReply(state: ComposerBindingState, thread: TaskThrea
     return;
   }
   try {
+    state.setAgentRuns((current) => recordModelCallStarted(current, thread, model, new Date().toISOString()));
     const response = await sendOllamaChat(state.modelSettings, modelMessages(thread));
     const now = new Date().toISOString();
     appendMessage(state, thread.id, { role: "assistant", body: response.text }, "idle");

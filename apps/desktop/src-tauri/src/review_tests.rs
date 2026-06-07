@@ -101,6 +101,8 @@ mod tests {
             exit_code: Some(1),
             failure_summary: Some("assertion failed".to_string()),
             id: "test-artifact-1".to_string(),
+            exec_events: Vec::new(),
+            output_truncated: false,
             run_id: "run-1".to_string(),
             status: TestStatus::Failed,
             stderr: "assertion failed".to_string(),

@@ -7,7 +7,7 @@ Last updated: 2026-06-07.
 Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
-- `cargo test --workspace`: 203 passed, 0 failed.
+- `cargo test --workspace`: 207 passed, 0 failed.
 - `npm run typecheck`, `npm test` (smoke/source-contract), and `npm run smoke:ui`: pass.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
@@ -53,7 +53,9 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - The repo intentionally has one Rust crate today: `apps/desktop/src-tauri`.
 - `openai/codex` was audited at commit `e093d81` as a reference/salvage pool, not a repo to blindly copy.
 - A small Codex-inspired PowerShell UTF-8 terminal-capture polish is wired for approved external worker commands.
+- A Codex-inspired typed command execution artifact now backs approved test commands and external terminal workers with output caps, stdout/stderr events, status, duration, approval IDs, and deterministic tests.
 - Codex CLI launch is now wired only through Delyx approvals and captured command artifacts; it is not an autonomous build loop.
+- The cockpit replaced the dead metric card grid with a compact live activity strip, readable message formatting, and compact evidence coverage; it is still string-rendered pending D4.
 
 ## Phase 1 Skeleton Checklist
 
@@ -133,6 +135,8 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - [ ] D2 - AgentRun Execution Engine
   - Add executor, scheduler, node runner, resume, repair, and hook modules.
   - Make AgentRun the real execution graph, not only an inspector artifact.
+  - Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
+  - Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.
   - Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
   - Use Codex thread/start vs turn/start and command/exec protocol shapes as reference.
   - Keep all risky actions approval-gated.
@@ -188,6 +192,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Use `docs/CODEX_REFERENCE_AUDIT.md` as the pick list.
   - Pull only pieces that reduce risk or save real implementation time.
   - Candidate direct/adapt pieces: exec policy decisions, command exec artifacts, thread/turn protocol shape, apply-patch deltas, keyring store, Ollama readiness, Git baseline/diff helpers, sandbox capability detection.
+  - Pulled/adapted: PowerShell UTF-8 command prep, read-only Codex CLI launch contract, and typed command execution receipts.
   - Avoid importing Codex core, generated protocol macros, cloud auth, or broad parser stacks until a PR proves the need.
   - Every Codex-derived change needs tests, UI-visible state, approval gates, and dependency justification.
 

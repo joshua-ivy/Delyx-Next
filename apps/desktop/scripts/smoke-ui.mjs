@@ -12,7 +12,9 @@ const builtOutput = existsSync(indexPath)
   : "";
 const source = [
   "src/app/cockpitMarkup.ts",
+  "src/app/cockpitMessageFormat.ts",
   "src/app/cockpitWorkPane.ts",
+  "src/app/appShellModelRunActions.ts",
   "src/app/cockpitPlanBindings.ts",
   "src/app/runtimeBridge.ts",
   "src/app/workspaceBridge.ts",
@@ -27,7 +29,7 @@ check(existsSync(indexPath), "dist/index.html must exist; run npm run build firs
 check(assetExists("assets", ".js"), "built JS asset must exist");
 check(assetExists("assets", ".css"), "built CSS asset must exist");
 
-for (const label of ["Projects", "Threads", "Plan", "Approvals", "Diff", "Tests", "Evidence"]) {
+for (const label of ["Projects", "Threads", "Plan", "Approval", "Diff", "Tests", "Evidence"]) {
   check(source.includes(label), `UI source must include ${label}`);
 }
 for (const state of ["Loading:", "Error:", "blocked", "failed", "done"]) {
