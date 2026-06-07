@@ -57,6 +57,7 @@ pub struct CheckpointFile {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PatchError {
     AlreadyApplied,
+    AlreadyRestored,
     Approval(ApprovalError),
     CheckpointNotFound,
     EmptyPatch,
@@ -154,6 +155,10 @@ impl PatchEngine {
             .find(|item| item.id == checkpoint_id)
             .cloned()
             .ok_or(PatchError::CheckpointNotFound)?;
+        let index = self.proposal_index(&checkpoint.proposal_id)?;
+        if self.proposals[index].status != PatchStatus::Applied {
+            return Err(PatchError::AlreadyRestored);
+        }
         approvals.assert_can_execute(&checkpoint.approval_id, now).map_err(PatchError::Approval)?;
 
         for file in &checkpoint.files {
@@ -163,7 +168,6 @@ impl PatchEngine {
                 None => {}
             }
         }
-        let index = self.proposal_index(&checkpoint.proposal_id)?;
         self.proposals[index].status = PatchStatus::Restored;
         Ok(())
     }

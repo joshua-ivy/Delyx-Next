@@ -74,6 +74,26 @@ mod tests {
     }
 
     #[test]
+    fn restored_checkpoint_cannot_be_reused() {
+        let root = temp_workspace("restore-once");
+        let file = root.join("copy.txt");
+        fs::write(&file, "original\n").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(file_write_input(30));
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut engine = PatchEngine::new(vec![root]).unwrap();
+        let patch = engine.propose_patch(patch_input(&approval.id, &file, "changed\n")).unwrap();
+        let checkpoint = engine.apply_approved_patch(&patch.id, 10, &approvals).unwrap();
+        engine.restore_checkpoint(&checkpoint.id, 10, &approvals).unwrap();
+        fs::write(&file, "user edit\n").unwrap();
+
+        let result = engine.restore_checkpoint(&checkpoint.id, 10, &approvals);
+
+        assert_eq!(result.unwrap_err(), PatchError::AlreadyRestored);
+        assert_eq!(fs::read_to_string(&file).unwrap(), "user edit\n");
+    }
+
+    #[test]
     fn outside_approved_root_is_rejected() {
         let root = temp_workspace("inside-root");
         let outside = temp_workspace("outside-root").join("escape.txt");
