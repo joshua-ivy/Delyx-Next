@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CommandPalette } from "../design-system/CommandPalette";
 import { ShellPreferenceController } from "./ShellPreferenceController";
+import { useApprovalPolicy } from "./appShellApprovalPolicy";
 import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { canTransition, createThread, modeForThreadStatus } from "./appShellThreadActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
@@ -53,6 +54,7 @@ export function AppShell() {
   const [modelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
+  const riskPolicy = useApprovalPolicy();
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
   const activeThread = visibleThreads.find((thread) => thread.id === activeThreadId) ?? visibleThreads[0];
@@ -79,8 +81,9 @@ export function AppShell() {
       currentReleaseState,
       visibleThreads,
       runtimeBridge,
+      riskPolicy,
     ),
-    [actionProposals, activePlan, activeProject, activeRun, activeThread, externalAgentState, modelSettings, runtimeBridge, visibleThreads],
+    [actionProposals, activePlan, activeProject, activeRun, activeThread, externalAgentState, modelSettings, riskPolicy, runtimeBridge, visibleThreads],
   );
   useEffect(() => {
     let cancelled = false;

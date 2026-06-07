@@ -129,6 +129,10 @@ same UI-ready proposal shape as the renderer, rejects unsupported non-risky
 approval actions, deduplicates repeated plan-approval requests by client ID, and
 keeps expired decisions visible instead of moving a run forward. Web preview
 retains the local renderer fallback.
+The `approval_taxonomy` command exposes the Rust risk taxonomy as a read-only
+UI snapshot. The renderer merges that snapshot into its web-preview fallback so
+approval policy labels come from the same minimum-risk floors used by execution
+gates when Tauri is available.
 
 ## Tool Layer
 

@@ -12,7 +12,7 @@ import { threadStatsBlock } from "./cockpitStats";
 import { buildProgressBlock, composerMode, terminalLabel, workDiffBlock } from "./cockpitWorkPane";
 import { escapeHtml } from "./html";
 import type { RuntimeBridgeState } from "./runtimeBridge";
-import type { ActionProposalView } from "../features/approvals/approvalTypes";
+import { riskTaxonomy, type ActionProposalView, type RiskTaxonomySnapshotView } from "../features/approvals/approvalTypes";
 import type { AutomationStateView } from "../features/automations/automationTypes";
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
 import type { MemoryStateView } from "../features/memory/memoryTypes";
@@ -51,6 +51,7 @@ export function buildCockpitMarkup(
   releaseState: ReleaseStateView,
   threads: TaskThread[],
   runtimeBridge: RuntimeBridgeState,
+  riskPolicy: RiskTaxonomySnapshotView = riskTaxonomy,
 ) {
   const activeProposals = activeRun ? proposals.filter((proposal) => proposal.runId === activeRun.id) : [];
   const activePatches = activeRun ? patches.filter((patch) => patch.runId === activeRun.id) : [];
@@ -100,6 +101,7 @@ export function buildCockpitMarkup(
       activeTests,
       activeReview,
       activeRun,
+      riskPolicy,
     }));
 }
 
@@ -225,12 +227,13 @@ interface InspectorState {
   activeTests: TestArtifactView[];
   activeReview: ReviewReportView | undefined;
   activeRun: AgentRunView | undefined;
+  riskPolicy: RiskTaxonomySnapshotView;
 }
 
 function inspectorBlock(state: InspectorState) {
   const pending = state.activeProposals.filter((proposal) => proposal.status === "pending");
   if (pending.length > 0) {
-    return approvalBlock(pending);
+    return approvalBlock(pending, state.riskPolicy);
   }
   if (state.activeReview) {
     return reviewBlock(state.activeReview);
@@ -267,5 +270,5 @@ function inspectorBlock(state: InspectorState) {
         <div class="kv"><span class="k">Evidence</span><span class="v">${state.activeRun.metrics.evidenceCount}</span></div>
       </div>`;
   }
-  return emptyApprovalBlock();
+  return emptyApprovalBlock(state.riskPolicy);
 }

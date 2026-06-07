@@ -9,6 +9,7 @@ fn main() {
             delyx_next_desktop::approval_bridge::approval_decide,
             delyx_next_desktop::approval_bridge::approval_propose,
             delyx_next_desktop::approval_bridge::approval_snapshot,
+            delyx_next_desktop::approval_bridge_taxonomy::approval_taxonomy,
             delyx_next_desktop::external_agent_contract_bridge::external_agent_contract_preview,
             delyx_next_desktop::external_agent_status_bridge::external_agent_status,
             delyx_next_desktop::patch_bridge::patch_propose,

@@ -4,6 +4,7 @@ mod tests {
         approval_snapshot_from_store, decide_approval_record, propose_approval_record,
         ApprovalBridgeStore, ApprovalDecisionRequest, ApprovalProposalRequest, PermissionScopeView,
     };
+    use crate::approval_bridge_taxonomy::approval_taxonomy_records;
 
     #[test]
     fn proposal_request_returns_ui_ready_approval_from_rust_gate() {
@@ -63,6 +64,25 @@ mod tests {
 
         assert!(result.is_err());
         assert!(approval_snapshot_from_store(&store, "run-1").is_empty());
+    }
+
+    #[test]
+    fn taxonomy_snapshot_maps_rust_risk_floor_for_edit_file() {
+        let taxonomy = approval_taxonomy_records();
+        let edit_file = taxonomy.iter().find(|entry| entry.action_type == "edit_file").unwrap();
+
+        assert_eq!(edit_file.minimum_risk, "high");
+        assert!(edit_file.rollback_required);
+        assert_eq!(edit_file.summary, "file writes require checkpoint scope");
+    }
+
+    #[test]
+    fn taxonomy_snapshot_excludes_non_risky_read_file_action() {
+        let taxonomy = approval_taxonomy_records();
+
+        assert!(taxonomy.iter().any(|entry| entry.action_type == "run_terminal"));
+        assert!(taxonomy.iter().any(|entry| entry.action_type == "schedule_work"));
+        assert!(!taxonomy.iter().any(|entry| entry.action_type == "read_file"));
     }
 
     fn request(client_id: &str) -> ApprovalProposalRequest {

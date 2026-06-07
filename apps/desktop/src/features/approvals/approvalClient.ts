@@ -1,5 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { ActionProposalView, ProposalStatus } from "./approvalTypes";
+import {
+  mergeRiskTaxonomySnapshot,
+  type ActionProposalView,
+  type ProposalStatus,
+  type RiskTaxonomyBridgeEntryView,
+  type RiskTaxonomySnapshotView,
+} from "./approvalTypes";
 
 export async function proposeApprovalOverBridge(
   proposal: ActionProposalView,
@@ -40,6 +46,18 @@ export async function loadApprovalSnapshot(runId: string): Promise<ActionProposa
   }
   try {
     return await invoke<ActionProposalView[]>("approval_snapshot", { runId });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function loadRiskTaxonomySnapshot(): Promise<RiskTaxonomySnapshotView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    const entries = await invoke<RiskTaxonomyBridgeEntryView[]>("approval_taxonomy");
+    return mergeRiskTaxonomySnapshot(entries);
   } catch {
     return undefined;
   }

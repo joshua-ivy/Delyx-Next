@@ -2,6 +2,7 @@ pub mod agent_run;
 pub mod agent_run_persistence;
 pub mod approval;
 pub mod approval_bridge;
+pub mod approval_bridge_taxonomy;
 pub mod automation;
 pub mod external_agent;
 mod external_agent_adapters;

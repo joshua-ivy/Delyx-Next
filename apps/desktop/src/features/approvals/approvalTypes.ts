@@ -38,6 +38,12 @@ export interface RiskTaxonomyEntryView {
   rollbackRequired: boolean;
 }
 
+export interface RiskTaxonomyBridgeEntryView extends RiskTaxonomyEntryView {
+  actionType: RiskyAction;
+}
+
+export type RiskTaxonomySnapshotView = Partial<Record<RiskyAction, RiskTaxonomyEntryView>>;
+
 export const riskTaxonomy: Record<RiskyAction, RiskTaxonomyEntryView> = {
   read_file: {
     minimumRisk: "low",
@@ -91,8 +97,19 @@ export const riskTaxonomy: Record<RiskyAction, RiskTaxonomyEntryView> = {
   },
 };
 
-export function riskPolicyLabel(action: RiskyAction) {
-  const entry = riskTaxonomy[action];
+export function mergeRiskTaxonomySnapshot(entries: RiskTaxonomyBridgeEntryView[]): RiskTaxonomySnapshotView {
+  return entries.reduce<RiskTaxonomySnapshotView>(
+    (policy, entry) => ({ ...policy, [entry.actionType]: {
+      minimumRisk: entry.minimumRisk,
+      rollbackRequired: entry.rollbackRequired,
+      summary: entry.summary,
+    } }),
+    riskTaxonomy,
+  );
+}
+
+export function riskPolicyLabel(action: RiskyAction, policy: RiskTaxonomySnapshotView = riskTaxonomy) {
+  const entry = policy[action] ?? riskTaxonomy[action];
   const rollback = entry.rollbackRequired ? "rollback required" : "rollback optional";
   return `${entry.minimumRisk} minimum; ${rollback}; ${entry.summary}`;
 }

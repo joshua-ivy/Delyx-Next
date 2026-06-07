@@ -1,29 +1,31 @@
 import {
   riskPolicyLabel,
+  riskTaxonomy,
   scopeArtifactLabel,
   scopeLabel,
   type ActionProposalView,
   type ProposalStatus,
+  type RiskTaxonomySnapshotView,
 } from "../features/approvals/approvalTypes";
 import type { DiffLineView, PatchProposalView } from "../features/patches/patchTypes";
 import type { ReviewFindingView, ReviewReportView } from "../features/review/reviewTypes";
 import type { TestArtifactView, TestStatus } from "../features/tests/testTypes";
 import { escapeHtml } from "./html";
 
-export function emptyApprovalBlock() {
+export function emptyApprovalBlock(policy: RiskTaxonomySnapshotView = riskTaxonomy) {
   return `<div class="appro">
         <div class="at"><span class="pill ghost">No proposal</span><span class="meta-id">none</span></div>
         <h4>No approval requests</h4>
         <div class="kv"><span class="k">Scope</span><span class="v">No file writes, commands, connectors, memory saves, or external agents requested.</span></div>
         <div class="kv"><span class="k">Risk</span><span class="v">No risky action pending.</span></div>
-        <div class="kv"><span class="k">Policy</span><span class="v">Risk taxonomy active; risky actions keep their minimum risk floor.</span></div>
+        <div class="kv"><span class="k">Policy</span><span class="v">${escapeHtml(riskPolicySummary(policy))}</span></div>
         <div class="kv"><span class="k">Rollback</span><span class="v">No checkpoint exists yet.</span></div>
       </div>`;
 }
 
-export function approvalBlock(proposals: ActionProposalView[]) {
+export function approvalBlock(proposals: ActionProposalView[], policy: RiskTaxonomySnapshotView = riskTaxonomy) {
   if (proposals.length === 0) {
-    return emptyApprovalBlock();
+    return emptyApprovalBlock(policy);
   }
 
   return proposals.map((proposal) => {
@@ -36,7 +38,7 @@ export function approvalBlock(proposals: ActionProposalView[]) {
         <div class="kv"><span class="k">Permission</span><span class="v">${escapeHtml(proposal.requiredPermission)}</span></div>
         <div class="kv"><span class="k">Reason</span><span class="v">${escapeHtml(proposal.rationale)}</span></div>
         <div class="kv"><span class="k">Expected</span><span class="v">${escapeHtml(proposal.expectedResult)}</span></div>
-        <div class="kv"><span class="k">Policy</span><span class="v">${escapeHtml(riskPolicyLabel(proposal.actionType))}</span></div>
+        <div class="kv"><span class="k">Policy</span><span class="v">${escapeHtml(riskPolicyLabel(proposal.actionType, policy))}</span></div>
         <div class="kv"><span class="k">Rollback</span><span class="v">${escapeHtml(proposal.rollbackPlan ?? "No rollback plan recorded.")}</span></div>
         <div class="exp">Run ${escapeHtml(proposal.runId)} &middot; Node ${escapeHtml(proposal.nodeId)} &middot; Expires ${escapeHtml(proposal.expiresAt)} &middot; ${escapeHtml(status)}</div>
         ${approvalActions(proposal, status)}
@@ -213,4 +215,9 @@ function statusForArtifact(artifact: TestArtifactView): TestStatus {
     return "not_run";
   }
   return artifact.exitCode === 0 ? "passed" : "failed";
+}
+
+function riskPolicySummary(policy: RiskTaxonomySnapshotView) {
+  const riskyActionCount = Object.keys(policy).filter((action) => action !== "read_file").length;
+  return `Risk taxonomy active; ${riskyActionCount} risky action floors visible.`;
 }

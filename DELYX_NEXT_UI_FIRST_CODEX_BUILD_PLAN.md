@@ -3647,9 +3647,10 @@ Output:
 
 ## 23. Safety and Permission Model
 
-Status: Approval records, execution gates, run/node linkage, and per-action
-risk floors implemented on 2026-06-07. Future tools must extend the same typed
-taxonomy instead of inventing one-off risk labels.
+Status: Approval records, execution gates, run/node linkage, per-action risk
+floors, and read-only Rust taxonomy snapshots implemented on 2026-06-07. Future
+tools must extend the same typed taxonomy instead of inventing one-off risk
+labels.
 
 ### 23.1 Risk Taxonomy
 
@@ -3700,6 +3701,46 @@ Approval must include:
 ### 23.3 Tool Execution Rule
 
 - ~~No file write, terminal command, connector send, durable memory save, scheduled risky action, or external agent run can execute without an approval record linked to the active AgentRun.~~
+
+### ~~PR 23.1 - Approval Taxonomy Snapshot Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added a read-only Tauri `approval_taxonomy` command backed by the Rust
+RiskyAction taxonomy, plus a renderer approval-policy hook. In Tauri, policy
+labels now merge the Rust snapshot into the web-preview fallback so visible
+minimum-risk floors match the execution gate source of truth. The command does
+not approve, deny, mutate approval state, execute tools, or broaden authority.
+
+Scope:
+
+- ~~Expose a read-only `approval_taxonomy` Tauri command.~~
+- ~~Return UI-ready action type, minimum risk, summary, and rollback-required policy fields.~~
+- ~~Keep non-risky `read_file` out of the risky-action bridge snapshot.~~
+- ~~Load the snapshot in the renderer through a small approval-policy hook.~~
+- ~~Render approval policy labels from the loaded snapshot when Tauri is available, with a web-preview fallback.~~
+- ~~Add deterministic Rust tests and verifier markers.~~
+- ~~Split focused modules so source files stay within the line-budget rule.~~
+
+Acceptance:
+
+- ~~The visible approval policy can come from the Rust taxonomy source of truth.~~
+- ~~The snapshot path is read-only and cannot execute or approve risky work.~~
+- ~~Risk floors for writable actions remain high and rollback-required.~~
+- ~~Non-risky file reads remain outside the risky approval bridge.~~
+- ~~First-run approval UI keeps honest no-proposal state while showing active policy.~~
+
+Validation:
+
+- ~~`npm run typecheck` passed.~~
+- ~~`cargo test approval_bridge_tests --workspace` passed with 7 focused tests.~~
+- ~~`cargo test --workspace` passed with 181 Rust tests.~~
+- ~~`npm test` passed, including workbench, Ollama agent, release smoke, and file-size verifiers.~~
+- ~~`npm run build` passed.~~
+- ~~`npm run smoke:ui` passed.~~
+- ~~`npm run smoke:tauri` passed with installer artifact `target/release/bundle/nsis/Delyx Next_0.0.0_x64-setup.exe`.~~
+- ~~`git diff --check` passed with only Windows line-ending warnings.~~
+- ~~Desktop source scan found no `.rs`, `.ts`, `.tsx`, or `.mjs` files over 300 lines.~~
 
 ---
 
