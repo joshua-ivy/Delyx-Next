@@ -1,17 +1,8 @@
 import type { ModelSettingsView } from "./modelTypes";
 
 export const currentModelSettings: ModelSettingsView = {
-  selectedProviderId: "mock-local",
+  selectedProviderId: "ollama-local",
   providers: [
-    {
-      detail: "Deterministic local provider for offline development.",
-      id: "mock-local",
-      kind: "mock",
-      label: "Local deterministic",
-      models: ["delyx-mock-coder", "delyx-mock-reasoner"],
-      requiresSecret: false,
-      status: "ready",
-    },
     {
       detail: "No local endpoint configured yet.",
       id: "ollama-local",
@@ -31,7 +22,5 @@ export const currentModelSettings: ModelSettingsView = {
       status: "missing_key",
     },
   ],
-  routes: [
-    { modelId: "delyx-mock-coder", providerId: "mock-local", role: "coding", saved: true },
-  ],
+  routes: [],
 };

@@ -287,6 +287,9 @@ export const forbiddenRenderedDemoStrings = [
   "Plan approved in local UI state",
   "Queue follow-up", "Review approval</Button>",
   "Accept patch", "Ask for revision</button>",
+  "Local deterministic",
+  "Deterministic local provider",
+  "delyx-mock-coder",
   "role: \"answer\", saved: true",
   "role: \"helper\", saved: true",
 ];

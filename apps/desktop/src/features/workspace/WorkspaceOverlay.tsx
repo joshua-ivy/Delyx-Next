@@ -128,7 +128,7 @@ function gitChangesLabel(project: WorkspaceProject) {
 
 function modelProfileLabel(settings: ModelSettingsView) {
   const provider = settings.providers.find((item) => item.id === settings.selectedProviderId);
-  const codingRoute = settings.routes.find((route) => route.role === "coding");
+  const codingRoute = settings.routes.find((route) => route.providerId === provider?.id && route.role === "coding");
   if (!provider) {
     return "No provider selected";
   }

@@ -2423,6 +2423,33 @@ Acceptance:
 
 ---
 
+### ~~PR 11.4 - Remove Frontend Mock Model Route~~
+
+Status: Complete on 2026-06-07.
+
+Update: The frontend no longer selects the deterministic mock provider or
+`delyx-mock-coder` as the active user-facing model route. The default model
+state now shows Ollama as not configured with no saved route until real local
+discovery succeeds. Mock provider behavior remains available in backend tests
+and deterministic fixtures only.
+
+Scope:
+
+- ~~Default frontend model settings to Ollama instead of the deterministic mock provider.~~
+- ~~Remove the saved mock coding route from user-facing frontend state.~~
+- ~~Keep the model context chip honest when no ready Ollama route exists.~~
+- ~~Ensure workspace model profile labels only show routes for the selected provider.~~
+- ~~Make the verifier forbid frontend mock-coder route strings.~~
+
+Acceptance:
+
+- ~~First-run UI does not present `delyx-mock-coder` as a usable model.~~
+- ~~Ollama readiness still promotes a real discovered model into the coding route.~~
+- ~~Backend deterministic mock coverage remains available for fixtures.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 12 — External Agent Bridge Prototype~~
 
 Status: Complete on 2026-06-07.
