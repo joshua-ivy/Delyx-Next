@@ -60,6 +60,8 @@ export function ShellPreferenceController() {
       bindLayoutGrip(".resize-side", "side"),
       bindLayoutGrip(".resize-review", "review"),
       bindLayoutGrip(".resize-drawer", "drawer"),
+      bindLogSearch(),
+      bindOutputCollapse(),
     ];
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);
@@ -137,6 +139,39 @@ function bindLayoutGrip(selector: string, kind: ResizeKind) {
     grip.removeEventListener("pointerdown", onPointerDown);
     grip.removeEventListener("keydown", onKeyDown);
   };
+}
+
+function bindLogSearch() {
+  const input = document.querySelector(".log-search");
+  if (!(input instanceof HTMLInputElement)) {
+    return () => undefined;
+  }
+  const onInput = () => filterLogLines(input.value);
+  input.addEventListener("input", onInput);
+  return () => input.removeEventListener("input", onInput);
+}
+
+function bindOutputCollapse() {
+  const button = document.querySelector(".output-collapse");
+  const term = document.querySelector(".term");
+  if (!(button instanceof HTMLButtonElement) || !(term instanceof HTMLElement)) {
+    return () => undefined;
+  }
+  const toggle = () => {
+    const collapsed = term.dataset.outputCollapsed !== "true";
+    term.dataset.outputCollapsed = `${collapsed}`;
+    button.ariaPressed = `${collapsed}`;
+    button.textContent = collapsed ? "Expand output" : "Collapse output";
+  };
+  button.addEventListener("click", toggle);
+  return () => button.removeEventListener("click", toggle);
+}
+
+function filterLogLines(query: string) {
+  const needle = query.trim().toLowerCase();
+  document.querySelectorAll<HTMLElement>("[data-log-line]").forEach((line) => {
+    line.hidden = Boolean(needle) && !line.textContent?.toLowerCase().includes(needle);
+  });
 }
 
 function startResize(event: PointerEvent, kind: ResizeKind) {

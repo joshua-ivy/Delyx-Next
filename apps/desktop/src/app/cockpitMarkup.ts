@@ -183,14 +183,16 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
   <footer class="drawer">
     <div class="dr-h">
       <div class="dr-tabs"><span class="on">Terminal</span><span>Logs</span><span>External agent</span></div>
+      <label class="log-search-wrap"><span>Search logs</span><input class="log-search" aria-label="Search drawer logs" type="search" placeholder="Search logs" /></label>
+      <button class="output-collapse" type="button" aria-pressed="false">Collapse output</button>
       <span class="pill ghost">Idle</span>
     </div>
-    <div class="term">
-      <div class="dm">No terminal command has run. Commands require an approval-backed AgentRun artifact.</div>
+    <div class="term" data-output-collapsed="false">
+      <div class="dm" data-log-line>No terminal command has run. Commands require an approval-backed AgentRun artifact.</div>
       <div class="external-agent-stream">
-        <div class="dm">No external agent run has been approved or captured.</div>
+        <div class="dm" data-log-line>No external agent run has been approved or captured.</div>
       </div>
-      <div><span class="pr">delyx local &gt;</span> <span class="bk"></span></div>
+      <div data-log-line><span class="pr">delyx local &gt;</span> <span class="bk"></span></div>
     </div>
   </footer>
 </div>`;

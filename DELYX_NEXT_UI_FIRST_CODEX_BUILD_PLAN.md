@@ -702,8 +702,8 @@ Advanced mode:
 - Great error states
 - ~~Toasts/notifications for safe local UI actions~~
 - Accessible dialogs, menus, buttons, and drawers
-- Searchable logs
-- Collapsible long output
+- ~~Searchable logs in the bottom drawer~~
+- ~~Collapsible long output in the bottom drawer~~
 - Status pills for every state
 - Consistent design tokens
 - No random one-off styling

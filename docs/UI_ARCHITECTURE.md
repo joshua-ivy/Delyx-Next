@@ -66,6 +66,10 @@ CSS variables so the UI can resize without changing runtime state.
 Local toasts are for confirmed UI-state changes only. They are not evidence
 that runtime work, tool execution, or tests happened.
 
+The bottom drawer supports client-side search and long-output collapse across
+real terminal, log, and external-agent lines. Filtering changes visibility only;
+it does not alter artifacts.
+
 ## Core Panels
 
 ### Top Bar
