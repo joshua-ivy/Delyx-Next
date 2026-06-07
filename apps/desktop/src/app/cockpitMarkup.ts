@@ -66,7 +66,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
       </div>
 
       <div class="sec">
-        <div class="sec-h"><h4>Plan</h4><span class="pill ghost micro">Empty</span><span class="ln"></span><span class="btn plan-create">Create plan</span><span class="btn plan-approve">Approve</span><span class="btn plan-revise">Revise</span><span class="btn plan-cancel">Cancel</span></div>
+        <div class="sec-h"><h4>Plan</h4><span class="pill ghost micro">Empty</span><span class="ln"></span><span class="btn plan-create">Create plan</span><span class="btn plan-approve">Approve</span><span class="btn plan-edit">Edit plan</span><span class="btn plan-question">Ask question</span><span class="btn plan-review-mode">Read-only review</span><span class="btn plan-revise">Revise</span><span class="btn plan-cancel">Cancel</span></div>
         <div class="plan-grid">
           <div class="pbox">
             <div class="bh">Files likely to change</div>

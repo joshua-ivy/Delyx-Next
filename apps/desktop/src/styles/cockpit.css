@@ -113,7 +113,7 @@
   .stat .sk{font-size:11px;color:var(--fg-3);margin-top:2px;}
 
   .sec{margin-bottom:20px;}
-  .sec-h{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+  .sec-h{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-bottom:11px;}
   .sec-h.compact{margin:16px 0 6px;}
   .sec-h.compact h4{font-size:12px;}
   .sec-h h4{margin:0;font-family:var(--disp);font-size:13px;font-weight:600;}
@@ -128,7 +128,7 @@
   .pbox.risk .it .ix{color:var(--build);}
   .perm{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
   .plan-actions{display:flex;gap:8px;grid-column:1/-1;}
-  .plan-create,.plan-approve,.plan-revise,.plan-cancel{border:1px solid var(--line);background:var(--card-2);color:var(--fg-2);padding:6px 9px;border-radius:8px;font-size:11px;}
+  .plan-create,.plan-approve,.plan-edit,.plan-question,.plan-review-mode,.plan-revise,.plan-cancel{border:1px solid var(--line);background:var(--card-2);color:var(--fg-2);padding:6px 9px;border-radius:8px;font-size:11px;}
   .plan-approve{color:var(--test);}
   .plan-cancel{color:var(--danger);}
 
