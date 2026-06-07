@@ -263,6 +263,7 @@ export const requiredChecks = [
   ["src/features/review/reviewTypes.ts", "ReviewFindingView"],
   ["src/features/models/modelData.ts", "currentModelSettings"],
   ["src/features/models/modelData.ts", "Secrets must stay outside the repo"],
+  ["src/features/models/modelData.ts", "{ modelId: \"delyx-mock-coder\", providerId: \"mock-local\", role: \"coding\", saved: true }"],
   ["src/features/models/modelTypes.ts", "ModelSettingsView"],
   ["src/features/models/modelTypes.ts", "ProviderStatus"],
   ["src/features/externalAgents/externalAgentData.ts", "currentExternalAgentState"],
@@ -453,4 +454,6 @@ export const forbiddenRenderedDemoStrings = [
   "Revision request stayed local",
   "Persistent allow rules are not wired",
   "Scope editing is not wired yet",
+  "role: \"answer\", saved: true",
+  "role: \"helper\", saved: true",
 ];

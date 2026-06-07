@@ -1659,6 +1659,7 @@ Status update: AppShell cockpit DOM bindings were extracted into a focused hook 
 - ~~Plan-action DOM bindings are split into a focused module before the cockpit hook approaches the 300-line target.~~
 - ~~Unused generic safe-action no-op binder is removed after controls become stateful or unavailable.~~
 - ~~External-agent path-scope checks are split into a focused helper module before the bridge file approaches the 300-line target.~~
+- ~~External-agent terminal command tests are split into a focused module to keep test files under the verifier line budget.~~
 
 ## UI Rules
 
@@ -2205,6 +2206,7 @@ Acceptance:
 - ~~Missing provider/API key produces clear UI state.~~
 - ~~Secrets are not stored in repo.~~
 - ~~Missing-key, unconfigured, or unreachable providers cannot be saved as active routes.~~
+- ~~First-run model routing UI only marks the backend default coding route as saved.~~
 
 ---
 

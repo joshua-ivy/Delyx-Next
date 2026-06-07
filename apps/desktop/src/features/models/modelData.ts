@@ -32,8 +32,6 @@ export const currentModelSettings: ModelSettingsView = {
     },
   ],
   routes: [
-    { modelId: "delyx-mock-reasoner", providerId: "mock-local", role: "answer", saved: true },
     { modelId: "delyx-mock-coder", providerId: "mock-local", role: "coding", saved: true },
-    { modelId: "delyx-mock-reasoner", providerId: "mock-local", role: "helper", saved: true },
   ],
 };

@@ -22,6 +22,7 @@ mod agent_run_tests;
 mod approval_tests;
 mod automation_tests;
 mod external_agent_tests;
+mod external_agent_terminal_tests;
 mod explore_plan_tests;
 mod memory_tests;
 mod mobile_tests;
