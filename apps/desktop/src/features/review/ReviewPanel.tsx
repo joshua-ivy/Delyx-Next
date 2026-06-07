@@ -1,4 +1,4 @@
-import { GitPullRequest, ShieldCheck } from "lucide-react";
+import { GitPullRequest } from "lucide-react";
 
 import { Badge } from "../../design-system/Badge";
 import { Panel } from "../../design-system/Panel";
@@ -71,12 +71,7 @@ function DiffPanel({ diffFiles }: { diffFiles: DiffFile[] }) {
         </article>
       ))}
       <div className="review-actions">
-        <button type="button">Reject</button>
-        <button type="button">Ask for revision</button>
-        <button type="button">
-          <ShieldCheck size={15} />
-          Accept patch
-        </button>
+        <Badge tone="info">Patch actions require an approval-gated binding.</Badge>
       </div>
     </div>
   );

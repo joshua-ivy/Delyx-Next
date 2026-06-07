@@ -23,7 +23,7 @@ export async function refreshOllamaSettings(settings: ModelSettingsView) {
   try {
     const response = await fetchWithTimeout(`${endpoint}/api/tags`, { method: "GET" }, 2500);
     if (!response.ok) {
-      return withOllamaProvider(settings, [], "unreachable", `Ollama returned HTTP ${response.status}.`);
+      return withOllamaProvider(settings, [], "unreachable", `Ollama returned HTTP ${response.status}${await responseDetail(response)}.`);
     }
     const models = modelNames(await response.json() as OllamaTagsResponse);
     const status = models.length > 0 ? "ready" : "not_configured";
@@ -45,7 +45,7 @@ export async function sendOllamaChat(settings: ModelSettingsView, messages: Thre
     method: "POST",
   }, 120000);
   if (!response.ok) {
-    throw new Error(`Ollama chat failed with HTTP ${response.status}.`);
+    throw new Error(`Ollama chat failed with HTTP ${response.status}${await responseDetail(response)}.`);
   }
   const text = chatText(await response.json() as OllamaChatResponse);
   if (!text) {
@@ -106,4 +106,9 @@ function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
   return fetch(input, { ...init, signal: controller.signal }).finally(() => window.clearTimeout(timer));
+}
+
+async function responseDetail(response: Response) {
+  const text = (await response.text()).trim();
+  return text ? `: ${text.slice(0, 180)}` : "";
 }

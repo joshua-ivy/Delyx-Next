@@ -1,5 +1,6 @@
 import { runtimeChecks } from "./verify-workbench-runtime-checks.mjs";
 import { bridgeChecks } from "./verify-workbench-bridge-checks.mjs";
+import { ollamaAgentChecks } from "./verify-workbench-ollama-checks.mjs";
 import { workspaceChecks } from "./verify-workbench-workspace-checks.mjs";
 
 export const requiredChecks = [
@@ -27,16 +28,7 @@ export const requiredChecks = [
   ["src/app/useCockpitDomBindings.ts", "Approval proposal is expired; request a fresh approval"],
   ["src/app/useCockpitDomBindings.ts", "proposal.status !== \"pending\""],
   ["src/app/useCockpitDomBindings.ts", ".deck-comp-form"],
-  ["src/app/cockpitComposerBindings.ts", "sendOllamaChat"],
-  ["src/app/cockpitComposerBindings.ts", "recordModelCallResult"],
-  ["src/app/cockpitComposerBindings.ts", "recordModelCallFailure"],
-  ["src/app/cockpitComposerBindings.ts", "Ollama is not ready"],
-  ["src/features/models/ollamaClient.ts", "/api/tags"],
-  ["src/features/models/ollamaClient.ts", "/api/chat"],
-  ["src/features/models/ollamaClient.ts", "stream: false"],
-  ["src/features/models/ollamaClient.ts", "127.0.0.1:11434"],
-  ["src/app/appShellModelRunActions.ts", "model_call.completed"],
-  ["src/app/appShellModelRunActions.ts", "model_call.failed"],
+  ...ollamaAgentChecks,
   ["src/app/ShellPreferenceController.tsx", "delyx-next.theme"],
   ["src/app/ShellPreferenceController.tsx", "delyx-next.layout"],
   ["src/app/ShellPreferenceController.tsx", "bindLayoutGrip"],
@@ -72,7 +64,6 @@ export const requiredChecks = [
   ["src/app/appShellCommands.ts", "paletteCommands"],
   ["src/app/appShellCommands.ts", "notifyLocalAction"],
   ["src/app/appShellCommands.ts", "Queue a scoped build approval proposal"],
-  ["src/app/appShellCommands.ts", "moveThreadAndRunToPlanning"],
   ["src/app/appShellCommands.ts", "moveThreadAndRun(context, activeThread, \"waiting_for_approval\")"],
   ["src/app/appShellCommands.ts", "expireRunProposals"],
   ["src/app/appShellCommands.ts", "createPlanApprovalProposal"],
@@ -179,8 +170,7 @@ export const requiredChecks = [
   ["src/features/threads/ThreadOverlay.tsx", "Idle, exploring, planning, waiting_for_approval, building, testing, reviewing, blocked, failed, done"],
   ["src/features/threads/ThreadOverlay.tsx", "thread-pill"],
   ["src/features/threads/ThreadView.tsx", "visibleStates"],
-  ["src/features/threads/ThreadView.tsx", "Approval pending"],
-  ["src/features/task/PlanPanel.tsx", "Approval required"],
+  ["src/features/threads/ThreadView.tsx", "Approval pending"], ["src/features/task/PlanPanel.tsx", "Approval required"], ["src/features/review/ReviewPanel.tsx", "Patch actions require an approval-gated binding."],
   ["src/design-system/StatusPill.tsx", "waiting_for_approval"],
   ["src/design-system/StatusPill.tsx", "statusTone"],
   ["src/features/runs/agentRunData.ts", "currentAgentRuns: AgentRunView[] = []"],
@@ -296,6 +286,7 @@ export const forbiddenRenderedDemoStrings = [
   "Approve the active plan in UI state only",
   "Plan approved in local UI state",
   "Queue follow-up", "Review approval</Button>",
+  "Accept patch", "Ask for revision</button>",
   "role: \"answer\", saved: true",
   "role: \"helper\", saved: true",
 ];

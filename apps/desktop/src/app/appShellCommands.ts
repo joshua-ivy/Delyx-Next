@@ -7,11 +7,11 @@ import {
   upsertActionProposal,
 } from "./appShellApprovalActions";
 import { recordApprovalProposalForRun, updateRunsForThreadStatus } from "./appShellRunActions";
-import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
+import { createPlanWithOllama } from "./appShellOllamaPlanActions";
+import { modeForThreadStatus } from "./appShellThreadActions";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import { refreshOllamaSettings } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
-import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
@@ -22,7 +22,7 @@ export const paletteCommands = [
   { detail: "Open thread manager for create, archive, and status controls.", id: "threads.open", label: "Open threads" },
   { detail: "Switch between dark and light Command Deck themes.", id: "theme.toggle", label: "Toggle light / dark" },
   { detail: "Check 127.0.0.1:11434 and load local Ollama models.", id: "models.ollama.refresh", label: "Refresh Ollama models" },
-  { detail: "Create a read-only plan from the active thread.", id: "plan.create", label: "Create plan" },
+  { detail: "Ask local Ollama to draft a read-only plan from the active thread.", id: "plan.create", label: "Create plan" },
   { detail: "Queue a scoped build approval proposal for the active plan.", id: "plan.approve", label: "Approve plan" },
   { detail: "Request revision for the active plan.", id: "plan.revise", label: "Revise plan" },
   { detail: "Cancel the active plan.", id: "plan.cancel", label: "Cancel plan" },
@@ -42,6 +42,7 @@ export interface AppShellCommandContext {
   setThreads: Dispatch<SetStateAction<TaskThread[]>>;
   setThreadState: Dispatch<SetStateAction<ThreadUiState>>;
   setWorkspaceOpen: Dispatch<SetStateAction<boolean>>;
+  threads: TaskThread[];
 }
 
 export function runAppShellCommand(commandId: string, context: AppShellCommandContext) {
@@ -83,15 +84,7 @@ async function refreshOllamaModels(context: AppShellCommandContext) {
 }
 
 function createPlan(context: AppShellCommandContext) {
-  const activeThread = context.activeThread;
-  if (!activeThread) {
-    context.setThreadState("empty");
-    notifyLocalAction("Create a thread before planning", "warning");
-    return;
-  }
-  context.setPlans((current) => upsertPlan(current, createPlanFromThread(activeThread, context.activeProject)));
-  moveThreadAndRunToPlanning(context, activeThread);
-  notifyLocalAction("Plan created from active thread", "success");
+  void createPlanWithOllama(context);
 }
 
 function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecision, message: string) {
@@ -121,10 +114,6 @@ function expireRunProposals(context: AppShellCommandContext, activeThread: TaskT
   if (runId) {
     context.setActionProposals((current) => expirePendingProposalsForRun(current, runId));
   }
-}
-
-function moveThreadAndRunToPlanning(context: AppShellCommandContext, activeThread: TaskThread) {
-  moveThreadAndRun(context, activeThread, "planning");
 }
 
 function moveThreadAndRun(context: AppShellCommandContext, activeThread: TaskThread, status: ThreadStatus) {

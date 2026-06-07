@@ -1989,20 +1989,22 @@ Acceptance:
 
 Status: Complete on 2026-06-07.
 
-Update: Removed unbound decorative buttons from the legacy ThreadView and
-PlanPanel source path. The live command palette now describes plan approval as
-queueing a scoped build approval proposal instead of "UI state only."
+Update: Removed unbound decorative buttons from the legacy ThreadView,
+PlanPanel, and ReviewPanel source paths. The live command palette now describes
+plan approval as queueing a scoped build approval proposal instead of "UI state
+only."
 
 Scope:
 
 - ~~Replace legacy PlanPanel approve button with approval-required status.~~
 - ~~Replace legacy ThreadView follow-up button with composer guidance status.~~
 - ~~Replace legacy waiting-for-approval button with approval-pending status.~~
+- ~~Replace legacy ReviewPanel accept/reject/revision buttons with approval-gated patch status.~~
 - ~~Remove "UI state only" plan approval copy from command palette messaging.~~
 
 Acceptance:
 
-- ~~No source path renders decorative plan/thread buttons without handlers.~~
+- ~~No source path renders decorative plan/thread/review buttons without handlers.~~
 - ~~Plan approval copy describes the real approval proposal flow.~~
 - ~~Verifier forbids the old fake/decorative action labels.~~
 
@@ -2387,6 +2389,36 @@ Acceptance:
 - ~~The UI has a visible runtime bridge state instead of hiding desktop/web differences.~~
 - ~~The bridge reports provider and coding-route status without storing secrets.~~
 - ~~The command is registered through Tauri and covered by Rust tests.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
+### ~~PR 11.3 - Ollama PlanAgent MVP~~
+
+Status: Complete on 2026-06-07.
+
+Update: The active Create Plan flow now asks a ready local Ollama coding route
+to draft a read-only PlanView. Delyx accepts only structured JSON, filters
+model file references to the approved workspace index, records successful and
+failed model calls in the AgentRun ledger, and shows blocked state when Ollama
+is unavailable or returns unusable output. No file writes, terminal commands,
+connector actions, memory saves, scheduled work, or external agents execute
+from this plan draft.
+
+Scope:
+
+- ~~Add a PlanAgent prompt for local Ollama with explicit no-fake/test-claim rules.~~
+- ~~Parse Ollama JSON into the typed PlanView and ExploreView contracts.~~
+- ~~Reject model file references outside the approved indexed workspace files.~~
+- ~~Route cockpit and command-palette Create Plan controls through the same Ollama PlanAgent path.~~
+- ~~Record model-call success/failure artifacts, evidence, nodes, and events in AgentRun.~~
+- ~~Add deterministic fixture coverage for PlanAgent parsing and file filtering.~~
+
+Acceptance:
+
+- ~~Create Plan does not claim a model-authored plan unless Ollama returns parseable JSON.~~
+- ~~Unavailable Ollama or invalid model output is visible as a blocked thread state.~~
+- ~~A successful plan draft keeps risky build actions approval-gated.~~
 - ~~Source files stay within the line-budget rule.~~
 
 ---
@@ -3109,7 +3141,9 @@ Scope:
 - mock blocked state
 - mock external agent transcript
 
-Do not implement real agent runtime yet.
+~~Do not implement real agent runtime yet.~~ Superseded narrowly by PR 11.3:
+Ollama may draft read-only PlanView output through the visible AgentRun ledger,
+while risky tool execution remains approval-gated and unimplemented here.
 ~~Do not implement real model providers yet.~~ Superseded by PR 11.1: local
 Ollama composer usage is now allowed and implemented behind truthful provider
 health states.
@@ -3206,8 +3240,10 @@ Scope:
   - append_agent_event
 - wire real AgentRun timeline into UI
 
-Do not implement real model calls yet.
-Use deterministic mock run creation only.
+~~Do not implement real model calls yet.~~ Superseded by PR 11.1 and PR 11.3:
+local Ollama model calls are allowed for composer replies and read-only plan
+drafts when recorded as AgentRun artifacts. Deterministic fixtures still cover
+parser and verifier behavior.
 
 Architectural rule:
 The AgentRun graph is the future execution/resume engine, not just an inspection artifact.

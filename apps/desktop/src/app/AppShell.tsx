@@ -167,6 +167,7 @@ export function AppShell() {
       setThreads,
       setThreadState,
       setWorkspaceOpen,
+      threads,
     });
     setPaletteOpen(false);
   };

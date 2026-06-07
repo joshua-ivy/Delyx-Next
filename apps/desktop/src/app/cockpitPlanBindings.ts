@@ -8,9 +8,8 @@ import {
   recordApprovalProposalForRun,
   recordPlanQuestionForRun,
 } from "./appShellRunActions";
-import { upsertPlan } from "./appShellThreadActions";
+import { createPlanWithOllama } from "./appShellOllamaPlanActions";
 import { expireRunProposals, updateThreadAndRunStatus } from "./cockpitStateTransitions";
-import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision } from "../features/plans/planTypes";
 
 type KeyboardActivator = (event: Event) => void;
@@ -24,14 +23,7 @@ export function bindPlanControls(state: CockpitDomBindingState, activateOnKeyboa
   const planRevise = controls(".plan-revise");
   const planCancel = controls(".plan-cancel");
   const createPlan = () => {
-    const activeThread = state.activeThread;
-    if (!activeThread) {
-      state.setThreadState("empty");
-      notifyLocalAction("Create a thread before planning", "warning");
-      return;
-    }
-    state.setPlans((current) => upsertPlan(current, createPlanFromThread(activeThread, state.activeProject)));
-    updateThreadAndRunStatus(state, activeThread, "planning");
+    void createPlanWithOllama(state);
   };
   const approvePlan = () => updatePlanDecision(state, "approved");
   const revisePlan = () => requestPlanRevision(state);

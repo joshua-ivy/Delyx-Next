@@ -153,7 +153,10 @@ Owns:
 - missing provider/API-key states
 
 The implementation keeps a deterministic mock provider for fixtures and uses
-local Ollama for real composer calls when `127.0.0.1:11434` is reachable.
+local Ollama for real composer calls and read-only PlanAgent drafts when
+`127.0.0.1:11434` is reachable. Ollama plans must parse into typed PlanView
+JSON before appearing in the UI, and each successful or failed model call is
+recorded in the AgentRun ledger.
 Role routing may only save routes to providers whose health is ready; missing-key,
 unconfigured, or unreachable providers remain visible but unusable.
 The read-only Tauri `runtime_status` command exposes app identity, provider
