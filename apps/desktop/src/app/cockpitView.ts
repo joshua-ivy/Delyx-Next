@@ -1,4 +1,5 @@
 import { cockpitMarkup } from "./cockpitMarkup";
+import { evidenceBlock } from "./cockpitEvidence";
 import { externalAgentBlock } from "./cockpitExternalAgents";
 import { approvalBlock, diffBlock, emptyApprovalBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
 import { runLabel } from "./cockpitRuns";
@@ -12,6 +13,8 @@ import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import type { ReviewReportView } from "../features/review/reviewTypes";
+import { researchAnswerFromRunEvidence } from "../features/research/runEvidence";
+import type { ResearchAnswerView } from "../features/research/researchTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
@@ -30,7 +33,7 @@ export function buildCockpitMarkup(
   reviews: ReviewReportView[],
   modelSettings: ModelSettingsView,
   externalAgents: ExternalAgentStateView,
-  _researchAnswers: unknown,
+  researchAnswers: ResearchAnswerView[],
   _memoryState: unknown,
   _skillState: unknown,
   _automationState: unknown,
@@ -43,6 +46,9 @@ export function buildCockpitMarkup(
   const activePatches = activeRun ? patches.filter((patch) => patch.runId === activeRun.id) : [];
   const activeTests = activeRun ? tests.filter((artifact) => artifact.runId === activeRun.id) : [];
   const activeReview = activeRun ? reviews.find((report) => report.runId === activeRun.id) : undefined;
+  const activeEvidence = activeRun
+    ? researchAnswers.find((answer) => answer.runId === activeRun.id) ?? researchAnswerFromRunEvidence(activeRun)
+    : undefined;
 
   return cockpitMarkup
     .replace("__SPINE_PIPE__", spinePipeline(activeThread?.status))
@@ -64,6 +70,7 @@ export function buildCockpitMarkup(
     .replace("__INSPECTOR__", inspectorBlock({
       activeProposals,
       activePatches,
+      activeEvidence,
       activeTests,
       activeReview,
       activeRun,
@@ -183,6 +190,7 @@ function inspectorStatus(proposals: ActionProposalView[], run: AgentRunView | un
 interface InspectorState {
   activeProposals: ActionProposalView[];
   activePatches: PatchProposalView[];
+  activeEvidence: ResearchAnswerView | undefined;
   activeTests: TestArtifactView[];
   activeReview: ReviewReportView | undefined;
   activeRun: AgentRunView | undefined;
@@ -201,6 +209,9 @@ function inspectorBlock(state: InspectorState) {
   }
   if (state.activePatches.length > 0) {
     return diffBlock(state.activePatches);
+  }
+  if (state.activeEvidence) {
+    return evidenceBlock(state.activeEvidence);
   }
   if (state.activeRun) {
     return `<div class="appro">

@@ -2,7 +2,7 @@ import type { EvidenceRecord } from "../runs/agentRunTypes";
 
 export type { EvidenceRecord, EvidenceSourceKind } from "../runs/agentRunTypes";
 
-export type EvidenceStance = "supports" | "contradicts";
+export type EvidenceStance = "supports" | "contradicts" | "recorded";
 export type ClaimStatus = "supported" | "insufficient_evidence" | "contradicted";
 
 export interface ResearchAnswerView {

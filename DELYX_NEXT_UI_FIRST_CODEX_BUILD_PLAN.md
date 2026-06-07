@@ -2833,6 +2833,31 @@ Acceptance:
 
 ---
 
+### ~~PR 13.1 - Active Run Evidence Inspector Wiring~~
+
+Status: Complete on 2026-06-07.
+
+Update: The main inspector now renders real active-run EvidenceRecords through
+the Evidence panel. Run receipts are marked as recorded, not claim-supporting,
+until a real ResearchAnswer audit exists for that run.
+
+Scope:
+
+- ~~Derive a ResearchAnswer view from active AgentRun evidence receipts.~~
+- ~~Mark unaudited run receipts as recorded instead of supports/contradicts.~~
+- ~~Prefer real ResearchAnswer audits when they exist for the active run.~~
+- ~~Render active-run evidence in the inspector before generic run status.~~
+- ~~Add verifier coverage for active-run evidence wiring.~~
+
+Acceptance:
+
+- ~~Model-call and other run evidence receipts can appear in the Evidence panel.~~
+- ~~Recorded receipts do not claim source-backed support.~~
+- ~~No fake evidence receipt is seeded into the first-run UI.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 14 — Memory Governance~~
 
 Status: Complete on 2026-06-07.

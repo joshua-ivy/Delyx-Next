@@ -21,7 +21,7 @@ export function evidenceBlock(answer: ResearchAnswerView | undefined) {
 }
 
 function receiptBlock(receipt: EvidenceReceiptView) {
-  const stance = receipt.stance === "supports" ? "supports" : "contradicts";
+  const stance = receipt.stance === "supports" ? "supports" : receipt.stance === "contradicts" ? "contradicts" : "recorded";
   return `<div class="rcpt">
         <span class="ri">${escapeHtml(sourceLabel(receipt.sourceKind))}</span>
         <div><div class="rn">${escapeHtml(receipt.title ?? receipt.sourceId)} <span class="pill ghost micro">${stance}</span></div>
