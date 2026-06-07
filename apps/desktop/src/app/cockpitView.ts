@@ -3,6 +3,7 @@ import { cockpitMarkup } from "./cockpitMarkup";
 import { evidenceBlock } from "./cockpitEvidence";
 import { externalAgentBlock } from "./cockpitExternalAgents";
 import { hasMemoryForRun, memoryBlock } from "./cockpitMemory";
+import { hasMobileActivity, mobileBlock } from "./cockpitMobile";
 import { approvalBlock, diffBlock, emptyApprovalBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
 import { runLabel } from "./cockpitRuns";
 import { hasSkills, skillBlock } from "./cockpitSkills";
@@ -14,6 +15,7 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { AutomationStateView } from "../features/automations/automationTypes";
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
 import type { MemoryStateView } from "../features/memory/memoryTypes";
+import type { MobileStateView } from "../features/mobile/mobileTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
@@ -43,7 +45,7 @@ export function buildCockpitMarkup(
   memoryState: MemoryStateView,
   skillState: SkillStateView,
   automationState: AutomationStateView,
-  _mobileState: unknown,
+  mobileState: MobileStateView,
   _releaseState: unknown,
   threads: TaskThread[],
   runtimeBridge: RuntimeBridgeState,
@@ -62,6 +64,7 @@ export function buildCockpitMarkup(
   const activeAutomations = hasAutomations(automationState)
     ? automationBlock(automationState)
     : undefined;
+  const activeMobile = hasMobileActivity(mobileState) ? mobileBlock(mobileState) : undefined;
 
   return cockpitMarkup
     .replace("__SPINE_PIPE__", spinePipeline(activeThread?.status))
@@ -87,6 +90,7 @@ export function buildCockpitMarkup(
       activeMemory,
       activeSkills,
       activeAutomations,
+      activeMobile,
       activeTests,
       activeReview,
       activeRun,
@@ -210,6 +214,7 @@ interface InspectorState {
   activeMemory: string | undefined;
   activeSkills: string | undefined;
   activeAutomations: string | undefined;
+  activeMobile: string | undefined;
   activeTests: TestArtifactView[];
   activeReview: ReviewReportView | undefined;
   activeRun: AgentRunView | undefined;
@@ -229,12 +234,19 @@ function inspectorBlock(state: InspectorState) {
   if (state.activePatches.length > 0) {
     return diffBlock(state.activePatches);
   }
-  if (state.activeEvidence || state.activeMemory || state.activeSkills || state.activeAutomations) {
+  if (
+    state.activeEvidence
+    || state.activeMemory
+    || state.activeSkills
+    || state.activeAutomations
+    || state.activeMobile
+  ) {
     return [
       state.activeEvidence ? evidenceBlock(state.activeEvidence) : "",
       state.activeMemory ?? "",
       state.activeSkills ?? "",
       state.activeAutomations ?? "",
+      state.activeMobile ?? "",
     ].join("");
   }
   if (state.activeRun) {

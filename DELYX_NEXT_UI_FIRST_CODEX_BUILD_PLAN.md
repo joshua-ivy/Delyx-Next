@@ -3046,6 +3046,31 @@ Acceptance:
 
 ---
 
+### ~~PR 17.1 - Mobile Companion Inspector Wiring~~
+
+Status: Complete on 2026-06-07.
+
+Update: Wired the existing mobile companion state into the cockpit inspector
+only when the companion is paired or real mobile-visible threads, approvals,
+or runs exist. The default unpaired state stays hidden from the inspector and
+does not imply mobile access.
+
+Scope:
+
+- ~~Detect paired/mobile-visible activity from MobileStateView.~~
+- ~~Render real mobile policy, approval scope, threads, and run status.~~
+- ~~Keep broad file and terminal access denied by default.~~
+- ~~Add verifier coverage for mobile inspector wiring.~~
+
+Acceptance:
+
+- ~~Mobile inspector output is based on MobileStateView only.~~
+- ~~Unpaired empty state does not claim mobile access.~~
+- ~~Mobile policy remains visible when real mobile activity exists.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 18 — Packaging and Release~~
 
 Status: Complete on 2026-06-07.

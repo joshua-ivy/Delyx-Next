@@ -11,7 +11,12 @@ export function emptyMobileBlock() {
 }
 
 export function mobileBlock(state: MobileStateView) {
-  if (!state.paired && state.threads.length === 0 && state.pendingApprovals.length === 0 && state.runs.length === 0) {
+  if (
+    !state.paired
+    && state.threads.length === 0
+    && state.pendingApprovals.length === 0
+    && state.runs.length === 0
+  ) {
     return emptyMobileBlock();
   }
 
@@ -24,6 +29,13 @@ export function mobileBlock(state: MobileStateView) {
           ${state.runs.map(runLine).join("")}
         </div>
       </div>`;
+}
+
+export function hasMobileActivity(state: MobileStateView) {
+  return state.paired
+    || state.threads.length > 0
+    || state.pendingApprovals.length > 0
+    || state.runs.length > 0;
 }
 
 function policyLine(state: MobileStateView) {
