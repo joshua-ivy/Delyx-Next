@@ -2246,6 +2246,33 @@ Acceptance:
 
 ---
 
+### ~~PR 11.2 - Tauri Runtime Bridge MVP~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added the first read-only Tauri command bridge for the UI runtime.
+The desktop backend now exposes app identity, packaged milestone, configured
+model providers, and the default coding route through `runtime_status`. The
+renderer invokes that command when running inside Tauri and falls back to an
+honest web-preview state when the Rust bridge is unavailable.
+
+Scope:
+
+- ~~Expose read-only runtime status through a typed Tauri command.~~
+- ~~Serialize Rust bridge views in the camelCase shape expected by TypeScript.~~
+- ~~Show Rust/web bridge availability in the Command Deck context chips.~~
+- ~~Keep the bridge read-only; no tools, files, terminal commands, memory saves, or external agents execute from this command.~~
+- ~~Add deterministic verifier and Rust unit-test coverage for the bridge.~~
+
+Acceptance:
+
+- ~~The UI has a visible runtime bridge state instead of hiding desktop/web differences.~~
+- ~~The bridge reports provider and coding-route status without storing secrets.~~
+- ~~The command is registered through Tauri and covered by Rust tests.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 12 — External Agent Bridge Prototype~~
 
 Status: Complete on 2026-06-07.

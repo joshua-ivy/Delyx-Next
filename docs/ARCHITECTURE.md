@@ -148,9 +148,13 @@ Owns:
 - model health checks
 - missing provider/API-key states
 
-Initial implementation should include a deterministic mock provider before real model calls.
+The implementation keeps a deterministic mock provider for fixtures and uses
+local Ollama for real composer calls when `127.0.0.1:11434` is reachable.
 Role routing may only save routes to providers whose health is ready; missing-key,
 unconfigured, or unreachable providers remain visible but unusable.
+The read-only Tauri `runtime_status` command exposes app identity, provider
+status, and the default coding route to the UI without executing tools or
+storing secrets.
 
 Model roles:
 

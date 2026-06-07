@@ -1,0 +1,14 @@
+export const bridgeChecks = [
+  ["src-tauri/src/runtime_bridge.rs", "RuntimeStatusView"],
+  ["src-tauri/src/runtime_bridge.rs", "runtime_status"],
+  ["src-tauri/src/runtime_bridge.rs", "runtime_status_from_registry"],
+  ["src-tauri/src/runtime_bridge.rs", "rename_all = \"camelCase\""],
+  ["src-tauri/src/runtime_bridge_tests.rs", "runtime_status_exposes_app_identity_and_default_route"],
+  ["src-tauri/src/runtime_bridge_tests.rs", "runtime_status_maps_ready_ollama_models"],
+  ["src-tauri/src/main.rs", "generate_handler"],
+  ["src/app/runtimeBridge.ts", "@tauri-apps/api/core"],
+  ["src/app/runtimeBridge.ts", "runtime_status"],
+  ["src/app/runtimeBridge.ts", "Web preview / Rust bridge unavailable"],
+  ["src/app/AppShell.tsx", "loadRuntimeBridgeState"],
+  ["src/app/cockpitView.ts", "runtimeBridge"],
+];

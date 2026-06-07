@@ -27,6 +27,13 @@ import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes"
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
+import { loadRuntimeBridgeState, type RuntimeBridgeState } from "./runtimeBridge";
+
+const webRuntimeBridge: RuntimeBridgeState = {
+  label: "Web preview / Rust bridge unavailable",
+  mode: "web",
+};
+
 export function AppShell() {
   const [activeThreadId, setActiveThreadId] = useState<string | undefined>();
   const [actionProposals, setActionProposals] = useState(currentActionProposals);
@@ -40,6 +47,7 @@ export function AppShell() {
   const [projects, setProjects] = useState<WorkspaceProject[]>([currentWorkspaceProject]);
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
   const [modelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
+  const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
   const activeThread = visibleThreads.find((thread) => thread.id === activeThreadId) ?? visibleThreads[0];
@@ -65,9 +73,21 @@ export function AppShell() {
       currentMobileState,
       currentReleaseState,
       visibleThreads,
+      runtimeBridge,
     ),
-    [actionProposals, activePlan, activeProject, activeRun, activeThread, modelSettings, visibleThreads],
+    [actionProposals, activePlan, activeProject, activeRun, activeThread, modelSettings, runtimeBridge, visibleThreads],
   );
+  useEffect(() => {
+    let cancelled = false;
+    void loadRuntimeBridgeState().then((state) => {
+      if (!cancelled) {
+        setRuntimeBridge(state);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   useEffect(() => {
     let cancelled = false;
     void refreshOllamaSettings(currentModelSettings).then((settings) => {

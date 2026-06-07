@@ -1,4 +1,5 @@
 import { runtimeChecks } from "./verify-workbench-runtime-checks.mjs";
+import { bridgeChecks } from "./verify-workbench-bridge-checks.mjs";
 
 export const requiredChecks = [
   ["src/app/AppShell.tsx", "document.documentElement.dataset.mode"],
@@ -267,6 +268,7 @@ export const requiredChecks = [
   ["src/app/cockpitView.ts", "contextChips"],
   ["src/app/cockpitWorkPane.ts", "data-diff-file"],
   ["src/app/cockpitWorkPane.ts", "No patch"],
+  ...bridgeChecks,
   ...runtimeChecks,
 ];
 export const forbiddenRenderedDemoStrings = [

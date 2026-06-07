@@ -4,6 +4,7 @@ import { runLabel } from "./cockpitRuns";
 import { threadStatsBlock } from "./cockpitStats";
 import { buildProgressBlock, composerMode, terminalLabel, workDiffBlock } from "./cockpitWorkPane";
 import { escapeHtml } from "./html";
+import type { RuntimeBridgeState } from "./runtimeBridge";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
@@ -34,6 +35,7 @@ export function buildCockpitMarkup(
   _mobileState: unknown,
   _releaseState: unknown,
   threads: TaskThread[],
+  runtimeBridge: RuntimeBridgeState,
 ) {
   const activeProposals = activeRun ? proposals.filter((proposal) => proposal.runId === activeRun.id) : [];
   const activePatches = activeRun ? patches.filter((patch) => patch.runId === activeRun.id) : [];
@@ -44,7 +46,7 @@ export function buildCockpitMarkup(
     .replace("__SPINE_PIPE__", spinePipeline(activeThread?.status))
     .replace("__MODE_LABEL__", modeLabel(activeThread?.mode))
     .replace("__STATUS_PILL__", barStatusPill(activeThread, activeRun, activeProposals))
-    .replace("__CONTEXT_CHIPS__", contextChips(project, modelSettings, threads.length))
+    .replace("__CONTEXT_CHIPS__", contextChips(project, modelSettings, threads.length, runtimeBridge))
     .replace("__THREAD_ID__", escapeHtml(activeThread?.id ?? "empty"))
     .replace("__RUN_LABEL__", runLabel(activeRun))
     .replace("__THREAD_TITLE__", escapeHtml(activeThread?.title ?? "No active thread"))
@@ -91,7 +93,12 @@ function statusPill(tone: string, label: string) {
   return `<span class="pill deck-bar-status ${tone}"><span class="dot ${tone}"></span>${escapeHtml(label)}</span>`;
 }
 
-function contextChips(project: WorkspaceProject, modelSettings: ModelSettingsView, activeThreads: number) {
+function contextChips(
+  project: WorkspaceProject,
+  modelSettings: ModelSettingsView,
+  activeThreads: number,
+  runtimeBridge: RuntimeBridgeState,
+) {
   const provider = modelSettings.providers.find((item) => item.id === modelSettings.selectedProviderId);
   const route = modelSettings.routes.find((item) => item.providerId === provider?.id && item.role === "coding");
   const model = route?.modelId ?? provider?.models[0] ?? "no model";
@@ -99,6 +106,7 @@ function contextChips(project: WorkspaceProject, modelSettings: ModelSettingsVie
   return [
     `<span class="deck-ctx-chip"><strong>${escapeHtml(project.name)}</strong> / ${escapeHtml(git)} / ${escapeHtml(gitChanges(project))}</span>`,
     `<span class="deck-ctx-chip"><strong>${activeThreads}</strong> threads / ${escapeHtml(provider?.label ?? "No provider")} / ${escapeHtml(model)}</span>`,
+    `<span class="deck-ctx-chip"><strong>${escapeHtml(runtimeBridge.mode)}</strong> / ${escapeHtml(runtimeBridge.label)}</span>`,
   ].join("");
 }
 
