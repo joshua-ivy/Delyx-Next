@@ -71,14 +71,54 @@ mod tests {
         assert_eq!(engine.list_proposals("run-1")[0].status, ProposalStatus::Expired);
     }
 
+    #[test]
+    fn action_taxonomy_clamps_downgraded_risk() {
+        let mut engine = ApprovalEngine::new();
+        let proposal = engine.propose(input_with_risk(RiskyAction::DependencyInstall, RiskLevel::Low, 100));
+
+        assert_eq!(proposal.risk, RiskLevel::High);
+    }
+
+    #[test]
+    fn action_taxonomy_allows_escalated_dangerous_risk() {
+        let mut engine = ApprovalEngine::new();
+        let proposal = engine.propose(input_with_risk(RiskyAction::TerminalCommand, RiskLevel::Dangerous, 100));
+
+        assert_eq!(proposal.risk, RiskLevel::Dangerous);
+    }
+
+    #[test]
+    fn risk_taxonomy_declares_minimums_for_risky_actions() {
+        for (action, minimum, rollback_required) in [
+            (RiskyAction::FileWrite, RiskLevel::High, true),
+            (RiskyAction::TerminalCommand, RiskLevel::Medium, false),
+            (RiskyAction::DependencyInstall, RiskLevel::High, true),
+            (RiskyAction::ConnectorWrite, RiskLevel::High, true),
+            (RiskyAction::DurableMemorySave, RiskLevel::Medium, true),
+            (RiskyAction::ScheduledRiskyAction, RiskLevel::Dangerous, true),
+            (RiskyAction::ExternalAgentExecution, RiskLevel::High, true),
+            (RiskyAction::ExternalSend, RiskLevel::High, false),
+        ] {
+            let entry = action.taxonomy();
+            assert_eq!(entry.action, action);
+            assert_eq!(entry.minimum_risk, minimum);
+            assert_eq!(entry.rollback_required, rollback_required);
+            assert!(!entry.summary.is_empty());
+        }
+    }
+
     fn input(action: RiskyAction, expires_at: u64) -> ProposalInput {
+        input_with_risk(action, RiskLevel::High, expires_at)
+    }
+
+    fn input_with_risk(action: RiskyAction, risk: RiskLevel, expires_at: u64) -> ProposalInput {
         ProposalInput {
             action,
             expected_result: "risky action would execute only after approval".to_string(),
             expires_at,
             node_id: "node-1".to_string(),
             reason: "required by requested local task".to_string(),
-            risk: RiskLevel::High,
+            risk,
             rollback_plan: "restore checkpoint or cancel action".to_string(),
             run_id: "run-1".to_string(),
             scope: "approved workspace file".to_string(),

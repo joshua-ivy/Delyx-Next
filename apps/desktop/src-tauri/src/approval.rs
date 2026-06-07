@@ -26,12 +26,43 @@ pub enum RiskyAction {
     ExternalSend,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RiskLevel {
     Low,
     Medium,
     High,
     Dangerous,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RiskTaxonomyEntry {
+    pub action: RiskyAction,
+    pub minimum_risk: RiskLevel,
+    pub summary: &'static str,
+    pub rollback_required: bool,
+}
+
+impl RiskyAction {
+    pub fn taxonomy(self) -> RiskTaxonomyEntry {
+        match self {
+            RiskyAction::FileWrite => entry(self, RiskLevel::High, "file writes require checkpoint scope", true),
+            RiskyAction::TerminalCommand => entry(self, RiskLevel::Medium, "terminal commands require captured artifacts", false),
+            RiskyAction::DependencyInstall => entry(self, RiskLevel::High, "dependency installs mutate the project", true),
+            RiskyAction::ConnectorWrite => entry(self, RiskLevel::High, "connector writes leave the local trust boundary", true),
+            RiskyAction::DurableMemorySave => entry(self, RiskLevel::Medium, "durable memory changes future runs", true),
+            RiskyAction::ScheduledRiskyAction => entry(self, RiskLevel::Dangerous, "scheduled risky actions can run later without attention", true),
+            RiskyAction::ExternalAgentExecution => entry(self, RiskLevel::High, "external agents run inside bounded scope only", true),
+            RiskyAction::ExternalSend => entry(self, RiskLevel::High, "external sends disclose data outside the workspace", false),
+        }
+    }
+
+    pub fn minimum_risk(self) -> RiskLevel {
+        self.taxonomy().minimum_risk
+    }
+
+    pub fn normalize_risk(self, requested: RiskLevel) -> RiskLevel {
+        requested.max(self.minimum_risk())
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -83,12 +114,13 @@ impl ApprovalEngine {
 
     pub fn propose(&mut self, input: ProposalInput) -> ActionProposal {
         self.next_id += 1;
+        let risk = input.action.normalize_risk(input.risk);
         let proposal = ActionProposal {
             id: format!("prop-{}", self.next_id),
             run_id: input.run_id,
             node_id: input.node_id,
             action: input.action,
-            risk: input.risk,
+            risk,
             scope: input.scope,
             reason: input.reason,
             expected_result: input.expected_result,
@@ -180,6 +212,15 @@ pub struct ProposalInput {
 
 fn ensure_pending(proposal: &ActionProposal) -> Result<(), ApprovalError> {
     (proposal.status == ProposalStatus::Pending).then_some(()).ok_or(ApprovalError::AlreadyDecided)
+}
+
+fn entry(
+    action: RiskyAction,
+    minimum_risk: RiskLevel,
+    summary: &'static str,
+    rollback_required: bool,
+) -> RiskTaxonomyEntry {
+    RiskTaxonomyEntry { action, minimum_risk, summary, rollback_required }
 }
 
 fn decision(kind: ApprovalDecisionKind, decided_at: u64, note: &str) -> ApprovalDecision {

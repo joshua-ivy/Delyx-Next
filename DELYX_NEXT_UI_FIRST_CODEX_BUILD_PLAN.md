@@ -2554,11 +2554,16 @@ Output:
 
 ## 23. Safety and Permission Model
 
-Status: Approval records and execution gates implemented with run/node linkage
-on 2026-06-07. Risk labels exist; detailed per-action taxonomy remains a
-policy surface to keep refining as tools are added.
+Status: Approval records, execution gates, run/node linkage, and per-action
+risk floors implemented on 2026-06-07. Future tools must extend the same typed
+taxonomy instead of inventing one-off risk labels.
 
 ### 23.1 Risk Taxonomy
+
+- ~~Risk levels have typed ordering: low < medium < high < dangerous.~~
+- ~~Each risky action has a typed taxonomy entry with minimum risk, summary, and rollback requirement.~~
+- ~~Approval proposals clamp requested risk to the action minimum so callers cannot downgrade risky work.~~
+- ~~The approval UI shows the active risk taxonomy policy when proposals are empty or present.~~
 
 ```text
 low:
