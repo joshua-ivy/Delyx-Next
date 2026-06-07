@@ -21,6 +21,10 @@ export function skillBlock(state: SkillStateView) {
       </div>`;
 }
 
+export function hasSkills(state: SkillStateView) {
+  return state.skills.length > 0;
+}
+
 function skillLine(skill: SkillManifestView) {
   const scripts = skill.permissions.canRunScripts ? "scripts allowed" : "scripts blocked";
   const files = skill.permissions.canEditFiles ? "edits allowed" : "edits blocked";

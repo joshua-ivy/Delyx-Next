@@ -2941,6 +2941,30 @@ Acceptance:
 
 ---
 
+### ~~PR 15.1 - Imported Skills Inspector Wiring~~
+
+Status: Complete on 2026-06-07.
+
+Update: Wired the existing skill state into the cockpit inspector only when
+real skills have been imported. The default empty UI remains free of seeded
+skill manifests.
+
+Scope:
+
+- ~~Detect imported skills from SkillStateView.~~
+- ~~Render real skill status, trust, source hash, and permissions.~~
+- ~~Keep third-party skills inactive unless explicitly reviewed.~~
+- ~~Add verifier coverage for skill inspector wiring.~~
+
+Acceptance:
+
+- ~~Skills inspector output is based on SkillStateView only.~~
+- ~~Empty skill state does not claim imported or active skills.~~
+- ~~Skill permissions remain visible when real skills exist.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 16 — Automations / Mission Contracts~~
 
 Status: Complete on 2026-06-07.
