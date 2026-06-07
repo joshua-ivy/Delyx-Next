@@ -81,7 +81,7 @@ impl AutomationEngine {
 
     pub fn approve_contract(&mut self, contract_id: &str, approval_id: &str, now: u64, approvals: &ApprovalEngine) -> Result<(), AutomationError> {
         approvals
-            .assert_can_execute_action(approval_id, now, RiskyAction::ScheduledRiskyAction)
+            .assert_can_execute_action_for_run(approval_id, now, RiskyAction::ScheduledRiskyAction, contract_id)
             .map_err(AutomationError::Approval)?;
         self.contract_mut(contract_id)?.status = MissionStatus::Active;
         Ok(())

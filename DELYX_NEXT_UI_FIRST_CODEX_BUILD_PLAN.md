@@ -2358,6 +2358,7 @@ Acceptance:
 - ~~Contract shows what it can do, when, where, and when it stops.~~
 - ~~Workspace drift blocks scheduled work.~~
 - ~~Risky scheduled action creates approval instead of executing.~~
+- ~~Mission contract activation approvals are bound to the specific contract so one scheduled approval cannot activate another mission.~~
 
 ---
 

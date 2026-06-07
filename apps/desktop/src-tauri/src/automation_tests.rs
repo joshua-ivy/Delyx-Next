@@ -29,9 +29,9 @@ mod tests {
     fn workspace_drift_blocks_scheduled_work() {
         let mut engine = AutomationEngine::new();
         let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(approval_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let contract = engine.create_contract(contract_input(vec!["read".to_string()]));
+        let approval = approvals.propose(approval_input(&contract.id));
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         engine.approve_contract(&contract.id, &approval.id, 10, &approvals).unwrap();
 
         let run = engine.schedule_due_run(&contract.id, "changed", 10, &mut approvals).unwrap();
@@ -44,9 +44,9 @@ mod tests {
     fn contract_activation_requires_scheduled_action_approval() {
         let mut engine = AutomationEngine::new();
         let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(ProposalInput { action: RiskyAction::FileWrite, ..approval_input() });
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let contract = engine.create_contract(contract_input(vec!["read".to_string()]));
+        let approval = approvals.propose(ProposalInput { action: RiskyAction::FileWrite, ..approval_input(&contract.id) });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
 
         let result = engine.approve_contract(&contract.id, &approval.id, 10, &approvals);
 
@@ -61,28 +61,53 @@ mod tests {
     }
 
     #[test]
+    fn contract_activation_requires_matching_contract_approval() {
+        let mut engine = AutomationEngine::new();
+        let mut approvals = ApprovalEngine::new();
+        let first = engine.create_contract(contract_input(vec!["read".to_string()]));
+        let second = engine.create_contract(contract_input(vec!["read".to_string()]));
+        let approval = approvals.propose(approval_input(&first.id));
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+
+        let result = engine.approve_contract(&second.id, &approval.id, 10, &approvals);
+
+        assert_eq!(
+            result.unwrap_err(),
+            crate::automation::AutomationError::Approval(ApprovalError::RunMismatch {
+                expected: second.id,
+                actual: first.id,
+            })
+        );
+        assert_eq!(engine.contracts()[1].status, MissionStatus::Paused);
+    }
+
+    #[test]
     fn risky_scheduled_action_creates_approval_instead_of_executing() {
         let mut engine = AutomationEngine::new();
         let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(approval_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let contract = engine.create_contract(contract_input(vec!["terminal_command".to_string()]));
+        let approval = approvals.propose(approval_input(&contract.id));
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         engine.approve_contract(&contract.id, &approval.id, 10, &approvals).unwrap();
 
         let run = engine.schedule_due_run(&contract.id, "fingerprint-1", 10, &mut approvals).unwrap();
 
         assert_eq!(run.status, ScheduledRunStatus::WaitingForApproval);
         assert!(run.approval_id.is_some());
-        assert_eq!(approvals.list_proposals(&contract.id).len(), 1);
+        assert_eq!(approvals.list_proposals(&contract.id).len(), 2);
+        assert!(approvals
+            .list_proposals(&contract.id)
+            .iter()
+            .any(|proposal| Some(proposal.id.as_str()) == run.approval_id.as_deref()));
     }
 
     #[test]
     fn low_risk_scheduled_work_can_create_run_after_approval() {
         let mut engine = AutomationEngine::new();
         let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(approval_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         let contract = engine.create_contract(contract_input(vec!["read".to_string()]));
+        let approval = approvals.propose(approval_input(&contract.id));
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
         engine.approve_contract(&contract.id, &approval.id, 10, &approvals).unwrap();
 
         let run = engine.schedule_due_run(&contract.id, "fingerprint-1", 10, &mut approvals).unwrap();
@@ -103,7 +128,7 @@ mod tests {
         }
     }
 
-    fn approval_input() -> ProposalInput {
+    fn approval_input(run_id: &str) -> ProposalInput {
         ProposalInput {
             action: RiskyAction::ScheduledRiskyAction,
             expires_at: 30,
@@ -112,7 +137,7 @@ mod tests {
             reason: "Deterministic automation test.".to_string(),
             risk: RiskLevel::Medium,
             rollback_plan: "Pause the mission contract.".to_string(),
-            run_id: "mission-approval".to_string(),
+            run_id: run_id.to_string(),
             scope: "Activate one mission contract.".to_string(),
         }
     }
