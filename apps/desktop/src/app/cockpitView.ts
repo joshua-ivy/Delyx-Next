@@ -3,6 +3,7 @@ import { automationBlock, emptyAutomationBlock } from "./cockpitAutomations";
 import { emptyEvidenceBlock, evidenceBlock } from "./cockpitEvidence";
 import { emptyExternalAgentBlock, externalAgentBlock } from "./cockpitExternalAgents";
 import { emptyMemoryBlock, memoryBlock } from "./cockpitMemory";
+import { emptyPipelineBlock, modePill, pipelineBlock } from "./cockpitModes";
 import { emptyMobileBlock, mobileBlock } from "./cockpitMobile";
 import { emptyModelSettingsBlock, modelSettingsBlock, modelStatusChip } from "./cockpitModels";
 import { emptyReleaseBlock, releaseBlock } from "./cockpitRelease";
@@ -53,6 +54,8 @@ export function buildCockpitMarkup(
   return cockpitMarkup
     .replace("/ no-thread", `/ ${activeThread?.id ?? "no-thread"}`)
     .replace('<span class="chip"><span class="k">runtime</span><b>not connected</b> local only</span>', modelStatusChip(modelSettings))
+    .replace('<span class="pill build"><span class="dot"></span>BUILD MODE</span>', modePill(activeThread?.status))
+    .replace(emptyPipelineBlock(), pipelineBlock(activeThread?.status))
     .replace('<span class="pill ghost">No active run</span>', runStatusPill(activeRun))
     .replace(emptyThreadCardBlock(), threadCards(threads, activeThread?.id))
     .replace("<span class=\"chip\"><span class=\"k\">git</span><b>0</b> uncommitted</span>", gitChip(project))

@@ -800,7 +800,7 @@ Status update: full workflow thread status vocabulary implemented on 2026-06-07.
 Show:
 
 - User goal
-- Current mode
+- ~~Current mode~~
 - Agent plan
 - Step timeline
 - Files touched
@@ -809,6 +809,8 @@ Show:
 - Test result
 - Final answer
 - Evidence receipts
+
+Status update: current mode pill and workflow pipeline derive from thread status as of 2026-06-07.
 
 ### 12.3 Plan Panel
 
