@@ -27,6 +27,7 @@ export const requiredChecks = [
   ["src/app/appShellRunActions.ts", "updateRunsForThreadStatus"],
   ["src/app/appShellRunActions.ts", "runStatusForThreadStatus"],
   ["src/app/appShellRunActions.ts", "thread.status_changed"],
+  ["src/app/appShellRunActions.ts", "run.mode === nextMode"],
   ["src/app/appShellRunActions.ts", "thread.created"],
   ["src/app/AppShell.tsx", "setAgentRuns"],
   ["src/app/appShellCommands.ts", "paletteCommands"],

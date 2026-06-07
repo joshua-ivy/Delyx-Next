@@ -78,6 +78,11 @@ function metricsWithEvent(): RunMetrics {
 }
 
 function runWithThreadStatus(run: AgentRunView, status: ThreadStatus, updatedAt: string): AgentRunView {
+  const nextMode = modeForThreadStatus(status);
+  const nextStatus = runStatusForThreadStatus(status);
+  if (run.mode === nextMode && run.status === nextStatus) {
+    return run;
+  }
   const events = [...run.events, {
     createdAt: updatedAt,
     id: `${run.id}-event-${run.events.length + 1}`,
@@ -90,8 +95,8 @@ function runWithThreadStatus(run: AgentRunView, status: ThreadStatus, updatedAt:
     ...run,
     events,
     metrics: { ...run.metrics, eventCount: events.length },
-    mode: modeForThreadStatus(status),
-    status: runStatusForThreadStatus(status),
+    mode: nextMode,
+    status: nextStatus,
     updatedAt,
   };
 }
