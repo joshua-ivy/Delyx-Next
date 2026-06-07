@@ -1,3 +1,4 @@
+use crate::workspace_git::detect_git;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -213,19 +214,6 @@ fn detect_rules_files(root: &Path) -> Vec<ProjectRulesFile> {
 
 fn is_plain_file(path: &Path) -> bool {
     fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_file())
-}
-
-fn detect_git(root: &Path) -> GitState {
-    let git_dir = root.join(".git");
-    let branch = fs::read_to_string(git_dir.join("HEAD"))
-        .ok()
-        .and_then(|head| head.strip_prefix("ref: refs/heads/").map(|branch| branch.trim().to_string()));
-
-    GitState {
-        is_repo: git_dir.exists(),
-        branch,
-        uncommitted_changes: None,
-    }
 }
 
 fn stable_project_id(path: &Path) -> String {

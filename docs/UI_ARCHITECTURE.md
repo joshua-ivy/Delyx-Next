@@ -86,8 +86,9 @@ Shows:
 - active mode
 - run status
 
-The Git chip must not show a fake dirty count. If no real dirty-count artifact
-exists, the UI says changes are not loaded. Checkpoint/worktree isolation is a
+The Git chip must not show a fake dirty count. Desktop snapshots may show a
+read-only Git-index dirty count; otherwise the UI says changes are not loaded.
+Checkpoint/worktree isolation is a
 separate visible state and starts as no active isolation.
 
 ### Mode Spine

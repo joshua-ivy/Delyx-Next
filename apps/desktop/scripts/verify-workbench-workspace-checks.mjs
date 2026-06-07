@@ -3,6 +3,10 @@ export const workspaceChecks = [
   ["src-tauri/src/workspace_bridge.rs", "WorkspaceProjectView"],
   ["src-tauri/src/workspace_bridge.rs", "index_files"],
   ["src-tauri/src/workspace_bridge_tests.rs", "workspace_snapshot_exposes_real_rules_and_indexed_files"],
+  ["src-tauri/src/workspace_git.rs", "dirty_count"],
+  ["src-tauri/src/workspace_git.rs", "read_index"],
+  ["src-tauri/src/workspace_git_tests.rs", "git_dirty_count_reads_clean_index_without_running_git"],
+  ["src-tauri/src/workspace_git_tests.rs", "git_dirty_count_counts_modified_deleted_and_untracked_files"],
   ["src-tauri/src/main.rs", "workspace_bridge::workspace_snapshot"],
   ["src/app/workspaceBridge.ts", "@tauri-apps/api/core"],
   ["src/app/workspaceBridge.ts", "workspace_snapshot"],
@@ -10,4 +14,5 @@ export const workspaceChecks = [
   ["src/features/workspace/workspaceData.ts", "branch: \"branch not loaded\""],
   ["src/features/workspace/workspaceData.ts", "indexedFiles: []"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "No indexed files are loaded for this query"],
+  ["src/features/workspace/WorkspaceOverlay.tsx", "Loaded from read-only Git index metadata."],
 ];

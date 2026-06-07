@@ -20,6 +20,7 @@ pub mod test_runner;
 pub mod threads;
 pub mod workspace;
 pub mod workspace_bridge;
+mod workspace_git;
 pub mod workbench_modes;
 mod agent_run_tests;
 mod approval_tests;
@@ -40,6 +41,7 @@ mod test_runner_tests;
 mod threads_tests;
 mod workspace_tests;
 mod workspace_bridge_tests;
+mod workspace_git_tests;
 mod workbench_modes_tests;
 
 pub const APP_NAME: &str = "Delyx Next";

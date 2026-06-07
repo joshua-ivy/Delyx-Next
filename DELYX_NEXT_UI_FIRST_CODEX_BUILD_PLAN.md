@@ -770,9 +770,11 @@ Approval policy
 
 Status update: top-bar Git/isolation truth slice implemented on 2026-06-07.
 Status update: workspace manager project surface implemented on 2026-06-07.
+Status update: read-only Git index dirty count implemented on 2026-06-07.
 
 - ~~Git UI shows the current `main` branch from real local project facts.~~
 - ~~Uncommitted count is not faked; the UI says changes are not loaded until a real dirty-count artifact exists.~~
+- ~~Desktop workspace snapshots can replace "changes not loaded" with a read-only Git index dirty count when metadata exists.~~
 - ~~Checkpoint/worktree isolation has its own visible chip and starts as no active isolation.~~
 - ~~Project card shows name, path, Git status, active threads, last run, provider/model health, and approval policy from real local state or honest empty state.~~
 
@@ -1902,6 +1904,33 @@ Acceptance:
 - ~~Users do not see fake workspace-state actions.~~
 - ~~Workspace states remain present for real runtime outcomes.~~
 - ~~Verifier and smoke checks require truthful state copy.~~
+
+---
+
+### ~~PR 3.3 - Read-Only Git Dirty Count~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added a std-only Git index reader for the workspace manager. Desktop
+workspace snapshots now report a conservative dirty-file count when `.git/index`
+metadata is present, without launching `git` or any hidden terminal command.
+If the index is missing or unsupported, the UI keeps the honest "changes not
+loaded" state.
+
+Scope:
+
+- ~~Read Git branch and dirty count from local Git metadata only.~~
+- ~~Count modified, deleted, and untracked workspace files from approved-root metadata.~~
+- ~~Keep dirty count unknown when Git index metadata is missing or unsupported.~~
+- ~~Show whether the workspace dirty count came from read-only Git index metadata.~~
+- ~~Cover clean, dirty, and missing-index cases with deterministic Rust tests.~~
+
+Acceptance:
+
+- ~~Workspace snapshot can expose a real dirty count without running a terminal command.~~
+- ~~Browser fallback still stays honest when no Rust workspace snapshot is available.~~
+- ~~Verifier covers the Git index reader and UI policy copy.~~
+- ~~Source files stay within the line-budget rule.~~
 
 ---
 

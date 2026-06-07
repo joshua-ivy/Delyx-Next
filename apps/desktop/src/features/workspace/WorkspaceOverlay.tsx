@@ -109,7 +109,7 @@ export function WorkspaceOverlay({
             <dl>
               <InfoRow label="Scope" value="Read-only indexing stays inside approved roots." />
               <InfoRow label="Denied state" value="Rendered when a workspace read is rejected by policy." />
-              <InfoRow label="Dirty count" value="Not loaded until a real dirty-count artifact exists." />
+              <InfoRow label="Dirty count" value={dirtyCountPolicy(project)} />
             </dl>
             <p>{projects.length} project linked to this local workspace.</p>
           </section>
@@ -124,6 +124,12 @@ function gitChangesLabel(project: WorkspaceProject) {
     return "not a repo";
   }
   return project.git.uncommittedChanges === null ? "changes not loaded" : `${project.git.uncommittedChanges}`;
+}
+
+function dirtyCountPolicy(project: WorkspaceProject) {
+  return project.git.uncommittedChanges === null
+    ? "Unavailable until read-only Git index metadata exists."
+    : "Loaded from read-only Git index metadata.";
 }
 
 function modelProfileLabel(settings: ModelSettingsView) {
