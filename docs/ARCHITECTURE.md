@@ -37,13 +37,13 @@ complete:
   indexed file names. Model role routes persist to SQLite and are validated
   against current provider health before becoming active. The Rust memory
   governance store persists candidates, durable records, suppression state, and
-  ID continuity, but there is no live Tauri memory bridge yet. The Rust skill
+  ID continuity, and a read-only Tauri snapshot bridge feeds the cockpit. The Rust skill
   registry persists imported manifests, trust, permissions, status, source
-  hashes, and ID continuity, but there is no live Tauri skill bridge yet.
+  hashes, and ID continuity, and a read-only Tauri snapshot bridge feeds the cockpit.
   The Rust automation engine persists mission contracts and scheduled-run
-  records, but there is no live Tauri automation bridge yet. Release profile
+  records, and a read-only Tauri snapshot bridge feeds the cockpit. Release profile
   and redacted support-bundle state persist to SQLite, but there is no live
-  Tauri release bridge yet.
+  mutation bridge yet.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -244,9 +244,10 @@ Owns:
 
 The Rust `MemoryStore` persists candidates and records to SQLite, including
 candidate status, record suppression, source run/thread IDs, and post-reload ID
-continuity. The shipped UI still reads the frontend memory state and has no live
-Tauri memory bridge, so memory persistence is not yet an end-to-end user
-workflow.
+continuity. The Tauri `memory_snapshot` command exposes a read-only UI-ready
+view to the cockpit. Memory proposal, suppression, and promotion mutation
+workflows still need explicit approval-gated bridges before this becomes an
+end-to-end user workflow.
 
 ## Skills
 
@@ -259,9 +260,10 @@ Owns:
 - explicit skill permissions
 
 The Rust `SkillRegistry` persists imported manifests to SQLite, including trust,
-status, permissions, source hashes, and post-reload ID continuity. The shipped UI
-still reads the frontend skill state and has no live Tauri skill bridge, so skill
-persistence is not yet an end-to-end user workflow.
+status, permissions, source hashes, and post-reload ID continuity. The Tauri
+`skill_snapshot` command exposes a read-only UI-ready view to the cockpit. Skill
+import, activation, disable, and suppression mutation workflows still need
+explicit bridges before this becomes an end-to-end user workflow.
 
 ## Automations
 
@@ -276,9 +278,10 @@ Owns:
 
 The Rust `AutomationEngine` persists mission contracts and scheduled runs to
 SQLite, including status, schedule shape, allowed tools, approval links,
-workspace fingerprints, and post-reload ID continuity. The shipped UI still
-reads the frontend automation state and has no live Tauri automation bridge, so
-automation persistence is not yet an end-to-end user workflow.
+workspace fingerprints, and post-reload ID continuity. The Tauri
+`automation_snapshot` command exposes a read-only UI-ready view to the cockpit.
+Contract creation, approval, pause, and scheduled-run mutation workflows still
+need explicit bridges before this becomes an end-to-end user workflow.
 
 ## Release
 
@@ -292,9 +295,10 @@ Owns:
 
 Release profile and the latest redacted support bundle persist to SQLite,
 including signing inputs, update channel/published state, redacted config
-summary, redacted logs, and support-bundle metadata. The shipped UI still reads
-the frontend release state and has no live Tauri release bridge, so release
-persistence is not yet an end-to-end user workflow.
+summary, redacted logs, and support-bundle metadata. The Tauri
+`release_snapshot` command exposes a read-only UI-ready view to the cockpit.
+Release smoke capture and support-bundle export mutation workflows still need
+explicit bridges before this becomes an end-to-end user workflow.
 
 ## Model Layer
 

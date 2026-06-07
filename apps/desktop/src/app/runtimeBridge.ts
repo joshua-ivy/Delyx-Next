@@ -7,6 +7,11 @@ export interface RuntimeBridgeState {
   status?: RuntimeStatusView;
 }
 
+export const webRuntimeBridge: RuntimeBridgeState = {
+  label: "Web preview / Rust bridge unavailable",
+  mode: "web",
+};
+
 export interface RuntimeStatusView {
   appIdentifier: string;
   appName: string;

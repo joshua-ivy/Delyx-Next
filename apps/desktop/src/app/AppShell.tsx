@@ -8,22 +8,18 @@ import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { buildCockpitMarkup } from "./cockpitView";
 import { useCockpitDomBindings } from "./useCockpitDomBindings";
 import { currentActionProposals } from "../features/approvals/approvalData";
-import { currentAutomationState } from "../features/automations/automationData";
 import { externalAgentBridgeUnavailableState, loadExternalAgentStatus } from "../features/externalAgents/externalAgentClient";
 import { currentExternalAgentState } from "../features/externalAgents/externalAgentData";
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
-import { currentMemoryState } from "../features/memory/memoryData";
 import { currentMobileState } from "../features/mobile/mobileData";
 import { currentModelSettings } from "../features/models/modelData";
 import { refreshOllamaSettings } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import { currentPatchProposals } from "../features/patches/patchData";
 import type { PlanView } from "../features/plans/planTypes";
-import { currentReleaseState } from "../features/release/releaseData";
 import { currentReviewReports } from "../features/review/reviewData";
 import { currentAgentRuns } from "../features/runs/agentRunData";
 import { currentResearchAnswers } from "../features/research/researchData";
-import { currentSkillState } from "../features/skills/skillData";
 import { currentTestArtifacts } from "../features/tests/testData";
 import { ThreadOverlay } from "../features/threads/ThreadOverlay";
 import { archiveThreadOverBridge, createThreadRunOverBridge, loadThreadRunSnapshot, updateThreadStatusOverBridge } from "../features/threads/threadClient";
@@ -31,13 +27,9 @@ import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes"
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
-import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, type RuntimeBridgeState } from "./runtimeBridge";
+import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, webRuntimeBridge, type RuntimeBridgeState } from "./runtimeBridge";
+import { usePersistedInspectorState } from "./usePersistedInspectorState";
 import { loadWorkspaceProject } from "./workspaceBridge";
-
-const webRuntimeBridge: RuntimeBridgeState = {
-  label: "Web preview / Rust bridge unavailable",
-  mode: "web",
-};
 
 export function AppShell() {
   const [activeThreadId, setActiveThreadId] = useState<string | undefined>();
@@ -54,6 +46,7 @@ export function AppShell() {
   const [modelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
+  const { automationState, memoryState, releaseState, skillState } = usePersistedInspectorState();
   const riskPolicy = useApprovalPolicy();
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
@@ -74,16 +67,16 @@ export function AppShell() {
       modelSettings,
       externalAgentState,
       currentResearchAnswers,
-      currentMemoryState,
-      currentSkillState,
-      currentAutomationState,
+      memoryState,
+      skillState,
+      automationState,
       currentMobileState,
-      currentReleaseState,
+      releaseState,
       visibleThreads,
       runtimeBridge,
       riskPolicy,
     ),
-    [actionProposals, activePlan, activeProject, activeRun, activeThread, externalAgentState, modelSettings, riskPolicy, runtimeBridge, visibleThreads],
+    [actionProposals, activePlan, activeProject, activeRun, activeThread, automationState, externalAgentState, memoryState, modelSettings, releaseState, riskPolicy, runtimeBridge, skillState, visibleThreads],
   );
   useEffect(() => {
     let cancelled = false;

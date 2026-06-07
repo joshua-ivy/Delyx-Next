@@ -6,6 +6,9 @@ fn main() {
             )
             .expect("approval SQLite state should open"),
         )
+        .manage(delyx_next_desktop::local_store_bridge::LocalStoreBridgeState::persistent(
+            delyx_next_desktop::sqlite_store::default_database_path(),
+        ))
         .manage(delyx_next_desktop::patch_bridge::PatchBridgeState::default())
         .manage(delyx_next_desktop::review_bridge::ReviewBridgeState::default())
         .manage(delyx_next_desktop::runtime_bridge::RuntimeBridgeState::persistent(
@@ -27,16 +30,20 @@ fn main() {
             delyx_next_desktop::approval_bridge::approval_propose,
             delyx_next_desktop::approval_bridge::approval_snapshot,
             delyx_next_desktop::approval_bridge_taxonomy::approval_taxonomy,
+            delyx_next_desktop::automation_bridge::automation_snapshot,
             delyx_next_desktop::external_agent_contract_bridge::external_agent_contract_preview,
             delyx_next_desktop::external_agent_run_bridge::external_agent_run_codex,
             delyx_next_desktop::external_agent_run_bridge::external_agent_run_snapshot,
             delyx_next_desktop::external_agent_status_bridge::external_agent_status,
+            delyx_next_desktop::memory_bridge::memory_snapshot,
             delyx_next_desktop::patch_bridge::patch_propose,
             delyx_next_desktop::patch_bridge::patch_snapshot,
+            delyx_next_desktop::release_bridge::release_snapshot,
             delyx_next_desktop::review_bridge::review_create,
             delyx_next_desktop::review_bridge::review_snapshot,
             delyx_next_desktop::runtime_bridge::ollama_chat,
             delyx_next_desktop::runtime_bridge::runtime_status,
+            delyx_next_desktop::skills_bridge::skill_snapshot,
             delyx_next_desktop::test_runner_bridge::test_run_approved,
             delyx_next_desktop::test_runner_bridge::test_snapshot,
             delyx_next_desktop::thread_run_bridge::thread_archive,
