@@ -2,6 +2,8 @@ export const requiredChecks = [
   ["src/app/AppShell.tsx", "document.documentElement.dataset.mode"],
   ["src/app/AppShell.tsx", "ctrlKey"],
   ["src/app/useCockpitDomBindings.ts", "activateOnKeyboard"],
+  ["src/app/useCockpitDomBindings.ts", "const planEdit"],
+  ["src/app/useCockpitDomBindings.ts", "planEdit?.addEventListener(\"click\", revisePlan)"],
   ["src/app/AppShell.tsx", "setPaletteOpen"],
   ["src/app/useCockpitDomBindings.ts", "review-revise"],
   ["src/app/useCockpitDomBindings.ts", "useCockpitDomBindings"],
@@ -433,4 +435,5 @@ export const forbiddenRenderedDemoStrings = [
   "Accept mock patch",
   "mock transcript",
   "Create a fixture-backed thread manager state.",
+  "Plan editing is not wired yet",
 ];

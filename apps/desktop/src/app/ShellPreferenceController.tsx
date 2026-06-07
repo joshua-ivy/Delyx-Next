@@ -65,7 +65,6 @@ export function ShellPreferenceController() {
       bindLogSearch(),
       bindOutputCollapse(),
       ...bindTerminalDrawerActions(),
-      bindSafeAction(".plan-edit", "Edit plan", "Plan editing is not wired yet; no plan changed.", "warning"),
       bindSafeAction(".plan-question", "Ask question", "Question capture is not wired yet; no model call ran.", "warning"),
       bindSafeAction(".plan-review-mode", "Switch to read-only review", "Read-only review selected locally; no files changed."),
       bindSafeAction(".diff-approve", "Approve apply", "Patch apply still requires approval; no file changed.", "warning"),
