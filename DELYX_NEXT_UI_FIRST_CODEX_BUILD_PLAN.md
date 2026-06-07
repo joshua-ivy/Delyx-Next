@@ -852,16 +852,13 @@ MVP:
 ```text
 Changed files
 Unified diff
-Approve apply
-Reject
-Revert checkpoint
-Ask for revision
+Patch action status
 ```
 
-Status update: diff review MVP controls implemented on 2026-06-07.
+Status update: diff review artifact surface implemented on 2026-06-07.
 
 - ~~Diff panel shows changed files and unified diff artifacts.~~
-- ~~Diff panel exposes Approve apply, Reject, Revert checkpoint, and Ask revision as safe local UI controls.~~
+- ~~Diff panel hides patch action controls until executable PatchProposal bindings exist.~~
 
 Later:
 
@@ -920,13 +917,12 @@ Rollback plan
 Expiration
 Approve once
 Deny
-Always allow for this project later
-Edit scope
 ```
 
 Status update: approval drawer card controls implemented on 2026-06-07.
 
-- ~~Approval cards show action, risk, reason, files/commands scope, expected result, rollback plan, expiration, and safe local controls for approve once, deny, always allow later, and edit scope.~~
+- ~~Approval cards show action, risk, reason, files/commands scope, expected result, rollback plan, expiration, and safe local controls for approve once and deny.~~
+- ~~Project-wide allow and scope editing controls stay hidden until they have real policy bindings.~~
 
 Approval types:
 
@@ -2144,7 +2140,7 @@ Acceptance:
 - ~~Approval expiration is closed at the exact deadline across UI and Rust gates.~~
 - ~~Approved approvals visibly expire after their execution window closes.~~
 - ~~UI shows risk, scope, reason, expected result, and expiration when real proposals exist.~~
-- ~~Approval policy controls without implementations render unavailable instead of clickable no-ops.~~
+- ~~Approval policy controls without implementations stay hidden instead of rendering unavailable no-ops.~~
 - ~~Execution gates reject approvals for the wrong risky action type.~~
 - ~~Execution gates reject approvals from another AgentRun before performing run-scoped work.~~
 - ~~Approval decision handlers reject stale, non-pending, or expired proposals before recording decision events.~~
@@ -2178,9 +2174,33 @@ Acceptance:
 - ~~Revert restores checkpoint.~~
 - ~~Diff panel shows changed files and patch.~~
 - ~~Empty diff state hides patch action controls until a real PatchProposal exists.~~
-- ~~Patch action controls without execution/state bindings render unavailable instead of clickable no-ops.~~
+- ~~Patch action controls without execution/state bindings stay hidden instead of rendering unavailable no-ops.~~
 - ~~Restored checkpoints cannot be reused to overwrite later local changes.~~
 - ~~Patch proposals reject duplicate normalized file paths so diff/checkpoint artifacts stay unambiguous.~~
+
+---
+
+### ~~PR 8.1 - Remove Unimplemented Approval and Diff Controls~~
+
+Status: Complete on 2026-06-07.
+
+Update: Removed disabled future controls from the approval and diff panels.
+Approval proposals now show only the bound `Approve once` and `Deny` actions.
+Patch review panels show real diff artifacts plus a non-action status note
+until executable patch controls exist.
+
+Scope:
+
+- ~~Remove `Always allow later` and `Edit scope` controls until policy bindings exist.~~
+- ~~Remove disabled patch action controls until executable PatchProposal bindings exist.~~
+- ~~Keep pending approval decisions usable through approve-once and deny controls.~~
+- ~~Keep diff panels truthful without advertising unavailable commands.~~
+
+Acceptance:
+
+- ~~No disabled future approval controls render.~~
+- ~~No disabled future patch controls render.~~
+- ~~Verifier checks require truthful non-action status text.~~
 
 ---
 
