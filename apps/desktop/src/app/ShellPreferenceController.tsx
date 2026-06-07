@@ -170,30 +170,6 @@ function bindOutputCollapse() {
   return () => button.removeEventListener("click", toggle);
 }
 
-function bindSafeAction(selector: string, label: string, message: string, tone: ToastTone = "info") {
-  const button = document.querySelector(selector);
-  if (!(button instanceof HTMLElement)) {
-    return () => undefined;
-  }
-  const run = () => notifyLocalAction(message, tone);
-  const onKeyDown = (event: Event) => {
-    const key = (event as KeyboardEvent).key;
-    if (key === "Enter" || key === " ") {
-      event.preventDefault();
-      run();
-    }
-  };
-  button.setAttribute("aria-label", label);
-  button.setAttribute("role", "button");
-  button.setAttribute("tabindex", "0");
-  button.addEventListener("click", run);
-  button.addEventListener("keydown", onKeyDown);
-  return () => {
-    button.removeEventListener("click", run);
-    button.removeEventListener("keydown", onKeyDown);
-  };
-}
-
 function filterLogLines(query: string) {
   const needle = query.trim().toLowerCase();
   document.querySelectorAll<HTMLElement>("[data-log-line]").forEach((line) => {

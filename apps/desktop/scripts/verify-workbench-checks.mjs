@@ -23,7 +23,6 @@ export const requiredChecks = [
   ["src/app/ShellPreferenceController.tsx", "bindLayoutGrip"],
   ["src/app/ShellPreferenceController.tsx", "bindLogSearch"],
   ["src/app/ShellPreferenceController.tsx", "bindOutputCollapse"],
-  ["src/app/ShellPreferenceController.tsx", "bindSafeAction"],
   ["src/app/drawerActions.ts", "bindTerminalDrawerActions"],
   ["src/app/drawerActions.ts", "navigator.clipboard.writeText"],
   ["src/app/drawerActions.ts", "button.disabled"],
