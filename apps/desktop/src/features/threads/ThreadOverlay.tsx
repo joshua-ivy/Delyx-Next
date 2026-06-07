@@ -27,8 +27,16 @@ export function ThreadOverlay({
   state,
   threads,
 }: ThreadOverlayProps) {
-  const [goal, setGoal] = useState("Create a fixture-backed thread manager state.");
+  const [goal, setGoal] = useState("");
+  const canCreate = goal.trim().length > 0;
   const visibleThreads = useMemo(() => threads.filter((thread) => !thread.archived), [threads]);
+  const createThread = () => {
+    if (!canCreate) {
+      return;
+    }
+    onCreateThread(goal);
+    setGoal("");
+  };
 
   if (!open) {
     return null;
@@ -48,9 +56,14 @@ export function ThreadOverlay({
         <div className="thread-grid">
           <section className="thread-card">
             <h3>Create thread</h3>
-            <textarea aria-label="Thread goal" onChange={(event) => setGoal(event.target.value)} value={goal} />
+            <textarea
+              aria-label="Thread goal"
+              onChange={(event) => setGoal(event.target.value)}
+              placeholder="Describe the local task"
+              value={goal}
+            />
             <div className="thread-actions">
-              <button onClick={() => onCreateThread(goal)} type="button">Create thread</button>
+              <button aria-disabled={!canCreate} disabled={!canCreate} onClick={createThread} type="button">Create thread</button>
               <button onClick={onShowEmpty} type="button">Show empty state</button>
             </div>
             <StateNotice state={state} />

@@ -141,6 +141,8 @@ export const requiredChecks = [
   ["src/features/workspace/WorkspaceOverlay.tsx", "Error state"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Denied: attempted read outside approved workspace root"],
   ["src/features/threads/ThreadOverlay.tsx", "Create thread"],
+  ["src/features/threads/ThreadOverlay.tsx", "goal.trim().length > 0"],
+  ["src/features/threads/ThreadOverlay.tsx", "disabled={!canCreate}"],
   ["src/features/threads/ThreadOverlay.tsx", "aria-label=\"Thread manager\""],
   ["src/features/threads/ThreadOverlay.tsx", "Show empty state"],
   ["src/features/threads/ThreadOverlay.tsx", "Archive active"],
@@ -430,4 +432,5 @@ export const forbiddenRenderedDemoStrings = [
   "uncommittedChanges: 12",
   "Accept mock patch",
   "mock transcript",
+  "Create a fixture-backed thread manager state.",
 ];

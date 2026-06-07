@@ -1895,6 +1895,7 @@ Scope:
 Acceptance:
 
 - ~~No fake thread cards render on first load.~~
+- ~~Thread creation starts with an empty user-goal input instead of a seeded fixture goal.~~
 - ~~No fake approvals, diffs, test results, evidence receipts, or terminal output render.~~
 - ~~Empty states explain what is not wired yet.~~
 - ~~Workspace scope, Git status, and rules files still render from the current local project.~~
