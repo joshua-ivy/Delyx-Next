@@ -126,6 +126,9 @@ export const requiredChecks = [
   ["src/features/runs/agentRunTypes.ts", "parentRunId?: string"],
   ["src/features/runs/agentRunTypes.ts", "\"created\""],
   ["src/features/runs/agentRunTypes.ts", "AgentNodeKind"],
+  ["src/features/runs/agentRunTypes.ts", "AgentNodeStatus"],
+  ["src/features/runs/agentRunTypes.ts", "dependsOn"],
+  ["src/features/runs/agentRunTypes.ts", "completedAt"],
   ["src/features/runs/agentRunTypes.ts", "RunMetrics"],
   ["src/features/runs/agentRunTypes.ts", "AgentOutcome"],
   ["src/features/runs/agentRunTypes.ts", "waiting_for_approval"],
@@ -367,6 +370,8 @@ export const requiredChecks = [
   ["src/app/types.ts", "BlockerViewModel"],
   ["src/app/types.ts", "worktreePath"],
   ["src/app/types.ts", "lastRunStatus"],
+  ["../../AGENTS.md", "Delyx Next is a local-first, UI-first AI workbench."],
+  ["../../AGENTS.md", "Keep source files focused: aim for 300 lines or fewer"],
 ];
 export const forbiddenRenderedDemoStrings = [
   "Disable network during tests",

@@ -1347,6 +1347,10 @@ interface AgentNode {
 }
 ```
 
+Status update: frontend AgentNode core model fields implemented on 2026-06-07.
+
+- ~~AgentNode UI model uses typed kind/status, runId, dependsOn, input/output/error, startedAt, and completedAt.~~
+
 ### 16.5 Approval Proposal
 
 ```ts
@@ -1717,6 +1721,10 @@ A task is not done until:
 - test claims link to execution artifacts
 - UI states exist for success, failure, blocked, waiting, empty, and loading states
 ```
+
+Status update: root AGENTS.md exists and matches the active project rules as of 2026-06-07.
+
+- ~~Root AGENTS.md is present with project mission, hard rules, UI rules, safety rules, implementation style, validation commands, and Definition of Done.~~
 
 ---
 
