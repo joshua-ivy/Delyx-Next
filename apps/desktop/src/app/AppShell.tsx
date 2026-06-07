@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CommandPalette } from "../design-system/CommandPalette";
 import { ShellPreferenceController } from "./ShellPreferenceController";
+import { createRunForThread, threadWithRun } from "./appShellRunActions";
 import { canTransition, createThread, modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { buildCockpitMarkup } from "./cockpitView";
@@ -29,6 +30,7 @@ export function AppShell() {
   const [plans, setPlans] = useState<PlanView[]>([]);
   const [threadOpen, setThreadOpen] = useState(false);
   const [threads, setThreads] = useState<TaskThread[]>([]);
+  const [agentRuns, setAgentRuns] = useState(currentAgentRuns);
   const [threadState, setThreadState] = useState<ThreadUiState>("empty");
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
@@ -37,9 +39,9 @@ export function AppShell() {
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
   const activeThread = visibleThreads.find((thread) => thread.id === activeThreadId) ?? visibleThreads[0];
-  const activeRun = currentAgentRuns.find((run) => run.threadId === activeThread?.id);
+  const activeRun = agentRuns.find((run) => run.id === activeThread?.activeRunId)
+    ?? agentRuns.find((run) => run.threadId === activeThread?.id);
   const activePlan = plans.find((plan) => plan.threadId === activeThread?.id);
-
   const cockpitHtml = useMemo(
     () => buildCockpitMarkup(
       activeProject,
@@ -62,11 +64,9 @@ export function AppShell() {
     ),
     [activePlan, activeProject, activeRun, activeThread, visibleThreads],
   );
-
   useEffect(() => {
     document.documentElement.dataset.mode = "build";
   }, []);
-
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
@@ -80,7 +80,6 @@ export function AppShell() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-
   useEffect(() => {
     const commandButton = document.querySelector(".command-trigger");
     const projectButton = document.querySelector('.rail .rnav[title="Projects"]');
@@ -127,7 +126,6 @@ export function AppShell() {
         (event.currentTarget as HTMLElement).click();
       }
     };
-
     projectButton?.setAttribute("role", "button");
     projectButton?.setAttribute("tabindex", "0");
     projectButton?.setAttribute("aria-label", "Open workspace manager");
@@ -145,7 +143,6 @@ export function AppShell() {
     commandButton?.setAttribute("role", "button");
     commandButton?.setAttribute("tabindex", "0");
     commandButton?.setAttribute("aria-label", "Open command palette");
-
     commandButton?.addEventListener("click", openPalette);
     commandButton?.addEventListener("keydown", activateOnKeyboard);
     projectButton?.addEventListener("click", openProject);
@@ -173,7 +170,6 @@ export function AppShell() {
       card.addEventListener("click", selectThread);
       card.addEventListener("keydown", activateOnKeyboard);
     });
-
     return () => {
       commandButton?.removeEventListener("click", openPalette);
       commandButton?.removeEventListener("keydown", activateOnKeyboard);
@@ -199,7 +195,6 @@ export function AppShell() {
       });
     };
   }, [activePlan, activeProject, activeThread, cockpitHtml]);
-
   const runPaletteCommand = (commandId: string) => {
     runAppShellCommand(commandId, {
       activePlan,
@@ -214,7 +209,6 @@ export function AppShell() {
     });
     setPaletteOpen(false);
   };
-
   return (
     <>
       <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} onRun={runPaletteCommand} open={paletteOpen} />
@@ -239,8 +233,11 @@ export function AppShell() {
             setThreadState("error");
             return;
           }
-          setThreads((current) => [thread, ...current]);
-          setActiveThreadId(thread.id);
+          const run = createRunForThread(thread, activeProject.id, threads.length + 1);
+          const runnableThread = threadWithRun(thread, run);
+          setAgentRuns((current) => [run, ...current]);
+          setThreads((current) => [runnableThread, ...current]);
+          setActiveThreadId(runnableThread.id);
           setThreadState("ready");
         }}
         onSelectThread={(threadId) => {
@@ -263,6 +260,7 @@ export function AppShell() {
         }}
         onShowEmpty={() => {
           setThreads([]);
+          setAgentRuns([]);
           setActiveThreadId(undefined);
           setPlans([]);
           setThreadState("empty");

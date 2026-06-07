@@ -1937,6 +1937,7 @@ Acceptance:
 - ~~Fail run.~~
 - ~~Link run to thread.~~
 - ~~Timeline shows real run events when ledger data exists.~~
+- ~~User-created in-session threads attach a real local AgentRun entry and set activeRunId/runIds without seeding fake first-run data.~~
 
 Architectural rule:
 
