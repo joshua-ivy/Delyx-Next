@@ -1660,6 +1660,7 @@ Status update: AppShell cockpit DOM bindings were extracted into a focused hook 
 - ~~Unused generic safe-action no-op binder is removed after controls become stateful or unavailable.~~
 - ~~External-agent path-scope checks are split into a focused helper module before the bridge file approaches the 300-line target.~~
 - ~~External-agent terminal command tests are split into a focused module to keep test files under the verifier line budget.~~
+- ~~External-agent adapter defaults are split into a focused helper before the bridge file hits the verifier line cap.~~
 
 ## UI Rules
 

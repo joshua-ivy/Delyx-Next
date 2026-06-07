@@ -3,6 +3,7 @@ pub mod agent_run_persistence;
 pub mod approval;
 pub mod automation;
 pub mod external_agent;
+mod external_agent_adapters;
 mod external_agent_scope;
 pub mod external_agent_terminal;
 pub mod explore_plan;
