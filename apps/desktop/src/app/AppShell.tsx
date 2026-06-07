@@ -27,6 +27,7 @@ import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 export function AppShell() {
   const [activeThreadId, setActiveThreadId] = useState<string | undefined>();
+  const [actionProposals, setActionProposals] = useState(currentActionProposals);
   const [plans, setPlans] = useState<PlanView[]>([]);
   const [threadOpen, setThreadOpen] = useState(false);
   const [threads, setThreads] = useState<TaskThread[]>([]);
@@ -48,7 +49,7 @@ export function AppShell() {
       activeThread,
       activeRun,
       activePlan,
-      currentActionProposals,
+      actionProposals,
       currentPatchProposals,
       currentTestArtifacts,
       currentReviewReports,
@@ -62,7 +63,7 @@ export function AppShell() {
       currentReleaseState,
       visibleThreads,
     ),
-    [activePlan, activeProject, activeRun, activeThread, visibleThreads],
+    [actionProposals, activePlan, activeProject, activeRun, activeThread, visibleThreads],
   );
   useEffect(() => {
     document.documentElement.dataset.mode = "build";
@@ -80,12 +81,14 @@ export function AppShell() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-  useCockpitDomBindings({ activePlan, activeProject, activeThread, cockpitHtml, setActiveThreadId, setAgentRuns, setPaletteOpen, setPlans, setThreadOpen, setThreadState, setThreads, setWorkspaceOpen });
+  useCockpitDomBindings({ activePlan, activeProject, activeRun, activeThread, cockpitHtml, setActionProposals, setActiveThreadId, setAgentRuns, setPaletteOpen, setPlans, setThreadOpen, setThreadState, setThreads, setWorkspaceOpen });
   const runPaletteCommand = (commandId: string) => {
     runAppShellCommand(commandId, {
       activePlan,
       activeProject,
+      activeRun,
       activeThread,
+      setActionProposals,
       setActiveThreadId,
       setAgentRuns,
       setPlans,
@@ -151,6 +154,7 @@ export function AppShell() {
         onShowEmpty={() => {
           setThreads([]);
           setAgentRuns([]);
+          setActionProposals([]);
           setActiveThreadId(undefined);
           setPlans([]);
           setThreadState("empty");

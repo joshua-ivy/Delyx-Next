@@ -1,8 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import { notifyLocalAction } from "./ShellPreferenceController";
+import { createPlanApprovalProposal, upsertActionProposal } from "./appShellApprovalActions";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
+import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
@@ -24,7 +26,9 @@ export const paletteCommands = [
 export interface AppShellCommandContext {
   activePlan: PlanView | undefined;
   activeProject: WorkspaceProject;
+  activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
+  setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
   setActiveThreadId: Dispatch<SetStateAction<string | undefined>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setPlans: Dispatch<SetStateAction<PlanView[]>>;
@@ -60,6 +64,7 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
     case "state.threads.empty":
       context.setActiveThreadId(undefined);
       context.setAgentRuns([]);
+      context.setActionProposals([]);
       context.setPlans([]);
       context.setThreads([]);
       context.setThreadState("empty");
@@ -99,6 +104,10 @@ function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecis
   context.setPlans((current) => current.map((plan) => (
     plan.threadId === context.activePlan?.threadId ? { ...plan, decision } : plan
   )));
+  if (decision === "approved" && context.activeThread) {
+    const proposal = createPlanApprovalProposal(context.activePlan, context.activeThread, context.activeRun, context.activeProject);
+    context.setActionProposals((current) => upsertActionProposal(current, proposal));
+  }
   notifyLocalAction(message, "success");
 }
 

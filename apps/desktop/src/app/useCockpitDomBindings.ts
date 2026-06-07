@@ -1,17 +1,21 @@
 import { useEffect, type Dispatch, type SetStateAction } from "react";
+import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { createPlanFromThread } from "../features/plans/planBuilder";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
+import { createPlanApprovalProposal, upsertActionProposal } from "./appShellApprovalActions";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 
 interface CockpitDomBindingState {
   activePlan: PlanView | undefined;
   activeProject: WorkspaceProject;
+  activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
   cockpitHtml: string;
+  setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
   setActiveThreadId: Dispatch<SetStateAction<string | undefined>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setPaletteOpen: Dispatch<SetStateAction<boolean>>;
@@ -53,6 +57,10 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       state.setPlans((current) => current.map((plan) => (
         plan.threadId === state.activePlan?.threadId ? { ...plan, decision } : plan
       )));
+      if (decision === "approved" && state.activeThread) {
+        const proposal = createPlanApprovalProposal(state.activePlan, state.activeThread, state.activeRun, state.activeProject);
+        state.setActionProposals((current) => upsertActionProposal(current, proposal));
+      }
     };
     const selectThread = (event: Event) => {
       const threadId = (event.currentTarget as HTMLElement).dataset.threadId;

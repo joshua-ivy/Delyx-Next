@@ -2043,6 +2043,7 @@ external send
 Acceptance:
 
 - ~~Risky action creates approval proposal.~~
+- ~~Approving a real in-session plan queues a scoped edit_file ActionProposal instead of executing build work.~~
 - ~~Approval changes proposal status.~~
 - ~~Denial blocks node.~~
 - ~~Expired proposal blocks node.~~
