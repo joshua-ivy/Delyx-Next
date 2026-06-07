@@ -697,14 +697,14 @@ Advanced mode:
 - ~~Resizable split panes~~
 - ~~Persistent layout for pane sizes and theme preference~~
 - ~~Light/dark themes with persisted local preference~~
-- Great empty states
-- Great loading states
-- Great error states
+- ~~Great empty states~~
+- ~~Great loading states~~
+- ~~Great error states~~
 - ~~Toasts/notifications for safe local UI actions~~
 - ~~Accessible dialogs, menus, buttons, and drawers~~
 - ~~Searchable logs in the bottom drawer~~
 - ~~Collapsible long output in the bottom drawer~~
-- Status pills for every state
+- ~~Status pills for every state~~
 - Consistent design tokens
 - No random one-off styling
 
