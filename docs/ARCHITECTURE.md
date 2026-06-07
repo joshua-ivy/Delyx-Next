@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, and automation-engine persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, and release-state persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -41,8 +41,9 @@ complete:
   registry persists imported manifests, trust, permissions, status, source
   hashes, and ID continuity, but there is no live Tauri skill bridge yet.
   The Rust automation engine persists mission contracts and scheduled-run
-  records, but there is no live Tauri automation bridge yet. Release state is
-  not yet persisted in SQLite.
+  records, but there is no live Tauri automation bridge yet. Release profile
+  and redacted support-bundle state persist to SQLite, but there is no live
+  Tauri release bridge yet.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -278,6 +279,22 @@ SQLite, including status, schedule shape, allowed tools, approval links,
 workspace fingerprints, and post-reload ID continuity. The shipped UI still
 reads the frontend automation state and has no live Tauri automation bridge, so
 automation persistence is not yet an end-to-end user workflow.
+
+## Release
+
+Owns:
+
+- Windows dev release profile
+- signing readiness
+- update metadata status
+- support bundle export shape
+- secret redaction policy
+
+Release profile and the latest redacted support bundle persist to SQLite,
+including signing inputs, update channel/published state, redacted config
+summary, redacted logs, and support-bundle metadata. The shipped UI still reads
+the frontend release state and has no live Tauri release bridge, so release
+persistence is not yet an end-to-end user workflow.
 
 ## Model Layer
 

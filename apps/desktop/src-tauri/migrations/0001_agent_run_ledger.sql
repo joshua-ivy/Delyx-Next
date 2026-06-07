@@ -159,3 +159,28 @@ CREATE TABLE IF NOT EXISTS scheduled_runs (
   reason TEXT NOT NULL,
   approval_id TEXT
 );
+
+CREATE TABLE IF NOT EXISTS release_profiles (
+  id TEXT PRIMARY KEY NOT NULL,
+  product_name TEXT NOT NULL,
+  version TEXT NOT NULL,
+  target_platform TEXT NOT NULL,
+  bundle_target TEXT NOT NULL,
+  certificate_thumbprint TEXT,
+  digest_algorithm TEXT,
+  timestamp_url TEXT,
+  sign_command TEXT,
+  tsp INTEGER NOT NULL DEFAULT 0,
+  update_channel TEXT NOT NULL,
+  update_published INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS support_bundles (
+  id TEXT PRIMARY KEY NOT NULL,
+  app_name TEXT NOT NULL,
+  version TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  config_summary_json TEXT NOT NULL,
+  logs_json TEXT NOT NULL,
+  secret_policy TEXT NOT NULL
+);
