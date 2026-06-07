@@ -41,6 +41,7 @@ mod tests {
         assert_eq!(artifact.exit_code, Some(0));
         assert!(artifact.stdout.to_lowercase().contains("test passed"));
         assert!(artifact.duration_ms <= 60_000);
+        assert_eq!(artifact.approval_id, approval.id);
         assert!(runner.has_execution_artifact("run-1"));
     }
 

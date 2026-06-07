@@ -899,6 +899,10 @@ Run ID
 Approval used
 ```
 
+Status update: test panel artifact receipts implemented on 2026-06-07.
+
+- ~~Test panel shows command, working directory, exit code, duration, stdout, stderr, parsed failures, artifact ID, timestamp, run ID, and approval used when TestArtifact data exists.~~
+
 ### 12.6 Approval Drawer
 
 Each approval card shows:

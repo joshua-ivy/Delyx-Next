@@ -90,6 +90,10 @@ export function testBlock(artifacts: TestArtifactView[]) {
   return artifacts.map((artifact) => `<div class="dfile test-artifact">
         <div class="dh"><span class="fn">${escapeHtml(artifact.command)}</span><span class="dst">${testStatus(artifact)} &middot; ${artifact.durationMs}ms</span></div>
         <div class="dc">
+          <div class="dr"><span class="g">artifact</span><span class="x">${escapeHtml(artifact.id)}</span></div>
+          <div class="dr"><span class="g">run</span><span class="x">${escapeHtml(artifact.runId)}</span></div>
+          <div class="dr"><span class="g">approval</span><span class="x">${escapeHtml(artifact.approvalId)}</span></div>
+          <div class="dr"><span class="g">time</span><span class="x">${escapeHtml(artifact.createdAt)}</span></div>
           <div class="dr"><span class="g">cwd</span><span class="x">${escapeHtml(artifact.workingDirectory)}</span></div>
           ${failureLine(artifact)}
           ${streamLines("out", artifact.stdout, "")}

@@ -94,6 +94,7 @@ mod tests {
 
     fn failed_artifact() -> TestArtifact {
         TestArtifact {
+            approval_id: "prop-1".to_string(),
             command: "cargo test".to_string(),
             created_at: 10,
             duration_ms: 12,

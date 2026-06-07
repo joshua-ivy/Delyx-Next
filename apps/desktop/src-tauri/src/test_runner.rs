@@ -8,6 +8,7 @@ use std::time::Instant;
 pub struct TestArtifact {
     pub id: String,
     pub run_id: String,
+    pub approval_id: String,
     pub command: String,
     pub working_directory: PathBuf,
     pub exit_code: Option<i32>,
@@ -79,6 +80,7 @@ impl TestRunner {
         let artifact = TestArtifact {
             id: format!("test-artifact-{}", self.next_artifact_id),
             run_id: input.run_id,
+            approval_id: input.approval_id,
             command: command_label(&input.program, &input.args),
             working_directory,
             exit_code: output.status.code(),
