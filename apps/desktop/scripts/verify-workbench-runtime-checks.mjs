@@ -88,6 +88,7 @@ export const runtimeChecks = [
   ["src-tauri/src/review.rs", "can_write"],
   ["src-tauri/src/review.rs", "request_revision"],
   ["src-tauri/src/model_provider.rs", "ModelRegistry"],
+  ["src-tauri/src/model_provider.rs", "with_runtime_defaults"],
   ["src-tauri/src/model_provider.rs", "mock_complete"],
   ["src-tauri/src/model_provider.rs", "save_role_route"],
   ["src-tauri/src/model_provider.rs", "MissingApiKey"],

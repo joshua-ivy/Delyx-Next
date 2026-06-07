@@ -98,6 +98,13 @@ impl ModelRegistry {
         registry
     }
 
+    pub fn with_runtime_defaults(checked_at: u64) -> Self {
+        let mut registry = Self::new();
+        registry.providers.push(ollama_provider(checked_at));
+        registry.providers.push(openai_compatible_missing_key(checked_at));
+        registry
+    }
+
     pub fn list_providers(&self) -> &[ModelProvider] {
         &self.providers
     }

@@ -34,7 +34,7 @@ pub struct RoleRouteStatusView {
 
 #[tauri::command]
 pub fn runtime_status() -> RuntimeStatusView {
-    runtime_status_from_registry(&ModelRegistry::with_default_local(0))
+    runtime_status_from_registry(&ModelRegistry::with_runtime_defaults(0))
 }
 
 pub fn runtime_status_from_registry(registry: &ModelRegistry) -> RuntimeStatusView {

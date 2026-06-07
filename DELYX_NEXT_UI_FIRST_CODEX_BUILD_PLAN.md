@@ -2359,7 +2359,7 @@ Acceptance:
 - ~~Missing provider/API key produces clear UI state.~~
 - ~~Secrets are not stored in repo.~~
 - ~~Missing-key, unconfigured, or unreachable providers cannot be saved as active routes.~~
-- ~~First-run model routing UI only marks the backend default coding route as saved.~~
+- ~~First-run model routing UI does not mark missing or mock routes as saved.~~
 
 ---
 
@@ -2401,9 +2401,9 @@ Status: Complete on 2026-06-07.
 
 Update: Added the first read-only Tauri command bridge for the UI runtime.
 The desktop backend now exposes app identity, packaged milestone, configured
-model providers, and the default coding route through `runtime_status`. The
-renderer invokes that command when running inside Tauri and falls back to an
-honest web-preview state when the Rust bridge is unavailable.
+model providers, and coding-route status through `runtime_status`. The renderer
+invokes that command when running inside Tauri and falls back to an honest
+web-preview state when the Rust bridge is unavailable.
 
 Scope:
 
@@ -2475,6 +2475,31 @@ Acceptance:
 - ~~First-run UI does not present `delyx-mock-coder` as a usable model.~~
 - ~~Ollama readiness still promotes a real discovered model into the coding route.~~
 - ~~Backend deterministic mock coverage remains available for fixtures.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
+### ~~PR 11.5 - Remove Runtime Mock Route~~
+
+Status: Complete on 2026-06-07.
+
+Update: The live Tauri `runtime_status` command now uses runtime defaults that
+exclude the deterministic mock provider and do not select a mock coding route.
+The mock provider remains available only through explicit fixture registries for
+backend tests.
+
+Scope:
+
+- ~~Add runtime model-provider defaults separate from fixture defaults.~~
+- ~~Return no coding route from live runtime status until a real route is ready.~~
+- ~~Keep mock completion tests on the explicit fixture registry.~~
+- ~~Add bridge verifier coverage so runtime status cannot silently reselect the mock route.~~
+
+Acceptance:
+
+- ~~Tauri runtime status does not expose `mock-local` as a live provider.~~
+- ~~Tauri runtime status does not expose `delyx-mock-coder` as the live coding route.~~
+- ~~Backend mock provider tests continue to pass as deterministic fixtures.~~
 - ~~Source files stay within the line-budget rule.~~
 
 ---

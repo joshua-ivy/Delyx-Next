@@ -160,9 +160,9 @@ into typed PlanView JSON before appearing in the UI, and each successful or
 failed model call is recorded in the AgentRun ledger.
 Role routing may only save routes to providers whose health is ready; missing-key,
 unconfigured, or unreachable providers remain visible but unusable.
-The read-only Tauri `runtime_status` command exposes app identity, provider
-status, and the default coding route to the UI without executing tools or
-storing secrets.
+The read-only Tauri `runtime_status` command exposes app identity and provider
+status to the UI without executing tools or storing secrets. It does not expose
+the deterministic mock provider or a mock coding route as live runtime state.
 
 Model roles:
 

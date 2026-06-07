@@ -2,16 +2,17 @@
 mod tests {
     use crate::{
         model_provider::{ModelInfo, ModelProvider, ModelRegistry, ProviderHealth, ProviderKind, ProviderStatus, SecretPolicy},
-        runtime_bridge::runtime_status_from_registry,
+        runtime_bridge::{runtime_status, runtime_status_from_registry},
     };
 
     #[test]
-    fn runtime_status_exposes_app_identity_and_default_route() {
-        let status = runtime_status_from_registry(&ModelRegistry::with_default_local(10));
+    fn runtime_status_exposes_app_identity_without_mock_route() {
+        let status = runtime_status();
 
         assert_eq!(status.app_name, "Delyx Next");
         assert_eq!(status.app_identifier, "com.geaux.delyxnext");
-        assert_eq!(status.coding_route.unwrap().provider_id, "mock-local");
+        assert!(status.coding_route.is_none());
+        assert!(!status.providers.iter().any(|provider| provider.id == "mock-local"));
         assert!(status.providers.iter().any(|provider| provider.id == "ollama-local"));
     }
 
