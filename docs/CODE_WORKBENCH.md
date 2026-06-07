@@ -228,7 +228,7 @@ Review Mode should not edit unless the user explicitly switches to Build mode or
 
 The code workbench comes online across PRs 2 through 10:
 
-1. PR 2: realistic mock shell and mock workflow
+1. PR 2: realistic shell prototype; shipped fake data removed in later Phase 1 cleanup
 2. PR 3: real workspace manager
 3. PR 4: real thread manager
 4. PR 5: typed AgentRun ledger
@@ -249,4 +249,3 @@ Delyx can only be considered useful as a code workbench when:
 - final answers do not fake tested status
 - failures and blockers are visible
 - user can accept, revert, or continue from the review surface
-

@@ -92,9 +92,8 @@ impl ModelRegistry {
         registry.providers.push(mock_provider(checked_at));
         registry.providers.push(ollama_provider(checked_at));
         registry.providers.push(openai_compatible_missing_key(checked_at));
-        registry
-            .save_role_route(ModelRole::Coding, "mock-local", "delyx-mock-coder")
-            .expect("default mock route is valid");
+        let route_result = registry.save_role_route(ModelRole::Coding, "mock-local", "delyx-mock-coder");
+        debug_assert!(route_result.is_ok(), "default mock route is valid");
         registry
     }
 

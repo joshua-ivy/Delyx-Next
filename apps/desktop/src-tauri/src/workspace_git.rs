@@ -124,13 +124,16 @@ fn skip_git_scan(name: &str) -> bool {
 }
 
 fn read_u32(data: &[u8], offset: usize) -> std::io::Result<u32> {
-    let bytes: [u8; 4] = data.get(offset..offset + 4).ok_or_else(invalid_index)?.try_into().unwrap();
-    Ok(u32::from_be_bytes(bytes))
+    Ok(u32::from_be_bytes(read_fixed(data, offset)?))
 }
 
 fn read_u16(data: &[u8], offset: usize) -> std::io::Result<u16> {
-    let bytes: [u8; 2] = data.get(offset..offset + 2).ok_or_else(invalid_index)?.try_into().unwrap();
-    Ok(u16::from_be_bytes(bytes))
+    Ok(u16::from_be_bytes(read_fixed(data, offset)?))
+}
+
+fn read_fixed<const N: usize>(data: &[u8], offset: usize) -> std::io::Result<[u8; N]> {
+    let end = offset.checked_add(N).ok_or_else(invalid_index)?;
+    data.get(offset..end).and_then(|bytes| bytes.try_into().ok()).ok_or_else(invalid_index)
 }
 
 fn invalid_index() -> std::io::Error {

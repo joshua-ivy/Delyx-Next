@@ -2,7 +2,7 @@
 
 The UI is the product and the trust layer.
 
-Delyx Next should feel like a serious desktop workbench from the first app-shell PR, even while the runtime is still mock-backed.
+Delyx Next should feel like a serious desktop workbench from the first app-shell PR, while staying honest about which runtime paths are still skeletal.
 
 Target feel:
 
@@ -20,7 +20,7 @@ The interface should be:
 - dense but readable
 - inspectable
 - truthful about failure
-- useful with mock data before runtime depth exists
+- useful with real runtime data or honest empty states before runtime depth exists
 
 It should not feel:
 
@@ -63,7 +63,7 @@ Advanced mode adds:
 
 ## First Screens To Build
 
-PR 2 should build the real-feeling shell with mock data.
+PR 2 established the real-feeling shell prototype. Current shipped UI must use real runtime data or honest empty, loading, error, waiting, blocked, failed, denied, expired, partial, and success states.
 
 Screens and panels:
 
@@ -214,11 +214,11 @@ The workbench must support:
 - collapsible long output
 - stable layout dimensions for panels and toolbars
 
-## Mock-Data Prototype Strategy
+## Prototype Data Rule
 
-Mock data is not filler. It is a product design tool.
+Mock data was a product design tool for the first shell prototype. It must not ship as runtime state.
 
-PR 2 mock data must cover:
+Historical PR 2 prototype states remain coverage targets for fixtures and tests:
 
 - a real-looking project
 - multiple task threads
@@ -238,7 +238,7 @@ PR 2 mock data must cover:
 - untested state
 - insufficient evidence state
 
-Mock click-through:
+Fixture click-through:
 
 ```text
 Project
@@ -257,7 +257,7 @@ Project
 
 The UI is first-class when tests prove:
 
-- the shell renders with realistic mock data
+- the shell renders with real runtime data, honest empty states, or deterministic test fixtures
 - major panels are reachable by click and keyboard
 - task states render with correct status labels
 - blocked and failed states are visible
