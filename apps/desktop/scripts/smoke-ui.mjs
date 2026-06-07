@@ -1,9 +1,15 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { forbiddenRenderedDemoStrings } from "./verify-workbench-checks.mjs";
 
 const desktopRoot = fileURLToPath(new URL("..", import.meta.url));
 const failures = [];
+const distRoot = join(desktopRoot, "dist");
+const indexPath = join(distRoot, "index.html");
+const builtOutput = existsSync(indexPath)
+  ? [readFileSync(indexPath, "utf8"), ...assetText("assets", [".js", ".css"])].join("\n")
+  : "";
 const source = [
   "src/app/cockpitMarkup.ts",
   "src/features/workspace/WorkspaceOverlay.tsx",
@@ -12,7 +18,7 @@ const source = [
   "src/app/cockpitEvidence.ts",
 ].map((file) => readFileSync(join(desktopRoot, file), "utf8")).join("\n");
 
-check(existsSync(join(desktopRoot, "dist", "index.html")), "dist/index.html must exist; run npm run build first");
+check(existsSync(indexPath), "dist/index.html must exist; run npm run build first");
 check(assetExists("assets", ".js"), "built JS asset must exist");
 check(assetExists("assets", ".css"), "built CSS asset must exist");
 
@@ -25,16 +31,31 @@ for (const state of ["Loading state", "Error state", "blocked", "failed", "done"
 for (const action of ["Create plan", "Approve", "Revise", "Cancel"]) {
   check(source.includes(action), `primary workflow action must include ${action}`);
 }
+for (const marker of [
+  "Cockpit workbench",
+  "No active thread",
+  "No approval requests",
+  "No patch or file change has been proposed",
+  "No test command artifact has been captured",
+  "No evidence records",
+  "No terminal command has run",
+  "No external agent run has been approved or captured",
+]) {
+  check(builtOutput.includes(marker), `built UI must include real first-run marker: ${marker}`);
+}
+for (const forbidden of forbiddenRenderedDemoStrings) {
+  check(!builtOutput.includes(forbidden), `built UI must not render demo string: ${forbidden}`);
+}
 
 if (failures.length > 0) {
   console.error(failures.join("\n"));
   process.exit(1);
 }
 
-console.log("UI smoke passed: built assets and primary workflow states are present.");
+console.log("UI smoke passed: built assets, real empty states, and primary workflow markers are present.");
 
 function assetExists(directory, extension) {
-  const path = join(desktopRoot, "dist", directory);
+  const path = join(distRoot, directory);
   return existsSync(path) && readdirSync(path).some((entry) => entry.endsWith(extension));
 }
 
@@ -42,4 +63,15 @@ function check(condition, message) {
   if (!condition) {
     failures.push(message);
   }
+}
+
+function assetText(directory, extensions) {
+  const path = join(distRoot, directory);
+  if (!existsSync(path)) {
+    return [];
+  }
+
+  return readdirSync(path)
+    .filter((entry) => extensions.some((extension) => entry.endsWith(extension)))
+    .map((entry) => readFileSync(join(path, entry), "utf8"));
 }

@@ -2354,22 +2354,12 @@ Status: Implemented as deterministic `response-cases.json` and
 
 ### 20.4 UI Acceptance Tests
 
-The app must support mock click-through:
+Status: Implemented as `npm run smoke:ui` against built desktop assets.
 
-```text
-Project
-→ Thread
-→ Plan
-→ Approval
-→ Diff
-→ Test
-→ Evidence
-→ Blocked state
-→ Failed state
-→ Done state
-```
-
-No major screen should be blank once mock data exists.
+- ~~Project -> Thread -> Plan -> Approval -> Diff -> Test -> Evidence markers are present in the built UI.~~
+- ~~Blocked, failed, done, waiting, empty, loading, and error states have deterministic UI markers.~~
+- ~~The first-run workbench uses real local project facts plus honest empty states, not seeded demo runtime data.~~
+- ~~No major runtime surface renders blank when no ledger data exists.~~
 
 ---
 

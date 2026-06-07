@@ -182,7 +182,7 @@ export const requiredChecks = [
   ["src-tauri/src/release.rs", "redacted"],
   ["scripts/release-smoke.mjs", "Release smoke passed"],
   ["scripts/release-smoke.mjs", "icon.ico"],
-  ["scripts/smoke-ui.mjs", "UI smoke passed"],
+  ["scripts/smoke-ui.mjs", "real empty states"],
   ["scripts/smoke-tauri.mjs", "Tauri smoke passed"],
   ["scripts/eval-response.mjs", "Response eval passed"],
   ["scripts/eval-agentic.mjs", "Agentic eval passed"],
