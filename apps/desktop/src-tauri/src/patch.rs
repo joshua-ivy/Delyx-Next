@@ -132,7 +132,7 @@ impl PatchEngine {
             return Err(PatchError::AlreadyApplied);
         }
         approvals
-            .assert_can_execute_action(&proposal.approval_id, now, RiskyAction::FileWrite)
+            .assert_can_execute_action_for_run(&proposal.approval_id, now, RiskyAction::FileWrite, &proposal.run_id)
             .map_err(PatchError::Approval)?;
 
         let checkpoint = self.create_checkpoint(&proposal)?;
@@ -162,7 +162,12 @@ impl PatchEngine {
             return Err(PatchError::AlreadyRestored);
         }
         approvals
-            .assert_can_execute_action(&checkpoint.approval_id, now, RiskyAction::FileWrite)
+            .assert_can_execute_action_for_run(
+                &checkpoint.approval_id,
+                now,
+                RiskyAction::FileWrite,
+                &self.proposals[index].run_id,
+            )
             .map_err(PatchError::Approval)?;
 
         for file in &checkpoint.files {

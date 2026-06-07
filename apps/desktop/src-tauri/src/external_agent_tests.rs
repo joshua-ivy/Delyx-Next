@@ -54,6 +54,25 @@ mod tests {
     }
 
     #[test]
+    fn external_agent_requires_same_run_approval() {
+        let root = temp_workspace("wrong-external-run");
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { run_id: "run-2".to_string(), ..external_agent_input() });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut bridge = ExternalAgentBridge::new(vec![root.clone()]).unwrap();
+
+        let result = bridge.run_approved_worker(run_request(&approval.id, &root, true, vec![]), 10, &approvals);
+
+        assert_eq!(
+            result.unwrap_err(),
+            ExternalAgentError::Approval(ApprovalError::RunMismatch {
+                expected: "run-1".to_string(),
+                actual: "run-2".to_string(),
+            })
+        );
+    }
+
+    #[test]
     fn external_agent_scope_must_be_inside_approved_root() {
         let root = temp_workspace("approved-external");
         let outside = temp_workspace("outside-external");

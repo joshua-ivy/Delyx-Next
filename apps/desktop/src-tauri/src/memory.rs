@@ -88,13 +88,18 @@ impl MemoryStore {
         approvals: &ApprovalEngine,
         source_status: SourceRunStatus,
     ) -> Result<MemoryRecord, MemoryError> {
+        let index = self.candidate_index(candidate_id)?;
         approvals
-            .assert_can_execute_action(approval_id, now, RiskyAction::DurableMemorySave)
+            .assert_can_execute_action_for_run(
+                approval_id,
+                now,
+                RiskyAction::DurableMemorySave,
+                &self.candidates[index].source_run_id,
+            )
             .map_err(MemoryError::Approval)?;
         if source_status != SourceRunStatus::Completed {
             return Err(MemoryError::FailedRunCannotPromote);
         }
-        let index = self.candidate_index(candidate_id)?;
         if self.candidates[index].status != MemoryCandidateStatus::Pending {
             return Err(MemoryError::NotPending);
         }

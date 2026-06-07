@@ -51,6 +51,26 @@ mod tests {
     }
 
     #[test]
+    fn memory_promotion_requires_same_run_approval() {
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { run_id: "run-2".to_string(), ..memory_save_input() });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut store = MemoryStore::new();
+        let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));
+
+        let result = store.promote_approved(&candidate.id, &approval.id, 10, &approvals, SourceRunStatus::Completed);
+
+        assert_eq!(
+            result.unwrap_err(),
+            MemoryError::Approval(ApprovalError::RunMismatch {
+                expected: "run-1".to_string(),
+                actual: "run-2".to_string(),
+            })
+        );
+        assert!(store.records().is_empty());
+    }
+
+    #[test]
     fn user_can_suppress_memory_candidate() {
         let mut store = MemoryStore::new();
         let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));

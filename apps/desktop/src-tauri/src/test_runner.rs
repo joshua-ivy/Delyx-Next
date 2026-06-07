@@ -64,7 +64,7 @@ impl TestRunner {
             return Err(TestRunnerError::NotTestCommand);
         }
         approvals
-            .assert_can_execute_action(&input.approval_id, now, RiskyAction::TerminalCommand)
+            .assert_can_execute_action_for_run(&input.approval_id, now, RiskyAction::TerminalCommand, &input.run_id)
             .map_err(TestRunnerError::Approval)?;
         let working_directory = self.checked_directory(&input.working_directory)?;
 

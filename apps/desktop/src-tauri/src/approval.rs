@@ -96,6 +96,7 @@ pub enum ApprovalGateState {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ApprovalError {
     ActionMismatch { expected: RiskyAction, actual: RiskyAction },
+    RunMismatch { expected: String, actual: String },
     ProposalNotFound,
     AlreadyDecided,
     Expired,
@@ -192,6 +193,23 @@ impl ApprovalEngine {
         expected: RiskyAction,
     ) -> Result<(), ApprovalError> {
         let proposal = self.proposal(proposal_id)?;
+        if proposal.action != expected {
+            return Err(ApprovalError::ActionMismatch { expected, actual: proposal.action });
+        }
+        self.assert_can_execute(proposal_id, now)
+    }
+
+    pub fn assert_can_execute_action_for_run(
+        &self,
+        proposal_id: &str,
+        now: u64,
+        expected: RiskyAction,
+        run_id: &str,
+    ) -> Result<(), ApprovalError> {
+        let proposal = self.proposal(proposal_id)?;
+        if proposal.run_id != run_id {
+            return Err(ApprovalError::RunMismatch { expected: run_id.to_string(), actual: proposal.run_id.clone() });
+        }
         if proposal.action != expected {
             return Err(ApprovalError::ActionMismatch { expected, actual: proposal.action });
         }

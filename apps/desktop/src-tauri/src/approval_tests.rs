@@ -58,6 +58,23 @@ mod tests {
     }
 
     #[test]
+    fn approved_run_must_match_execution_request() {
+        let mut engine = ApprovalEngine::new();
+        let proposal = engine.propose(input(RiskyAction::FileWrite, 100));
+        engine.approve(&proposal.id, 50, "approved once").unwrap();
+
+        let result = engine.assert_can_execute_action_for_run(&proposal.id, 60, RiskyAction::FileWrite, "run-2");
+
+        assert_eq!(
+            result.unwrap_err(),
+            ApprovalError::RunMismatch {
+                expected: "run-2".to_string(),
+                actual: "run-1".to_string(),
+            }
+        );
+    }
+
+    #[test]
     fn denial_blocks_execution() {
         let mut engine = ApprovalEngine::new();
         let proposal = engine.propose(input(RiskyAction::ExternalAgentExecution, 100));

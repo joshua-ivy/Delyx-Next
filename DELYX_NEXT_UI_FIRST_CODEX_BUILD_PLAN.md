@@ -2066,6 +2066,7 @@ Acceptance:
 - ~~UI shows risk, scope, reason, expected result, and expiration when real proposals exist.~~
 - ~~Approval policy controls without implementations render unavailable instead of clickable no-ops.~~
 - ~~Execution gates reject approvals for the wrong risky action type.~~
+- ~~Execution gates reject approvals from another AgentRun before performing run-scoped work.~~
 
 ---
 

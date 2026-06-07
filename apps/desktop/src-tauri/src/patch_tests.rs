@@ -79,6 +79,29 @@ mod tests {
     }
 
     #[test]
+    fn patch_apply_requires_same_run_approval() {
+        let root = temp_workspace("wrong-patch-run");
+        let file = root.join("plan.md");
+        fs::write(&file, "before\n").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { run_id: "run-2".to_string(), ..file_write_input(30) });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut engine = PatchEngine::new(vec![root]).unwrap();
+        let patch = engine.propose_patch(patch_input(&approval.id, &file, "after\n")).unwrap();
+
+        let result = engine.apply_approved_patch(&patch.id, 10, &approvals);
+
+        assert_eq!(
+            result.unwrap_err(),
+            PatchError::Approval(ApprovalError::RunMismatch {
+                expected: "run-1".to_string(),
+                actual: "run-2".to_string(),
+            })
+        );
+        assert_eq!(fs::read_to_string(&file).unwrap(), "before\n");
+    }
+
+    #[test]
     fn restore_checkpoint_restores_original_contents() {
         let root = temp_workspace("restore");
         let file = root.join("copy.txt");

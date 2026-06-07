@@ -68,6 +68,26 @@ mod tests {
     }
 
     #[test]
+    fn test_command_requires_same_run_approval() {
+        let root = temp_workspace("wrong-command-run");
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(ProposalInput { run_id: "run-2".to_string(), ..command_input() });
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut runner = TestRunner::new(vec![root.clone()]).unwrap();
+
+        let result = runner.run_approved_test(test_input(&approval.id, &root, passing_command()), 10, &approvals);
+
+        assert_eq!(
+            result.unwrap_err(),
+            TestRunnerError::Approval(ApprovalError::RunMismatch {
+                expected: "run-1".to_string(),
+                actual: "run-2".to_string(),
+            })
+        );
+        assert!(!runner.has_execution_artifact("run-1"));
+    }
+
+    #[test]
     fn failed_test_captures_failure_summary() {
         let root = temp_workspace("failing-command");
         let mut approvals = ApprovalEngine::new();

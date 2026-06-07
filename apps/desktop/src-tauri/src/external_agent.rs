@@ -158,7 +158,12 @@ impl ExternalAgentBridge {
             return Err(ExternalAgentError::EmptyTask);
         }
         approvals
-            .assert_can_execute_action(&request.approval_id, now, RiskyAction::ExternalAgentExecution)
+            .assert_can_execute_action_for_run(
+                &request.approval_id,
+                now,
+                RiskyAction::ExternalAgentExecution,
+                &request.run_id,
+            )
             .map_err(ExternalAgentError::Approval)?;
         self.ensure_available(&request.adapter_id)?;
         self.ensure_task_authority(&request)?;
