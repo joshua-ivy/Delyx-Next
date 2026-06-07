@@ -2014,6 +2014,7 @@ Acceptance:
 - ~~Plan is visible in UI.~~
 - ~~User can approve, revise, or cancel plan.~~
 - ~~Creating a plan moves the active thread and attached in-session AgentRun into planning mode with a timeline event.~~
+- ~~Plan controls report truthful warnings instead of silently no-oping when no thread or plan exists.~~
 
 ---
 

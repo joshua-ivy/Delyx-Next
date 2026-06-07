@@ -9,6 +9,8 @@ export const requiredChecks = [
   ["src/app/cockpitPlanBindings.ts", "recordPlanQuestionForRun"],
   ["src/app/cockpitPlanBindings.ts", "const planReviewMode"],
   ["src/app/cockpitPlanBindings.ts", "planReviewMode, switchToReviewMode"],
+  ["src/app/cockpitPlanBindings.ts", "Create a plan before changing its decision"],
+  ["src/app/cockpitPlanBindings.ts", "Create a thread before switching to review"],
   ["src/app/AppShell.tsx", "setPaletteOpen"],
   ["src/app/useCockpitDomBindings.ts", "review-revise"],
   ["src/app/useCockpitDomBindings.ts", "useCockpitDomBindings"],

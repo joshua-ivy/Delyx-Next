@@ -27,6 +27,7 @@ export function bindPlanControls(state: CockpitDomBindingState, activateOnKeyboa
     const activeThread = state.activeThread;
     if (!activeThread) {
       state.setThreadState("empty");
+      notifyLocalAction("Create a thread before planning", "warning");
       return;
     }
     state.setPlans((current) => upsertPlan(current, createPlanFromThread(activeThread, state.activeProject)));
@@ -38,6 +39,7 @@ export function bindPlanControls(state: CockpitDomBindingState, activateOnKeyboa
   const switchToReviewMode = () => {
     if (!state.activeThread) {
       state.setThreadState("empty");
+      notifyLocalAction("Create a thread before switching to review", "warning");
       return;
     }
     updateThreadAndRunStatus(state, state.activeThread, "reviewing");
@@ -46,6 +48,7 @@ export function bindPlanControls(state: CockpitDomBindingState, activateOnKeyboa
     const activeThread = state.activeThread;
     if (!activeThread) {
       state.setThreadState("empty");
+      notifyLocalAction("Create a thread before asking a plan question", "warning");
       return;
     }
     const now = new Date().toISOString();
@@ -80,6 +83,7 @@ export function requestPlanRevision(state: CockpitDomBindingState) {
 function updatePlanDecision(state: CockpitDomBindingState, decision: PlanDecision) {
   if (!state.activePlan) {
     state.setThreadState(state.activeThread ? "ready" : "empty");
+    notifyLocalAction("Create a plan before changing its decision", "warning");
     return;
   }
   state.setPlans((current) => current.map((plan) => (
