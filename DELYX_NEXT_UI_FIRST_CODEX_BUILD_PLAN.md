@@ -2360,6 +2360,7 @@ Acceptance:
 
 - ~~Mobile cannot grant broader permissions than desktop policy.~~
 - ~~Mobile approval scope is visible.~~
+- ~~Mobile approval view filters out non-pending approval records.~~
 - ~~Mobile can review status without running full agent runtime.~~
 
 ---

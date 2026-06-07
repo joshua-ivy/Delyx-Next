@@ -26,6 +26,19 @@ mod tests {
     }
 
     #[test]
+    fn mobile_view_only_lists_pending_approvals() {
+        let pending = proposal(RiskLevel::Low, RiskyAction::ExternalSend);
+        let mut approved = proposal(RiskLevel::Low, RiskyAction::ExternalSend);
+        approved.id = "prop-approved".to_string();
+        approved.status = ProposalStatus::Approved;
+
+        let view = mobile_status_view(Vec::new(), vec![&pending, &approved], Vec::new(), default_mobile_policy());
+
+        assert_eq!(view.pending_approvals.len(), 1);
+        assert_eq!(view.pending_approvals[0].id, "prop-1");
+    }
+
+    #[test]
     fn mobile_can_review_status_without_full_runtime_access() {
         let view = mobile_status_view(
             vec![MobileThreadView { id: "thread-1".to_string(), title: "Review patch".to_string(), status: "active".to_string() }],

@@ -1,4 +1,4 @@
-use crate::approval::{ActionProposal, RiskLevel, RiskyAction};
+use crate::approval::{ActionProposal, ProposalStatus, RiskLevel, RiskyAction};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MobilePolicy {
@@ -67,7 +67,11 @@ pub fn mobile_status_view(
     policy: MobilePolicy,
 ) -> MobileCompanionView {
     MobileCompanionView {
-        pending_approvals: proposals.into_iter().map(approval_view).collect(),
+        pending_approvals: proposals
+            .into_iter()
+            .filter(|proposal| proposal.status == ProposalStatus::Pending)
+            .map(approval_view)
+            .collect(),
         threads,
         runs,
         policy,

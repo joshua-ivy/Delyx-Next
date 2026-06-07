@@ -354,6 +354,7 @@ export const requiredChecks = [
   ["src-tauri/src/automation.rs", "Workspace drift blocks scheduled work"],
   ["src-tauri/src/mobile.rs", "MobileCompanionView"],
   ["src-tauri/src/mobile.rs", "decide_mobile_approval"],
+  ["src-tauri/src/mobile.rs", "ProposalStatus::Pending"],
   ["src-tauri/src/mobile.rs", "BroadTerminalAccessDenied"],
   ["src-tauri/src/release.rs", "ReleaseProfile"],
   ["src-tauri/src/release.rs", "export_support_bundle"],
