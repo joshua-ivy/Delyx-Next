@@ -6,7 +6,11 @@ import type { PlanDecision, PlanView } from "../features/plans/planTypes";
 import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { notifyLocalAction } from "./ShellPreferenceController";
-import { createPlanApprovalProposal, upsertActionProposal } from "./appShellApprovalActions";
+import {
+  createPlanApprovalProposal,
+  expirePendingProposalsForRun,
+  upsertActionProposal,
+} from "./appShellApprovalActions";
 import {
   recordApprovalDecisionForRun,
   recordApprovalProposalForRun,
@@ -71,6 +75,9 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
         state.setActionProposals((current) => upsertActionProposal(current, proposal));
         state.setAgentRuns((current) => recordApprovalProposalForRun(current, activeThread, proposal, new Date().toISOString()));
         updateThreadAndRunStatus(state, activeThread, "waiting_for_approval");
+      } else if (activeThread) {
+        expireRunProposals(state, activeThread);
+        updateThreadAndRunStatus(state, activeThread, decision === "cancelled" ? "blocked" : "planning");
       }
     };
     const selectThread = (event: Event) => {
@@ -150,6 +157,13 @@ function updateProposalStatus(state: CockpitDomBindingState, event: Event, statu
     updateThreadAndRunStatus(state, activeThread, status === "approved" ? "building" : "blocked");
   }
   notifyLocalAction(status === "approved" ? "Approval granted for this run" : "Approval denied; run blocked", status === "approved" ? "success" : "warning");
+}
+
+function expireRunProposals(state: CockpitDomBindingState, activeThread: TaskThread) {
+  const runId = state.activeRun?.id ?? activeThread.activeRunId;
+  if (runId) {
+    state.setActionProposals((current) => expirePendingProposalsForRun(current, runId));
+  }
 }
 
 function updateThreadAndRunStatus(state: CockpitDomBindingState, activeThread: TaskThread, status: ThreadStatus) {

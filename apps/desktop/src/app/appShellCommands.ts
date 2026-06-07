@@ -1,7 +1,11 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import { notifyLocalAction } from "./ShellPreferenceController";
-import { createPlanApprovalProposal, upsertActionProposal } from "./appShellApprovalActions";
+import {
+  createPlanApprovalProposal,
+  expirePendingProposalsForRun,
+  upsertActionProposal,
+} from "./appShellApprovalActions";
 import { recordApprovalProposalForRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
@@ -110,8 +114,18 @@ function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecis
     context.setActionProposals((current) => upsertActionProposal(current, proposal));
     context.setAgentRuns((current) => recordApprovalProposalForRun(current, activeThread, proposal, new Date().toISOString()));
     moveThreadAndRun(context, activeThread, "waiting_for_approval");
+  } else if (activeThread) {
+    expireRunProposals(context, activeThread);
+    moveThreadAndRun(context, activeThread, decision === "cancelled" ? "blocked" : "planning");
   }
   notifyLocalAction(message, "success");
+}
+
+function expireRunProposals(context: AppShellCommandContext, activeThread: TaskThread) {
+  const runId = context.activeRun?.id ?? activeThread.activeRunId;
+  if (runId) {
+    context.setActionProposals((current) => expirePendingProposalsForRun(current, runId));
+  }
 }
 
 function moveThreadAndRunToPlanning(context: AppShellCommandContext, activeThread: TaskThread) {

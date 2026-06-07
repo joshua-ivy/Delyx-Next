@@ -2049,6 +2049,7 @@ Acceptance:
 - ~~Approval drawer hides pending decision controls once a proposal is approved or denied.~~
 - ~~Approval drawer decision controls keep keyboard role, tabindex, and labels after becoming stateful controls.~~
 - ~~AgentRun timeline records approval proposal and decision receipts without implying a patch or command executed.~~
+- ~~Revising or cancelling an approved plan expires stale pending build approvals.~~
 - ~~Denial blocks node.~~
 - ~~Expired proposal blocks node.~~
 - ~~Expired pending proposals render as expired and remove decision controls.~~

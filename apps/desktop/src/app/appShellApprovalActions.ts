@@ -36,3 +36,9 @@ export function createPlanApprovalProposal(
 export function upsertActionProposal(proposals: ActionProposalView[], proposal: ActionProposalView) {
   return [proposal, ...proposals.filter((item) => item.id !== proposal.id)];
 }
+
+export function expirePendingProposalsForRun(proposals: ActionProposalView[], runId: string): ActionProposalView[] {
+  return proposals.map((proposal) => (
+    proposal.runId === runId && proposal.status === "pending" ? { ...proposal, status: "expired" as const } : proposal
+  ));
+}
