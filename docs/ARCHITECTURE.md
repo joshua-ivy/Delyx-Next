@@ -149,6 +149,11 @@ approved-root file content requests. It uses the Rust PatchEngine to read
 before contents and build UI-ready diff records, but it does not apply writes
 or create checkpoints. Patch apply and restore remain separate approval-gated
 runtime actions.
+The Tauri `test_run_approved` bridge exposes approved test-command execution
+through the Rust TestRunner. It reads the same Rust ApprovalEngine owned by the
+approval bridge, rejects pending or mismatched approvals, captures stdout,
+stderr, exit code, duration, and failure summary, and stores UI-ready
+TestArtifactView records by run.
 Codex CLI and Claude Code adapter detection reads PATH only. Their typed
 command contracts produce visible `codex exec` and `claude -p` command arrays
 with explicit permission mode, transcript format, working directory, and Delyx

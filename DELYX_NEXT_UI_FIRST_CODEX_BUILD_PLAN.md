@@ -2423,6 +2423,46 @@ Acceptance:
 
 ---
 
+### ~~PR 9.1 - Tauri Test Runner Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: Added an approval-gated Tauri test-runner bridge and frontend client.
+The bridge reads the Rust ApprovalEngine owned by the approval bridge before
+running any command, uses the Rust TestRunner to reject pending approvals,
+wrong actions, non-test commands, timeouts, and outside-root working
+directories, then stores UI-ready TestArtifactView records by run. No test UI
+execution control was added, so first-run state remains empty until a future
+approved Test mode flow calls the bridge.
+
+Scope:
+
+- ~~Expose `test_run_approved` and `test_snapshot` Tauri commands.~~
+- ~~Reuse the Rust approval bridge gate before executing a test command.~~
+- ~~Return UI-ready test artifacts with stdout, stderr, exit code, duration, failure summary, approval ID, and timestamps.~~
+- ~~Reject pending approvals and non-test commands without storing artifacts.~~
+- ~~Add a frontend test client without seeding fake test artifacts.~~
+- ~~Add deterministic Rust tests and verifier markers.~~
+
+Acceptance:
+
+- ~~Approved test commands can produce TestArtifactView records through the bridge.~~
+- ~~Pending approval blocks execution and leaves no artifact.~~
+- ~~Non-test commands are rejected before execution.~~
+- ~~First-run UI still shows honest empty test state until a real artifact exists.~~
+- ~~Source files stay within the line-budget rule.~~
+
+Validation:
+
+- ~~`npm run typecheck` passed.~~
+- ~~`cargo test --workspace` passed with 174 Rust tests.~~
+- ~~`npm test` passed.~~
+- ~~`npm run build` passed.~~
+- ~~`npm run smoke:ui` passed.~~
+- ~~`npm run smoke:tauri` passed.~~
+
+---
+
 ### ~~PR 10 — Review Mode~~
 
 Status: Complete on 2026-06-07.

@@ -2,6 +2,7 @@ fn main() {
     tauri::Builder::default()
         .manage(delyx_next_desktop::approval_bridge::ApprovalBridgeState::default())
         .manage(delyx_next_desktop::patch_bridge::PatchBridgeState::default())
+        .manage(delyx_next_desktop::test_runner_bridge::TestRunnerBridgeState::default())
         .manage(delyx_next_desktop::thread_run_bridge::ThreadRunBridgeState::default())
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::approval_bridge::approval_decide,
@@ -13,6 +14,8 @@ fn main() {
             delyx_next_desktop::patch_bridge::patch_snapshot,
             delyx_next_desktop::runtime_bridge::ollama_chat,
             delyx_next_desktop::runtime_bridge::runtime_status,
+            delyx_next_desktop::test_runner_bridge::test_run_approved,
+            delyx_next_desktop::test_runner_bridge::test_snapshot,
             delyx_next_desktop::thread_run_bridge::thread_archive,
             delyx_next_desktop::thread_run_bridge::thread_message_append,
             delyx_next_desktop::thread_run_bridge::thread_run_create,

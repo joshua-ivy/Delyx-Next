@@ -7,6 +7,13 @@ pub struct ApprovalBridgeState {
     store: Mutex<ApprovalBridgeStore>,
 }
 
+impl ApprovalBridgeState {
+    pub fn with_engine<R>(&self, read: impl FnOnce(&ApprovalEngine) -> R) -> Result<R, String> {
+        let store = self.store.lock().map_err(|_| "Approval bridge lock failed.".to_string())?;
+        Ok(read(&store.engine))
+    }
+}
+
 #[derive(Default)]
 pub struct ApprovalBridgeStore {
     engine: ApprovalEngine,
