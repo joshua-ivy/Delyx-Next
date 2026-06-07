@@ -13,9 +13,12 @@ Start with the source of truth:
 - `AGENTS.md`
 - `docs/`
 
-The PR 1-18 implementation sequence is complete in the local scaffold. The UI
-defaults to real empty state; deterministic fixtures live under
-`apps/desktop/evals`.
+The PR 1-18 implementation sequence is skeleton-complete in the local scaffold:
+typed models, Tauri bridge slices, honest empty-state UI, and deterministic
+slice tests exist. It is not yet functionally complete as an autonomous
+workbench. The largest remaining depth gaps are real SQLite persistence, an
+AgentRun execution/resume engine, behavioral frontend tests, and the final UI
+architecture decision. Deterministic fixtures live under `apps/desktop/evals`.
 
 ## Run Locally
 
@@ -39,6 +42,10 @@ http://127.0.0.1:1420
 cargo test --workspace
 .\.tools\npm.cmd run build
 ```
+
+Note: `npm test` currently runs deterministic source-contract and smoke
+verifiers, plus non-frontend checks. It is not yet a behavioral React/component
+test suite; that is Phase 2 depth work.
 
 Extra deterministic checks:
 

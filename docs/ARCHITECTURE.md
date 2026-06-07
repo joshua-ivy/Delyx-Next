@@ -12,13 +12,30 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite
+- SQLite (Phase 2 target; not wired yet)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
 - Lucide icons
 
 Use old Delyx's Tauri/React/TypeScript/Rust/SQLite direction unless a decision record proves otherwise.
+
+## Current Implementation Reality
+
+As of 2026-06-07, the repo is Phase 1 skeleton-complete, not functionally
+complete:
+
+- Rust is a single crate in `apps/desktop/src-tauri`; the multi-crate target is
+  an extraction map, not current state.
+- SQLite is not implemented. `agent_run_persistence.rs` is a std-only
+  tab-separated file helper, and the migration file is only a schema artifact.
+- There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
+  runner yet.
+- Frontend checks are smoke/source-contract verifiers, not behavioral
+  component/interaction tests.
+- The Command Deck cockpit currently uses `buildCockpitMarkup` string rendering
+  plus manual DOM bindings. That is a Phase 1 implementation choice awaiting an
+  explicit architecture decision or migration.
 
 ## Source File Size Budget
 
@@ -108,6 +125,11 @@ Core agents:
 - ResearchAgent
 
 The AgentRun graph is the future execution/resume engine, not just an inspector artifact.
+Current state: the graph is still primarily an inspection and bridge artifact.
+Only narrow runtime islands execute real work: Ollama chat/plan calls,
+approval-gated test commands, patch/checkpoint primitives, and the generic
+terminal-worker bridge. The full Explore -> Plan -> Approve -> Build -> Diff ->
+Test -> Review execution loop remains Phase 2 work.
 
 ## Permission Engine
 
@@ -222,6 +244,8 @@ Model roles:
 - scoring
 
 Secrets must not be stored in the repo.
+OpenAI-compatible providers are currently represented by health/config states,
+not real chat/completion execution. Ollama is the only live model execution path.
 
 ## Evidence Layer
 
