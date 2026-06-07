@@ -180,7 +180,7 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
     </div>
   </aside>
 
-  <footer class="drawer">
+  <footer aria-label="Terminal, logs, and external agent drawer" class="drawer">
     <div class="dr-h">
       <div class="dr-tabs"><span class="on">Terminal</span><span>Logs</span><span>External agent</span></div>
       <label class="log-search-wrap"><span>Search logs</span><input class="log-search" aria-label="Search drawer logs" type="search" placeholder="Search logs" /></label>

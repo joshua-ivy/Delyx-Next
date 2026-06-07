@@ -37,7 +37,7 @@ export function ThreadOverlay({
   }
 
   return (
-    <div aria-modal="true" className="thread-backdrop" role="dialog">
+    <div aria-label="Thread manager" aria-modal="true" className="thread-backdrop" role="dialog">
       <section className="thread-modal">
         <header>
           <div>

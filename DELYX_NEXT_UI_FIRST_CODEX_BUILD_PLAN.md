@@ -701,7 +701,7 @@ Advanced mode:
 - Great loading states
 - Great error states
 - ~~Toasts/notifications for safe local UI actions~~
-- Accessible dialogs, menus, buttons, and drawers
+- ~~Accessible dialogs, menus, buttons, and drawers~~
 - ~~Searchable logs in the bottom drawer~~
 - ~~Collapsible long output in the bottom drawer~~
 - Status pills for every state

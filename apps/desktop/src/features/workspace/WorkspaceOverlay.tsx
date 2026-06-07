@@ -39,7 +39,7 @@ export function WorkspaceOverlay({
   }
 
   return (
-    <div aria-modal="true" className="workspace-backdrop" role="dialog">
+    <div aria-label="Workspace manager" aria-modal="true" className="workspace-backdrop" role="dialog">
       <section className="workspace-modal">
         <header>
           <div>

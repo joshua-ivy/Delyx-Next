@@ -37,7 +37,7 @@ export function CommandPalette({ commands, onClose, onRun, open }: CommandPalett
   }
 
   return (
-    <div aria-modal="true" className="palette-backdrop" role="dialog">
+    <div aria-label="Command palette" aria-modal="true" className="palette-backdrop" role="dialog">
       <div className="palette">
         <header>
           <Search size={18} />

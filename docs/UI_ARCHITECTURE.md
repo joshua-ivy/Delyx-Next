@@ -70,6 +70,9 @@ The bottom drawer supports client-side search and long-output collapse across
 real terminal, log, and external-agent lines. Filtering changes visibility only;
 it does not alter artifacts.
 
+Dialogs and drawers must expose explicit accessible names. Icon-only controls
+must keep labels even when the visual surface is compact.
+
 ## Core Panels
 
 ### Top Bar
