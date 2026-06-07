@@ -134,6 +134,10 @@ impl ModelRegistry {
         self.routes.iter().find(|route| route.role == role)
     }
 
+    pub fn routes(&self) -> &[RoleRoute] {
+        &self.routes
+    }
+
     pub fn mock_complete(&self, role: ModelRole, prompt: &str) -> Result<ModelResponse, ModelProviderError> {
         let route = self.route_for(role).ok_or(ModelProviderError::ModelNotFound)?;
         let provider = self.provider(&route.provider_id)?;

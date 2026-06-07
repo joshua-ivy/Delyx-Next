@@ -1,10 +1,24 @@
 use crate::{
     desktop_shell_info,
     model_ollama::{detect_local_ollama_provider, send_ollama_chat, OllamaChatMessage, OllamaChatResult},
-    model_provider::{ModelProvider, ModelRegistry, ModelRole, ProviderKind, ProviderStatus},
+    model_provider::{ModelInfo, ModelProvider, ModelRegistry, ModelRole, ProviderKind, ProviderStatus},
 };
 use serde::Serialize;
-use std::time::Duration;
+use std::{
+    path::{Path, PathBuf},
+    time::Duration,
+};
+
+#[derive(Debug)]
+pub struct RuntimeBridgeState {
+    database_path: PathBuf,
+}
+
+impl RuntimeBridgeState {
+    pub fn persistent(database_path: PathBuf) -> Self {
+        Self { database_path }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,15 +49,37 @@ pub struct RoleRouteStatusView {
 }
 
 #[tauri::command]
-pub fn runtime_status() -> RuntimeStatusView {
-    let mut registry = ModelRegistry::with_runtime_defaults(0);
+pub fn runtime_status(state: tauri::State<RuntimeBridgeState>) -> Result<RuntimeStatusView, String> {
     let ollama = detect_local_ollama_provider(0, Duration::from_millis(750));
-    let coding_model = ollama.models.first().map(|model| model.id.clone());
+    runtime_status_with_provider(&state.database_path, ollama)
+}
+
+pub fn runtime_status_with_provider(database_path: &Path, ollama: ModelProvider) -> Result<RuntimeStatusView, String> {
+    let mut registry = ModelRegistry::with_runtime_defaults(0);
     registry.register_provider(ollama);
-    if let Some(model_id) = coding_model {
-        let _ = registry.save_role_route(ModelRole::Coding, "ollama-local", &model_id);
+    for route in crate::model_provider_persistence::load_routes_from_path(database_path)? {
+        let _ = registry.save_role_route(route.role, &route.provider_id, &route.model_id);
     }
-    runtime_status_from_registry(&registry)
+    if registry.route_for(ModelRole::Coding).is_none() {
+        save_detected_coding_route(&mut registry, database_path)?;
+    }
+    Ok(runtime_status_from_registry(&registry))
+}
+
+fn save_detected_coding_route(registry: &mut ModelRegistry, database_path: &Path) -> Result<(), String> {
+    if let Some(model_id) = first_ready_ollama_model(registry).map(|model| model.id.clone()) {
+        let _ = registry.save_role_route(ModelRole::Coding, "ollama-local", &model_id);
+        crate::model_provider_persistence::save_routes_to_path(database_path, registry.routes())?;
+    }
+    Ok(())
+}
+
+fn first_ready_ollama_model(registry: &ModelRegistry) -> Option<&ModelInfo> {
+    registry
+        .list_providers()
+        .iter()
+        .find(|provider| provider.id == "ollama-local" && provider.health.status == ProviderStatus::Ready)
+        .and_then(|provider| provider.models.first())
 }
 
 #[tauri::command]

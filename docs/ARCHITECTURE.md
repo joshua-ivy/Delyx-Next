@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, and recent workspace persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, and model-route persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -34,8 +34,9 @@ complete:
   AgentRun rows to the local SQLite database. The approval bridge persists
   proposals, UI scope, status, and decisions. Recent workspace project snapshots
   persist project metadata, approved roots, rules files, Git metadata, and
-  indexed file names. Model routes, memory, skills, automations, and release
-  state are not yet persisted in SQLite.
+  indexed file names. Model role routes persist to SQLite and are validated
+  against current provider health before becoming active. Memory, skills,
+  automations, and release state are not yet persisted in SQLite.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -243,6 +244,9 @@ into typed PlanView JSON before appearing in the UI, and each successful or
 failed model call is recorded in the AgentRun ledger.
 Role routing may only save routes to providers whose health is ready; missing-key,
 unconfigured, or unreachable providers remain visible but unusable.
+Model role routes are stored locally in SQLite. Runtime status reloads valid
+routes first, then saves the first ready Ollama coding route only when no valid
+coding route exists.
 The read-only Tauri `runtime_status` command exposes app identity and provider
 status to the UI without executing tools or storing secrets. It probes local
 Ollama through loopback `/api/tags`, promotes discovered local models into the

@@ -8,6 +8,9 @@ fn main() {
         )
         .manage(delyx_next_desktop::patch_bridge::PatchBridgeState::default())
         .manage(delyx_next_desktop::review_bridge::ReviewBridgeState::default())
+        .manage(delyx_next_desktop::runtime_bridge::RuntimeBridgeState::persistent(
+            delyx_next_desktop::sqlite_store::default_database_path(),
+        ))
         .manage(delyx_next_desktop::test_runner_bridge::TestRunnerBridgeState::default())
         .manage(
             delyx_next_desktop::thread_run_bridge::ThreadRunBridgeState::persistent(
