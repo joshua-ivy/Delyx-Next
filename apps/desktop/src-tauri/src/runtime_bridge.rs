@@ -1,6 +1,6 @@
 use crate::{
     desktop_shell_info,
-    model_ollama::detect_local_ollama_provider,
+    model_ollama::{detect_local_ollama_provider, send_ollama_chat, OllamaChatMessage, OllamaChatResult},
     model_provider::{ModelProvider, ModelRegistry, ModelRole, ProviderKind, ProviderStatus},
 };
 use serde::Serialize;
@@ -44,6 +44,14 @@ pub fn runtime_status() -> RuntimeStatusView {
         let _ = registry.save_role_route(ModelRole::Coding, "ollama-local", &model_id);
     }
     runtime_status_from_registry(&registry)
+}
+
+#[tauri::command]
+pub fn ollama_chat(
+    model: String,
+    messages: Vec<OllamaChatMessage>,
+) -> Result<OllamaChatResult, String> {
+    send_ollama_chat(model, messages, Duration::from_secs(120))
 }
 
 pub fn runtime_status_from_registry(registry: &ModelRegistry) -> RuntimeStatusView {

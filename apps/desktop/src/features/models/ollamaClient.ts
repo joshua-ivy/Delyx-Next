@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import type { ModelProviderView, ModelSettingsView, ThreadRoleMessage } from "./modelTypes";
 
 const endpoint = "http://127.0.0.1:11434";
@@ -17,6 +18,12 @@ interface OllamaChatResponse {
     content?: unknown;
   };
   response?: unknown;
+}
+
+interface OllamaChatResult {
+  model: string;
+  providerId: string;
+  text: string;
 }
 
 export async function refreshOllamaSettings(settings: ModelSettingsView) {
@@ -39,6 +46,21 @@ export async function sendOllamaChat(settings: ModelSettingsView, messages: Thre
   if (!model) {
     throw new Error("Ollama is not ready. Start Ollama and pull a model, then send again.");
   }
+  if (hasTauriRuntime()) {
+    return sendOllamaChatViaRuntime(model, messages);
+  }
+  return sendOllamaChatOverHttp(model, messages);
+}
+
+async function sendOllamaChatViaRuntime(model: string, messages: ThreadRoleMessage[]): Promise<OllamaChatResult> {
+  try {
+    return await invoke<OllamaChatResult>("ollama_chat", { model, messages });
+  } catch (error) {
+    throw new Error(ollamaBridgeError(error));
+  }
+}
+
+async function sendOllamaChatOverHttp(model: string, messages: ThreadRoleMessage[]): Promise<OllamaChatResult> {
   const response = await fetchWithTimeout(`${endpoint}/api/chat`, {
     body: JSON.stringify({ model, messages, stream: false }),
     headers: { "Content-Type": "application/json" },
@@ -110,4 +132,18 @@ function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs
 async function responseDetail(response: Response) {
   const text = (await response.text()).trim();
   return text ? `: ${text.slice(0, 180)}` : "";
+}
+
+function hasTauriRuntime() {
+  return Boolean((globalThis as Record<string, unknown>).__TAURI_INTERNALS__);
+}
+
+function ollamaBridgeError(error: unknown) {
+  if (typeof error === "string" && error.trim()) {
+    return error;
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return "Ollama runtime bridge failed.";
 }

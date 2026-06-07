@@ -2560,6 +2560,34 @@ Acceptance:
 
 ---
 
+### ~~PR 11.8 - Tauri Ollama Chat Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: Desktop Ollama chat calls now flow through a Tauri `ollama_chat`
+runtime command instead of renderer-only networking. The bridge validates the
+selected model and message roles before requesting local `/api/chat`, returns
+provider/model/text output for AgentRun evidence, keeps the direct browser
+fetch only as a web-preview fallback, and has deterministic parser/error tests
+without requiring a live model.
+
+Scope:
+
+- ~~Add a Tauri runtime command for local Ollama `/api/chat`.~~
+- ~~Validate model selection and supported message roles before network I/O.~~
+- ~~Return provider/model/text output for composer and PlanAgent model-call artifacts.~~
+- ~~Use the runtime bridge in desktop while preserving web-preview fallback.~~
+- ~~Add deterministic chat parser, HTTP-error, and preflight validation tests.~~
+
+Acceptance:
+
+- ~~Desktop agent replies and PlanAgent drafts use the Tauri Ollama bridge.~~
+- ~~Web preview remains usable when no Tauri bridge exists.~~
+- ~~Malformed, empty, unavailable, and HTTP-error chat states remain visible as failures.~~
+- ~~Source files stay within the line-budget rule.~~
+
+---
+
 ### ~~PR 12 — External Agent Bridge Prototype~~
 
 Status: Complete on 2026-06-07.

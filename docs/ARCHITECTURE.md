@@ -172,6 +172,12 @@ or empty states truthfully. The renderer applies that desktop runtime status
 to model settings on first load and uses direct browser Ollama probing only
 when the Tauri bridge is unavailable. It does not expose the deterministic mock
 provider or a mock coding route as live runtime state.
+The Tauri `ollama_chat` command owns desktop `/api/chat` model calls so local
+agent replies and read-only PlanAgent drafts flow through the runtime bridge
+instead of relying on renderer-only networking. The command validates the
+selected model and message roles before the loopback request, returns a
+provider/model/text artifact shape, and preserves the renderer HTTP path only
+for web preview where no Tauri bridge exists.
 
 Model roles:
 
