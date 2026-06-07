@@ -163,6 +163,12 @@ impl ExternalAgentBridge {
         if scope.checkpoint_id.is_none() && scope.worktree_id.is_none() {
             return Err(ExternalAgentError::MissingIsolation);
         }
+        let changed_files = request
+            .capture_plan
+            .changed_files
+            .iter()
+            .map(|path| checked_scoped_path(path, &scope))
+            .collect::<Result<Vec<_>, _>>()?;
         let worker = run_worker_command(&request, &scope, now)?;
         let mut transcript = vec![
             event(ExternalAgentEventKind::Started, "External worker started inside approved scope.", now),
@@ -175,7 +181,7 @@ impl ExternalAgentBridge {
         for command in &request.capture_plan.commands {
             transcript.push(event(ExternalAgentEventKind::Command, command, now));
         }
-        for path in &request.capture_plan.changed_files {
+        for path in &changed_files {
             transcript.push(event(ExternalAgentEventKind::FileChanged, &path.display().to_string(), now));
         }
         let diff_summary = request.capture_plan.capture_diff.then(|| "Diff capture requested for Delyx review.".to_string());
@@ -282,6 +288,13 @@ fn checked_path(path: &Path, approved_roots: &[PathBuf]) -> Result<PathBuf, Exte
         .any(|root| normalized.starts_with(root))
         .then_some(normalized)
         .ok_or(ExternalAgentError::OutsideApprovedRoot)
+}
+
+fn checked_scoped_path(path: &Path, scope: &ExternalAgentScope) -> Result<PathBuf, ExternalAgentError> {
+    let normalized = fs::canonicalize(path).map_err(io_error)?;
+    let inside_root = normalized.starts_with(&scope.project_root);
+    let inside_allowed = scope.allowed_paths.iter().any(|allowed| normalized.starts_with(allowed));
+    (inside_root && inside_allowed).then_some(normalized).ok_or(ExternalAgentError::OutsideApprovedRoot)
 }
 
 fn event(kind: ExternalAgentEventKind, message: &str, timestamp: u64) -> ExternalAgentEvent {

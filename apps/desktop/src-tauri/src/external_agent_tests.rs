@@ -49,6 +49,24 @@ mod tests {
     }
 
     #[test]
+    fn external_agent_changed_files_must_stay_inside_approved_scope() {
+        let root = temp_workspace("changed-approved");
+        let outside = temp_workspace("changed-outside");
+        let outside_file = outside.join("leak.txt");
+        fs::write(&outside_file, "outside").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(external_agent_input());
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut bridge = ExternalAgentBridge::new(vec![root.clone()]).unwrap();
+        let mut request = run_request(&approval.id, &root, true, vec![]);
+        request.capture_plan.changed_files = vec![outside_file];
+
+        let result = bridge.run_approved_worker(request, 10, &approvals);
+
+        assert_eq!(result.unwrap_err(), ExternalAgentError::OutsideApprovedRoot);
+    }
+
+    #[test]
     fn approved_generic_worker_captures_transcript_output_and_diff() {
         let root = temp_workspace("approved-worker");
         let mut approvals = ApprovalEngine::new();
@@ -259,6 +277,8 @@ mod tests {
         let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
         let path = std::env::temp_dir().join(format!("delyx-next-{label}-{stamp}"));
         fs::create_dir_all(&path).unwrap();
+        fs::create_dir_all(path.join("src")).unwrap();
+        fs::write(path.join("src").join("main.rs"), "fn main() {}\n").unwrap();
         path
     }
 }

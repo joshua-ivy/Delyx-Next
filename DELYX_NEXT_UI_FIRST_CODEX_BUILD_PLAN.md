@@ -2503,6 +2503,7 @@ Delyx provides:
 - ~~Transcript capture~~
 - ~~Diff capture~~
 - ~~Test artifact capture~~
+- ~~Changed-file capture metadata is rejected when it points outside the approved external-agent scope.~~
 - ~~Review UI~~
 - ~~Accept/revert control~~
 - ~~Generic terminal worker command execution when `terminal_command` is explicitly allowed by task policy~~
