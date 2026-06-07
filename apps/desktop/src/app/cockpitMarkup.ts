@@ -58,7 +58,10 @@ export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cock
           <div class="stat"><div class="sv">0</div><div class="sk">Files touched</div></div>
           <div class="stat"><div class="sv">None</div><div class="sk">Diff</div></div>
           <div class="stat"><div class="sv">Not run</div><div class="sk">Tests</div></div>
-          <div class="stat"><div class="sv">0</div><div class="sk">Evidence</div></div>
+          <div class="stat"><div class="sv">0</div><div class="sk">Commands run</div></div>
+          <div class="stat"><div class="sv">0</div><div class="sk">Approvals needed</div></div>
+          <div class="stat"><div class="sv">None</div><div class="sk">Final answer</div></div>
+          <div class="stat"><div class="sv">0</div><div class="sk">Evidence receipts</div></div>
         </div>
       </div>
 

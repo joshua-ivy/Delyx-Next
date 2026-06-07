@@ -799,18 +799,19 @@ Status update: full workflow thread status vocabulary implemented on 2026-06-07.
 
 Show:
 
-- User goal
+- ~~User goal~~
 - ~~Current mode~~
-- Agent plan
-- Step timeline
-- Files touched
-- Commands run
-- Approvals needed
-- Test result
-- Final answer
-- Evidence receipts
+- ~~Agent plan~~
+- ~~Step timeline~~
+- ~~Files touched~~
+- ~~Commands run~~
+- ~~Approvals needed~~
+- ~~Test result~~
+- ~~Final answer~~
+- ~~Evidence receipts~~
 
 Status update: current mode pill and workflow pipeline derive from thread status as of 2026-06-07.
+Status update: thread summary stats cover commands, approvals, final answer, tests, files, and evidence as of 2026-06-07.
 
 ### 12.3 Plan Panel
 

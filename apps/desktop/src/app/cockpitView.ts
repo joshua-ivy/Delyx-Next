@@ -7,7 +7,8 @@ import { emptyPipelineBlock, modePill, pipelineBlock } from "./cockpitModes";
 import { emptyMobileBlock, mobileBlock } from "./cockpitMobile";
 import { emptyModelSettingsBlock, modelSettingsBlock, modelStatusChip } from "./cockpitModels";
 import { emptyReleaseBlock, releaseBlock } from "./cockpitRelease";
-import { approvalBlock, diffBlock, emptyApprovalBlock, emptyDiffBlock, emptyReviewBlock, emptyTestBlock, pendingCount, reviewBlock, testBlock, testStat } from "./cockpitReview";
+import { approvalBlock, diffBlock, emptyApprovalBlock, emptyDiffBlock, emptyReviewBlock, emptyTestBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
+import { emptyThreadStatsBlock, threadStatsBlock } from "./cockpitStats";
 import { emptySkillBlock, skillBlock } from "./cockpitSkills";
 import { escapeHtml } from "./html";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
@@ -64,9 +65,7 @@ export function buildCockpitMarkup(
     .replace("THREAD &middot; empty", `THREAD &middot; ${escapeHtml(activeThread?.id ?? "empty")}${runLabel(activeRun)}`)
     .replace("No active thread", escapeHtml(activeThread?.title ?? "No active thread"))
     .replace(emptyThreadGoal(), escapeHtml(activeThread?.goal ?? "Empty: create a thread inside this project to begin."))
-    .replace(emptyFilesTouchedStat(), filesTouchedStat(activePatches))
-    .replace(emptyDiffStat(), diffStat(activePatches))
-    .replace(emptyTestsStat(), testsStat(activeTests))
+    .replace(emptyThreadStatsBlock(), threadStatsBlock(activePatches, activeTests, activeProposals, activeRun))
     .replace(emptyPlanGrid(), planGrid(activePlan, Boolean(activeThread)))
     .replace("0 pending", `${pendingCount(activeProposals)} pending`)
     .replace('<span class="rtab">Approvals<span class="c">0</span></span>', `<span class="rtab">Approvals<span class="c">${pendingCount(activeProposals)}</span></span>`)
@@ -82,35 +81,8 @@ export function buildCockpitMarkup(
     .replace(emptyReleaseBlock(), releaseBlock(releaseState))
     .replace(emptyExternalAgentBlock(), externalAgentBlock(externalAgents, activeRun?.id))
     .replace(emptyTimelineBlock(), runTimeline(activeRun))
-    .replace('<div class="sv">0</div><div class="sk">Evidence</div>', `<div class="sv">${activeRun?.evidenceCount ?? 0}</div><div class="sk">Evidence</div>`)
     .replace(emptyEvidenceBlock(), evidenceBlock(activeResearch))
     .replace("Local only</span><span class=\"pill ghost\">AGENTS.md", `Local only</span><span class="pill ghost">${rulesLabel(project)}`);
-}
-
-function emptyFilesTouchedStat() {
-  return '<div class="stat"><div class="sv">0</div><div class="sk">Files touched</div></div>';
-}
-
-function filesTouchedStat(patches: PatchProposalView[]) {
-  const touched = patches.reduce((count, patch) => count + patch.files.length, 0);
-  return `<div class="stat"><div class="sv">${touched}</div><div class="sk">Files touched</div></div>`;
-}
-
-function emptyDiffStat() {
-  return '<div class="stat"><div class="sv">None</div><div class="sk">Diff</div></div>';
-}
-
-function diffStat(patches: PatchProposalView[]) {
-  const hasDiff = patches.some((patch) => patch.files.length > 0);
-  return `<div class="stat"><div class="sv">${hasDiff ? "Ready" : "None"}</div><div class="sk">Diff</div></div>`;
-}
-
-function emptyTestsStat() {
-  return '<div class="stat"><div class="sv">Not run</div><div class="sk">Tests</div></div>';
-}
-
-function testsStat(artifacts: TestArtifactView[]) {
-  return `<div class="stat"><div class="sv">${testStat(artifacts)}</div><div class="sk">Tests</div></div>`;
 }
 
 function gitChip(project: WorkspaceProject) {
