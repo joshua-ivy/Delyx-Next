@@ -95,7 +95,7 @@ export const agentRuntimeChecks = [
   ["src-tauri/src/explore_plan.rs", "ToolCapability::ReadApprovedFile"],
   ["src-tauri/src/explore_plan.rs", "architecture_summary"],
   ["src-tauri/src/explore_plan.rs", "rollback_strategy"],
-  ["src-tauri/migrations/0001_agent_run_ledger.sql", "CREATE TABLE agent_runs"],
+  ["src-tauri/migrations/0001_agent_run_ledger.sql", "CREATE TABLE IF NOT EXISTS agent_runs"],
   ["src-tauri/src/agent_run.rs", "AgentRunLedger"],
   ["src-tauri/src/agent_run.rs", "EvidenceRecord"],
   ["src-tauri/src/agent_run.rs", "create_agent_run"],

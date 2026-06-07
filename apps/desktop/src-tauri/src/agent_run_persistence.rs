@@ -1,82 +1,214 @@
-use std::fs;
+use rusqlite::{params, Connection};
 use std::path::Path;
 
 use crate::agent_run::{
-    AgentEvent, AgentOutcome, AgentRun, AgentRunError, AgentRunLedger, AgentRunStatus, RunMetrics,
+    AgentEvent, AgentNode, AgentOutcome, AgentRun, AgentRunError, AgentRunLedger, AgentRunStatus,
+    Artifact, EvidenceRecord, RunMetrics,
 };
 
 pub fn save_to_path(ledger: &AgentRunLedger, path: &Path) -> Result<(), AgentRunError> {
-    fs::write(path, encode(ledger)).map_err(|error| AgentRunError::Io(error.to_string()))
+    let mut connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_error)?;
+    save_to_connection(ledger, &mut connection)
 }
 
 pub fn load_from_path(path: &Path) -> Result<AgentRunLedger, AgentRunError> {
-    let contents = fs::read_to_string(path).map_err(|error| AgentRunError::Io(error.to_string()))?;
-    decode(&contents)
+    let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_error)?;
+    load_from_connection(&connection)
 }
 
-fn encode(ledger: &AgentRunLedger) -> String {
-    ledger
-        .runs
-        .iter()
-        .map(|run| {
-            let outcome = run.outcome.as_ref().map(|value| value.summary.as_str()).unwrap_or("");
-            format!("RUN\t{}\t{}\t{}\t{}", esc(&run.id), esc(&run.thread_id), status_key(run.status), esc(outcome))
-        })
-        .chain(ledger.runs.iter().flat_map(|run| {
-            run.events.iter().map(move |event| {
-                format!("EVENT\t{}\t{}\t{}\t{}", esc(&run.id), esc(&event.id), esc(&event.kind), esc(&event.message))
-            })
-        }))
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-fn decode(contents: &str) -> Result<AgentRunLedger, AgentRunError> {
-    let mut ledger = AgentRunLedger::new();
-    for line in contents.lines() {
-        let parts: Vec<_> = line.split('\t').collect();
-        match parts.as_slice() {
-            ["RUN", id, thread_id, status, outcome] => push_loaded_run(&mut ledger, id, thread_id, status, outcome)?,
-            ["EVENT", run_id, id, kind, message] => push_loaded_event(&mut ledger, run_id, id, kind, message)?,
-            _ => return Err(AgentRunError::InvalidLedger(line.to_string())),
+pub fn save_to_connection(
+    ledger: &AgentRunLedger,
+    connection: &mut Connection,
+) -> Result<(), AgentRunError> {
+    let transaction = connection.transaction().map_err(sql_error)?;
+    clear_tables(&transaction)?;
+    for run in &ledger.runs {
+        insert_run(&transaction, run)?;
+        for node in &run.nodes {
+            insert_node(&transaction, &run.id, node)?;
+        }
+        for event in &run.events {
+            insert_event(&transaction, &run.id, event)?;
+        }
+        for artifact in &run.artifacts {
+            insert_artifact(&transaction, &run.id, artifact)?;
+        }
+        for evidence in &run.evidence {
+            insert_evidence(&transaction, &run.id, evidence)?;
         }
     }
+    transaction.commit().map_err(sql_error)
+}
+
+pub fn load_from_connection(connection: &Connection) -> Result<AgentRunLedger, AgentRunError> {
+    let mut ledger = AgentRunLedger::new();
+    load_runs(connection, &mut ledger)?;
+    load_nodes(connection, &mut ledger)?;
+    load_events(connection, &mut ledger)?;
+    load_artifacts(connection, &mut ledger)?;
+    load_evidence(connection, &mut ledger)?;
+    ledger.refresh_loaded_counters();
     Ok(ledger)
 }
 
-fn push_loaded_run(
-    ledger: &mut AgentRunLedger,
-    id: &str,
-    thread_id: &str,
-    status: &str,
-    outcome: &str,
-) -> Result<(), AgentRunError> {
-    let status = parse_status(status)?;
-    ledger.runs.push(AgentRun {
-        id: unesc(id),
-        thread_id: unesc(thread_id),
-        status,
-        nodes: Vec::new(),
-        events: Vec::new(),
-        artifacts: Vec::new(),
-        evidence: Vec::new(),
-        metrics: RunMetrics::default(),
-        outcome: (!outcome.is_empty()).then(|| AgentOutcome { status, summary: unesc(outcome) }),
-    });
-    ledger.next_run = ledger.runs.len();
+fn clear_tables(connection: &Connection) -> Result<(), AgentRunError> {
+    connection
+        .execute_batch(
+            "DELETE FROM evidence_records;
+             DELETE FROM artifacts;
+             DELETE FROM agent_events;
+             DELETE FROM agent_nodes;
+             DELETE FROM agent_runs;",
+        )
+        .map_err(sql_error)
+}
+
+fn insert_run(connection: &Connection, run: &AgentRun) -> Result<(), AgentRunError> {
+    let outcome = run.outcome.as_ref().map(|value| value.summary.as_str());
+    connection
+        .execute(
+            "INSERT INTO agent_runs (id, thread_id, status, outcome_summary) VALUES (?1, ?2, ?3, ?4)",
+            params![run.id, run.thread_id, status_key(run.status), outcome],
+        )
+        .map(|_| ())
+        .map_err(sql_error)
+}
+
+fn insert_node(connection: &Connection, run_id: &str, node: &AgentNode) -> Result<(), AgentRunError> {
+    connection
+        .execute(
+            "INSERT INTO agent_nodes (id, run_id, kind, label, status) VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![node.id, run_id, node.kind, node.label, status_key(node.status)],
+        )
+        .map(|_| ())
+        .map_err(sql_error)
+}
+
+fn insert_event(connection: &Connection, run_id: &str, event: &AgentEvent) -> Result<(), AgentRunError> {
+    connection
+        .execute(
+            "INSERT INTO agent_events (id, run_id, kind, message) VALUES (?1, ?2, ?3, ?4)",
+            params![event.id, run_id, event.kind, event.message],
+        )
+        .map(|_| ())
+        .map_err(sql_error)
+}
+
+fn insert_artifact(connection: &Connection, run_id: &str, artifact: &Artifact) -> Result<(), AgentRunError> {
+    connection
+        .execute(
+            "INSERT INTO artifacts (id, run_id, kind, label) VALUES (?1, ?2, ?3, ?4)",
+            params![artifact.id, run_id, artifact.kind, artifact.label],
+        )
+        .map(|_| ())
+        .map_err(sql_error)
+}
+
+fn insert_evidence(connection: &Connection, run_id: &str, evidence: &EvidenceRecord) -> Result<(), AgentRunError> {
+    connection
+        .execute(
+            "INSERT INTO evidence_records (id, run_id, source_kind, title) VALUES (?1, ?2, ?3, ?4)",
+            params![evidence.id, run_id, evidence.source_kind, evidence.title],
+        )
+        .map(|_| ())
+        .map_err(sql_error)
+}
+
+fn load_runs(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(), AgentRunError> {
+    let mut statement = connection
+        .prepare("SELECT id, thread_id, status, outcome_summary FROM agent_runs ORDER BY rowid")
+        .map_err(sql_error)?;
+    let mut rows = statement.query([]).map_err(sql_error)?;
+    while let Some(row) = rows.next().map_err(sql_error)? {
+        let status_value: String = row.get(2).map_err(sql_error)?;
+        let status = parse_status(&status_value)?;
+        let summary: Option<String> = row.get(3).map_err(sql_error)?;
+        ledger.runs.push(AgentRun {
+            id: row.get(0).map_err(sql_error)?,
+            thread_id: row.get(1).map_err(sql_error)?,
+            status,
+            nodes: Vec::new(),
+            events: Vec::new(),
+            artifacts: Vec::new(),
+            evidence: Vec::new(),
+            metrics: RunMetrics::default(),
+            outcome: summary.map(|value| AgentOutcome { status, summary: value }),
+        });
+    }
     Ok(())
 }
 
-fn push_loaded_event(
-    ledger: &mut AgentRunLedger,
-    run_id: &str,
-    id: &str,
-    kind: &str,
-    message: &str,
-) -> Result<(), AgentRunError> {
-    let run = ledger.run_mut(&unesc(run_id))?;
-    run.events.push(AgentEvent { id: unesc(id), kind: unesc(kind), message: unesc(message) });
-    run.metrics.event_count = run.events.len();
+fn load_nodes(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(), AgentRunError> {
+    let mut statement = connection
+        .prepare("SELECT run_id, id, kind, label, status FROM agent_nodes ORDER BY rowid")
+        .map_err(sql_error)?;
+    let mut rows = statement.query([]).map_err(sql_error)?;
+    while let Some(row) = rows.next().map_err(sql_error)? {
+        let status_value: String = row.get(4).map_err(sql_error)?;
+        let status = parse_status(&status_value)?;
+        let run_id: String = row.get(0).map_err(sql_error)?;
+        let node = AgentNode {
+            id: row.get(1).map_err(sql_error)?,
+            kind: row.get(2).map_err(sql_error)?,
+            label: row.get(3).map_err(sql_error)?,
+            status,
+        };
+        ledger.run_mut(&run_id)?.nodes.push(node);
+    }
+    Ok(())
+}
+
+fn load_events(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(), AgentRunError> {
+    let mut statement = connection
+        .prepare("SELECT run_id, id, kind, message FROM agent_events ORDER BY rowid")
+        .map_err(sql_error)?;
+    let rows = statement
+        .query_map([], |row| Ok((row.get::<_, String>(0)?, AgentEvent { id: row.get(1)?, kind: row.get(2)?, message: row.get(3)? })))
+        .map_err(sql_error)?;
+    for row in rows {
+        let (run_id, event) = row.map_err(sql_error)?;
+        let run = ledger.run_mut(&run_id)?;
+        run.events.push(event);
+        run.metrics.event_count = run.events.len();
+    }
+    Ok(())
+}
+
+fn load_artifacts(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(), AgentRunError> {
+    let mut statement = connection
+        .prepare("SELECT run_id, id, kind, label FROM artifacts ORDER BY rowid")
+        .map_err(sql_error)?;
+    let rows = statement
+        .query_map([], |row| Ok((row.get::<_, String>(0)?, Artifact { id: row.get(1)?, kind: row.get(2)?, label: row.get(3)? })))
+        .map_err(sql_error)?;
+    for row in rows {
+        let (run_id, artifact) = row.map_err(sql_error)?;
+        let run = ledger.run_mut(&run_id)?;
+        run.artifacts.push(artifact);
+        run.metrics.artifact_count = run.artifacts.len();
+    }
+    Ok(())
+}
+
+fn load_evidence(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(), AgentRunError> {
+    let mut statement = connection
+        .prepare("SELECT run_id, id, source_kind, title FROM evidence_records ORDER BY rowid")
+        .map_err(sql_error)?;
+    let rows = statement
+        .query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, EvidenceRecord {
+                id: row.get(1)?,
+                source_kind: row.get(2)?,
+                title: row.get(3)?,
+            }))
+        })
+        .map_err(sql_error)?;
+    for row in rows {
+        let (run_id, evidence) = row.map_err(sql_error)?;
+        let run = ledger.run_mut(&run_id)?;
+        run.evidence.push(evidence);
+        run.metrics.evidence_count = run.evidence.len();
+    }
     Ok(())
 }
 
@@ -99,10 +231,6 @@ fn parse_status(value: &str) -> Result<AgentRunStatus, AgentRunError> {
     }
 }
 
-fn esc(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('\t', "\\t").replace('\n', "\\n")
-}
-
-fn unesc(value: &str) -> String {
-    value.replace("\\n", "\n").replace("\\t", "\t").replace("\\\\", "\\")
+fn sql_error(error: rusqlite::Error) -> AgentRunError {
+    AgentRunError::Io(error.to_string())
 }

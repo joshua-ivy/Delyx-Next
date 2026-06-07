@@ -1,4 +1,4 @@
-CREATE TABLE agent_runs (
+CREATE TABLE IF NOT EXISTS agent_runs (
   id TEXT PRIMARY KEY NOT NULL,
   thread_id TEXT NOT NULL,
   status TEXT NOT NULL,
@@ -7,7 +7,7 @@ CREATE TABLE agent_runs (
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE agent_nodes (
+CREATE TABLE IF NOT EXISTS agent_nodes (
   id TEXT PRIMARY KEY NOT NULL,
   run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
   kind TEXT NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE agent_nodes (
   status TEXT NOT NULL
 );
 
-CREATE TABLE agent_events (
+CREATE TABLE IF NOT EXISTS agent_events (
   id TEXT PRIMARY KEY NOT NULL,
   run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
   kind TEXT NOT NULL,
@@ -23,16 +23,18 @@ CREATE TABLE agent_events (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE artifacts (
-  id TEXT PRIMARY KEY NOT NULL,
+CREATE TABLE IF NOT EXISTS artifacts (
+  id TEXT NOT NULL,
   run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
   kind TEXT NOT NULL,
-  label TEXT NOT NULL
+  label TEXT NOT NULL,
+  PRIMARY KEY (run_id, id)
 );
 
-CREATE TABLE evidence_records (
-  id TEXT PRIMARY KEY NOT NULL,
+CREATE TABLE IF NOT EXISTS evidence_records (
+  id TEXT NOT NULL,
   run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
   source_kind TEXT NOT NULL,
-  title TEXT NOT NULL
+  title TEXT NOT NULL,
+  PRIMARY KEY (run_id, id)
 );

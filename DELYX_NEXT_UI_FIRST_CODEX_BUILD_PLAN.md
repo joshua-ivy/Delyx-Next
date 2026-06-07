@@ -7,9 +7,9 @@ Last updated: 2026-06-07.
 Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
-- `cargo test --workspace`: 190 passed, 0 failed.
+- `cargo test --workspace`: 192 passed, 0 failed.
 - `npm run typecheck`, `npm test` (smoke/source-contract), and `npm run smoke:ui`: pass.
-- SQLite absence, missing execution engine, Ollama-only live model path,
+- Partial SQLite state, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
   grep-style frontend verifiers all match the "Current Reality" claims below.
 - Functional islands confirmed to do real I/O: `apply_approved_patch` performs
@@ -39,7 +39,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Current Reality
 
 - PR 1-18.1 breadth is skeleton-complete.
-- SQLite is not implemented. Current AgentRun persistence is a std-only tab-separated file helper plus a schema artifact.
+- SQLite is partially implemented. AgentRun save/load now uses a real SQLite database and migration; the broader app stores are still in memory.
 - There is no full execution engine: no scheduler, executor, resume engine, repair loop, or hook runner.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
@@ -67,7 +67,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - [x] PR 4.5 - Remove Demo Data From UI: complete.
 - [x] PR 4.6 - Remove Simulated Thread Empty-State Controls: complete.
 - [x] PR 4.7 - Remove Legacy Decorative Thread Controls: complete.
-- [x] PR 5 - Typed AgentRun Ledger: skeleton complete; real SQLite store missing.
+- [x] PR 5 - Typed AgentRun Ledger: skeleton complete; AgentRun file persistence now uses SQLite, broader local store still missing.
 - [x] PR 5.1 - Tauri Thread/Run Session Bridge: skeleton complete.
 - [x] PR 5.2 - Thread Session Status and Archive Bridge: skeleton complete.
 - [x] PR 6 - Explore and Plan Modes: skeleton complete.
@@ -115,9 +115,11 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Phase 2 Functional Depth Checklist
 
 - [ ] D1 - Real SQLite Local Store
-  - Add actual SQLite dependency and migrations.
+  - Added `rusqlite` with bundled SQLite for local Windows-safe storage.
+  - AgentRun `save_to_path` / `load_from_path` now use the SQLite migration instead of a tab-separated text helper.
+  - SQLite tests prove migration tables, foreign keys, child records, run reload, and SQLite file format.
   - Persist projects, threads, runs, approvals, artifacts, evidence, model routes, memory, skills, automations, and release state.
-  - Replace the tab-separated AgentRun file helper or demote it to fixture-only.
+  - Next: wire thread/run bridge state into the SQLite store instead of keeping session records only in memory.
   - Add migration/repository tests that prove data survives reload.
 
 - [ ] D2 - AgentRun Execution Engine

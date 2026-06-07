@@ -78,16 +78,28 @@ mod tests {
         let path = temp_path("ledger");
         let mut ledger = AgentRunLedger::new();
         let run = ledger.create_run(THREAD_ID).unwrap();
+        let second = ledger.create_run(THREAD_ID).unwrap();
+        ledger.append_node(&run.id, "explore", "Loaded from SQLite").unwrap();
         ledger.append_event(&run.id, "created", "real ledger event").unwrap();
+        ledger.record_artifact(&run.id, "timeline", "primary artifact").unwrap();
+        ledger.record_artifact(&second.id, "timeline", "second run artifact").unwrap();
+        ledger.record_evidence(&run.id, "local_file", "AGENTS.md").unwrap();
         ledger.complete_run(&run.id, "complete").unwrap();
 
         ledger.save_to_path(&path).unwrap();
-        let loaded = AgentRunLedger::load_from_path(&path).unwrap();
+        let bytes = fs::read(&path).unwrap();
+        assert!(bytes.starts_with(b"SQLite format 3"));
+        let mut loaded = AgentRunLedger::load_from_path(&path).unwrap();
         let loaded_run = loaded.get_run(&run.id).unwrap();
 
         assert_eq!(loaded_run.status, AgentRunStatus::Completed);
+        assert_eq!(loaded_run.nodes[0].label, "Loaded from SQLite");
         assert_eq!(loaded_run.events[0].message, "real ledger event");
+        assert_eq!(loaded_run.artifacts[0].label, "primary artifact");
+        assert_eq!(loaded_run.evidence[0].title, "AGENTS.md");
         assert_eq!(loaded_run.outcome.as_ref().unwrap().summary, "complete");
+        assert_eq!(loaded.get_run(&second.id).unwrap().artifacts[0].id, "artifact-1");
+        assert_eq!(loaded.append_event(&second.id, "after.reload", "counter advanced").unwrap().id, "event-2");
         let _ = fs::remove_file(path);
     }
 

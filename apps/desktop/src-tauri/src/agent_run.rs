@@ -225,6 +225,24 @@ impl AgentRunLedger {
         self.runs.iter_mut().find(|run| run.id == run_id).ok_or(AgentRunError::RunNotFound)
     }
 
+    pub(crate) fn refresh_loaded_counters(&mut self) {
+        self.next_run = self.runs.iter().filter_map(|run| numeric_suffix(&run.id, "run-")).max().unwrap_or(self.runs.len());
+        self.next_event = self
+            .runs
+            .iter()
+            .flat_map(|run| run.events.iter())
+            .filter_map(|event| numeric_suffix(&event.id, "event-"))
+            .max()
+            .unwrap_or(0);
+        self.next_node = self
+            .runs
+            .iter()
+            .flat_map(|run| run.nodes.iter())
+            .filter_map(|node| numeric_suffix(&node.id, "node-"))
+            .max()
+            .unwrap_or(0);
+    }
+
     fn allocate_event_id(&mut self) -> String {
         self.next_event += 1;
         format!("event-{}", self.next_event)
@@ -247,4 +265,8 @@ pub fn append_agent_event(ledger: &mut AgentRunLedger, run_id: &str, kind: &str,
 
 fn ensure_running(run: &AgentRun) -> Result<(), AgentRunError> {
     (run.status == AgentRunStatus::Running).then_some(()).ok_or(AgentRunError::TerminalRun)
+}
+
+fn numeric_suffix(value: &str, prefix: &str) -> Option<usize> {
+    value.strip_prefix(prefix)?.parse().ok()
 }
