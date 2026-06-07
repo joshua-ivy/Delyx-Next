@@ -2404,6 +2404,7 @@ Acceptance:
 - ~~Signing checks are clear~~
 - ~~Support bundle exports logs/config summary without secrets~~
 - ~~Support bundle redaction covers common token prefixes, AWS access keys, and private-key blocks.~~
+- ~~First-run release readiness does not claim release smoke or support bundle artifacts are loaded until real artifacts are attached.~~
 
 ---
 

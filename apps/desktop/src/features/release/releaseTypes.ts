@@ -1,4 +1,4 @@
-export type ReleaseSmokeStatus = "configured" | "passed" | "not_loaded";
+export type ReleaseSmokeStatus = "passed" | "not_loaded";
 export type SigningStatus = "unsigned_dev" | "signed" | "missing_certificate";
 
 export interface ReleaseStateView {

@@ -4,14 +4,14 @@ export const currentReleaseState: ReleaseStateView = {
   platform: "windows",
   bundleTarget: "nsis",
   installer: "unsigned dev installer",
-  smokeStatus: "configured",
+  smokeStatus: "not_loaded",
   signing: {
     status: "unsigned_dev",
     message: "Signing checks are clear: no certificate, digest, timestamp, or sign command is configured for dev builds.",
   },
   supportBundle: {
-    exportStatus: "available",
-    secretPolicy: "Support bundle exports logs/config summary without secrets.",
+    exportStatus: "not_exported",
+    secretPolicy: "No support bundle export is loaded in this UI session.",
   },
   updateMetadata: {
     status: "placeholder",
