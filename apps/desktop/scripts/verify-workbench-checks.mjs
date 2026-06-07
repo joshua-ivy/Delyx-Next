@@ -20,6 +20,8 @@ export const requiredChecks = [
   ["src/app/cockpitStateTransitions.ts", "expireRunProposals"],
   ["src/app/useCockpitDomBindings.ts", ".approval-approve-once[data-proposal-id]"],
   ["src/app/useCockpitDomBindings.ts", "Update approval decision"],
+  ["src/app/useCockpitDomBindings.ts", "Approval proposal is expired; request a fresh approval"],
+  ["src/app/useCockpitDomBindings.ts", "proposal.status !== \"pending\""],
   ["src/app/ShellPreferenceController.tsx", "delyx-next.theme"],
   ["src/app/ShellPreferenceController.tsx", "delyx-next.layout"],
   ["src/app/ShellPreferenceController.tsx", "bindLayoutGrip"],

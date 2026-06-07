@@ -2071,6 +2071,7 @@ Acceptance:
 - ~~Approval policy controls without implementations render unavailable instead of clickable no-ops.~~
 - ~~Execution gates reject approvals for the wrong risky action type.~~
 - ~~Execution gates reject approvals from another AgentRun before performing run-scoped work.~~
+- ~~Approval decision handlers reject stale, non-pending, or expired proposals before recording decision events.~~
 
 ---
 

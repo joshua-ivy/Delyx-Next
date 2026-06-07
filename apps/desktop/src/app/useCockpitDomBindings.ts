@@ -90,6 +90,21 @@ function updateProposalStatus(state: CockpitDomBindingState, event: Event, statu
     return;
   }
   const proposal = state.actionProposals.find((item) => item.id === proposalId);
+  if (!proposal) {
+    notifyLocalAction("Approval proposal is no longer available", "warning");
+    return;
+  }
+  if (proposal.status !== "pending") {
+    notifyLocalAction("Approval decision was already recorded", "warning");
+    return;
+  }
+  if (isExpired(proposal.expiresAt)) {
+    state.setActionProposals((current) => current.map((proposal) => (
+      proposal.id === proposalId ? { ...proposal, status: "expired" } : proposal
+    )));
+    notifyLocalAction("Approval proposal is expired; request a fresh approval", "warning");
+    return;
+  }
   const decidedProposal = proposal ? { ...proposal, status } : undefined;
   state.setActionProposals((current) => current.map((proposal) => (
     proposal.id === proposalId ? { ...proposal, status } : proposal
@@ -100,6 +115,11 @@ function updateProposalStatus(state: CockpitDomBindingState, event: Event, statu
     updateThreadAndRunStatus(state, activeThread, status === "approved" ? "building" : "blocked");
   }
   notifyLocalAction(status === "approved" ? "Approval granted for this run" : "Approval denied; run blocked", status === "approved" ? "success" : "warning");
+}
+
+function isExpired(expiresAt: string) {
+  const deadline = Date.parse(expiresAt);
+  return Number.isFinite(deadline) && deadline <= Date.now();
 }
 
 function bindProposalButtons(buttons: HTMLElement[], updateStatus: (event: Event) => void, activateOnKeyboard: (event: Event) => void) {
