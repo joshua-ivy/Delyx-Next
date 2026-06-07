@@ -1851,6 +1851,7 @@ Acceptance:
 - ~~UI has empty/error/loading states.~~
 - ~~Workspace manager last-run status reads the current in-session AgentRun state instead of a static empty ledger.~~
 - ~~Workspace file indexing skips symlink entries so read-only discovery cannot walk outside approved roots.~~
+- ~~Rules file detection skips symlinked rule files so external rules cannot masquerade as approved workspace rules.~~
 
 ---
 

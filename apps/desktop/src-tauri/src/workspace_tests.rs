@@ -57,6 +57,21 @@ mod tests {
     }
 
     #[test]
+    fn rules_detection_skips_symlinked_rules_that_can_escape_scope() {
+        let fixture = Fixture::new("symlink-rules");
+        let outside = Fixture::new("symlink-rules-outside");
+        outside.file("AGENTS.md", "# Outside rules\n");
+        if symlink_file(&outside.root().join("AGENTS.md"), &fixture.root().join("AGENTS.md")).is_err() {
+            return;
+        }
+
+        let mut manager = WorkspaceManager::new();
+        let project = manager.add_project(fixture.root()).unwrap();
+
+        assert!(project.rules_files.is_empty());
+    }
+
+    #[test]
     fn denies_reads_outside_approved_roots() {
         let fixture = Fixture::new("denied");
         fixture.file("allowed.txt", "yes");
@@ -121,8 +136,18 @@ mod tests {
         std::os::unix::fs::symlink(target, link)
     }
 
+    #[cfg(unix)]
+    fn symlink_file(target: &PathBuf, link: &PathBuf) -> std::io::Result<()> {
+        std::os::unix::fs::symlink(target, link)
+    }
+
     #[cfg(windows)]
     fn symlink_dir(target: &PathBuf, link: &PathBuf) -> std::io::Result<()> {
         std::os::windows::fs::symlink_dir(target, link)
+    }
+
+    #[cfg(windows)]
+    fn symlink_file(target: &PathBuf, link: &PathBuf) -> std::io::Result<()> {
+        std::os::windows::fs::symlink_file(target, link)
     }
 }

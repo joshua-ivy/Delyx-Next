@@ -163,7 +163,7 @@ fn collect_files(
 
         if file_type.is_dir() {
             collect_files(root, &path, limit, entries)?;
-        } else {
+        } else if file_type.is_file() {
             let relative_path = path
                 .strip_prefix(root)
                 .unwrap_or(&path)
@@ -192,7 +192,7 @@ fn detect_rules_files(root: &Path) -> Vec<ProjectRulesFile> {
         ("CLAUDE.md", RulesFileKind::Claude),
     ] {
         let path = root.join(name);
-        if path.is_file() {
+        if is_plain_file(&path) {
             files.push(ProjectRulesFile { path, kind });
         }
     }
@@ -201,13 +201,18 @@ fn detect_rules_files(root: &Path) -> Vec<ProjectRulesFile> {
     if let Ok(entries) = fs::read_dir(rules_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().and_then(|value| value.to_str()) == Some("md") {
+            let is_file = entry.file_type().is_ok_and(|file_type| file_type.is_file());
+            if is_file && path.extension().and_then(|value| value.to_str()) == Some("md") {
                 files.push(ProjectRulesFile { path, kind: RulesFileKind::DelyxRule });
             }
         }
     }
 
     files
+}
+
+fn is_plain_file(path: &Path) -> bool {
+    fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_file())
 }
 
 fn detect_git(root: &Path) -> GitState {
