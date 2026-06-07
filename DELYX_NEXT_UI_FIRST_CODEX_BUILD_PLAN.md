@@ -2047,6 +2047,7 @@ Acceptance:
 - ~~Approval changes proposal status.~~
 - ~~Approval drawer Approve once and Deny controls update in-session proposal status and move the thread/run to building or blocked without executing tools.~~
 - ~~Approval drawer hides pending decision controls once a proposal is approved or denied.~~
+- ~~Approval drawer decision controls keep keyboard role, tabindex, and labels after becoming stateful controls.~~
 - ~~Denial blocks node.~~
 - ~~Expired proposal blocks node.~~
 - ~~UI shows risk, scope, reason, expected result, and expiration when real proposals exist.~~

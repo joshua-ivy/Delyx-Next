@@ -9,6 +9,7 @@ export const requiredChecks = [
   ["src/app/useCockpitDomBindings.ts", "setActionProposals"],
   ["src/app/useCockpitDomBindings.ts", "updateProposalStatus"],
   ["src/app/useCockpitDomBindings.ts", ".approval-approve-once[data-proposal-id]"],
+  ["src/app/useCockpitDomBindings.ts", "Update approval decision"],
   ["src/app/ShellPreferenceController.tsx", "delyx-next.theme"],
   ["src/app/ShellPreferenceController.tsx", "delyx-next.layout"],
   ["src/app/ShellPreferenceController.tsx", "bindLayoutGrip"],

@@ -151,6 +151,9 @@ function updateThreadAndRunStatus(state: CockpitDomBindingState, activeThread: T
 
 function bindProposalButtons(buttons: HTMLElement[], updateStatus: (event: Event) => void, activateOnKeyboard: (event: Event) => void) {
   buttons.forEach((button) => {
+    button.setAttribute("role", "button");
+    button.setAttribute("tabindex", "0");
+    button.setAttribute("aria-label", button.textContent?.trim() || "Update approval decision");
     button.addEventListener("click", updateStatus);
     button.addEventListener("keydown", activateOnKeyboard);
   });
