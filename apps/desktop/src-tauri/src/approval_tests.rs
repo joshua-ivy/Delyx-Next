@@ -72,6 +72,16 @@ mod tests {
     }
 
     #[test]
+    fn proposal_expires_at_deadline_boundary() {
+        let mut engine = ApprovalEngine::new();
+        let proposal = engine.propose(input(RiskyAction::FileWrite, 100));
+
+        assert_eq!(engine.gate_state(&proposal.id, 100).unwrap(), ApprovalGateState::Blocked);
+        assert_eq!(engine.approve(&proposal.id, 100, "deadline").unwrap_err(), ApprovalError::Expired);
+        assert_eq!(engine.list_proposals("run-1")[0].status, ProposalStatus::Expired);
+    }
+
+    #[test]
     fn action_taxonomy_clamps_downgraded_risk() {
         let mut engine = ApprovalEngine::new();
         let proposal = engine.propose(input_with_risk(RiskyAction::DependencyInstall, RiskLevel::Low, 100));

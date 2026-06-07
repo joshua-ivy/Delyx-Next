@@ -295,6 +295,7 @@ export const requiredChecks = [
   ["src-tauri/src/approval.rs", "ApprovalGateState"],
   ["src-tauri/src/approval.rs", "node_id"],
   ["src-tauri/src/approval.rs", "assert_can_execute"],
+  ["src-tauri/src/approval.rs", "now >= proposal.expires_at"],
   ["src-tauri/src/patch.rs", "PatchProposal"],
   ["src-tauri/src/patch.rs", "DiffLine"],
   ["src-tauri/src/patch.rs", "Checkpoint"],

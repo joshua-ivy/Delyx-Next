@@ -2053,6 +2053,7 @@ Acceptance:
 - ~~Denial blocks node.~~
 - ~~Expired proposal blocks node.~~
 - ~~Expired pending proposals render as expired and remove decision controls.~~
+- ~~Approval expiration is closed at the exact deadline across UI and Rust gates.~~
 - ~~UI shows risk, scope, reason, expected result, and expiration when real proposals exist.~~
 
 ---

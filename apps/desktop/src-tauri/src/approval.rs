@@ -140,7 +140,7 @@ impl ApprovalEngine {
     pub fn approve(&mut self, proposal_id: &str, now: u64, note: &str) -> Result<(), ApprovalError> {
         let proposal = self.proposal_mut(proposal_id)?;
         ensure_pending(proposal)?;
-        if now > proposal.expires_at {
+        if now >= proposal.expires_at {
             proposal.status = ProposalStatus::Expired;
             return Err(ApprovalError::Expired);
         }
@@ -159,7 +159,7 @@ impl ApprovalEngine {
 
     pub fn expire_due(&mut self, now: u64) {
         for proposal in &mut self.proposals {
-            if proposal.status == ProposalStatus::Pending && now > proposal.expires_at {
+            if proposal.status == ProposalStatus::Pending && now >= proposal.expires_at {
                 proposal.status = ProposalStatus::Expired;
             }
         }
@@ -168,8 +168,8 @@ impl ApprovalEngine {
     pub fn gate_state(&self, proposal_id: &str, now: u64) -> Result<ApprovalGateState, ApprovalError> {
         let proposal = self.proposal(proposal_id)?;
         Ok(match proposal.status {
-            ProposalStatus::Pending if now <= proposal.expires_at => ApprovalGateState::WaitingForApproval,
-            ProposalStatus::Approved if now <= proposal.expires_at => ApprovalGateState::Ready,
+            ProposalStatus::Pending if now < proposal.expires_at => ApprovalGateState::WaitingForApproval,
+            ProposalStatus::Approved if now < proposal.expires_at => ApprovalGateState::Ready,
             _ => ApprovalGateState::Blocked,
         })
     }
