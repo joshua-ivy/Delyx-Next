@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import type { TaskThread, ThreadStatus, ThreadUiState } from "./threadTypes";
+import { threadStatuses, type TaskThread, type ThreadStatus, type ThreadUiState } from "./threadTypes";
 
 interface ThreadOverlayProps {
   activeThread: TaskThread | undefined;
@@ -14,8 +14,6 @@ interface ThreadOverlayProps {
   onSetStatus: (status: ThreadStatus) => void;
   onShowEmpty: () => void;
 }
-
-const statuses: ThreadStatus[] = ["idle", "active", "blocked", "failed", "done"];
 
 export function ThreadOverlay({
   activeThread,
@@ -97,7 +95,7 @@ export function ThreadOverlay({
           <section className="thread-card">
             <h3>Status controls</h3>
             <div className="thread-statuses">
-              {statuses.map((status) => (
+              {threadStatuses.map((status) => (
                 <button key={status} onClick={() => onSetStatus(status)} type="button">
                   <StatusPill status={status} />
                 </button>
@@ -106,7 +104,7 @@ export function ThreadOverlay({
             <div className="thread-actions">
               <button onClick={onArchiveActive} type="button">Archive active</button>
             </div>
-            <p>Idle, active, blocked, failed, done, and empty states are visible before runtime work begins.</p>
+            <p>Idle, exploring, planning, waiting_for_approval, building, testing, reviewing, blocked, failed, done, and empty states are visible before runtime work begins.</p>
           </section>
         </div>
       </section>

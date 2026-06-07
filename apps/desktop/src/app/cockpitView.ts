@@ -229,18 +229,28 @@ function runLabel(run: AgentRunView | undefined) {
 
 function statusPill(status: ThreadStatus) {
   const labels: Record<ThreadStatus, string> = {
-    active: "Active",
     blocked: "Blocked",
+    building: "Building",
     done: "Done",
+    exploring: "Exploring",
     failed: "Failed",
     idle: "Idle",
+    planning: "Planning",
+    reviewing: "Reviewing",
+    testing: "Testing",
+    waiting_for_approval: "Waiting",
   };
   const classes: Record<ThreadStatus, string> = {
-    active: "wait",
     blocked: "blocked",
+    building: "wait",
     done: "done",
+    exploring: "wait",
     failed: "failed",
     idle: "ghost",
+    planning: "wait",
+    reviewing: "wait",
+    testing: "wait",
+    waiting_for_approval: "blocked",
   };
 
   return `<span class="pill ${classes[status]}"><span class="dot"></span>${labels[status]}</span>`;
@@ -248,11 +258,16 @@ function statusPill(status: ThreadStatus) {
 
 function statusMarkerClass(status: ThreadStatus) {
   const classes: Record<ThreadStatus, string> = {
-    active: "status-active",
     blocked: "status-blocked",
+    building: "status-active",
     done: "status-done",
+    exploring: "status-active",
     failed: "status-failed",
     idle: "status-idle",
+    planning: "status-active",
+    reviewing: "status-active",
+    testing: "status-active",
+    waiting_for_approval: "status-blocked",
   };
   return classes[status];
 }

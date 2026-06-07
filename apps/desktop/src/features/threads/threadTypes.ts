@@ -1,4 +1,27 @@
-export type ThreadStatus = "idle" | "active" | "blocked" | "failed" | "done";
+export type ThreadStatus =
+  | "idle"
+  | "exploring"
+  | "planning"
+  | "waiting_for_approval"
+  | "building"
+  | "testing"
+  | "reviewing"
+  | "blocked"
+  | "failed"
+  | "done";
+
+export const threadStatuses: ThreadStatus[] = [
+  "idle",
+  "exploring",
+  "planning",
+  "waiting_for_approval",
+  "building",
+  "testing",
+  "reviewing",
+  "blocked",
+  "failed",
+  "done",
+];
 
 export type ThreadUiState = "ready" | "empty" | "error";
 

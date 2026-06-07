@@ -48,13 +48,17 @@ mod tests {
         let mut manager = linked_manager();
         let thread = manager.create_thread(PROJECT_ID, "Render state pills").unwrap();
 
-        manager.set_status(&thread.id, ThreadStatus::Active).unwrap();
-        manager.set_status(&thread.id, ThreadStatus::Blocked).unwrap();
+        manager.set_status(&thread.id, ThreadStatus::Exploring).unwrap();
+        manager.set_status(&thread.id, ThreadStatus::Planning).unwrap();
+        manager.set_status(&thread.id, ThreadStatus::WaitingForApproval).unwrap();
+        manager.set_status(&thread.id, ThreadStatus::Building).unwrap();
+        manager.set_status(&thread.id, ThreadStatus::Testing).unwrap();
+        manager.set_status(&thread.id, ThreadStatus::Reviewing).unwrap();
         manager.set_status(&thread.id, ThreadStatus::Done).unwrap();
 
         assert_eq!(manager.get_thread(&thread.id).unwrap().status, ThreadStatus::Done);
         assert_eq!(
-            manager.set_status(&thread.id, ThreadStatus::Active).unwrap_err(),
+            manager.set_status(&thread.id, ThreadStatus::Building).unwrap_err(),
             ThreadError::InvalidTransition
         );
     }

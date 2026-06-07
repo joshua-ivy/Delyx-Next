@@ -793,6 +793,10 @@ failed
 done
 ```
 
+Status update: full workflow thread status vocabulary implemented on 2026-06-07.
+
+- ~~Thread UI and domain model cover idle, exploring, planning, waiting_for_approval, building, testing, reviewing, blocked, failed, and done.~~
+
 Show:
 
 - User goal

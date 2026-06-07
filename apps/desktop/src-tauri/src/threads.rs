@@ -12,7 +12,12 @@ pub struct TaskThread {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ThreadStatus {
     Idle,
-    Active,
+    Exploring,
+    Planning,
+    WaitingForApproval,
+    Building,
+    Testing,
+    Reviewing,
     Blocked,
     Failed,
     Done,
@@ -146,13 +151,21 @@ impl ThreadManager {
 }
 
 fn can_transition(from: ThreadStatus, to: ThreadStatus) -> bool {
-    use ThreadStatus::{Active, Blocked, Done, Failed, Idle};
+    use ThreadStatus::{
+        Blocked, Building, Done, Exploring, Failed, Idle, Planning, Reviewing, Testing,
+        WaitingForApproval,
+    };
 
     match (from, to) {
         (_, _) if from == to => true,
-        (Idle, Active | Blocked | Failed | Done) => true,
-        (Active, Idle | Blocked | Failed | Done) => true,
-        (Blocked, Active | Failed | Done) => true,
+        (Idle, Exploring | Planning | Blocked | Failed | Done) => true,
+        (Exploring, Planning | Blocked | Failed | Done) => true,
+        (Planning, WaitingForApproval | Building | Blocked | Failed | Done) => true,
+        (WaitingForApproval, Building | Blocked | Failed) => true,
+        (Building, Testing | Reviewing | Blocked | Failed | Done) => true,
+        (Testing, Reviewing | Blocked | Failed | Done) => true,
+        (Reviewing, Building | Blocked | Failed | Done) => true,
+        (Blocked, Exploring | Planning | Building | Failed | Done) => true,
         (Failed | Done, _) => false,
         _ => false,
     }

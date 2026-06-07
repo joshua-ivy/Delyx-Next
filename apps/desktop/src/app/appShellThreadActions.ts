@@ -23,16 +23,19 @@ export function canTransition(from: ThreadStatus, to: ThreadStatus) {
   if (from === to) {
     return true;
   }
-  if (from === "idle") {
-    return ["active", "blocked", "failed", "done"].includes(to);
-  }
-  if (from === "active") {
-    return ["idle", "blocked", "failed", "done"].includes(to);
-  }
-  if (from === "blocked") {
-    return ["active", "failed", "done"].includes(to);
-  }
-  return false;
+  const allowed: Record<ThreadStatus, ThreadStatus[]> = {
+    idle: ["exploring", "planning", "blocked", "failed", "done"],
+    exploring: ["planning", "blocked", "failed", "done"],
+    planning: ["waiting_for_approval", "building", "blocked", "failed", "done"],
+    waiting_for_approval: ["building", "blocked", "failed"],
+    building: ["testing", "reviewing", "blocked", "failed", "done"],
+    testing: ["reviewing", "blocked", "failed", "done"],
+    reviewing: ["building", "blocked", "failed", "done"],
+    blocked: ["exploring", "planning", "building", "failed", "done"],
+    failed: [],
+    done: [],
+  };
+  return allowed[from].includes(to);
 }
 
 export function upsertPlan(plans: PlanView[], plan: PlanView) {

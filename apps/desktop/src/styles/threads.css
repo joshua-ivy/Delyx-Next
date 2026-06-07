@@ -132,10 +132,19 @@
   color: var(--fg-2);
 }
 
-.thread-pill.active,
+.thread-pill.exploring,
+.thread-pill.planning,
+.thread-pill.building,
+.thread-pill.testing,
+.thread-pill.reviewing,
 .thread-state.thread-ready {
   background: var(--accent-soft);
   color: var(--build);
+}
+
+.thread-pill.waiting_for_approval {
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  color: var(--warning);
 }
 
 .thread-pill.blocked,

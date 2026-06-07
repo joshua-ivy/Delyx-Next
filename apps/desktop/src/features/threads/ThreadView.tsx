@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, CircleDashed, FileText } from "lucide-react";
+import { AlertTriangle, CircleDashed, FileText } from "lucide-react";
 
 import { Badge } from "../../design-system/Badge";
 import { Button } from "../../design-system/Button";
@@ -13,6 +13,14 @@ interface ThreadViewProps {
   thread: ThreadSummary;
   plan: PlanViewModel;
   timeline: TimelineItem[];
+}
+
+type ThreadStateTone = "neutral" | "warning" | "danger" | "success";
+
+interface VisibleThreadState {
+  detail: string;
+  title: string;
+  tone: ThreadStateTone;
 }
 
 export function ThreadView({ plan, thread, timeline }: ThreadViewProps) {
@@ -48,42 +56,67 @@ export function ThreadView({ plan, thread, timeline }: ThreadViewProps) {
 }
 
 function StateGallery({ status }: { status: ThreadSummary["status"] }) {
-  if (status === "blocked") {
-    return (
-      <StateBlock
-        detail="Provider setup needs a configured model before this task can continue."
-        title="Blocked"
-        tone="danger"
-      />
-    );
-  }
-
-  if (status === "failed") {
-    return (
-      <StateBlock
-        detail="A previous smoke run failed. The failure is visible in the test panel."
-        title="Failed"
-        tone="danger"
-      />
-    );
-  }
-
-  if (status === "done") {
-    return (
-      <StateBlock
-        detail="This thread completed with evidence receipts and no hidden follow-up work."
-        title="Done"
-        tone="success"
-      />
-    );
-  }
-
+  const visibleStates: Record<ThreadSummary["status"], VisibleThreadState> = {
+    blocked: {
+      detail: "A required approval, model, file scope, or workspace condition is blocking progress.",
+      title: "Blocked",
+      tone: "danger",
+    },
+    building: {
+      detail: "Approved build work is in progress and must surface diffs before review.",
+      title: "Building",
+      tone: "neutral",
+    },
+    done: {
+      detail: "This thread completed with evidence receipts and no hidden follow-up work.",
+      title: "Done",
+      tone: "success",
+    },
+    exploring: {
+      detail: "Read-only file and project exploration is active.",
+      title: "Exploring",
+      tone: "neutral",
+    },
+    failed: {
+      detail: "A run failed. The failure must stay visible with its artifact or reason.",
+      title: "Failed",
+      tone: "danger",
+    },
+    idle: {
+      detail: "No AgentRun is active for this thread yet.",
+      title: "Idle",
+      tone: "neutral",
+    },
+    planning: {
+      detail: "A plan is being prepared before any risky action runs.",
+      title: "Planning",
+      tone: "neutral",
+    },
+    reviewing: {
+      detail: "Diffs, findings, test artifacts, and evidence are under review.",
+      title: "Reviewing",
+      tone: "neutral",
+    },
+    testing: {
+      detail: "Approved test commands are running or ready to capture artifacts.",
+      title: "Testing",
+      tone: "neutral",
+    },
+    waiting_for_approval: {
+      detail: "A risky action is waiting for explicit approval before execution.",
+      title: "Waiting for approval",
+      tone: "warning",
+    },
+  };
+  const state = visibleStates[status];
   return (
     <StateBlock
-      action={<Button icon={<AlertTriangle size={16} />}>Review approval</Button>}
-      detail="A risky action is waiting for explicit approval before execution."
-      title="Waiting for approval"
-      tone="warning"
+      action={status === "waiting_for_approval" ? (
+        <Button icon={<AlertTriangle size={16} />}>Review approval</Button>
+      ) : undefined}
+      detail={state.detail}
+      title={state.title}
+      tone={state.tone}
     />
   );
 }
