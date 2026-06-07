@@ -2365,9 +2365,11 @@ Status: Implemented as `npm run smoke:ui` against built desktop assets.
 
 ## 21. External Agent Bridge Design
 
-Status: Prototype bridge contract strengthened on 2026-06-07. The current
-generic adapter remains no-spawn prototype mode; real external process launch
-stays pending approval-gated tool-runner integration.
+Status: Bridge contract strengthened on 2026-06-07. The generic terminal
+adapter now supports one approval-gated `terminal_command` launch inside
+checkpoint/worktree isolation with captured stdout, stderr, exit status, and
+failed-artifact visibility. Codex CLI and Claude Code remain detection-only
+until their command contracts are added.
 
 ### 21.1 Purpose
 
@@ -2396,6 +2398,8 @@ Delyx provides:
 - ~~Test artifact capture~~
 - ~~Review UI~~
 - ~~Accept/revert control~~
+- ~~Generic terminal worker command execution when `terminal_command` is explicitly allowed by task policy~~
+- ~~Failed worker commands are captured as failed artifacts instead of hidden errors~~
 
 ### 21.2 Rule
 

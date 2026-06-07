@@ -1,6 +1,8 @@
 # External Agent Bridge
 
-Delyx Next may later launch external coding agents as controlled workers.
+Delyx Next can launch approved generic terminal workers as controlled workers.
+Codex CLI and Claude Code stay detection-only until their command contracts are
+implemented.
 
 Examples:
 
@@ -35,6 +37,15 @@ Delyx owns:
 - accept/revert/continue decisions
 
 The external worker only performs the approved task inside the approved scope.
+
+Current implementation:
+
+- generic terminal adapter can run one approved `terminal_command`
+- command cwd must be inside the approved project scope and allowed paths
+- checkpoint or worktree isolation is required before launch
+- stdout, stderr, command label, exit status, and duration are captured
+- nonzero command exits create visible failed artifacts
+- Codex CLI and Claude Code adapters are still detection placeholders
 
 ## Worker Flow
 
@@ -151,4 +162,3 @@ PR 12 should implement:
 - UI panels for transcript, diff, and output
 
 It should not attempt broad autonomous delegation before approvals, checkpoints, diffs, and test artifacts are reliable.
-

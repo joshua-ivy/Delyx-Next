@@ -1,4 +1,5 @@
 use crate::approval::{ApprovalEngine, ApprovalError};
+use crate::external_agent_terminal::{run_worker_command, ExternalAgentCommand};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -50,6 +51,7 @@ pub struct ExternalAgentRunRequest {
     pub allowed_tools: Vec<String>,
     pub task_policy: ExternalAgentTaskPolicy,
     pub capture_plan: ExternalAgentCapturePlan,
+    pub worker_command: Option<ExternalAgentCommand>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -79,6 +81,7 @@ pub enum ExternalAgentRunStatus {
     Accepted,
     Completed,
     Blocked,
+    Failed,
     Reverted,
 }
 
@@ -98,6 +101,7 @@ pub enum ExternalAgentEventKind {
     Stdout,
     FileChanged,
     DiffCaptured,
+    Failed,
     TestResult,
     ReviewDecision,
 }
@@ -113,10 +117,12 @@ pub enum ExternalAgentError {
     AdapterUnavailable,
     Approval(ApprovalError),
     ArtifactNotFound,
+    EmptyCommand,
     EmptyTask,
     Io(String),
     MissingIsolation,
     OutsideApprovedRoot,
+    Timeout,
     ToolNotAllowed(String),
 }
 
@@ -153,15 +159,19 @@ impl ExternalAgentBridge {
         approvals.assert_can_execute(&request.approval_id, now).map_err(ExternalAgentError::Approval)?;
         self.ensure_available(&request.adapter_id)?;
         self.ensure_task_authority(&request)?;
-        let scope = self.checked_scope(request.scope)?;
+        let scope = self.checked_scope(request.scope.clone())?;
         if scope.checkpoint_id.is_none() && scope.worktree_id.is_none() {
             return Err(ExternalAgentError::MissingIsolation);
         }
+        let worker = run_worker_command(&request, &scope, now)?;
         let mut transcript = vec![
             event(ExternalAgentEventKind::Started, "External worker started inside approved scope.", now),
             event(ExternalAgentEventKind::Stdout, &format!("Task: {}", request.task), now),
-            event(ExternalAgentEventKind::Command, "prototype worker command captured", now),
         ];
+        if request.worker_command.is_none() {
+            transcript.push(event(ExternalAgentEventKind::Command, "prototype worker command captured", now));
+        }
+        transcript.extend(worker.transcript);
         for command in &request.capture_plan.commands {
             transcript.push(event(ExternalAgentEventKind::Command, command, now));
         }
@@ -175,17 +185,24 @@ impl ExternalAgentBridge {
         for artifact_id in &request.capture_plan.test_artifact_ids {
             transcript.push(event(ExternalAgentEventKind::TestResult, artifact_id, now));
         }
-        transcript.push(event(ExternalAgentEventKind::Completed, "External worker completed.", now));
+        let final_event = if worker.status == ExternalAgentRunStatus::Failed {
+            event(ExternalAgentEventKind::Failed, "External worker command failed.", now)
+        } else {
+            event(ExternalAgentEventKind::Completed, "External worker completed.", now)
+        };
+        transcript.push(final_event);
 
         self.next_artifact_id += 1;
         let artifact = ExternalAgentRunArtifact {
             id: format!("external-agent-{}", self.next_artifact_id),
             run_id: request.run_id,
             adapter_id: request.adapter_id,
-            status: ExternalAgentRunStatus::Completed,
+            status: worker.status,
             scope,
             transcript,
-            terminal_output: "prototype external agent bridge completed without spawning a worker".to_string(),
+            terminal_output: worker
+                .terminal_output
+                .unwrap_or_else(|| "prototype external agent bridge completed without spawning a worker".to_string()),
             review_required: diff_summary.is_some(),
             diff_summary,
             test_artifact_ids: request.capture_plan.test_artifact_ids,
@@ -250,7 +267,7 @@ fn default_adapters() -> Vec<ExternalAgentAvailability> {
     vec![
         adapter("codex-cli", ExternalAgentKind::CodexCli, "Codex CLI", AdapterStatus::Missing, "Adapter placeholder; executable not detected."),
         adapter("claude-code", ExternalAgentKind::ClaudeCode, "Claude Code", AdapterStatus::Missing, "Adapter placeholder; executable not detected."),
-        adapter("generic-terminal", ExternalAgentKind::GenericTerminal, "Generic terminal agent", AdapterStatus::Available, "Prototype adapter available; no process spawn yet."),
+        adapter("generic-terminal", ExternalAgentKind::GenericTerminal, "Generic terminal agent", AdapterStatus::Available, "Approved terminal_command runs inside scoped isolation."),
     ]
 }
 

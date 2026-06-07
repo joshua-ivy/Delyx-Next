@@ -7,9 +7,10 @@ export type ExternalAgentEventKind =
   | "stdout"
   | "file_changed"
   | "diff_captured"
+  | "failed"
   | "test_result"
   | "review_decision";
-export type ExternalAgentRunStatus = "accepted" | "completed" | "blocked" | "reverted";
+export type ExternalAgentRunStatus = "accepted" | "completed" | "blocked" | "failed" | "reverted";
 
 export interface ExternalAgentStateView {
   adapters: ExternalAgentAdapterView[];
