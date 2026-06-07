@@ -307,6 +307,8 @@ export const requiredChecks = [
   ["src-tauri/src/test_runner.rs", "TestArtifact"],
   ["src-tauri/src/test_runner.rs", "approval_id"],
   ["src-tauri/src/test_runner.rs", "is_test_command"],
+  ["src-tauri/src/test_runner.rs", "is_shell_program"],
+  ["src-tauri/src/test_runner.rs", "normalized_program_name"],
   ["src-tauri/src/test_runner.rs", "run_approved_test"],
   ["src-tauri/src/test_runner.rs", "failure_summary"],
   ["src-tauri/src/test_runner.rs", "has_execution_artifact"],

@@ -123,10 +123,16 @@ pub struct TestCommandInput {
 }
 
 pub fn is_test_command(program: &str, args: &[String]) -> bool {
-    let command = command_label(program, args).to_lowercase();
-    [" test", "test ", "cargo test", "npm test", "pytest", "vitest", "nextest"]
-        .iter()
-        .any(|needle| command.contains(needle))
+    let program = normalized_program_name(program);
+    if is_shell_program(&program) {
+        return false;
+    }
+    match program.as_str() {
+        "cargo" => matches!(arg(args, 0), Some("test" | "nextest")),
+        "npm" | "pnpm" | "yarn" => is_package_test_command(args),
+        "pytest" | "vitest" | "cargo-nextest" => true,
+        _ => false,
+    }
 }
 
 fn failure_summary(status: TestStatus, stdout: &str, stderr: &str) -> Option<String> {
@@ -146,6 +152,32 @@ fn failure_summary(status: TestStatus, stdout: &str, stderr: &str) -> Option<Str
 
 fn command_label(program: &str, args: &[String]) -> String {
     std::iter::once(program.to_string()).chain(args.iter().cloned()).collect::<Vec<_>>().join(" ")
+}
+
+fn normalized_program_name(program: &str) -> String {
+    let mut name = Path::new(program)
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or(program)
+        .to_ascii_lowercase();
+    for suffix in [".exe", ".cmd", ".bat"] {
+        if name.ends_with(suffix) {
+            name.truncate(name.len() - suffix.len());
+        }
+    }
+    name
+}
+
+fn is_shell_program(program: &str) -> bool {
+    matches!(program, "cmd" | "powershell" | "pwsh" | "sh" | "bash" | "zsh")
+}
+
+fn is_package_test_command(args: &[String]) -> bool {
+    matches!(arg(args, 0), Some("test")) || matches!((arg(args, 0), arg(args, 1)), (Some("run"), Some("test")))
+}
+
+fn arg(args: &[String], index: usize) -> Option<&str> {
+    args.get(index).map(String::as_str)
 }
 
 fn shorten(line: &str) -> String {

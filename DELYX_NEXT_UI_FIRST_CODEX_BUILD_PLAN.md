@@ -2117,6 +2117,7 @@ Acceptance:
 - ~~Failed tests show parsed failure summary when possible.~~
 - ~~Final answer cannot claim tested unless artifact exists.~~
 - ~~Terminal rerun/open/error controls stay disabled until a command artifact exists.~~
+- ~~Test command detection rejects shell wrappers that can hide non-test work.~~
 
 ---
 

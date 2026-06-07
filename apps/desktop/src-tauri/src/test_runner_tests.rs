@@ -12,6 +12,8 @@ mod tests {
         assert!(is_test_command("npm", &["run".to_string(), "test".to_string()]));
         assert!(is_test_command("pytest", &[]));
         assert!(!is_test_command("npm", &["install".to_string()]));
+        assert!(!is_test_command("cmd", &["/C".to_string(), "npm test".to_string()]));
+        assert!(!is_test_command("sh", &["-c".to_string(), "npm install && npm test".to_string()]));
     }
 
     #[test]
@@ -39,7 +41,7 @@ mod tests {
 
         assert_eq!(artifact.status, TestStatus::Passed);
         assert_eq!(artifact.exit_code, Some(0));
-        assert!(artifact.stdout.to_lowercase().contains("test passed"));
+        assert!(artifact.stdout.to_lowercase().contains("cargo"));
         assert!(artifact.duration_ms <= 60_000);
         assert_eq!(artifact.approval_id, approval.id);
         assert!(runner.has_execution_artifact("run-1"));
@@ -57,8 +59,8 @@ mod tests {
 
         assert_eq!(artifact.status, TestStatus::Failed);
         assert_ne!(artifact.exit_code, Some(0));
-        assert!(artifact.stderr.to_lowercase().contains("test failure"));
-        assert_eq!(artifact.failure_summary.as_deref(), Some("test failure"));
+        assert!(artifact.stderr.to_lowercase().contains("error"));
+        assert!(artifact.failure_summary.as_deref().is_some_and(|summary| summary.to_lowercase().contains("error")));
     }
 
     #[test]
@@ -100,19 +102,11 @@ mod tests {
     }
 
     fn passing_command() -> (String, Vec<String>) {
-        if cfg!(windows) {
-            ("cmd".to_string(), vec!["/C".to_string(), "echo test passed".to_string()])
-        } else {
-            ("sh".to_string(), vec!["-c".to_string(), "echo test passed".to_string()])
-        }
+        ("cargo".to_string(), vec!["test".to_string(), "--help".to_string()])
     }
 
     fn failing_command() -> (String, Vec<String>) {
-        if cfg!(windows) {
-            ("cmd".to_string(), vec!["/C".to_string(), "echo test failure 1>&2 & exit /B 2".to_string()])
-        } else {
-            ("sh".to_string(), vec!["-c".to_string(), "echo test failure >&2; exit 2".to_string()])
-        }
+        ("cargo".to_string(), vec!["test".to_string(), "--manifest-path".to_string(), "missing-Cargo.toml".to_string()])
     }
 
     fn temp_workspace(label: &str) -> PathBuf {
