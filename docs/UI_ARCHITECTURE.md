@@ -59,9 +59,9 @@ The app shell owns persistent layout:
 - command palette
 - theme provider
 
-The shell preserves theme preference locally with `ShellPreferenceController`.
-Resizable pane preferences still come later; until then the app uses
-deterministic default pane sizes.
+The shell preserves theme and pane-size preferences locally with
+`ShellPreferenceController`. Sidebar width, review width, and drawer height use
+CSS variables so the UI can resize without changing runtime state.
 
 ## Core Panels
 

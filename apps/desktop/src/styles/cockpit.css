@@ -17,12 +17,17 @@
   body{background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;}
   .app{
     width:1440px;height:900px;margin:0 auto;background:var(--bg);overflow:hidden;
-    display:grid;grid-template-columns:60px 252px 1fr 392px;grid-template-rows:54px 1fr 150px;
+    display:grid;grid-template-columns:var(--rail-w) var(--side-w) 1fr var(--review-w);grid-template-rows:var(--top-h) 1fr var(--drawer-h);position:relative;
     grid-template-areas:
       "rail top top top"
       "rail side center review"
       "rail drawer drawer drawer";
   }
+  .resize-grip{position:absolute;z-index:50;background:transparent;}
+  .resize-grip:hover,.resize-grip:focus-visible{background:var(--accent-line);outline:none;}
+  .resize-side{bottom:var(--drawer-h);cursor:col-resize;left:calc(var(--rail-w) + var(--side-w) - 3px);top:var(--top-h);width:6px;}
+  .resize-review{bottom:var(--drawer-h);cursor:col-resize;right:calc(var(--review-w) - 3px);top:var(--top-h);width:6px;}
+  .resize-drawer{bottom:calc(var(--drawer-h) - 3px);cursor:row-resize;height:6px;left:var(--rail-w);right:0;}
   .mono{font-family:var(--mono);}
   .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;line-height:1.4;}
   .pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}

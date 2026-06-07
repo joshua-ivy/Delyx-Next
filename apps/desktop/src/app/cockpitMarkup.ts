@@ -1,4 +1,7 @@
 export const cockpitMarkup = String.raw`<div class="app" data-screen-label="Cockpit workbench">
+  <div class="resize-grip resize-side" title="Resize sidebar"></div>
+  <div class="resize-grip resize-review" title="Resize review panel"></div>
+  <div class="resize-grip resize-drawer" title="Resize terminal drawer"></div>
   <nav class="rail">
     <div class="logo">D</div>
     <div class="rnav" title="Projects">P</div>

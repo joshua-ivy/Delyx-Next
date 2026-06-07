@@ -694,8 +694,8 @@ Advanced mode:
 
 - ~~Command palette with safe local shell actions~~
 - Keyboard shortcuts
-- Resizable split panes
-- Persistent layout
+- ~~Resizable split panes~~
+- ~~Persistent layout for pane sizes and theme preference~~
 - ~~Light/dark themes with persisted local preference~~
 - Great empty states
 - Great loading states
