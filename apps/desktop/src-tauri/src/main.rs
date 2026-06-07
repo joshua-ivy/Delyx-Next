@@ -4,7 +4,12 @@ fn main() {
         .manage(delyx_next_desktop::patch_bridge::PatchBridgeState::default())
         .manage(delyx_next_desktop::review_bridge::ReviewBridgeState::default())
         .manage(delyx_next_desktop::test_runner_bridge::TestRunnerBridgeState::default())
-        .manage(delyx_next_desktop::thread_run_bridge::ThreadRunBridgeState::default())
+        .manage(
+            delyx_next_desktop::thread_run_bridge::ThreadRunBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("thread/run SQLite state should open"),
+        )
         .manage(delyx_next_desktop::external_agent_run_bridge::ExternalAgentRunBridgeState::default())
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::approval_bridge::approval_decide,

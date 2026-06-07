@@ -5,18 +5,34 @@ use crate::thread_run_bridge_views::{
 };
 use crate::threads::{MessageRole, ThreadManager, ThreadStatus};
 use serde::Deserialize;
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 #[derive(Default)]
 pub struct ThreadRunBridgeState {
     store: Mutex<ThreadRunStore>,
+    database_path: Option<PathBuf>,
+}
+
+impl ThreadRunBridgeState {
+    pub fn persistent(database_path: PathBuf) -> Result<Self, String> {
+        let store = crate::thread_run_persistence::load_from_path(&database_path)?;
+        Ok(Self { store: Mutex::new(store), database_path: Some(database_path) })
+    }
+
+    fn persist(&self, store: &ThreadRunStore) -> Result<(), String> {
+        if let Some(path) = &self.database_path {
+            crate::thread_run_persistence::save_to_path(store, path)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Default)]
 pub struct ThreadRunStore {
-    manager: ThreadManager,
-    ledger: AgentRunLedger,
-    records: Vec<ThreadRunRecord>,
+    pub(crate) manager: ThreadManager,
+    pub(crate) ledger: AgentRunLedger,
+    pub(crate) records: Vec<ThreadRunRecord>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -53,12 +69,12 @@ pub struct ThreadMessageAppendRequest {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct ThreadRunRecord {
-    thread_id: String,
-    run_id: String,
-    project_id: String,
-    created_at: String,
-    updated_at: String,
+pub(crate) struct ThreadRunRecord {
+    pub(crate) thread_id: String,
+    pub(crate) run_id: String,
+    pub(crate) project_id: String,
+    pub(crate) created_at: String,
+    pub(crate) updated_at: String,
 }
 
 #[tauri::command]
@@ -67,7 +83,9 @@ pub fn thread_run_create(
     request: ThreadRunCreateRequest,
 ) -> Result<ThreadRunRecordView, String> {
     let mut store = state.store.lock().map_err(|_| "Thread bridge lock failed.".to_string())?;
-    create_thread_run_record(&mut store, request).map_err(|error| format!("{error:?}"))
+    let view = create_thread_run_record(&mut store, request).map_err(|error| format!("{error:?}"))?;
+    state.persist(&store)?;
+    Ok(view)
 }
 
 #[tauri::command]
@@ -85,7 +103,9 @@ pub fn thread_status_update(
     request: ThreadStatusUpdateRequest,
 ) -> Result<TaskThreadView, String> {
     let mut store = state.store.lock().map_err(|_| "Thread bridge lock failed.".to_string())?;
-    update_thread_status_record(&mut store, request).map_err(|error| format!("{error:?}"))
+    let view = update_thread_status_record(&mut store, request).map_err(|error| format!("{error:?}"))?;
+    state.persist(&store)?;
+    Ok(view)
 }
 
 #[tauri::command]
@@ -94,7 +114,9 @@ pub fn thread_archive(
     request: ThreadArchiveRequest,
 ) -> Result<TaskThreadView, String> {
     let mut store = state.store.lock().map_err(|_| "Thread bridge lock failed.".to_string())?;
-    archive_thread_record(&mut store, request).map_err(|error| format!("{error:?}"))
+    let view = archive_thread_record(&mut store, request).map_err(|error| format!("{error:?}"))?;
+    state.persist(&store)?;
+    Ok(view)
 }
 
 #[tauri::command]
@@ -103,7 +125,9 @@ pub fn thread_message_append(
     request: ThreadMessageAppendRequest,
 ) -> Result<TaskThreadView, String> {
     let mut store = state.store.lock().map_err(|_| "Thread bridge lock failed.".to_string())?;
-    append_thread_message_record(&mut store, request).map_err(|error| format!("{error:?}"))
+    let view = append_thread_message_record(&mut store, request).map_err(|error| format!("{error:?}"))?;
+    state.persist(&store)?;
+    Ok(view)
 }
 
 pub fn create_thread_run_record(

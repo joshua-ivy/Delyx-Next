@@ -8,7 +8,9 @@ use crate::agent_run::{
 
 pub fn save_to_path(ledger: &AgentRunLedger, path: &Path) -> Result<(), AgentRunError> {
     let mut connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_error)?;
-    save_to_connection(ledger, &mut connection)
+    let transaction = connection.transaction().map_err(sql_error)?;
+    save_to_connection(ledger, &transaction)?;
+    transaction.commit().map_err(sql_error)
 }
 
 pub fn load_from_path(path: &Path) -> Result<AgentRunLedger, AgentRunError> {
@@ -18,26 +20,25 @@ pub fn load_from_path(path: &Path) -> Result<AgentRunLedger, AgentRunError> {
 
 pub fn save_to_connection(
     ledger: &AgentRunLedger,
-    connection: &mut Connection,
+    connection: &Connection,
 ) -> Result<(), AgentRunError> {
-    let transaction = connection.transaction().map_err(sql_error)?;
-    clear_tables(&transaction)?;
+    clear_tables(connection)?;
     for run in &ledger.runs {
-        insert_run(&transaction, run)?;
+        insert_run(connection, run)?;
         for node in &run.nodes {
-            insert_node(&transaction, &run.id, node)?;
+            insert_node(connection, &run.id, node)?;
         }
         for event in &run.events {
-            insert_event(&transaction, &run.id, event)?;
+            insert_event(connection, &run.id, event)?;
         }
         for artifact in &run.artifacts {
-            insert_artifact(&transaction, &run.id, artifact)?;
+            insert_artifact(connection, &run.id, artifact)?;
         }
         for evidence in &run.evidence {
-            insert_evidence(&transaction, &run.id, evidence)?;
+            insert_evidence(connection, &run.id, evidence)?;
         }
     }
-    transaction.commit().map_err(sql_error)
+    Ok(())
 }
 
 pub fn load_from_connection(connection: &Connection) -> Result<AgentRunLedger, AgentRunError> {

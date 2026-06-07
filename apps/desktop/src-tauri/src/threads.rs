@@ -100,6 +100,27 @@ impl ThreadManager {
             .collect()
     }
 
+    pub(crate) fn all_threads(&self) -> &[TaskThread] {
+        &self.threads
+    }
+
+    pub(crate) fn from_loaded_threads(threads: Vec<TaskThread>) -> Self {
+        let mut manager = ThreadManager::new();
+        manager.project_ids = threads.iter().map(|thread| thread.project_id.clone()).fold(Vec::new(), |mut ids, id| {
+            if !ids.contains(&id) {
+                ids.push(id);
+            }
+            ids
+        });
+        manager.next_id = threads
+            .iter()
+            .filter_map(|thread| thread.id.rsplit("-thread-").next()?.parse::<usize>().ok())
+            .max()
+            .unwrap_or(threads.len());
+        manager.threads = threads;
+        manager
+    }
+
     pub fn get_thread(&self, thread_id: &str) -> Result<&TaskThread, ThreadError> {
         self.threads
             .iter()

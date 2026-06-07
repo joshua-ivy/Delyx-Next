@@ -38,3 +38,28 @@ CREATE TABLE IF NOT EXISTS evidence_records (
   title TEXT NOT NULL,
   PRIMARY KEY (run_id, id)
 );
+
+CREATE TABLE IF NOT EXISTS task_threads (
+  id TEXT PRIMARY KEY NOT NULL,
+  project_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  goal TEXT NOT NULL,
+  status TEXT NOT NULL,
+  archived INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS thread_messages (
+  thread_id TEXT NOT NULL REFERENCES task_threads(id) ON DELETE CASCADE,
+  message_index INTEGER NOT NULL,
+  role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  PRIMARY KEY (thread_id, message_index)
+);
+
+CREATE TABLE IF NOT EXISTS thread_run_records (
+  thread_id TEXT PRIMARY KEY NOT NULL REFERENCES task_threads(id) ON DELETE CASCADE,
+  run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
+  project_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);

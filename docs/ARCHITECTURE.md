@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun persistence is wired first)
+- SQLite (Phase 2 target; AgentRun and thread/run bridge persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -29,9 +29,11 @@ complete:
   an extraction map, not current state.
 - SQLite is partially implemented. `agent_run_persistence.rs` now uses
   `rusqlite` and the migration artifact for AgentRun save/load, including
-  nodes, events, artifacts, evidence, and outcome summary. Projects, threads,
-  approvals, model routes, memory, skills, automations, and release state are
-  not yet persisted in SQLite.
+  nodes, events, artifacts, evidence, and outcome summary. The Tauri
+  thread/run bridge also persists task threads, messages, run links, and
+  AgentRun rows to the local SQLite database. Projects, approvals, model
+  routes, memory, skills, automations, and release state are not yet persisted
+  in SQLite.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -153,8 +155,8 @@ Only narrow runtime islands execute real work: Ollama chat/plan calls,
 approval-gated test commands, patch/checkpoint primitives, the generic
 terminal-worker bridge, and Codex CLI read-only launches. The full Explore ->
 Plan -> Approve -> Build -> Diff -> Test -> Review execution loop remains
-Phase 2 work. AgentRun save/load now uses SQLite, but the Tauri thread/run
-session bridge still keeps live session records in memory.
+Phase 2 work. AgentRun save/load and Tauri thread/run bridge session reload now
+use SQLite.
 
 ## Permission Engine
 
