@@ -187,6 +187,7 @@ export function AppShell() {
   });
   const runPaletteCommand = (commandId: string) => {
     runAppShellCommand(commandId, {
+      actionProposals,
       activePlan,
       activeProject,
       activeRun,

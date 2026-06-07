@@ -147,9 +147,10 @@ Core agents:
 The AgentRun graph is the future execution/resume engine, not just an inspector artifact.
 Current state: the graph is still primarily an inspection and bridge artifact.
 Only narrow runtime islands execute real work: Ollama chat/plan calls,
-approval-gated test commands, patch/checkpoint primitives, and the generic
-terminal-worker bridge. The full Explore -> Plan -> Approve -> Build -> Diff ->
-Test -> Review execution loop remains Phase 2 work.
+approval-gated test commands, patch/checkpoint primitives, the generic
+terminal-worker bridge, and Codex CLI read-only launches. The full Explore ->
+Plan -> Approve -> Build -> Diff -> Test -> Review execution loop remains
+Phase 2 work.
 
 ## Permission Engine
 
@@ -207,9 +208,10 @@ turn missing execution into tested claims.
 Codex CLI and Claude Code adapter detection reads PATH only. Their typed
 command contracts produce visible `codex exec` and `claude -p` command arrays
 with explicit permission mode, transcript format, working directory, and Delyx
-tool requirements. Launch still flows through external-agent approval,
-terminal-command approval, checkpoint/worktree isolation, captured output, diff
-review, and rollback.
+tool requirements. Codex CLI read-only launch now flows through external-agent
+approval, terminal-command approval, captured output, and UI-visible artifacts.
+Codex write-capable launch and any diff-capturing external run still require a
+real checkpoint or isolated worktree. Claude launch remains preview-only.
 
 ## Model Layer
 

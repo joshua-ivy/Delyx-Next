@@ -16,9 +16,11 @@ mod tests {
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(external_agent_input());
         approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let terminal = approvals.propose(terminal_command_input());
+        approvals.approve(&terminal.id, 10, "approved in test").unwrap();
         let mut bridge = ExternalAgentBridge::new(vec![root.clone()]).unwrap();
 
-        let artifact = bridge.run_approved_worker(command_request(&approval.id, &root, passing_command()), 10, &approvals).unwrap();
+        let artifact = bridge.run_approved_worker(command_request(&approval.id, &terminal.id, &root, passing_command()), 10, &approvals).unwrap();
 
         assert_eq!(artifact.status, ExternalAgentRunStatus::Completed);
         assert!(artifact.terminal_output.contains("worker passed"));
@@ -32,9 +34,11 @@ mod tests {
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(external_agent_input());
         approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let terminal = approvals.propose(terminal_command_input());
+        approvals.approve(&terminal.id, 10, "approved in test").unwrap();
         let mut bridge = ExternalAgentBridge::new(vec![root.clone()]).unwrap();
 
-        let artifact = bridge.run_approved_worker(command_request(&approval.id, &root, failing_command()), 10, &approvals).unwrap();
+        let artifact = bridge.run_approved_worker(command_request(&approval.id, &terminal.id, &root, failing_command()), 10, &approvals).unwrap();
 
         assert_eq!(artifact.status, ExternalAgentRunStatus::Failed);
         assert!(artifact.terminal_output.contains("worker failed"));
@@ -47,8 +51,11 @@ mod tests {
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(external_agent_input());
         approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let terminal = approvals.propose(terminal_command_input());
+        approvals.approve(&terminal.id, 10, "approved in test").unwrap();
         let mut bridge = ExternalAgentBridge::new(vec![root.clone()]).unwrap();
         let mut request = run_request(&approval.id, &root);
+        request.terminal_approval_id = Some(terminal.id);
         let (program, args) = passing_command();
         request.worker_command = Some(ExternalAgentCommand { program, args, working_directory: root.clone() });
 
@@ -57,14 +64,29 @@ mod tests {
         assert_eq!(result.unwrap_err(), ExternalAgentError::ToolNotAllowed("terminal_command".to_string()));
     }
 
+    #[test]
+    fn worker_command_requires_terminal_command_approval() {
+        let root = temp_workspace("generic-terminal-approval-required");
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(external_agent_input());
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut bridge = ExternalAgentBridge::new(vec![root.clone()]).unwrap();
+
+        let result = bridge.run_approved_worker(command_request(&approval.id, "", &root, passing_command()), 10, &approvals);
+
+        assert_eq!(result.unwrap_err(), ExternalAgentError::MissingTerminalApproval);
+    }
+
     fn command_request(
         approval_id: &str,
+        terminal_approval_id: &str,
         root: &std::path::Path,
         command: (String, Vec<String>),
     ) -> ExternalAgentRunRequest {
         let mut request = run_request(approval_id, root);
         request.allowed_tools.push("terminal_command".to_string());
         request.task_policy.allowed_tools.push("terminal_command".to_string());
+        request.terminal_approval_id = Some(terminal_approval_id.to_string());
         request.worker_command = Some(ExternalAgentCommand {
             args: command.1,
             program: command.0,
@@ -80,12 +102,14 @@ mod tests {
             approval_id: approval_id.to_string(),
             capture_plan: ExternalAgentCapturePlan::default(),
             run_id: "run-1".to_string(),
+            requires_isolation: true,
             scope: ExternalAgentScope {
                 allowed_paths: vec![root.to_path_buf()],
                 checkpoint_id: Some("checkpoint-1".to_string()),
                 project_root: root.to_path_buf(),
                 worktree_id: None,
             },
+            terminal_approval_id: None,
             task: "Inspect and propose a patch.".to_string(),
             task_policy: ExternalAgentTaskPolicy {
                 allowed_tools: vec!["read".to_string(), "patch_proposal".to_string()],
@@ -123,6 +147,18 @@ mod tests {
             rollback_plan: "Discard transcript and restore checkpoint if changes are rejected.".to_string(),
             run_id: "run-1".to_string(),
             scope: "Launch generic terminal agent in one approved project root.".to_string(),
+        }
+    }
+
+    fn terminal_command_input() -> ProposalInput {
+        ProposalInput {
+            action: RiskyAction::TerminalCommand,
+            expected_result: "Capture external worker stdout, stderr, exit status, and duration.".to_string(),
+            node_id: "node-terminal-command".to_string(),
+            reason: "Deterministic terminal worker capture test.".to_string(),
+            rollback_plan: "No rollback needed for captured command output.".to_string(),
+            scope: "Run one terminal command inside the approved project root.".to_string(),
+            ..external_agent_input()
         }
     }
 

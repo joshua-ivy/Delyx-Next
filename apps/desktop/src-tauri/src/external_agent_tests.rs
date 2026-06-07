@@ -186,6 +186,24 @@ mod tests {
     }
 
     #[test]
+    fn read_only_external_agent_can_run_without_isolation() {
+        let root = temp_workspace("read-only-no-isolation");
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(external_agent_input());
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut bridge = ExternalAgentBridge::new(vec![root.clone()]).unwrap();
+        let mut request = run_request(&approval.id, &root, false, vec![]);
+        request.requires_isolation = false;
+        request.scope.checkpoint_id = None;
+        request.scope.worktree_id = None;
+
+        let artifact = bridge.run_approved_worker(request, 10, &approvals).unwrap();
+
+        assert_eq!(artifact.status, crate::external_agent::ExternalAgentRunStatus::Completed);
+        assert!(!artifact.review_required);
+    }
+
+    #[test]
     fn user_can_accept_or_revert_external_agent_artifact() {
         let root = temp_workspace("review-decision");
         let mut approvals = ApprovalEngine::new();
@@ -238,6 +256,7 @@ mod tests {
             adapter_id: "generic-terminal".to_string(),
             allowed_tools: vec!["read".to_string(), "patch_proposal".to_string()],
             approval_id: approval_id.to_string(),
+            terminal_approval_id: None,
             capture_plan: ExternalAgentCapturePlan {
                 capture_diff,
                 changed_files: vec![root.join("src").join("main.rs")],
@@ -245,6 +264,7 @@ mod tests {
                 test_artifact_ids,
             },
             run_id: "run-1".to_string(),
+            requires_isolation: true,
             scope: ExternalAgentScope {
                 allowed_paths: vec![root.to_path_buf()],
                 checkpoint_id: Some("checkpoint-1".to_string()),

@@ -7,7 +7,7 @@ Last updated: 2026-06-07.
 Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
-- `cargo test --workspace`: 181 passed, 0 failed.
+- `cargo test --workspace`: 190 passed, 0 failed.
 - `npm run typecheck`, `npm test` (smoke/source-contract), and `npm run smoke:ui`: pass.
 - SQLite absence, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
@@ -44,13 +44,16 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
 - OpenAI-compatible providers are health/config stubs only.
-- Codex and Claude external agents are detection/contract-preview only.
-- Generic terminal worker execution exists behind approval.
+- Codex CLI has an approval-gated read-only launch bridge with captured terminal output and UI artifacts.
+- Codex write-capable launch still needs real checkpoint/worktree isolation and diff depth before it is usable.
+- Claude external agent support is detection/contract-preview only.
+- Generic terminal worker execution exists behind external-agent and terminal-command approvals.
 - Frontend tests are smoke/source-contract verifier scripts, not behavioral React/component tests.
 - The cockpit UI is currently string-rendered with `buildCockpitMarkup` plus DOM bindings.
 - The repo intentionally has one Rust crate today: `apps/desktop/src-tauri`.
 - `openai/codex` was audited at commit `e093d81` as a reference/salvage pool, not a repo to blindly copy.
 - A small Codex-inspired PowerShell UTF-8 terminal-capture polish is wired for approved external worker commands.
+- Codex CLI launch is now wired only through Delyx approvals and captured command artifacts; it is not an autonomous build loop.
 
 ## Phase 1 Skeleton Checklist
 
@@ -156,9 +159,10 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Add Ollama version/readiness and optional pull-progress UI only when backed by real local state.
 
 - [ ] D8 - External Agent Integration Depth
-  - Decide whether Codex and Claude launch adapters are in scope.
-  - If yes, execute them behind external-agent and terminal approvals with scoped tools, transcript capture, diff capture, and rollback.
-  - Prefer Codex CLI as the first live external-agent adapter because its command contract already matches our app.
+  - Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.
+  - Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.
+  - Add real changed-file/diff capture from external-agent runs instead of review placeholders.
+  - Decide whether Claude launch is in scope beyond detection and contract preview.
   - If no, keep them detection/contract-preview only and label them that way in UI.
 
 - [ ] D9 - Evidence and Final Answer Receipts

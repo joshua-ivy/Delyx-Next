@@ -1,8 +1,8 @@
 # External Agent Bridge
 
 Delyx Next can launch approved generic terminal workers as controlled workers.
-Codex CLI and Claude Code now have typed command contracts, but launch still
-requires explicit external-agent and terminal-command approvals.
+Codex CLI also has a read-only launch bridge. Claude Code has a typed command
+contract, but remains preview-only.
 
 Examples:
 
@@ -42,27 +42,31 @@ Current implementation:
 
 - generic terminal adapter can run one approved `terminal_command`
 - command cwd must be inside the approved project scope and allowed paths
-- checkpoint or worktree isolation is required before launch
+- write-capable or diff-capturing external runs require checkpoint or worktree isolation before launch
 - stdout, stderr, command label, exit status, and duration are captured
 - nonzero command exits create visible failed artifacts
-- Codex CLI and Claude Code adapters are detection-only and report whether their executables are on PATH
+- Codex CLI and Claude Code adapters report whether their executables are on PATH
 - adapter detection is exposed to the UI through a read-only Tauri status command
 - web preview reports adapters as not checked when the desktop bridge is unavailable
 - Codex CLI contracts use `codex exec` with explicit sandbox mode and JSONL output
 - Claude Code contracts use `claude -p` with stream JSON output, permission mode, and restricted tools
-- Codex CLI and Claude Code commands still run only through the approval-gated terminal worker path
+- Codex CLI read-only commands run only through the approval-gated terminal worker path
+- Codex CLI write-capable launch remains blocked until a real checkpoint or isolated worktree exists
+- Claude Code commands are not launched yet
 - the UI has a contract preview ledger that stays empty until a real command contract is proposed
 - contract previews show permission mode, command, cwd, transcript format, required Delyx tools, and safety summary
 - the command palette can request a read-only Codex or Claude contract preview through the Tauri bridge without launching the agent
+- the command palette can queue Codex launch approvals and run Codex read-only after both approvals are granted
 
 ## Worker Flow
 
 ```text
 User starts task
 -> Delyx creates thread/run
--> Delyx creates checkpoint or worktree
+-> Delyx creates checkpoint or worktree when writes or diff capture are allowed
 -> Delyx proposes external worker action
--> user approves
+-> Delyx proposes terminal command action
+-> user approves both
 -> Delyx launches worker in approved scope
 -> transcript streams into bottom drawer
 -> changed files are captured as diff
@@ -142,6 +146,10 @@ Approval must show:
 - rollback plan
 - checkpoint or worktree ID
 - expiration
+
+Read-only Codex launches may show no checkpoint/worktree ID because the command
+contract uses `--sandbox read-only` and Delyx does not request diff capture.
+Write-capable launches must show real isolation before execution.
 
 ## Scope Restrictions
 

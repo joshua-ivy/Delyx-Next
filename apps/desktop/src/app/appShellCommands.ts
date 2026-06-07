@@ -6,7 +6,7 @@ import {
   expirePendingProposalsForRun,
   upsertActionProposal,
 } from "./appShellApprovalActions";
-import { previewExternalAgentContractForRun } from "./appShellExternalAgentActions";
+import { previewExternalAgentContractForRun, runCodexExternalAgentForRun } from "./appShellExternalAgentActions";
 import { recordApprovalProposalForRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { createPlanWithOllama } from "./appShellOllamaPlanActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
@@ -30,10 +30,12 @@ export const paletteCommands = [
   { detail: "Request revision for the active plan.", id: "plan.revise", label: "Revise plan" },
   { detail: "Cancel the active plan.", id: "plan.cancel", label: "Cancel plan" },
   { detail: "Preview a read-only Codex CLI command contract without launching it.", id: "external.codex.preview", label: "Preview Codex contract" },
+  { detail: "Run Codex CLI through approvals, captured terminal output, and external-agent artifacts.", id: "external.codex.run", label: "Run Codex adapter" },
   { detail: "Preview a read-only Claude Code command contract without launching it.", id: "external.claude.preview", label: "Preview Claude contract" },
 ] as const;
 
 export interface AppShellCommandContext {
+  actionProposals: ActionProposalView[];
   activePlan: PlanView | undefined;
   activeProject: WorkspaceProject;
   activeRun: AgentRunView | undefined;
@@ -81,6 +83,9 @@ export function runAppShellCommand(commandId: string, context: AppShellCommandCo
       break;
     case "external.codex.preview":
       void previewExternalAgentContractForRun(context, "codex_cli");
+      break;
+    case "external.codex.run":
+      void runCodexExternalAgentForRun(context);
       break;
     case "external.claude.preview":
       void previewExternalAgentContractForRun(context, "claude_code");

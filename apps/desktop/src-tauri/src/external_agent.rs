@@ -1,132 +1,15 @@
-use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
+use crate::approval::{ApprovalEngine, RiskyAction};
 use crate::external_agent_adapters::default_adapters;
 use crate::external_agent_scope::{checked_approved_path, checked_scoped_path};
-use crate::external_agent_terminal::{run_worker_command, ExternalAgentCommand};
+use crate::external_agent_terminal::run_worker_command;
+pub use crate::external_agent_types::{
+    AdapterStatus, ExternalAgentAvailability, ExternalAgentCapturePlan, ExternalAgentError,
+    ExternalAgentEvent, ExternalAgentEventKind, ExternalAgentKind, ExternalAgentReviewDecision,
+    ExternalAgentRunArtifact, ExternalAgentRunRequest, ExternalAgentRunStatus, ExternalAgentScope,
+    ExternalAgentTaskPolicy,
+};
 use std::fs;
 use std::path::PathBuf;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExternalAgentAvailability {
-    pub adapter_id: String,
-    pub kind: ExternalAgentKind,
-    pub display_name: String,
-    pub status: AdapterStatus,
-    pub detail: String,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ExternalAgentKind {
-    CodexCli,
-    ClaudeCode,
-    GenericTerminal,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AdapterStatus {
-    Available,
-    Missing,
-    NotChecked,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExternalAgentScope {
-    pub project_root: PathBuf,
-    pub checkpoint_id: Option<String>,
-    pub worktree_id: Option<String>,
-    pub allowed_paths: Vec<PathBuf>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExternalAgentTaskPolicy {
-    pub allowed_tools: Vec<String>,
-    pub approval_scope: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExternalAgentRunRequest {
-    pub run_id: String,
-    pub approval_id: String,
-    pub adapter_id: String,
-    pub task: String,
-    pub scope: ExternalAgentScope,
-    pub timeout_ms: u64,
-    pub allowed_tools: Vec<String>,
-    pub task_policy: ExternalAgentTaskPolicy,
-    pub capture_plan: ExternalAgentCapturePlan,
-    pub worker_command: Option<ExternalAgentCommand>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct ExternalAgentCapturePlan {
-    pub capture_diff: bool,
-    pub changed_files: Vec<PathBuf>,
-    pub commands: Vec<String>,
-    pub test_artifact_ids: Vec<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExternalAgentRunArtifact {
-    pub id: String,
-    pub run_id: String,
-    pub adapter_id: String,
-    pub status: ExternalAgentRunStatus,
-    pub scope: ExternalAgentScope,
-    pub transcript: Vec<ExternalAgentEvent>,
-    pub terminal_output: String,
-    pub diff_summary: Option<String>,
-    pub test_artifact_ids: Vec<String>,
-    pub review_required: bool,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ExternalAgentRunStatus {
-    Accepted,
-    Completed,
-    Blocked,
-    Failed,
-    Reverted,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExternalAgentEvent {
-    pub kind: ExternalAgentEventKind,
-    pub message: String,
-    pub timestamp: u64,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ExternalAgentEventKind {
-    Command,
-    Completed,
-    Started,
-    Stderr,
-    Stdout,
-    FileChanged,
-    DiffCaptured,
-    Failed,
-    TestResult,
-    ReviewDecision,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ExternalAgentReviewDecision {
-    Accept,
-    Revert,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ExternalAgentError {
-    AdapterUnavailable,
-    Approval(ApprovalError),
-    ArtifactNotFound,
-    EmptyCommand,
-    EmptyTask,
-    Io(String),
-    MissingIsolation,
-    OutsideApprovedRoot,
-    Timeout,
-    ToolNotAllowed(String),
-}
 
 #[derive(Debug)]
 pub struct ExternalAgentBridge {
@@ -138,11 +21,18 @@ pub struct ExternalAgentBridge {
 
 impl ExternalAgentBridge {
     pub fn new(approved_roots: Vec<PathBuf>) -> Result<Self, ExternalAgentError> {
+        Self::with_adapters(approved_roots, default_adapters())
+    }
+
+    pub fn with_adapters(
+        approved_roots: Vec<PathBuf>,
+        adapters: Vec<ExternalAgentAvailability>,
+    ) -> Result<Self, ExternalAgentError> {
         let roots = approved_roots
             .iter()
             .map(|root| fs::canonicalize(root).map_err(io_error))
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(Self { adapters: default_adapters(), approved_roots: roots, artifacts: Vec::new(), next_artifact_id: 0 })
+        Ok(Self { adapters, approved_roots: roots, artifacts: Vec::new(), next_artifact_id: 0 })
     }
 
     pub fn detect_adapters(&self) -> &[ExternalAgentAvailability] {
@@ -166,10 +56,25 @@ impl ExternalAgentBridge {
                 &request.run_id,
             )
             .map_err(ExternalAgentError::Approval)?;
+        if request.worker_command.is_some() {
+            let terminal_approval_id = request
+                .terminal_approval_id
+                .as_deref()
+                .filter(|id| !id.trim().is_empty())
+                .ok_or(ExternalAgentError::MissingTerminalApproval)?;
+            approvals
+                .assert_can_execute_action_for_run(
+                    terminal_approval_id,
+                    now,
+                    RiskyAction::TerminalCommand,
+                    &request.run_id,
+                )
+                .map_err(ExternalAgentError::Approval)?;
+        }
         self.ensure_available(&request.adapter_id)?;
         self.ensure_task_authority(&request)?;
         let scope = self.checked_scope(request.scope.clone())?;
-        if scope.checkpoint_id.is_none() && scope.worktree_id.is_none() {
+        if request.requires_isolation && scope.checkpoint_id.is_none() && scope.worktree_id.is_none() {
             return Err(ExternalAgentError::MissingIsolation);
         }
         let changed_files = request
@@ -193,7 +98,13 @@ impl ExternalAgentBridge {
         for path in &changed_files {
             transcript.push(event(ExternalAgentEventKind::FileChanged, &path.display().to_string(), now));
         }
-        let diff_summary = request.capture_plan.capture_diff.then(|| "Diff capture requested for Delyx review.".to_string());
+        let diff_summary = request.capture_plan.capture_diff.then(|| {
+            if changed_files.is_empty() {
+                "Diff capture requested for Delyx review; no changed files were reported by the worker.".to_string()
+            } else {
+                format!("Diff capture requested for Delyx review across {} changed file(s).", changed_files.len())
+            }
+        });
         if diff_summary.is_some() {
             transcript.push(event(ExternalAgentEventKind::DiffCaptured, "Diff artifact must be reviewed by Delyx UI.", now));
         }

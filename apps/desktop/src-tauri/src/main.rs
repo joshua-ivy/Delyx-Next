@@ -5,12 +5,15 @@ fn main() {
         .manage(delyx_next_desktop::review_bridge::ReviewBridgeState::default())
         .manage(delyx_next_desktop::test_runner_bridge::TestRunnerBridgeState::default())
         .manage(delyx_next_desktop::thread_run_bridge::ThreadRunBridgeState::default())
+        .manage(delyx_next_desktop::external_agent_run_bridge::ExternalAgentRunBridgeState::default())
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::approval_bridge::approval_decide,
             delyx_next_desktop::approval_bridge::approval_propose,
             delyx_next_desktop::approval_bridge::approval_snapshot,
             delyx_next_desktop::approval_bridge_taxonomy::approval_taxonomy,
             delyx_next_desktop::external_agent_contract_bridge::external_agent_contract_preview,
+            delyx_next_desktop::external_agent_run_bridge::external_agent_run_codex,
+            delyx_next_desktop::external_agent_run_bridge::external_agent_run_snapshot,
             delyx_next_desktop::external_agent_status_bridge::external_agent_status,
             delyx_next_desktop::patch_bridge::patch_propose,
             delyx_next_desktop::patch_bridge::patch_snapshot,

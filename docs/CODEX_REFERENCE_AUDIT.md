@@ -15,6 +15,11 @@ artifact-first.
   - Wired only into approved external terminal worker execution.
   - No new dependency.
   - Original approved command remains visible in artifacts.
+- Codex CLI read-only launch contract.
+  - Implemented locally through `external_agent_run_bridge`.
+  - Requires both `external_agent` and `run_terminal` approvals.
+  - Captures stdout, stderr, exit status, duration, transcript events, and UI artifacts.
+  - Write-capable launch remains blocked until real checkpoint/worktree isolation exists.
 
 ## Best Phase 2 Picks
 
@@ -24,7 +29,7 @@ artifact-first.
   - Network rules split from command rules.
   - Delyx adaptation: convert matches into `ActionProposal` records and visible UI policy reasons.
 
-- Command execution protocol ideas from `codex-rs/app-server-protocol`
+- Deeper command execution protocol ideas from `codex-rs/app-server-protocol`
   - Separate command params, output deltas, timeout, output caps, terminate, resize, cwd, env, sandbox policy.
   - Delyx adaptation: typed `CommandExecArtifact` with timeline events and approval IDs.
 

@@ -3,6 +3,7 @@ import type {
   ExternalAgentAdapterView,
   ExternalAgentCommandContractView,
   ExternalAgentPermissionMode,
+  ExternalAgentRunArtifactView,
   ExternalAgentStateView,
 } from "./externalAgentTypes";
 
@@ -16,6 +17,24 @@ export interface ExternalAgentContractPreviewRequest {
   runId: string;
 }
 
+export interface ExternalAgentCodexRunRequest {
+  runId: string;
+  externalApprovalId: string;
+  terminalApprovalId: string;
+  task: string;
+  workingDirectory: string;
+  approvedRoots: string[];
+  allowedPaths: string[];
+  permissionMode: ExternalAgentPermissionMode;
+  timeoutMs: number;
+  createdAtMs: number;
+  checkpointId?: string;
+  worktreeId?: string;
+  captureDiff: boolean;
+  changedFiles: string[];
+  testArtifactIds: string[];
+}
+
 export async function previewExternalAgentContract(
   request: ExternalAgentContractPreviewRequest,
 ): Promise<ExternalAgentCommandContractView> {
@@ -24,6 +43,16 @@ export async function previewExternalAgentContract(
 
 export async function loadExternalAgentStatus() {
   return invoke<{ adapters: ExternalAgentAdapterView[] }>("external_agent_status");
+}
+
+export async function runCodexExternalAgent(
+  request: ExternalAgentCodexRunRequest,
+): Promise<ExternalAgentRunArtifactView> {
+  return invoke<ExternalAgentRunArtifactView>("external_agent_run_codex", { request });
+}
+
+export async function loadExternalAgentRunSnapshot(runId: string) {
+  return invoke<ExternalAgentRunArtifactView[]>("external_agent_run_snapshot", { runId });
 }
 
 export function externalAgentBridgeUnavailableState(
