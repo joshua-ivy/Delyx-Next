@@ -64,6 +64,19 @@ mod tests {
     }
 
     #[test]
+    fn active_ollama_work_can_return_to_idle() {
+        let mut manager = linked_manager();
+        let thread = manager.create_thread(PROJECT_ID, "Ask Ollama").unwrap();
+
+        manager.set_status(&thread.id, ThreadStatus::Exploring).unwrap();
+        manager.set_status(&thread.id, ThreadStatus::Idle).unwrap();
+        manager.set_status(&thread.id, ThreadStatus::Planning).unwrap();
+        manager.set_status(&thread.id, ThreadStatus::Idle).unwrap();
+
+        assert_eq!(manager.get_thread(&thread.id).unwrap().status, ThreadStatus::Idle);
+    }
+
+    #[test]
     fn archives_threads_without_erasing_history() {
         let mut manager = linked_manager();
         let thread = manager.create_thread(PROJECT_ID, "Archive completed work").unwrap();

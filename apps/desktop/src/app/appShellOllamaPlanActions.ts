@@ -5,6 +5,7 @@ import type { ModelSettingsView } from "../features/models/modelTypes";
 import { createOllamaPlanMessages, createPlanFromOllamaText } from "../features/plans/ollamaPlan";
 import type { PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
+import { appendThreadMessageOverBridge } from "../features/threads/threadClient";
 import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { recordModelCallFailure, recordModelCallResult } from "./appShellModelRunActions";
@@ -88,6 +89,7 @@ function appendMessage(
   status: ThreadStatus,
 ) {
   const now = new Date().toISOString();
+  void appendThreadMessageOverBridge(threadId, message, now, status);
   state.setThreads((current) => current.map((thread) => (
     thread.id === threadId
       ? { ...thread, messages: [...thread.messages, message], mode: modeForThreadStatus(status), status, updatedAt: now }

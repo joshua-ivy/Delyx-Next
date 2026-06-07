@@ -178,6 +178,12 @@ instead of relying on renderer-only networking. The command validates the
 selected model and message roles before the loopback request, returns a
 provider/model/text artifact shape, and preserves the renderer HTTP path only
 for web preview where no Tauri bridge exists.
+Composer and PlanAgent thread messages are also mirrored through the Tauri
+thread/run bridge in desktop mode, so real Ollama user, assistant, and system
+messages are visible in bridge snapshots instead of living only in renderer
+state. The bridge validates roles, non-empty bodies, linked thread records, and
+typed status transitions; it does not grant model calls any file, terminal,
+connector, memory, scheduled-work, or external-agent authority.
 The frontend model view type does not include a live mock provider kind; unknown
 or unsupported runtime provider kinds map to an unavailable UI state.
 

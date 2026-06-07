@@ -159,8 +159,8 @@ fn can_transition(from: ThreadStatus, to: ThreadStatus) -> bool {
     match (from, to) {
         (_, _) if from == to => true,
         (Idle, Exploring | Planning | Blocked | Failed | Done) => true,
-        (Exploring, Planning | Blocked | Failed | Done) => true,
-        (Planning, WaitingForApproval | Building | Blocked | Failed | Done) => true,
+        (Exploring, Idle | Planning | Blocked | Failed | Done) => true,
+        (Planning, Idle | WaitingForApproval | Building | Blocked | Failed | Done) => true,
         (WaitingForApproval, Building | Blocked | Failed) => true,
         (Building, Testing | Reviewing | Blocked | Failed | Done) => true,
         (Testing, Reviewing | Blocked | Failed | Done) => true,

@@ -7,6 +7,7 @@ fn main() {
             delyx_next_desktop::runtime_bridge::ollama_chat,
             delyx_next_desktop::runtime_bridge::runtime_status,
             delyx_next_desktop::thread_run_bridge::thread_archive,
+            delyx_next_desktop::thread_run_bridge::thread_message_append,
             delyx_next_desktop::thread_run_bridge::thread_run_create,
             delyx_next_desktop::thread_run_bridge::thread_run_snapshot,
             delyx_next_desktop::thread_run_bridge::thread_status_update,

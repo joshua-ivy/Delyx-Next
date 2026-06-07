@@ -1,9 +1,10 @@
 #[cfg(test)]
 mod tests {
     use crate::thread_run_bridge::{
-        archive_thread_record, create_thread_run_record, thread_run_snapshot_from_store,
-        update_thread_status_record, ThreadArchiveRequest, ThreadRunCreateRequest,
-        ThreadRunStore, ThreadStatusUpdateRequest,
+        append_thread_message_record, archive_thread_record, create_thread_run_record,
+        thread_run_snapshot_from_store, update_thread_status_record, ThreadArchiveRequest,
+        ThreadMessageAppendRequest, ThreadRunCreateRequest, ThreadRunStore,
+        ThreadStatusUpdateRequest,
     };
 
     #[test]
@@ -69,6 +70,40 @@ mod tests {
         assert!(snapshot.runs.is_empty());
     }
 
+    #[test]
+    fn message_append_records_ollama_reply_and_settles_status() {
+        let mut store = ThreadRunStore::default();
+        let record = create_thread_run_record(&mut store, request("proj-1", "Ask Ollama")).unwrap();
+
+        update_thread_status_record(&mut store, status_request(&record.thread.id, "exploring")).unwrap();
+        let updated = append_thread_message_record(
+            &mut store,
+            message_request(&record.thread.id, "assistant", "Real local reply.", Some("idle")),
+        )
+        .unwrap();
+        let snapshot = thread_run_snapshot_from_store(&store, "proj-1");
+
+        assert_eq!(updated.status, "idle");
+        assert_eq!(updated.messages.len(), 2);
+        assert_eq!(updated.messages[1].role, "assistant");
+        assert_eq!(snapshot.threads[0].messages[1].body, "Real local reply.");
+    }
+
+    #[test]
+    fn message_append_rejects_unknown_roles_without_changing_thread() {
+        let mut store = ThreadRunStore::default();
+        let record = create_thread_run_record(&mut store, request("proj-1", "Keep roles typed")).unwrap();
+
+        let result = append_thread_message_record(
+            &mut store,
+            message_request(&record.thread.id, "tool", "Nope", None),
+        );
+        let snapshot = thread_run_snapshot_from_store(&store, "proj-1");
+
+        assert!(result.is_err());
+        assert_eq!(snapshot.threads[0].messages.len(), 1);
+    }
+
     fn request(project_id: &str, goal: &str) -> ThreadRunCreateRequest {
         ThreadRunCreateRequest {
             created_at: "2026-06-07T00:00:00.000Z".to_string(),
@@ -89,6 +124,21 @@ mod tests {
         ThreadArchiveRequest {
             thread_id: thread_id.to_string(),
             updated_at: "2026-06-07T00:02:00.000Z".to_string(),
+        }
+    }
+
+    fn message_request(
+        thread_id: &str,
+        role: &str,
+        body: &str,
+        status: Option<&str>,
+    ) -> ThreadMessageAppendRequest {
+        ThreadMessageAppendRequest {
+            body: body.to_string(),
+            role: role.to_string(),
+            status: status.map(str::to_string),
+            thread_id: thread_id.to_string(),
+            updated_at: "2026-06-07T00:03:00.000Z".to_string(),
         }
     }
 }

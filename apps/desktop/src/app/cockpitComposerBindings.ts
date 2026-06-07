@@ -8,7 +8,11 @@ import { recordModelCallFailure, recordModelCallResult } from "./appShellModelRu
 import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { createThread, modeForThreadStatus } from "./appShellThreadActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
-import { createThreadRunOverBridge } from "../features/threads/threadClient";
+import {
+  appendThreadMessageOverBridge,
+  createThreadRunOverBridge,
+  updateThreadStatusOverBridge,
+} from "../features/threads/threadClient";
 
 export interface ComposerBindingState {
   activeProject: WorkspaceProject;
@@ -71,7 +75,9 @@ function continueThreadFromComposer(state: ComposerBindingState, body: string) {
   if (!thread) {
     return;
   }
-  const updatedThread = withUserMessage(ensureThreadRun(state, thread), body);
+  const now = new Date().toISOString();
+  const updatedThread = withUserMessage(ensureThreadRun(state, thread), body, now);
+  void appendThreadMessageOverBridge(updatedThread.id, { role: "user", body }, now);
   state.setThreads((current) => current.map((item) => (item.id === updatedThread.id ? updatedThread : item)));
   void requestOllamaReply(state, updatedThread);
 }
@@ -112,12 +118,13 @@ function recordOllamaFailure(state: ComposerBindingState, thread: TaskThread, mo
   notifyLocalAction(message, "warning");
 }
 
-function withUserMessage(thread: TaskThread, body: string): TaskThread {
-  return { ...thread, messages: [...thread.messages, { role: "user", body }], updatedAt: new Date().toISOString() };
+function withUserMessage(thread: TaskThread, body: string, updatedAt: string): TaskThread {
+  return { ...thread, messages: [...thread.messages, { role: "user", body }], updatedAt };
 }
 
 function appendMessage(state: ComposerBindingState, threadId: string, message: TaskThread["messages"][number], status: ThreadStatus) {
   const now = new Date().toISOString();
+  void appendThreadMessageOverBridge(threadId, message, now, status);
   state.setThreads((current) => current.map((thread) => (
     thread.id === threadId
       ? { ...thread, messages: [...thread.messages, message], mode: modeForThreadStatus(status), status, updatedAt: now }
@@ -127,6 +134,7 @@ function appendMessage(state: ComposerBindingState, threadId: string, message: T
 
 function markThread(state: ComposerBindingState, threadId: string, status: ThreadStatus) {
   const now = new Date().toISOString();
+  void updateThreadStatusOverBridge(threadId, status, now);
   state.setThreads((current) => current.map((thread) => (
     thread.id === threadId ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread
   )));

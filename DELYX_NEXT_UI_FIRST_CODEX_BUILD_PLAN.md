@@ -2666,6 +2666,46 @@ Acceptance:
 
 ---
 
+### ~~PR 11.10 - Ollama Agent Session Bridge~~
+
+Status: Complete on 2026-06-07.
+
+Update: The real Ollama composer and PlanAgent paths now append user,
+assistant, and system messages through the Tauri thread/run bridge when running
+in desktop mode. Model-call status changes use the same bridge-backed thread
+state, active Ollama work can settle back to idle after a real response, and
+web preview keeps its local fallback. This records conversation state without
+granting tool, file, terminal, connector, durable memory, scheduled-work, or
+external-agent authority.
+
+Scope:
+
+- ~~Add a Tauri command for bridge-backed thread message appends.~~
+- ~~Validate message role, non-empty body, status, and linked thread before recording.~~
+- ~~Wire composer user, assistant, and failure messages through the bridge.~~
+- ~~Wire Ollama PlanAgent system, success, and failure messages through the bridge.~~
+- ~~Allow active explore/plan model work to return to idle as a typed transition.~~
+- ~~Add verifier markers and deterministic Rust tests for the session bridge.~~
+
+Acceptance:
+
+- ~~Desktop Ollama conversations are represented in the bridge snapshot instead of only renderer state.~~
+- ~~Invalid message roles are rejected without changing thread history.~~
+- ~~Ollama success/failure remains visible and local-first with no stored secrets.~~
+- ~~Source files stay within the line-budget rule.~~
+
+Validation:
+
+- ~~`npm run typecheck` passed.~~
+- ~~`cargo test --workspace` passed with 161 Rust tests.~~
+- ~~`npm test` passed.~~
+- ~~`npm run build` passed.~~
+- ~~`npm run smoke:ui` passed.~~
+- ~~`npm run smoke:tauri` passed.~~
+- ~~`git diff --check` passed with only existing CRLF normalization warnings.~~
+
+---
+
 ### ~~PR 12 — External Agent Bridge Prototype~~
 
 Status: Complete on 2026-06-07.

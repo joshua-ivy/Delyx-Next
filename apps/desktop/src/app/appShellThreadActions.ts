@@ -31,8 +31,8 @@ export function canTransition(from: ThreadStatus, to: ThreadStatus) {
   }
   const allowed: Record<ThreadStatus, ThreadStatus[]> = {
     idle: ["exploring", "planning", "blocked", "failed", "done"],
-    exploring: ["planning", "blocked", "failed", "done"],
-    planning: ["waiting_for_approval", "building", "blocked", "failed", "done"],
+    exploring: ["idle", "planning", "blocked", "failed", "done"],
+    planning: ["idle", "waiting_for_approval", "building", "blocked", "failed", "done"],
     waiting_for_approval: ["building", "blocked", "failed"],
     building: ["testing", "reviewing", "blocked", "failed", "done"],
     testing: ["reviewing", "blocked", "failed", "done"],

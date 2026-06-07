@@ -3,7 +3,7 @@ use crate::thread_run_bridge_views::{
     record_view, run_view, thread_view, TaskThreadView, ThreadRunRecordView,
     ThreadRunSnapshotView, ThreadRunViewContext,
 };
-use crate::threads::{ThreadManager, ThreadStatus};
+use crate::threads::{MessageRole, ThreadManager, ThreadStatus};
 use serde::Deserialize;
 use std::sync::Mutex;
 
@@ -39,6 +39,16 @@ pub struct ThreadStatusUpdateRequest {
 #[serde(rename_all = "camelCase")]
 pub struct ThreadArchiveRequest {
     pub thread_id: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThreadMessageAppendRequest {
+    pub thread_id: String,
+    pub role: String,
+    pub body: String,
+    pub status: Option<String>,
     pub updated_at: String,
 }
 
@@ -87,6 +97,15 @@ pub fn thread_archive(
     archive_thread_record(&mut store, request).map_err(|error| format!("{error:?}"))
 }
 
+#[tauri::command]
+pub fn thread_message_append(
+    state: tauri::State<ThreadRunBridgeState>,
+    request: ThreadMessageAppendRequest,
+) -> Result<TaskThreadView, String> {
+    let mut store = state.store.lock().map_err(|_| "Thread bridge lock failed.".to_string())?;
+    append_thread_message_record(&mut store, request).map_err(|error| format!("{error:?}"))
+}
+
 pub fn create_thread_run_record(
     store: &mut ThreadRunStore,
     request: ThreadRunCreateRequest,
@@ -123,6 +142,27 @@ pub fn archive_thread_record(
     request: ThreadArchiveRequest,
 ) -> Result<TaskThreadView, crate::threads::ThreadError> {
     store.manager.archive_thread(&request.thread_id)?;
+    let context = view_context(update_record_timestamp(store, &request.thread_id, &request.updated_at)?);
+    Ok(thread_view(store.manager.get_thread(&request.thread_id)?, &context))
+}
+
+pub fn append_thread_message_record(
+    store: &mut ThreadRunStore,
+    request: ThreadMessageAppendRequest,
+) -> Result<TaskThreadView, crate::threads::ThreadError> {
+    let role = parse_message_role(&request.role)?;
+    let body = request.body.trim().to_string();
+    if body.is_empty() {
+        return Err(crate::threads::ThreadError::InvalidTransition);
+    }
+    let status = request.status.as_deref().map(parse_thread_status).transpose()?;
+    if !store.records.iter().any(|item| item.thread_id == request.thread_id) {
+        return Err(crate::threads::ThreadError::ThreadNotFound);
+    }
+    if let Some(status) = status {
+        store.manager.set_status(&request.thread_id, status)?;
+    }
+    store.manager.append_message(&request.thread_id, role, &body)?;
     let context = view_context(update_record_timestamp(store, &request.thread_id, &request.updated_at)?);
     Ok(thread_view(store.manager.get_thread(&request.thread_id)?, &context))
 }
@@ -178,6 +218,15 @@ fn parse_thread_status(status: &str) -> Result<ThreadStatus, crate::threads::Thr
         "reviewing" => Ok(ThreadStatus::Reviewing),
         "testing" => Ok(ThreadStatus::Testing),
         "waiting_for_approval" => Ok(ThreadStatus::WaitingForApproval),
+        _ => Err(crate::threads::ThreadError::InvalidTransition),
+    }
+}
+
+fn parse_message_role(role: &str) -> Result<MessageRole, crate::threads::ThreadError> {
+    match role {
+        "assistant" => Ok(MessageRole::Assistant),
+        "system" => Ok(MessageRole::System),
+        "user" => Ok(MessageRole::User),
         _ => Err(crate::threads::ThreadError::InvalidTransition),
     }
 }

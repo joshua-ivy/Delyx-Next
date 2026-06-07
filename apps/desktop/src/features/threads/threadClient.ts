@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { AgentRunView } from "../runs/agentRunTypes";
-import type { TaskThread, ThreadStatus } from "./threadTypes";
+import type { TaskThread, ThreadMessage, ThreadStatus } from "./threadTypes";
 
 export interface ThreadRunRecordView {
   thread: TaskThread;
@@ -67,6 +67,24 @@ export async function archiveThreadOverBridge(
   try {
     return await invoke<TaskThread>("thread_archive", {
       request: { threadId, updatedAt },
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function appendThreadMessageOverBridge(
+  threadId: string,
+  message: ThreadMessage,
+  updatedAt: string,
+  status?: ThreadStatus,
+): Promise<TaskThread | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<TaskThread>("thread_message_append", {
+      request: { body: message.body, role: message.role, status, threadId, updatedAt },
     });
   } catch {
     return undefined;
