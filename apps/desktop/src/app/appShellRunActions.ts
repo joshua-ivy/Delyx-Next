@@ -69,6 +69,21 @@ export function recordApprovalDecisionForRun(
   return appendApprovalEvent(runs, thread, proposal, `approval.${proposal.status}`, `Approval ${proposal.status} for ${proposal.actionType}.`, createdAt);
 }
 
+export function recordPlanQuestionForRun(
+  runs: AgentRunView[],
+  thread: TaskThread,
+  createdAt: string,
+) {
+  if (!thread.activeRunId) {
+    return runs;
+  }
+  return runs.map((run) => (
+    run.id === thread.activeRunId
+      ? runWithEvent(run, "plan.question_requested", "Clarifying question requested locally; no model call ran.", { threadId: thread.id }, createdAt)
+      : run
+  ));
+}
+
 export function runStatusForThreadStatus(status: ThreadStatus): AgentRunStatus {
   const statuses: Record<ThreadStatus, AgentRunStatus> = {
     blocked: "blocked",
@@ -137,21 +152,29 @@ function runWithThreadStatus(run: AgentRunView, status: ThreadStatus, updatedAt:
   if (run.mode === nextMode && run.status === nextStatus) {
     return run;
   }
+  const updated = runWithEvent(run, "thread.status_changed", `Thread moved to ${status}.`, { status }, updatedAt);
+  return {
+    ...updated,
+    mode: nextMode,
+    status: nextStatus,
+    updatedAt,
+  };
+}
+
+function runWithEvent(run: AgentRunView, kind: string, message: string, payload: unknown, createdAt: string): AgentRunView {
   const events = [...run.events, {
-    createdAt: updatedAt,
+    createdAt,
     id: `${run.id}-event-${run.events.length + 1}`,
-    kind: "thread.status_changed",
-    message: `Thread moved to ${status}.`,
-    payload: { status },
+    kind,
+    message,
+    payload,
     runId: run.id,
   }];
   return {
     ...run,
     events,
     metrics: { ...run.metrics, eventCount: events.length },
-    mode: nextMode,
-    status: nextStatus,
-    updatedAt,
+    updatedAt: createdAt,
   };
 }
 

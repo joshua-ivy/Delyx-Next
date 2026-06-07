@@ -14,6 +14,7 @@ import {
 import {
   recordApprovalDecisionForRun,
   recordApprovalProposalForRun,
+  recordPlanQuestionForRun,
   updateRunsForThreadStatus,
 } from "./appShellRunActions";
 import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
@@ -44,6 +45,7 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     const planCreate = document.querySelector(".plan-create");
     const planApprove = document.querySelector(".plan-approve");
     const planEdit = document.querySelector(".plan-edit");
+    const planQuestion = document.querySelector(".plan-question");
     const planReviewMode = document.querySelector(".plan-review-mode");
     const planRevise = document.querySelector(".plan-revise");
     const planCancel = document.querySelector(".plan-cancel");
@@ -106,9 +108,20 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       }
       updateThreadAndRunStatus(state, state.activeThread, "reviewing");
     };
+    const askPlanQuestion = () => {
+      const activeThread = state.activeThread;
+      if (!activeThread) {
+        state.setThreadState("empty");
+        return;
+      }
+      const now = new Date().toISOString();
+      state.setAgentRuns((current) => recordPlanQuestionForRun(current, activeThread, now));
+      updateThreadAndRunStatus(state, activeThread, "planning");
+      notifyLocalAction("Question request recorded locally; no model call ran.", "success");
+    };
     const approveProposal = (event: Event) => updateProposalStatus(state, event, "approved");
     const denyProposal = (event: Event) => updateProposalStatus(state, event, "denied");
-    bindAccessibility(commandButton, projectButton, threadButton, [planCreate, planApprove, planEdit, planReviewMode, planRevise, planCancel]);
+    bindAccessibility(commandButton, projectButton, threadButton, [planCreate, planApprove, planEdit, planQuestion, planReviewMode, planRevise, planCancel]);
     commandButton?.addEventListener("click", openPalette);
     commandButton?.addEventListener("keydown", activateOnKeyboard);
     projectButton?.addEventListener("click", openProject);
@@ -121,6 +134,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
     planApprove?.addEventListener("keydown", activateOnKeyboard);
     planEdit?.addEventListener("click", revisePlan);
     planEdit?.addEventListener("keydown", activateOnKeyboard);
+    planQuestion?.addEventListener("click", askPlanQuestion);
+    planQuestion?.addEventListener("keydown", activateOnKeyboard);
     planReviewMode?.addEventListener("click", switchToReviewMode);
     planReviewMode?.addEventListener("keydown", activateOnKeyboard);
     planRevise?.addEventListener("click", revisePlan);
@@ -144,6 +159,8 @@ export function useCockpitDomBindings(state: CockpitDomBindingState) {
       planApprove?.removeEventListener("keydown", activateOnKeyboard);
       planEdit?.removeEventListener("click", revisePlan);
       planEdit?.removeEventListener("keydown", activateOnKeyboard);
+      planQuestion?.removeEventListener("click", askPlanQuestion);
+      planQuestion?.removeEventListener("keydown", activateOnKeyboard);
       planReviewMode?.removeEventListener("click", switchToReviewMode);
       planReviewMode?.removeEventListener("keydown", activateOnKeyboard);
       planRevise?.removeEventListener("click", revisePlan);
@@ -222,9 +239,10 @@ function bindAccessibility(commandButton: Element | null, projectButton: Element
   planButtons[0]?.setAttribute("aria-label", "Create plan");
   planButtons[1]?.setAttribute("aria-label", "Approve plan");
   planButtons[2]?.setAttribute("aria-label", "Edit plan");
-  planButtons[3]?.setAttribute("aria-label", "Switch to read-only review");
-  planButtons[4]?.setAttribute("aria-label", "Revise plan");
-  planButtons[5]?.setAttribute("aria-label", "Cancel plan");
+  planButtons[3]?.setAttribute("aria-label", "Ask question");
+  planButtons[4]?.setAttribute("aria-label", "Switch to read-only review");
+  planButtons[5]?.setAttribute("aria-label", "Revise plan");
+  planButtons[6]?.setAttribute("aria-label", "Cancel plan");
   commandButton?.setAttribute("role", "button");
   commandButton?.setAttribute("tabindex", "0");
   commandButton?.setAttribute("aria-label", "Open command palette");
