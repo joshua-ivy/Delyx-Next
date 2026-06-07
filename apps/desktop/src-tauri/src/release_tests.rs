@@ -63,4 +63,24 @@ mod tests {
         assert!(!format!("{:?}", bundle).contains("sk-test"));
         assert!(!format!("{:?}", bundle).contains("abc123"));
     }
+
+    #[test]
+    fn support_bundle_redacts_common_token_shapes() {
+        let profile = default_release_profile();
+        let bundle = export_support_bundle(
+            &profile,
+            vec![
+                ("github_token", "ghp_example"),
+                ("aws_access_key_id", "AKIAIOSFODNN7EXAMPLE"),
+                ("public_note", "-----BEGIN PRIVATE KEY-----"),
+            ],
+            vec![("slack", "xoxb-secret"), ("pem", "-----BEGIN OPENSSH PRIVATE KEY-----")],
+            43,
+        );
+
+        assert!(bundle.config_summary.iter().all(|entry| entry.value == "[redacted]"));
+        assert!(bundle.logs.iter().all(|entry| entry.line == "[redacted log line]"));
+        assert!(!format!("{:?}", bundle).contains("ghp_example"));
+        assert!(!format!("{:?}", bundle).contains("xoxb-secret"));
+    }
 }

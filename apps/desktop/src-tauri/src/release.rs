@@ -121,14 +121,35 @@ fn log_entry((source, line): (&str, &str)) -> SupportLogEntry {
 
 fn secret_key(key: &str) -> bool {
     let lower = key.to_ascii_lowercase();
-    ["api_key", "apikey", "authorization", "credential", "password", "secret", "token"]
+    [
+        "access_key",
+        "api_key",
+        "apikey",
+        "authorization",
+        "client_secret",
+        "credential",
+        "password",
+        "private_key",
+        "secret",
+        "token",
+    ]
         .iter()
         .any(|needle| lower.contains(needle))
 }
 
 fn secret_value(value: &str) -> bool {
     let lower = value.to_ascii_lowercase();
-    lower.starts_with("sk-") || lower.contains("bearer ") || lower.contains("api_key=") || lower.contains("token=")
+    let trimmed = value.trim_start();
+    lower.starts_with("sk-")
+        || lower.contains("bearer ")
+        || lower.contains("api_key=")
+        || lower.contains("token=")
+        || lower.contains("password=")
+        || value.contains("AKIA")
+        || value.contains("ghp_")
+        || value.contains("github_pat_")
+        || value.contains("xoxb-")
+        || trimmed.starts_with("-----BEGIN ")
 }
 
 fn redact_line(line: &str) -> String {

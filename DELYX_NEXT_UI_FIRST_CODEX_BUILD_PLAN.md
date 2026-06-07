@@ -2401,6 +2401,7 @@ Acceptance:
 - ~~Release smoke passes~~
 - ~~Signing checks are clear~~
 - ~~Support bundle exports logs/config summary without secrets~~
+- ~~Support bundle redaction covers common token prefixes, AWS access keys, and private-key blocks.~~
 
 ---
 
