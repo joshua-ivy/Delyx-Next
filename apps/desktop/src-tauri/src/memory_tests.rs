@@ -41,6 +41,20 @@ mod tests {
     }
 
     #[test]
+    fn promoted_candidate_cannot_be_suppressed_as_pending() {
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(memory_save_input());
+        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let mut store = MemoryStore::new();
+        let candidate = store.propose_candidate(candidate_input("style", "Prefer small files."));
+
+        store.promote_approved(&candidate.id, &approval.id, 10, &approvals, SourceRunStatus::Completed).unwrap();
+
+        assert_eq!(store.suppress_candidate(&candidate.id).unwrap_err(), MemoryError::NotPending);
+        assert_eq!(store.candidates()[0].status, MemoryCandidateStatus::Promoted);
+    }
+
+    #[test]
     fn promoted_memory_shows_source_run_and_thread() {
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(memory_save_input());

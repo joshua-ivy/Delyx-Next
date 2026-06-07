@@ -117,6 +117,9 @@ impl MemoryStore {
 
     pub fn suppress_candidate(&mut self, candidate_id: &str) -> Result<(), MemoryError> {
         let index = self.candidate_index(candidate_id)?;
+        if self.candidates[index].status != MemoryCandidateStatus::Pending {
+            return Err(MemoryError::NotPending);
+        }
         self.candidates[index].status = MemoryCandidateStatus::Suppressed;
         Ok(())
     }

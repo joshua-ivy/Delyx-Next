@@ -2277,6 +2277,7 @@ Acceptance:
 - ~~Memory candidate requires approval.~~
 - ~~Failed run cannot auto-promote memory.~~
 - ~~User can suppress memory.~~
+- ~~Promoted memory candidates cannot be re-suppressed as pending candidates.~~
 - ~~Memory shows source run/thread.~~
 
 ---

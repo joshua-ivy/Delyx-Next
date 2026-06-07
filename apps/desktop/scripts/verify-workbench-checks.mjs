@@ -342,6 +342,7 @@ export const requiredChecks = [
   ["src-tauri/src/memory.rs", "MemoryStore"],
   ["src-tauri/src/memory.rs", "promote_approved"],
   ["src-tauri/src/memory.rs", "FailedRunCannotPromote"],
+  ["src-tauri/src/memory.rs", "MemoryCandidateStatus::Pending"],
   ["src-tauri/src/memory.rs", "suppress_candidate"],
   ["src-tauri/src/skills.rs", "SkillRegistry"],
   ["src-tauri/src/skills.rs", "import_skill_file"],
