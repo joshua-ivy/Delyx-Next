@@ -1885,6 +1885,30 @@ Acceptance:
 
 ---
 
+### ~~PR 3.2 - Remove Simulated Workspace State Controls~~
+
+Status: Complete on 2026-06-07.
+
+Update: Removed command-palette entries and workspace-panel buttons that
+manually simulated loading, error, or denied workspace states for acceptance
+checks. The UI still defines those states, but they are now driven by real
+workspace bridge load, add-project, remove-project, or policy outcomes.
+
+Scope:
+
+- ~~Remove fake workspace loading/error command-palette actions.~~
+- ~~Remove fake denied/loading/error workspace buttons.~~
+- ~~Keep truthful loading, error, denied, empty, and ready state copy.~~
+- ~~Show read-policy facts instead of simulation controls.~~
+
+Acceptance:
+
+- ~~Users do not see fake workspace-state actions.~~
+- ~~Workspace states remain present for real runtime outcomes.~~
+- ~~Verifier and smoke checks require truthful state copy.~~
+
+---
+
 ### ~~PR 4 — Thread Manager Wired to UI~~
 
 Status: Complete on 2026-06-06.

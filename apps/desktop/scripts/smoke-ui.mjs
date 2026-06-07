@@ -30,7 +30,7 @@ check(assetExists("assets", ".css"), "built CSS asset must exist");
 for (const label of ["Projects", "Threads", "Plan", "Approvals", "Diff", "Tests", "Evidence"]) {
   check(source.includes(label), `UI source must include ${label}`);
 }
-for (const state of ["Loading state", "Error state", "blocked", "failed", "done"]) {
+for (const state of ["Loading:", "Error:", "blocked", "failed", "done"]) {
   check(source.includes(state), `UI source must include ${state}`);
 }
 for (const action of ["Create plan", "Approve", "Ask question", "Show review"]) {

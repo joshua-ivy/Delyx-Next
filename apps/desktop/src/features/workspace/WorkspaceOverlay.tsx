@@ -15,9 +15,6 @@ interface WorkspaceOverlayProps {
   onAddProject: (path: string) => void;
   onClose: () => void;
   onRemoveProject: (projectId: string) => void;
-  onShowDenied: () => void;
-  onSimulateError: () => void;
-  onSimulateLoading: () => void;
 }
 
 export function WorkspaceOverlay({
@@ -27,9 +24,6 @@ export function WorkspaceOverlay({
   onAddProject,
   onClose,
   onRemoveProject,
-  onShowDenied,
-  onSimulateError,
-  onSimulateLoading,
   open,
   project,
   projects,
@@ -111,12 +105,12 @@ export function WorkspaceOverlay({
           </section>
 
           <section className="workspace-card">
-            <h3>Safety states</h3>
-            <div className="workspace-actions">
-              <button onClick={onShowDenied} type="button">Show denied read</button>
-              <button onClick={onSimulateLoading} type="button">Loading state</button>
-              <button onClick={onSimulateError} type="button">Error state</button>
-            </div>
+            <h3>Read policy</h3>
+            <dl>
+              <InfoRow label="Scope" value="Read-only indexing stays inside approved roots." />
+              <InfoRow label="Denied state" value="Rendered when a workspace read is rejected by policy." />
+              <InfoRow label="Dirty count" value="Not loaded until a real dirty-count artifact exists." />
+            </dl>
             <p>{projects.length} project linked to this local workspace.</p>
           </section>
         </div>

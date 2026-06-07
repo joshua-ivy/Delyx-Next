@@ -168,7 +168,6 @@ export function AppShell() {
       setThreads,
       setThreadState,
       setWorkspaceOpen,
-      setWorkspaceState,
     });
     setPaletteOpen(false);
   };
@@ -254,9 +253,6 @@ export function AppShell() {
           setProjects([]);
           setWorkspaceState("empty");
         }}
-        onShowDenied={() => setWorkspaceState("denied")}
-        onSimulateError={() => setWorkspaceState("error")}
-        onSimulateLoading={() => setWorkspaceState("loading")}
         open={workspaceOpen}
         project={activeProject}
         projects={projects}
