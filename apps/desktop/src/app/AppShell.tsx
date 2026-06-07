@@ -81,7 +81,23 @@ export function AppShell() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-  useCockpitDomBindings({ activePlan, activeProject, activeRun, activeThread, cockpitHtml, setActionProposals, setActiveThreadId, setAgentRuns, setPaletteOpen, setPlans, setThreadOpen, setThreadState, setThreads, setWorkspaceOpen });
+  useCockpitDomBindings({
+    actionProposals,
+    activePlan,
+    activeProject,
+    activeRun,
+    activeThread,
+    cockpitHtml,
+    setActionProposals,
+    setActiveThreadId,
+    setAgentRuns,
+    setPaletteOpen,
+    setPlans,
+    setThreadOpen,
+    setThreadState,
+    setThreads,
+    setWorkspaceOpen,
+  });
   const runPaletteCommand = (commandId: string) => {
     runAppShellCommand(commandId, {
       activePlan,

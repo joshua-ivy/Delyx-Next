@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 import { notifyLocalAction } from "./ShellPreferenceController";
 import { createPlanApprovalProposal, upsertActionProposal } from "./appShellApprovalActions";
-import { updateRunsForThreadStatus } from "./appShellRunActions";
+import { recordApprovalProposalForRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus, upsertPlan } from "./appShellThreadActions";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import { createPlanFromThread } from "../features/plans/planBuilder";
@@ -104,10 +104,12 @@ function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecis
   context.setPlans((current) => current.map((plan) => (
     plan.threadId === context.activePlan?.threadId ? { ...plan, decision } : plan
   )));
-  if (decision === "approved" && context.activeThread) {
-    const proposal = createPlanApprovalProposal(context.activePlan, context.activeThread, context.activeRun, context.activeProject);
+  const activeThread = context.activeThread;
+  if (decision === "approved" && activeThread) {
+    const proposal = createPlanApprovalProposal(context.activePlan, activeThread, context.activeRun, context.activeProject);
     context.setActionProposals((current) => upsertActionProposal(current, proposal));
-    moveThreadAndRun(context, context.activeThread, "waiting_for_approval");
+    context.setAgentRuns((current) => recordApprovalProposalForRun(current, activeThread, proposal, new Date().toISOString()));
+    moveThreadAndRun(context, activeThread, "waiting_for_approval");
   }
   notifyLocalAction(message, "success");
 }
