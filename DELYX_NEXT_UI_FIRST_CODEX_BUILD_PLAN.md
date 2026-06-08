@@ -240,6 +240,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Added the official Tauri single-instance plugin so launching Delyx Next again focuses the existing main window instead of creating a second desktop session.
   - Runtime status now exposes desktop shell policy to the UI: main window label, renderer-command menu policy, startup focus behavior, single-instance reopen behavior, and unsigned dev signing status.
   - Settings now shows the real Windows shell state when the Rust bridge is available.
+  - Packaged Windows verification passed on current head: `.\.tools\npm.cmd run package:windows` produced `target\release\bundle\nsis\Delyx Next_0.0.0_x64-setup.exe`.
   - Next desktop depth: signing, updater policy, install/upgrade smoke, native file associations/deep links only if the product needs them.
   - Keep the desktop shell tied to real local runtime state; do not use packaging polish to hide missing agent behavior.
 
