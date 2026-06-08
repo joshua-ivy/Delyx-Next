@@ -92,6 +92,8 @@ export const requiredChecks = [
   ["src/app/FocusShell.tsx", "FocusShell"],
   ["src/app/FocusHome.tsx", "What should Delyx do?"],
   ["src/app/FocusThread.tsx", "onDecideProposal"],
+  ["src/app/focusApprovalDecision.ts", "Approval granted; waiting for the next executable step"],
+  ["src/app/focusApprovalDecision.ts", "hasOtherPendingApproval"],
   ["src/app/FocusSettings.tsx", "Everything Delyx needs to run locally"],
   ["src/app/FocusOverlays.tsx", "No active threads in this project."],
   ["src/styles/focus-layout.css", ".focus-app"],

@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { decideApprovalOverBridge } from "../features/approvals/approvalClient";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
-import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
+import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
 import { recordApprovalDecisionForRun } from "./appShellRunActions";
 import { updateThreadAndRunStatus } from "./cockpitStateTransitions";
 import { notifyLocalAction } from "./ShellPreferenceController";
@@ -50,10 +50,14 @@ export async function decideFocusApproval(
       decided,
       new Date(decidedAtMs).toISOString(),
     ));
-    updateThreadAndRunStatus(state, state.activeThread, decided.status === "approved" ? "building" : "blocked");
+    updateThreadAndRunStatus(
+      state,
+      state.activeThread,
+      threadStatusAfterDecision(decided, state.actionProposals, proposalId),
+    );
   }
   notifyLocalAction(
-    decided.status === "approved" ? "Approval granted for this run" : "Approval denied; run blocked",
+    decisionMessage(decided, state.actionProposals, proposalId),
     decided.status === "approved" ? "success" : "warning",
   );
 }
@@ -61,4 +65,41 @@ export async function decideFocusApproval(
 function isExpired(expiresAt: string) {
   const deadline = Date.parse(expiresAt);
   return Number.isFinite(deadline) && deadline <= Date.now();
+}
+
+function threadStatusAfterDecision(
+  decided: ActionProposalView,
+  proposals: ActionProposalView[],
+  decidedId: string,
+): ThreadStatus {
+  if (decided.status !== "approved") {
+    return "blocked";
+  }
+  return hasOtherPendingApproval(decided, proposals, decidedId) ? "waiting_for_approval" : "planning";
+}
+
+function decisionMessage(
+  decided: ActionProposalView,
+  proposals: ActionProposalView[],
+  decidedId: string,
+) {
+  if (decided.status !== "approved") {
+    return "Approval denied; run blocked";
+  }
+  return hasOtherPendingApproval(decided, proposals, decidedId)
+    ? "Approval recorded; more approvals are still pending"
+    : "Approval granted; waiting for the next executable step";
+}
+
+function hasOtherPendingApproval(
+  decided: ActionProposalView,
+  proposals: ActionProposalView[],
+  decidedId: string,
+) {
+  return proposals.some((proposal) => (
+    proposal.id !== decidedId
+    && proposal.runId === decided.runId
+    && proposal.status === "pending"
+    && !isExpired(proposal.expiresAt)
+  ));
 }

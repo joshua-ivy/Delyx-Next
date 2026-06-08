@@ -273,6 +273,9 @@ checkpoint receipts while recording the restore approval ID.
 The Focus UI loads `patch_snapshot` for the active run so persisted patch
 receipts can surface as real diffs; it does not synthesize placeholder diffs
 when the runtime has not produced a PatchProposal.
+Focus approval decisions do not mark a thread as building by themselves. They
+return to the next-step state, or keep waiting when more approvals are pending,
+until a concrete executor or tool action starts.
 The Tauri `test_run_approved` bridge exposes approved test-command execution
 through the Rust TestRunner. It reads the same Rust ApprovalEngine owned by the
 approval bridge, rejects pending or mismatched approvals, captures stdout,
