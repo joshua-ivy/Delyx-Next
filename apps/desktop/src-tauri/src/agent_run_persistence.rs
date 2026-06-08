@@ -66,10 +66,14 @@ fn clear_tables(connection: &Connection) -> Result<(), AgentRunError> {
 
 fn insert_run(connection: &Connection, run: &AgentRun) -> Result<(), AgentRunError> {
     let outcome = run.outcome.as_ref().map(|value| value.summary.as_str());
+    let evidence_ids = outcome_list(run.outcome.as_ref().map(|value| &value.evidence_record_ids))?;
+    let test_ids = outcome_list(run.outcome.as_ref().map(|value| &value.test_artifact_ids))?;
     connection
         .execute(
-            "INSERT INTO agent_runs (id, thread_id, status, outcome_summary) VALUES (?1, ?2, ?3, ?4)",
-            params![run.id, run.thread_id, status_key(run.status), outcome],
+            "INSERT INTO agent_runs
+             (id, thread_id, status, outcome_summary, outcome_evidence_record_ids, outcome_test_artifact_ids)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![run.id, run.thread_id, status_key(run.status), outcome, evidence_ids, test_ids],
         )
         .map(|_| ())
         .map_err(sql_error)
@@ -125,13 +129,29 @@ fn insert_artifact(
 
 fn load_runs(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(), AgentRunError> {
     let mut statement = connection
-        .prepare("SELECT id, thread_id, status, outcome_summary FROM agent_runs ORDER BY rowid")
+        .prepare(
+            "SELECT id, thread_id, status, outcome_summary,
+                    outcome_evidence_record_ids, outcome_test_artifact_ids
+             FROM agent_runs ORDER BY rowid",
+        )
         .map_err(sql_error)?;
     let mut rows = statement.query([]).map_err(sql_error)?;
     while let Some(row) = rows.next().map_err(sql_error)? {
         let status_value: String = row.get(2).map_err(sql_error)?;
         let status = parse_status(&status_value)?;
         let summary: Option<String> = row.get(3).map_err(sql_error)?;
+        let evidence_ids: String = row.get(4).map_err(sql_error)?;
+        let test_ids: String = row.get(5).map_err(sql_error)?;
+        let outcome = if let Some(value) = summary {
+            Some(AgentOutcome {
+                evidence_record_ids: parse_list(&evidence_ids)?,
+                status,
+                summary: value,
+                test_artifact_ids: parse_list(&test_ids)?,
+            })
+        } else {
+            None
+        };
         ledger.runs.push(AgentRun {
             id: row.get(0).map_err(sql_error)?,
             thread_id: row.get(1).map_err(sql_error)?,
@@ -141,10 +161,7 @@ fn load_runs(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(),
             artifacts: Vec::new(),
             evidence: Vec::new(),
             metrics: RunMetrics::default(),
-            outcome: summary.map(|value| AgentOutcome {
-                status,
-                summary: value,
-            }),
+            outcome,
         });
     }
     Ok(())
@@ -240,6 +257,18 @@ fn parse_status(value: &str) -> Result<AgentRunStatus, AgentRunError> {
         "failed" => Ok(AgentRunStatus::Failed),
         _ => Err(AgentRunError::InvalidLedger(value.to_string())),
     }
+}
+
+fn outcome_list(value: Option<&Vec<String>>) -> Result<String, AgentRunError> {
+    match value {
+        Some(items) => serde_json::to_string(items)
+            .map_err(|error| AgentRunError::InvalidLedger(error.to_string())),
+        None => Ok("[]".to_string()),
+    }
+}
+
+fn parse_list(value: &str) -> Result<Vec<String>, AgentRunError> {
+    serde_json::from_str(value).map_err(|error| AgentRunError::InvalidLedger(error.to_string()))
 }
 
 fn sql_error(error: rusqlite::Error) -> AgentRunError {

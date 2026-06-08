@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS agent_runs (
   thread_id TEXT NOT NULL,
   status TEXT NOT NULL,
   outcome_summary TEXT,
+  outcome_evidence_record_ids TEXT NOT NULL DEFAULT '[]',
+  outcome_test_artifact_ids TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

@@ -55,8 +55,11 @@ mod tests {
         drop(legacy);
 
         let connection = open_migrated_database(&path).unwrap();
+        let agent_columns = table_columns(&connection, "agent_runs");
         let columns = table_columns(&connection, "evidence_records");
 
+        assert!(agent_columns.contains(&"outcome_evidence_record_ids".to_string()));
+        assert!(agent_columns.contains(&"outcome_test_artifact_ids".to_string()));
         assert!(columns.contains(&"source_id".to_string()));
         assert!(columns.contains(&"retrieved_at".to_string()));
         assert!(columns.contains(&"relevance_reason".to_string()));

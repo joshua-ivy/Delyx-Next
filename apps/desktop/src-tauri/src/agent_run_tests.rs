@@ -120,7 +120,14 @@ mod tests {
         ledger
             .record_evidence_detail(&run.id, detailed_evidence("AGENTS.md"))
             .unwrap();
-        ledger.complete_run(&run.id, "complete").unwrap();
+        ledger
+            .complete_run_with_support(
+                &run.id,
+                "complete",
+                vec!["evidence-1".to_string()],
+                vec!["test-artifact-1".to_string()],
+            )
+            .unwrap();
 
         ledger.save_to_path(&path).unwrap();
         let bytes = fs::read(&path).unwrap();
@@ -147,6 +154,14 @@ mod tests {
             "doc"
         );
         assert_eq!(loaded_run.outcome.as_ref().unwrap().summary, "complete");
+        assert_eq!(
+            loaded_run.outcome.as_ref().unwrap().evidence_record_ids,
+            vec!["evidence-1"]
+        );
+        assert_eq!(
+            loaded_run.outcome.as_ref().unwrap().test_artifact_ids,
+            vec!["test-artifact-1"]
+        );
         assert_eq!(
             loaded.get_run(&second.id).unwrap().artifacts[0].id,
             "artifact-1"

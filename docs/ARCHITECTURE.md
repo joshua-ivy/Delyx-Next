@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, review-report, external-agent-run, and research-evidence persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, AgentOutcome support links, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, review-report, external-agent-run, and research-evidence persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -29,7 +29,8 @@ complete:
   an extraction map, not current state.
 - SQLite is partially implemented. `agent_run_persistence.rs` now uses
   `rusqlite` and the migration artifact for AgentRun save/load, including
-  nodes, events, artifacts, evidence, and outcome summary. The Tauri
+  nodes, events, artifacts, evidence, outcome summary, and outcome support ID
+  links. The Tauri
   thread/run bridge also persists task threads, messages, run links, and
   AgentRun rows to the local SQLite database. The approval bridge persists
   proposals, UI scope, status, and decisions. Recent workspace project snapshots
@@ -46,9 +47,11 @@ complete:
   proposed patch diffs, review reports, external-agent run artifacts, and
   research EvidenceStore receipts persist receipt data to SQLite and reload
   with ID continuity. AgentRun EvidenceRecords persist source IDs, locators,
-  quotes, hashes, retrieval timestamps, and relevance metadata, and the
-  thread/run snapshot bridge exposes those receipts to the UI. Governance
-  mutation bridges are still not live.
+  quotes, hashes, retrieval timestamps, and relevance metadata. AgentOutcome
+  evidence/test support ID links also persist and the thread/run snapshot
+  bridge exposes receipts and outcome support links to the UI. Governance
+  mutation bridges and automatic final-answer support synthesis are still not
+  live.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -190,7 +193,8 @@ reload, patch proposal bridge reload, review report reload, and external-agent
 run artifact reload now use SQLite. Research EvidenceStore receipts also
 persist to SQLite, including source kind, locator, excerpt, stance, and
 normalized claim keys. AgentRun EvidenceRecords also persist non-lossy receipt
-metadata and are serialized through desktop thread/run snapshots.
+metadata, and AgentOutcome support ID links are serialized through desktop
+thread/run snapshots.
 
 ## Permission Engine
 
@@ -413,7 +417,9 @@ The Rust `EvidenceStore` now persists source-backed research receipts to
 SQLite, including run IDs, source kind, title, locator, excerpt, stance, and
 normalized claim keys. This preserves research receipts across restart, but it
 does not yet build final-answer support records automatically from every file,
-diff, command, test, approval, model call, or external-agent artifact.
+diff, command, test, approval, model call, or external-agent artifact. AgentRun
+outcomes can now carry persisted evidence/test support ID links, so the UI can
+inspect declared support once the runtime attaches it.
 
 ## Data Models
 
@@ -548,6 +554,17 @@ interface EvidenceRecord {
     score: number;
     reason: string;
   };
+}
+```
+
+### AgentOutcome
+
+```ts
+interface AgentOutcome {
+  status: "succeeded" | "failed" | "blocked";
+  summary: string;
+  evidenceRecordIds: string[];
+  testArtifactIds: string[];
 }
 ```
 

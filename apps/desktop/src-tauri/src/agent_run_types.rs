@@ -84,6 +84,8 @@ pub struct RunMetrics {
 pub struct AgentOutcome {
     pub status: AgentRunStatus,
     pub summary: String,
+    pub evidence_record_ids: Vec<String>,
+    pub test_artifact_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

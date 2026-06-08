@@ -36,7 +36,24 @@ pub fn open_migrated_memory_database() -> rusqlite::Result<Connection> {
 fn migrate(connection: &Connection) -> rusqlite::Result<()> {
     connection.pragma_update(None, "foreign_keys", "ON")?;
     connection.execute_batch(AGENT_RUN_MIGRATION)?;
+    ensure_agent_run_columns(connection)?;
     ensure_evidence_columns(connection)?;
+    Ok(())
+}
+
+fn ensure_agent_run_columns(connection: &Connection) -> rusqlite::Result<()> {
+    let columns = table_columns(connection, "agent_runs")?;
+    for (name, definition) in [
+        ("outcome_evidence_record_ids", "TEXT NOT NULL DEFAULT '[]'"),
+        ("outcome_test_artifact_ids", "TEXT NOT NULL DEFAULT '[]'"),
+    ] {
+        if !columns.iter().any(|column| column == name) {
+            connection.execute(
+                &format!("ALTER TABLE agent_runs ADD COLUMN {name} {definition}"),
+                [],
+            )?;
+        }
+    }
     Ok(())
 }
 

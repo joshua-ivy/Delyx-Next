@@ -64,6 +64,8 @@ pub struct AgentRunView {
     pub artifacts: Vec<serde_json::Value>,
     pub evidence: Vec<Value>,
     pub metrics: RunMetricsView,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub outcome: Option<Value>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -154,6 +156,7 @@ pub fn run_view(
         },
         mode: mode_key(thread.status).to_string(),
         nodes: Vec::new(),
+        outcome: run.outcome.as_ref().map(outcome_view),
         project_id: context.project_id.clone(),
         status: run_status_key(thread.status).to_string(),
         thread_id: thread.id.clone(),
@@ -197,6 +200,15 @@ fn insert_optional(value: &mut Map<String, Value>, key: &str, item: &Option<Stri
     if let Some(item) = item {
         value.insert(key.to_string(), json!(item));
     }
+}
+
+fn outcome_view(outcome: &crate::agent_run::AgentOutcome) -> Value {
+    json!({
+        "evidenceRecordIds": outcome.evidence_record_ids,
+        "status": outcome_status_key(outcome.status),
+        "summary": outcome.summary,
+        "testArtifactIds": outcome.test_artifact_ids,
+    })
 }
 
 fn role_key(role: MessageRole) -> &'static str {
@@ -243,5 +255,14 @@ fn run_status_key(status: ThreadStatus) -> &'static str {
         ThreadStatus::Idle => "created",
         ThreadStatus::WaitingForApproval => "waiting_for_approval",
         _ => "running",
+    }
+}
+
+fn outcome_status_key(status: crate::agent_run::AgentRunStatus) -> &'static str {
+    match status {
+        crate::agent_run::AgentRunStatus::Completed => "succeeded",
+        crate::agent_run::AgentRunStatus::Failed => "failed",
+        crate::agent_run::AgentRunStatus::Running => "blocked",
+        crate::agent_run::AgentRunStatus::WaitingForApproval => "blocked",
     }
 }

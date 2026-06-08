@@ -2,6 +2,7 @@ pub mod agent_run;
 pub mod agent_run_commands;
 mod agent_run_evidence_persistence;
 mod agent_run_ids;
+mod agent_run_outcome;
 pub mod agent_run_persistence;
 mod agent_run_tests;
 mod agent_run_types;

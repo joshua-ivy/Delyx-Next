@@ -46,6 +46,15 @@ mod tests {
             .ledger
             .record_evidence_detail(&record.run.id, evidence_input())
             .unwrap();
+        store
+            .ledger
+            .complete_run_with_support(
+                &record.run.id,
+                "Supported final answer.",
+                vec!["evidence-1".to_string()],
+                vec!["test-artifact-1".to_string()],
+            )
+            .unwrap();
 
         let snapshot = thread_run_snapshot_from_store(&store, "proj-1");
         let evidence = &snapshot.runs[0].evidence[0];
@@ -55,6 +64,10 @@ mod tests {
         assert_eq!(evidence["sourceId"], "file://README.md");
         assert_eq!(evidence["quote"], "Delyx Next is local-first.");
         assert_eq!(evidence["relevance"]["relationship"], "doc");
+        let outcome = snapshot.runs[0].outcome.as_ref().unwrap();
+        assert_eq!(outcome["status"], "succeeded");
+        assert_eq!(outcome["evidenceRecordIds"][0], "evidence-1");
+        assert_eq!(outcome["testArtifactIds"][0], "test-artifact-1");
     }
 
     #[test]

@@ -34,6 +34,15 @@ mod tests {
             .ledger
             .record_evidence_detail(&record.run.id, evidence_input())
             .unwrap();
+        store
+            .ledger
+            .complete_run_with_support(
+                &record.run.id,
+                "Reloaded final answer.",
+                vec!["evidence-1".to_string()],
+                vec!["test-artifact-1".to_string()],
+            )
+            .unwrap();
 
         save_to_path(&store, &path).unwrap();
         let bytes = fs::read(&path).unwrap();
@@ -50,6 +59,10 @@ mod tests {
         assert_eq!(
             snapshot.runs[0].evidence[0]["relevance"]["reason"],
             "README supports the local-first claim."
+        );
+        assert_eq!(
+            snapshot.runs[0].outcome.as_ref().unwrap()["evidenceRecordIds"][0],
+            "evidence-1"
         );
 
         let next =

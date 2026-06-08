@@ -197,36 +197,12 @@ impl AgentRunLedger {
         Ok(event)
     }
 
-    pub fn complete_run(&mut self, run_id: &str, summary: &str) -> Result<(), AgentRunError> {
-        self.finish_run(run_id, AgentRunStatus::Completed, summary)
-    }
-
-    pub fn fail_run(&mut self, run_id: &str, summary: &str) -> Result<(), AgentRunError> {
-        self.finish_run(run_id, AgentRunStatus::Failed, summary)
-    }
-
     pub fn save_to_path(&self, path: &Path) -> Result<(), AgentRunError> {
         crate::agent_run_persistence::save_to_path(self, path)
     }
 
     pub fn load_from_path(path: &Path) -> Result<Self, AgentRunError> {
         crate::agent_run_persistence::load_from_path(path)
-    }
-
-    fn finish_run(
-        &mut self,
-        run_id: &str,
-        status: AgentRunStatus,
-        summary: &str,
-    ) -> Result<(), AgentRunError> {
-        let run = self.run_mut(run_id)?;
-        ensure_running(run)?;
-        run.status = status;
-        run.outcome = Some(AgentOutcome {
-            status,
-            summary: summary.to_string(),
-        });
-        Ok(())
     }
 
     pub(crate) fn run_mut(&mut self, run_id: &str) -> Result<&mut AgentRun, AgentRunError> {
@@ -270,7 +246,7 @@ impl AgentRunLedger {
     }
 }
 
-fn ensure_running(run: &AgentRun) -> Result<(), AgentRunError> {
+pub(crate) fn ensure_running(run: &AgentRun) -> Result<(), AgentRunError> {
     (run.status == AgentRunStatus::Running)
         .then_some(())
         .ok_or(AgentRunError::TerminalRun)
