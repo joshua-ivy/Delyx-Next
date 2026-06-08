@@ -61,7 +61,7 @@ fn detect_executable(command: &str, path_var: &OsStr, path_ext: &str) -> (Adapte
     }
 }
 
-fn find_executable(command: &str, path_var: &OsStr, path_ext: &str) -> Option<PathBuf> {
+pub(crate) fn find_executable(command: &str, path_var: &OsStr, path_ext: &str) -> Option<PathBuf> {
     let names = executable_names(command, path_ext);
     env::split_paths(path_var).find_map(|directory| {
         names

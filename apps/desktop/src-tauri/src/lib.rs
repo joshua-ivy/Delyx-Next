@@ -163,6 +163,8 @@ mod review_persistence_tests;
 mod review_tests;
 pub mod runtime_bridge;
 mod runtime_bridge_tests;
+pub mod sandbox_capability;
+mod sandbox_capability_tests;
 pub mod skills;
 pub mod skills_bridge;
 mod skills_bridge_tests;

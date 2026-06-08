@@ -231,11 +231,19 @@ Current Codex-inspired local adaptation:
   duplicated, denied approvals block launch, and expired external-agent or
   terminal approvals are requeued with fresh bridge client IDs so persisted
   approval dedupe cannot revive stale execution authority.
-- Claude Code is currently detection and command-contract preview only. The
-  Phase 2 checklist now tracks live Claude launch depth, but no Claude launch
-  path should be exposed until corrected CLI flags, approval gates, isolation,
-  transcript parsing, diff capture, and failure mapping are implemented and
-  tested.
+- Claude Code now has a live approval-gated launch path
+  (`external_agent_run_claude`) that reuses the same generic external-agent
+  worker, approval, isolation, checkpoint, and diff behavior as Codex. The
+  command contract uses `--allowedTools`, `--verbose`, and a bounded
+  `--max-turns`, and a `stream-json` parser maps assistant/tool/edited-file
+  events into the transcript and marks the artifact failed on `result.is_error`.
+  Remaining depth: verifying flags against an installed Claude binary and
+  cross-checking parser-derived edited paths against checkpoint bytes.
+- `sandbox_capability` is a read-only command adapted from Codex sandbox
+  capability detection as a design reference only. It reports the isolation
+  Delyx actually offers (checkpoint isolation wired; git worktrees available when
+  git is on PATH but not yet used by Delyx; no OS process sandbox backend) and
+  imports no OS-specific sandbox backend.
 
 ## Source File Size Budget
 

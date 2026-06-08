@@ -44,7 +44,7 @@ fn adapter_status(adapter: ExternalAgentAvailability) -> ExternalAgentAdapterSta
 fn adapter_detail(kind: ExternalAgentKind, detail: String) -> String {
     match kind {
         ExternalAgentKind::ClaudeCode => {
-            format!("{detail} Detection and command-contract preview only; launch is not enabled.")
+            format!("{detail} Approval-gated read and write launch is available; every run still requires external-agent and terminal approvals.")
         }
         _ => detail,
     }

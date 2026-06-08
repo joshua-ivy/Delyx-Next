@@ -31,7 +31,9 @@ mod tests {
         assert_eq!(status.adapters[0].kind, "codex_cli");
         assert_eq!(status.adapters[0].status, "available");
         assert_eq!(status.adapters[1].status, "missing");
-        assert!(status.adapters[1].detail.contains("preview only"));
+        assert!(status.adapters[1]
+            .detail
+            .contains("Approval-gated read and write launch"));
         assert_eq!(status.adapters[2].kind, "generic_terminal");
     }
 

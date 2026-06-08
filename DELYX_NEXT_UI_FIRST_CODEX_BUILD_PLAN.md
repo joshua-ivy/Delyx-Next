@@ -139,7 +139,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 223/256 checked, 33 open, 87.1%.
+- Phase 2 checkbox progress: 224/256 checked, 32 open, 87.5%.
 - Phase 2 track progress: 5/12 complete, 7/12 in progress.
 - Complete tracks: D3, D4, D6, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D8, D11, D12.
@@ -384,7 +384,8 @@ Progress board:
 - [ ] D11 - Codex Reference Salvage Track (in progress; command prep/receipts/read-only Codex launch adapted)
   - [x] ~~Use `docs/CODEX_REFERENCE_AUDIT.md` as the pick list.~~
   - [x] ~~Pull only pieces that reduce risk or save real implementation time.~~
-  - [ ] Candidate direct/adapt pieces still open: exec policy decisions, keyring store, Git baseline/diff helpers, and sandbox capability detection.
+  - [x] ~~Adapted sandbox capability detection as a read-only `sandbox_capability` command: it truthfully reports checkpoint isolation (wired), git-worktree availability (when git is on PATH; not yet used by Delyx), and OS process sandbox (not wired) without importing any OS sandbox backend, per the audit's design-reference rule. Covered by `sandbox_capability_tests`.~~
+  - [ ] Candidate direct/adapt pieces still open: exec policy decisions, keyring store, and Git baseline/diff helpers.
   - [x] ~~Pulled/adapted: PowerShell UTF-8 command prep, read-only Codex CLI launch contract, typed command execution receipts, scheduler next-action state, and apply-patch intent/delta preflight.~~
   - [x] ~~Codex apply-patch evaluation now exists as a local patch-engine adaptation: proposed files are classified as create/modify before apply, no-op file proposals are rejected before approval/write, and the UI-ready delta kind persists through SQLite reload.~~
   - [x] ~~Avoid importing Codex core, generated protocol macros, cloud auth, or broad parser stacks until a PR proves the need.~~

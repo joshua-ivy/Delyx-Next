@@ -134,6 +134,7 @@ fn main() {
             delyx_next_desktop::review_bridge::review_snapshot,
             delyx_next_desktop::runtime_bridge::ollama_chat,
             delyx_next_desktop::runtime_bridge::runtime_status,
+            delyx_next_desktop::sandbox_capability::sandbox_capability,
             delyx_next_desktop::skills_bridge::skill_activate,
             delyx_next_desktop::skills_bridge::skill_disable,
             delyx_next_desktop::skills_bridge::skill_import,
