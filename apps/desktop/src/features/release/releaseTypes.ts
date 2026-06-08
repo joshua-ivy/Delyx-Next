@@ -1,4 +1,4 @@
-export type ReleaseSmokeStatus = "passed" | "not_loaded";
+export type ReleaseSmokeStatus = "failed" | "passed" | "not_loaded";
 export type SigningStatus = "unsigned_dev" | "signed" | "missing_certificate";
 
 export interface ReleaseStateView {
@@ -6,9 +6,18 @@ export interface ReleaseStateView {
   bundleTarget: string;
   installer: string;
   smokeStatus: ReleaseSmokeStatus;
+  smoke: ReleaseSmokeStateView;
   signing: SigningStateView;
   supportBundle: SupportBundleStateView;
   updateMetadata: UpdateMetadataStateView;
+}
+
+export interface ReleaseSmokeStateView {
+  status: ReleaseSmokeStatus;
+  detail: string;
+  installerPath?: string;
+  command?: string;
+  capturedAt?: string;
 }
 
 export interface SigningStateView {

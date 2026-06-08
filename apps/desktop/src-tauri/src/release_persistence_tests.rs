@@ -1,9 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use crate::release::{default_release_profile, export_support_bundle};
+    use crate::release::{
+        default_release_profile, export_support_bundle, ReleaseSmokeRecord, ReleaseSmokeStatus,
+    };
     use crate::release_persistence::{
-        load_profile_from_path, load_support_bundle_from_path, save_profile_to_path,
-        save_support_bundle_to_path,
+        load_profile_from_path, load_smoke_from_path, load_support_bundle_from_path,
+        save_profile_to_path, save_smoke_to_path, save_support_bundle_to_path,
     };
     use std::fs;
     use std::path::PathBuf;
@@ -25,14 +27,23 @@ mod tests {
             ],
             42,
         );
+        let smoke = ReleaseSmokeRecord {
+            captured_at: "2026-06-08T00:00:00.000Z".to_string(),
+            command: "npm run smoke:tauri".to_string(),
+            detail: "Tauri smoke passed with NSIS installer artifact.".to_string(),
+            installer_path: "target/release/bundle/nsis/Delyx Next_0.0.0_x64-setup.exe".to_string(),
+            status: ReleaseSmokeStatus::Passed,
+        };
 
         save_profile_to_path(&profile, &path).unwrap();
         save_support_bundle_to_path(&bundle, &path).unwrap();
+        save_smoke_to_path(&smoke, &path).unwrap();
         let bytes = fs::read(&path).unwrap();
         assert!(bytes.starts_with(b"SQLite format 3"));
 
         let loaded_profile = load_profile_from_path(&path).unwrap().unwrap();
         let loaded_bundle = load_support_bundle_from_path(&path).unwrap().unwrap();
+        let loaded_smoke = load_smoke_from_path(&path).unwrap().unwrap();
         assert_eq!(
             loaded_profile.signing.digest_algorithm.as_deref(),
             Some("sha256")
@@ -41,6 +52,8 @@ mod tests {
         assert_eq!(loaded_bundle.config_summary[0].value, "[redacted]");
         assert_eq!(loaded_bundle.config_summary[1].value, "C:/work");
         assert_eq!(loaded_bundle.logs[1].line, "[redacted log line]");
+        assert_eq!(loaded_smoke.status, ReleaseSmokeStatus::Passed);
+        assert_eq!(loaded_smoke.command, "npm run smoke:tauri");
         assert!(!format!("{:?}", loaded_bundle).contains("sk-test"));
         assert!(!format!("{:?}", loaded_bundle).contains("abc123"));
         let _ = fs::remove_file(path);

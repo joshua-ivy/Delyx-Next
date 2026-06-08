@@ -195,6 +195,15 @@ CREATE TABLE IF NOT EXISTS support_bundles (
   secret_policy TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS release_smoke_records (
+  id TEXT PRIMARY KEY NOT NULL,
+  status TEXT NOT NULL,
+  installer_path TEXT NOT NULL,
+  command TEXT NOT NULL,
+  captured_at TEXT NOT NULL,
+  detail TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS test_artifact_records (
   id TEXT PRIMARY KEY NOT NULL,
   run_id TEXT NOT NULL,

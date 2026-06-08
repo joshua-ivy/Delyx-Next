@@ -1,9 +1,13 @@
-use crate::release::{ReleaseProfile, SigningPolicy, SupportBundle, UpdateMetadata};
+use crate::release::{
+    ReleaseProfile, ReleaseSmokeRecord, ReleaseSmokeStatus, SigningPolicy, SupportBundle,
+    UpdateMetadata,
+};
 use rusqlite::{params, OptionalExtension};
 use std::path::Path;
 
 const PROFILE_ID: &str = "default";
 const SUPPORT_BUNDLE_ID: &str = "latest";
+const SMOKE_ID: &str = "latest";
 
 pub fn save_profile_to_path(profile: &ReleaseProfile, path: &Path) -> Result<(), String> {
     let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_string)?;
@@ -143,6 +147,78 @@ pub fn load_support_bundle_from_path(path: &Path) -> Result<Option<SupportBundle
             },
         )
         .transpose()
+}
+
+pub fn save_smoke_to_path(smoke: &ReleaseSmokeRecord, path: &Path) -> Result<(), String> {
+    let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_string)?;
+    connection
+        .execute(
+            "INSERT INTO release_smoke_records
+             (id, status, installer_path, command, captured_at, detail)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+             ON CONFLICT(id) DO UPDATE SET
+               status = excluded.status,
+               installer_path = excluded.installer_path,
+               command = excluded.command,
+               captured_at = excluded.captured_at,
+               detail = excluded.detail",
+            params![
+                SMOKE_ID,
+                smoke_status_key(smoke.status),
+                &smoke.installer_path,
+                &smoke.command,
+                &smoke.captured_at,
+                &smoke.detail,
+            ],
+        )
+        .map(|_| ())
+        .map_err(sql_string)
+}
+
+pub fn load_smoke_from_path(path: &Path) -> Result<Option<ReleaseSmokeRecord>, String> {
+    let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_string)?;
+    connection
+        .query_row(
+            "SELECT status, installer_path, command, captured_at, detail
+             FROM release_smoke_records WHERE id = ?1",
+            [SMOKE_ID],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                ))
+            },
+        )
+        .optional()
+        .map_err(sql_string)?
+        .map(|(status, installer_path, command, captured_at, detail)| {
+            Ok(ReleaseSmokeRecord {
+                captured_at,
+                command,
+                detail,
+                installer_path,
+                status: parse_smoke_status(&status)?,
+            })
+        })
+        .transpose()
+}
+
+fn smoke_status_key(status: ReleaseSmokeStatus) -> &'static str {
+    match status {
+        ReleaseSmokeStatus::Failed => "failed",
+        ReleaseSmokeStatus::Passed => "passed",
+    }
+}
+
+fn parse_smoke_status(value: &str) -> Result<ReleaseSmokeStatus, String> {
+    match value {
+        "failed" => Ok(ReleaseSmokeStatus::Failed),
+        "passed" => Ok(ReleaseSmokeStatus::Passed),
+        _ => Err(format!("Unsupported release smoke status: {value}")),
+    }
 }
 
 fn sql_string(error: rusqlite::Error) -> String {

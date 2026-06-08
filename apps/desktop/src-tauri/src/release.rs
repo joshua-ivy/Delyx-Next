@@ -48,6 +48,21 @@ pub struct SupportBundle {
     pub secret_policy: String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReleaseSmokeStatus {
+    Failed,
+    Passed,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReleaseSmokeRecord {
+    pub status: ReleaseSmokeStatus,
+    pub installer_path: String,
+    pub command: String,
+    pub captured_at: String,
+    pub detail: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct SupportConfigEntry {
     pub key: String,

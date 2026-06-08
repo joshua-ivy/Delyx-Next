@@ -15,7 +15,7 @@ export function releaseBlock(state: ReleaseStateView) {
         <div class="dh"><span class="fn">Release readiness</span><span class="dst">${escapeHtml(state.platform)} ${escapeHtml(state.bundleTarget)}</span></div>
         <div class="dc">
           <div class="dr"><span class="g">build</span><span class="x">Windows dev build config &middot; ${escapeHtml(state.installer)}</span></div>
-          <div class="dr"><span class="g">smoke</span><span class="x">${escapeHtml(releaseSmokeLabel(state.smokeStatus))}</span></div>
+          <div class="dr"><span class="g">smoke</span><span class="x">${escapeHtml(releaseSmokeLabel(state))}</span></div>
           <div class="dr"><span class="g">sign</span><span class="x">${escapeHtml(state.signing.status)} &middot; ${escapeHtml(state.signing.message)}</span></div>
           <div class="dr"><span class="g">bundle</span><span class="x">${escapeHtml(supportBundleLabel(state))}</span></div>
           <div class="dr"><span class="g">update</span><span class="x">${escapeHtml(state.updateMetadata.status)} &middot; ${escapeHtml(state.updateMetadata.channel)}</span></div>
@@ -30,12 +30,13 @@ export function hasReleaseReadiness(state: ReleaseStateView) {
     || state.signing.status !== "unsigned_dev";
 }
 
-function releaseSmokeLabel(status: ReleaseStateView["smokeStatus"]) {
+function releaseSmokeLabel(state: ReleaseStateView) {
   const labels: Record<ReleaseStateView["smokeStatus"], string> = {
+    failed: "Release smoke failed with a captured artifact.",
     not_loaded: "No release smoke artifact loaded in this UI session.",
     passed: "Release smoke passed with a captured artifact.",
   };
-  return labels[status];
+  return state.smoke.detail || labels[state.smokeStatus];
 }
 
 function supportBundleLabel(state: ReleaseStateView) {

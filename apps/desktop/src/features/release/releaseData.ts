@@ -5,6 +5,10 @@ export const currentReleaseState: ReleaseStateView = {
   bundleTarget: "nsis",
   installer: "unsigned dev installer",
   smokeStatus: "not_loaded",
+  smoke: {
+    status: "not_loaded",
+    detail: "No release smoke artifact loaded in this UI session.",
+  },
   signing: {
     status: "unsigned_dev",
     message: "Signing checks are clear: no certificate, digest, timestamp, or sign command is configured for dev builds.",
