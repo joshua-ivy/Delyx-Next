@@ -78,8 +78,10 @@ complete:
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun scheduler, multi-node executor, repair loop, or hook
   runner yet.
-- Frontend checks are smoke/source-contract verifiers, not behavioral
-  component/interaction tests.
+- Frontend checks now include a narrow Vitest/React Testing Library component
+  test path, starting with FocusThread's approval-gated patch apply behavior.
+  The older smoke/source-contract verifiers remain as guardrails, not proof of
+  behavior.
 - The default workbench now uses a React Focus shell ported from the provided
   Focus prototype: centered first-run composer, rail navigation, command
   palette, thread switcher, model picker, settings, and artifact-driven active

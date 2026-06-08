@@ -8,7 +8,7 @@ Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - `cargo fmt --check` and `cargo test --workspace`: 212 passed, 0 failed.
-- `npm run typecheck`, `npm test` (smoke/source-contract), `npm run build`, `npm run smoke:ui`, and `npm run smoke:tauri`: pass.
+- `npm run typecheck`, `npm test` (smoke/source-contract plus first component behavior test), `npm run build`, `npm run smoke:ui`, and `npm run smoke:tauri`: pass.
 - Browser visual checks passed for the no-thread cockpit at 1280x720 and 390x844 before the Focus port: no fake progress/diff/terminal/metric blocks, no inspector, no horizontal overflow. Focus UI browser checks must stay current after each visual pass.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
@@ -161,6 +161,8 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - [ ] D3 - Behavioral Frontend Tests
   - Add Vitest + React Testing Library or Playwright interaction tests.
+  - Added Vitest + React Testing Library as a real component-test path, separate from the existing smoke/source-contract verifiers.
+  - First behavior test covers FocusThread patch apply visibility/click behavior: Apply appears only for proposed patches with matching approved approvals.
   - Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - Keep grep/source verifiers only as smoke guards.
   - Stop using source-substring checks as proof of UI behavior.
@@ -252,7 +254,7 @@ cargo test --workspace
 git diff --check
 ```
 
-Current warning: `npm test` is not a real frontend behavior suite yet. It is a smoke/source-contract gate until D3 lands.
+Current warning: `npm test` now includes one real component behavior test, but broad frontend behavior coverage is still missing until D3 is expanded.
 
 For eval work:
 
