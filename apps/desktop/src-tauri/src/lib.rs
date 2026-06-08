@@ -110,6 +110,8 @@ mod thread_run_bridge_parse;
 mod thread_run_bridge_state;
 mod thread_run_bridge_tests;
 pub mod thread_run_bridge_views;
+pub mod thread_run_final_answer;
+mod thread_run_final_answer_tests;
 pub mod thread_run_persistence;
 mod thread_run_persistence_tests;
 pub mod threads;

@@ -111,6 +111,7 @@ fn main() {
             delyx_next_desktop::test_runner_bridge::test_run_approved,
             delyx_next_desktop::test_runner_bridge::test_snapshot,
             delyx_next_desktop::thread_run_bridge::thread_archive,
+            delyx_next_desktop::thread_run_final_answer::thread_final_answer_record,
             delyx_next_desktop::thread_run_bridge::thread_message_append,
             delyx_next_desktop::thread_run_bridge::thread_run_create,
             delyx_next_desktop::thread_run_bridge::thread_run_snapshot,

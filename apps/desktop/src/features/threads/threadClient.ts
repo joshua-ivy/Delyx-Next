@@ -91,6 +91,23 @@ export async function appendThreadMessageOverBridge(
   }
 }
 
+export async function finalizeThreadRunOverBridge(
+  threadId: string,
+  summary: string,
+  updatedAt: string,
+): Promise<ThreadRunRecordView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<ThreadRunRecordView>("thread_final_answer_record", {
+      request: { summary, threadId, updatedAt },
+    });
+  } catch {
+    return undefined;
+  }
+}
+
 function hasTauriRuntime() {
   return Boolean((globalThis as Record<string, unknown>).__TAURI_INTERNALS__);
 }

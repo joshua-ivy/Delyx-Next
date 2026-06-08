@@ -60,9 +60,10 @@ complete:
   with ID continuity. AgentRun EvidenceRecords persist source IDs, locators,
   quotes, hashes, retrieval timestamps, and relevance metadata. AgentOutcome
   evidence/test support ID links also persist and the thread/run snapshot
-  bridge exposes receipts and outcome support links to the UI. Governance
-  mutation bridges and automatic final-answer support synthesis are still not
-  live.
+  bridge exposes receipts and outcome support links to the UI. A narrow
+  final-answer support bridge now links existing AgentRun EvidenceRecord IDs and
+  passed persisted test artifact IDs into AgentOutcome and saves the result to
+  SQLite. Remaining governance/action bridges are still not live.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -438,9 +439,12 @@ The Rust `EvidenceStore` now persists source-backed research receipts to
 SQLite, including run IDs, source kind, title, locator, excerpt, stance, and
 normalized claim keys. This preserves research receipts across restart, but it
 does not yet build final-answer support records automatically from every file,
-diff, command, test, approval, model call, or external-agent artifact. AgentRun
-outcomes can now carry persisted evidence/test support ID links, so the UI can
-inspect declared support once the runtime attaches it.
+diff, command, approval, model call, or external-agent artifact. The
+`thread_final_answer_record` bridge can finish a thread by linking current
+AgentRun evidence IDs and passed persisted test artifact IDs, emitting a
+visible support-synthesis event, and persisting those AgentOutcome support
+links. It does not infer claim support from prose or make unsupported/tested
+states complete by itself.
 
 ## Data Models
 

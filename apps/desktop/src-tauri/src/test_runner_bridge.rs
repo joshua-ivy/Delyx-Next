@@ -32,6 +32,17 @@ impl TestRunnerBridgeState {
             None => Ok(()),
         }
     }
+
+    pub(crate) fn with_store<T>(
+        &self,
+        read: impl FnOnce(&TestRunnerBridgeStore) -> T,
+    ) -> Result<T, String> {
+        let store = self
+            .store
+            .lock()
+            .map_err(|_| "Test bridge lock failed.".to_string())?;
+        Ok(read(&store))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

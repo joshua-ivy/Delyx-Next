@@ -40,7 +40,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Current Reality
 
 - PR 1-18.1 breadth is skeleton-complete.
-- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state, approved test artifacts, patch proposal diffs, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automation contracts/scheduled runs, and release/support-bundle state have narrow persisted mutation bridges; automatic final-answer support synthesis plus remaining action bridges are still missing.
+- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state, approved test artifacts, patch proposal diffs, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automation contracts/scheduled runs, release/support-bundle state, and final-answer support synthesis have narrow persisted mutation bridges; remaining action bridges are still missing.
 - There is no full execution engine: no scheduler, executor, resume engine, repair loop, or hook runner.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
@@ -139,8 +139,9 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Research EvidenceStore records now save run IDs, source kind, title, locator, excerpt, stance, normalized claim keys, and post-reload ID continuity to SQLite.
   - AgentRun EvidenceRecords now save source IDs, URIs, quotes, hashes, retrieval timestamps, and relevance metadata to SQLite; thread/run snapshots expose those receipts back to the UI instead of returning an empty evidence array.
   - AgentOutcome now saves linked evidence record IDs and test artifact IDs to SQLite; thread/run snapshots expose those support links to the UI.
-  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, memory mutation reload, skill reload, skill mutation reload, automation reload, automation contract/scheduled-run mutation reload, release reload, release mutation reload, support-bundle reload, test artifact reload, patch proposal reload, review report reload, external-agent run reload, research evidence reload, AgentOutcome support reload, UI-ready bridge snapshots, and SQLite file format.
-  - Persist remaining automatic final-answer support records and action bridges that still live only inside detached runtime state.
+  - Final-answer support synthesis now has a narrow Tauri bridge that links existing AgentRun EvidenceRecord IDs and passed persisted test artifact IDs into AgentOutcome, records a visible `final_answer.support_synthesized` event, marks the thread done, and saves the result to SQLite. It does not generate prose, infer unsupported claims, or make the full agent loop autonomous.
+  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, memory mutation reload, skill reload, skill mutation reload, automation reload, automation contract/scheduled-run mutation reload, release reload, release mutation reload, support-bundle reload, test artifact reload, patch proposal reload, review report reload, external-agent run reload, research evidence reload, AgentOutcome support reload, final-answer support synthesis reload, UI-ready bridge snapshots, and SQLite file format.
+  - Persist remaining action bridges that still live only inside detached runtime state.
   - Next: add mutation/action bridges for the remaining persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
   - Add migration/repository tests that prove data survives reload.
 
@@ -194,6 +195,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - If no, keep them detection/contract-preview only and label them that way in UI.
 
 - [ ] D9 - Evidence and Final Answer Receipts
+  - Added a narrow final-answer support synthesis bridge for existing AgentRun evidence and passed persisted test artifacts.
   - Build final-answer support records from files read, commands run, tests executed, diffs produced, model calls, approvals, and evidence.
   - Make unsupported, insufficient, partial, and untested final-answer states visible.
 
