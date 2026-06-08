@@ -77,6 +77,7 @@ mod automation_persistence_tests;
 mod automation_tests;
 pub mod command_exec;
 mod command_exec_tests;
+mod d1_shared_store_tests;
 pub mod desktop_shell;
 pub mod explore_plan;
 mod explore_plan_tests;

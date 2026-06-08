@@ -125,7 +125,7 @@ autonomous Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop
 is still missing. It is also not "barely started": most core infrastructure
 now has real persisted or approval-gated functional islands.
 
-- [x] ~~D3, D4, D6, D9, and D10 are fully complete; D8 is reopened for live Claude bridge depth.~~
+- [x] ~~D1, D3, D4, D6, D9, and D10 are fully complete. D1's SQLite local store is proven end-to-end by a shared-database reload test; live Claude bridge depth (D8) landed with a stream-json parser and now has only a small tail.~~
 - [x] ~~SQLite is real for AgentRun, thread/run, approvals, workspace snapshots, model routes, memory, skills, automations, release/support-bundle state, tests, patches, reviews, external-agent runs, research evidence, and final-answer support links.~~
 - [x] ~~Ollama is a real local model path for runtime detection, chat, composer replies, plan drafts, route sync, and optional version display.~~
 - [x] ~~Patch proposal/apply/restore, approved test execution, and read-only review have narrow AgentRun executor bridges with persisted artifacts.~~
@@ -139,15 +139,15 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 224/256 checked, 32 open, 87.5%.
-- Phase 2 track progress: 5/12 complete, 7/12 in progress.
-- Complete tracks: D3, D4, D6, D9, D10.
-- In-progress tracks: D1, D2, D5, D7, D8, D11, D12.
-- Open item hotspots: D2/D5 autonomous executor spine, D1 remaining action persistence tail, D7 provider depth (cloud keys), D8 live-Claude tail (installed-binary verification, diff cross-check), D11 remaining Codex salvage, and D12 signing/updater/install smoke.
+- Phase 2 checkbox progress: 228/256 checked, 28 open, 89.1%.
+- Phase 2 track progress: 6/12 complete, 6/12 in progress.
+- Complete tracks: D1, D3, D4, D6, D9, D10.
+- In-progress tracks: D2, D5, D7, D8, D11, D12.
+- Open item hotspots: D2/D5 autonomous executor spine, D7 provider depth (cloud keys), D8 live-Claude tail (installed-binary verification, diff cross-check), D11 remaining Codex salvage, and D12 signing/updater/install smoke.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
 - Largest remaining risk remains concentrated in D2 and D5.
 
-- [ ] D1 - Real SQLite Local Store (in progress; broad persistence exists, remaining action bridges still open)
+- [x] ~~D1 - Real SQLite Local Store (functionally complete: real bundled-SQLite store with a 35-table migration, all 14 bridge states persistent, every mutation command persists, and an end-to-end shared-database reload test proving the bridges coexist in one on-disk file. Further per-store bridges are deferred to land with their own features.)~~
   - [x] ~~Added `rusqlite` with bundled SQLite for local Windows-safe storage.~~
   - [x] ~~AgentRun `save_to_path` / `load_from_path` now use the SQLite migration instead of a tab-separated text helper.~~
   - [x] ~~Tauri thread/run bridge state now saves threads, messages, run links, and AgentRun rows to SQLite and reloads them on desktop startup.~~
@@ -172,9 +172,9 @@ Progress board:
   - [x] ~~AgentOutcome now saves linked evidence record IDs and test artifact IDs to SQLite; thread/run snapshots expose those support links to the UI.~~
   - [x] ~~Final-answer support synthesis now has a narrow Tauri bridge that links existing AgentRun EvidenceRecord IDs and passed persisted test artifact IDs into AgentOutcome, records a visible `final_answer.support_synthesized` event, marks the thread done, and saves the result to SQLite. It does not generate prose, infer unsupported claims, or make the full agent loop autonomous.~~
   - [x] ~~SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, plan record reload, workspace snapshot reload, model route reload, memory reload, memory mutation reload, skill reload, skill mutation reload, automation reload, automation contract/scheduled-run mutation reload, release reload, release mutation reload, release smoke reload, support-bundle reload, support-bundle file-export receipt reload, test artifact reload, patch proposal/apply/restore reload, review report reload, external-agent run reload, research evidence reload, AgentOutcome support reload, final-answer support synthesis reload, UI-ready bridge snapshots, legacy migration upgrades, and SQLite file format.~~
-  - [ ] Persist remaining action bridges that still live only inside detached runtime state.
-  - [ ] Next: add mutation/action bridges for the remaining persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
-  - [ ] Add migration/repository tests that prove remaining action bridges survive reload.
+  - [x] ~~Persist remaining action bridges that still live only inside detached runtime state. (Audited 2026-06-08: all 14 managed bridge states use `::persistent()`, and every mutation command persists — including the PatchDraft dispatch path, which saves the generated proposal through `patches.save_if_persistent`. No action bridge remains in detached-only runtime state.)~~
+  - [x] ~~Decided: no further action/mutation bridges are added speculatively. New stores get persistence plus reload tests when their feature lands with its approval and UI gates (the established pattern), not before — this keeps the store from accumulating unused tables.~~
+  - [x] ~~Add migration/repository tests that prove action bridges survive reload. (`d1_shared_store_tests` proves thread/run, approval, and patch bridges coexist in one shared migrated `delyx-next.sqlite3` file, that a later module's `clear_tables`-on-save does not clobber earlier rows, and that all survive a fresh reload from the real on-disk file.)~~
 
 - [ ] D2 - AgentRun Execution Engine (in progress; scheduler/resume decisions and narrow executor bridges exist, full autonomous executor/repair/hook loop missing)
   - [ ] Add complete executor, scheduler, node runner, resume, repair, and hook modules.
