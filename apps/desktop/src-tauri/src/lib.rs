@@ -1,5 +1,6 @@
 pub mod agent_drive;
 mod agent_drive_apply_tests;
+pub mod agent_drive_approvals;
 pub mod agent_drive_bridge;
 mod agent_drive_steps;
 mod agent_drive_tests;

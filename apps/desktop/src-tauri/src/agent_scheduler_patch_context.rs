@@ -183,7 +183,7 @@ fn scope_includes(paths: Option<&[String]>, target: &str) -> bool {
         .unwrap_or(false)
 }
 
-fn repair_relative_path(file_path: &str, project_path: &str) -> Option<String> {
+pub(crate) fn repair_relative_path(file_path: &str, project_path: &str) -> Option<String> {
     let normalized = file_path.replace('\\', "/");
     let root = project_path
         .replace('\\', "/")

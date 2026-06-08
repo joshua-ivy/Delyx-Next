@@ -40,7 +40,7 @@ impl ApprovalBridgeState {
         Ok(result)
     }
 
-    fn persist(&self, store: &ApprovalBridgeStore) -> Result<(), String> {
+    pub(crate) fn persist(&self, store: &ApprovalBridgeStore) -> Result<(), String> {
         if let Some(path) = &self.database_path {
             crate::approval_persistence::save_to_path(store, path)?;
         }

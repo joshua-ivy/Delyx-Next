@@ -1,8 +1,9 @@
 #[cfg(test)]
 mod tests {
     use crate::agent_drive::{drive_run, AgentDriveContext};
+    use crate::agent_drive_approvals::ApprovalExpiry;
     use crate::agent_run::AgentRunStatus;
-    use crate::approval_bridge::ApprovalBridgeStore;
+    use crate::approval_bridge::{approval_snapshot_from_store, ApprovalBridgeStore};
     use crate::patch_bridge::{DiffLineView, PatchBridgeStore, PatchFileView, PatchProposalView};
     use crate::review_bridge::ReviewBridgeStore;
     use crate::test_runner_bridge::TestRunnerBridgeStore;
@@ -25,13 +26,13 @@ mod tests {
             .push(patch(&record.run.id, "proposed", "let value = 1;"));
         let mut tests = TestRunnerBridgeStore::default();
         let mut reviews = ReviewBridgeStore::default();
-        let approvals = ApprovalBridgeStore::default();
+        let mut approvals = ApprovalBridgeStore::default();
         let mut persists = 0;
 
         let outcome = drive_run(
             &mut context(
                 &mut threads,
-                &approvals,
+                &mut approvals,
                 &mut patches,
                 &mut tests,
                 &mut reviews,
@@ -68,12 +69,12 @@ mod tests {
             .push(patch(&record.run.id, "restored", "let value = 1;"));
         let mut tests = TestRunnerBridgeStore::default();
         let mut reviews = ReviewBridgeStore::default();
-        let approvals = ApprovalBridgeStore::default();
+        let mut approvals = ApprovalBridgeStore::default();
         let mut persists = 0;
 
         let mut ctx = context(
             &mut threads,
-            &approvals,
+            &mut approvals,
             &mut patches,
             &mut tests,
             &mut reviews,
@@ -120,13 +121,13 @@ mod tests {
             .push(patch(&record.run.id, "restored", "let value = 1;"));
         let mut tests = TestRunnerBridgeStore::default();
         let mut reviews = ReviewBridgeStore::default();
-        let approvals = ApprovalBridgeStore::default();
+        let mut approvals = ApprovalBridgeStore::default();
         let mut persists = 0;
 
         let outcome = drive_run(
             &mut context(
                 &mut threads,
-                &approvals,
+                &mut approvals,
                 &mut patches,
                 &mut tests,
                 &mut reviews,
@@ -146,9 +147,50 @@ mod tests {
         let _ = fs::remove_file(db);
     }
 
+    #[test]
+    fn drive_creates_patch_apply_approval_when_expiry_provided() {
+        let db = temp_db("drive-create-apply-approval");
+        let mut threads = ThreadRunStore::default();
+        let record = create_thread_run_record(&mut threads, thread_request()).unwrap();
+        let mut patches = PatchBridgeStore::default();
+        patches
+            .records
+            .push(patch(&record.run.id, "proposed", "let value = 1;"));
+        let mut tests = TestRunnerBridgeStore::default();
+        let mut reviews = ReviewBridgeStore::default();
+        let mut approvals = ApprovalBridgeStore::default();
+
+        let mut ctx = context(
+            &mut threads,
+            &mut approvals,
+            &mut patches,
+            &mut tests,
+            &mut reviews,
+            &db,
+        );
+        ctx.approval_expiry = Some(ApprovalExpiry {
+            iso: "2999-01-01T00:00:00.000Z".to_string(),
+            ms: 32_503_680_000_000,
+        });
+        let outcome = drive_run(&mut ctx, |_, _, _, _| Ok(())).unwrap();
+
+        assert_eq!(outcome.stopped_because.kind, "needs_patch_apply_approval");
+        // The driver created the pending apply card itself, but did not grant it
+        // or apply the patch.
+        let cards = approval_snapshot_from_store(&approvals, &record.run.id);
+        let created = cards
+            .iter()
+            .find(|card| card.node_id == format!("{}-patch-apply-patch-1", record.run.id))
+            .expect("driver should create the apply approval card");
+        assert_eq!(created.status, "pending");
+        assert_eq!(created.action_type, "edit_file");
+        assert_eq!(patches.records[0].status, "proposed");
+        let _ = fs::remove_file(db);
+    }
+
     fn context<'a>(
         threads: &'a mut ThreadRunStore,
-        approvals: &'a ApprovalBridgeStore,
+        approvals: &'a mut ApprovalBridgeStore,
         patches: &'a mut PatchBridgeStore,
         tests: &'a mut TestRunnerBridgeStore,
         reviews: &'a mut ReviewBridgeStore,
@@ -156,6 +198,7 @@ mod tests {
     ) -> AgentDriveContext<'a> {
         AgentDriveContext {
             approvals,
+            approval_expiry: None,
             final_summary: None,
             now_ms: 42,
             patches,

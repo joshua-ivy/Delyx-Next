@@ -1,3 +1,4 @@
+use crate::agent_drive_approvals::{create_apply_approval, create_repair_approval, ApprovalExpiry};
 use crate::agent_drive_steps::{record_final_support, run_patch_apply, run_review, run_tests};
 use crate::agent_drive_types::{
     outcome, step, stop, stop_with_approvals, stop_with_proposal, stop_with_review,
@@ -19,7 +20,8 @@ use std::path::Path;
 pub const MAX_DRIVE_STEPS: usize = 24;
 
 pub struct AgentDriveContext<'a> {
-    pub approvals: &'a ApprovalBridgeStore,
+    pub approvals: &'a mut ApprovalBridgeStore,
+    pub approval_expiry: Option<ApprovalExpiry>,
     pub final_summary: Option<String>,
     pub now_ms: u64,
     pub patches: &'a mut PatchBridgeStore,
@@ -134,6 +136,7 @@ pub fn drive_run(
                 ));
             }
             "request_patch_apply_approval" => {
+                create_apply_approval(context, decision.proposal_id.as_deref())?;
                 return Ok(outcome(
                     context,
                     steps,
@@ -145,6 +148,11 @@ pub fn drive_run(
                 ));
             }
             "repair_requested" => {
+                create_repair_approval(
+                    context,
+                    decision.review_report_id.as_deref(),
+                    decision.finding_id.as_deref(),
+                )?;
                 return Ok(outcome(
                     context,
                     steps,

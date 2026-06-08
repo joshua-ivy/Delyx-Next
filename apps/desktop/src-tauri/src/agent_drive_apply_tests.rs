@@ -36,7 +36,7 @@ mod tests {
         let outcome = drive_run(
             &mut context(
                 &mut threads,
-                &approvals,
+                &mut approvals,
                 &mut patches,
                 &mut tests,
                 &mut reviews,
@@ -74,7 +74,7 @@ mod tests {
         let outcome = drive_run(
             &mut context(
                 &mut threads,
-                &approvals,
+                &mut approvals,
                 &mut patches,
                 &mut tests,
                 &mut reviews,
@@ -94,7 +94,7 @@ mod tests {
 
     fn context<'a>(
         threads: &'a mut ThreadRunStore,
-        approvals: &'a ApprovalBridgeStore,
+        approvals: &'a mut ApprovalBridgeStore,
         patches: &'a mut PatchBridgeStore,
         tests: &'a mut TestRunnerBridgeStore,
         reviews: &'a mut ReviewBridgeStore,
@@ -102,6 +102,7 @@ mod tests {
     ) -> AgentDriveContext<'a> {
         AgentDriveContext {
             approvals,
+            approval_expiry: None,
             final_summary: None,
             now_ms: 42,
             patches,

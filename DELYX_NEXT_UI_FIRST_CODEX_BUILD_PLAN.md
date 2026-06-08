@@ -133,13 +133,13 @@ now has real persisted or approval-gated functional islands.
 - [x] ~~Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.~~
 - [x] ~~Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.~~
 - [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, Rust-owned PatchDraft/apply/test/review steps, an initial Rust driver, and one-step approval-safe dispatcher now exist.
-- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft/apply/test/review scheduler steps and an initial apply/test/review/final-support driver are Rust-owned now, and the mounted dispatcher delegates those driver-owned decisions. The remaining gap is making PatchDraft/model generation, approval-proposal creation, repair queueing, and hooks fully driver-owned.
+- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft/apply/test/review scheduler steps and an initial apply/test/review/final-support driver are Rust-owned now, and the mounted dispatcher delegates those driver-owned decisions. The driver now also creates the apply and repair approval cards itself (from a renderer-supplied expiry) and halts on a failed node. The remaining gap is making PatchDraft/model generation and hooks fully driver-owned.
 - [x] ~~Broad frontend behavior coverage now covers project/thread creation, planning, approvals, diff/test/review artifacts, evidence support, error, blocked, expired, and empty states with React Testing Library component/action tests.~~
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
 Progress board:
 
-- Phase 2 checkbox progress: 221/256 checked, 35 open, 86.3%.
+- Phase 2 checkbox progress: 223/256 checked, 33 open, 87.1%.
 - Phase 2 track progress: 5/12 complete, 7/12 in progress.
 - Complete tracks: D3, D4, D6, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D8, D11, D12.
@@ -187,9 +187,9 @@ Progress board:
   - [x] ~~Establish one canonical lock order for thread, patch, test, review, approval, plan, workspace, and external-agent stores before the driver holds multiple stores. (Documented in `agent_drive_bridge.rs`: approvals -> threads -> patches -> tests -> reviews -> plans.)~~
   - [x] ~~The driver threads one command-entry `now_ms` through scheduler and approval checks instead of rereading time per step.~~
   - [x] ~~The driver has both `MAX_DRIVE_STEPS` and a repeated-decision progress guard so non-progressing scheduler states block instead of looping.~~
-  - [ ] Make `RequestPatchApplyApproval` driver-owned: create the visible apply approval proposal, persist it, then stop without granting it.
-  - [ ] Make `RepairRequested` driver-owned: queue the scoped repair PatchDraft approval from the review finding, persist it, then stop without writing files.
-  - [ ] Make `RunPatchDraft` driver-owned inside the loop: call the selected PatchDraft worker, persist the generated proposal/model receipts, then reschedule.
+  - [x] ~~Make `RequestPatchApplyApproval` driver-owned: create the visible apply approval proposal, persist it, then stop without granting it. (`agent_drive_approvals::create_apply_approval` builds the pending `{run}-patch-apply-{proposal}` FileWrite card from a renderer-supplied expiry; the bridge persists approvals after the run. Covered by `drive_creates_patch_apply_approval_when_expiry_provided`.)~~
+  - [x] ~~Make `RepairRequested` driver-owned: queue the scoped repair PatchDraft approval from the review finding, persist it, then stop without writing files. (`create_repair_approval` builds the `{run}-repair-{report}-{finding}` card scoped to the finding's repair-relative path.)~~
+  - [ ] Make `RunPatchDraft` driver-owned inside the loop: call the selected PatchDraft worker, persist the generated proposal/model receipts, then reschedule. (Deferred: this is a live local-model call, so it stays a yield to keep the loop deterministic; see the PatchDraft worker-route decision below.)
   - [ ] Shrink the renderer scheduler dispatcher into a thin `agent_drive_run` caller once the Rust driver covers the same decisions.
   - [x] ~~Initial driver tests prove ungranted apply approvals stop without persistence, review -> final-support completes with per-step persistence, and approved patch apply performs real file I/O then yields truthfully when tests are not ready.~~
   - [x] ~~The driver now returns a typed `needs_final_summary` stop when final support is ready but no assistant answer exists, instead of throwing or generating unsupported prose.~~
