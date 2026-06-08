@@ -6,6 +6,7 @@ import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { resumeSchedulerRun } from "./appShellSchedulerActions";
+import { notifyLocalAction } from "./ShellPreferenceController";
 
 vi.mock("../features/runs/agentExecutorClient", () => ({
   resumeWaitingRunOverBridge: vi.fn(),
@@ -21,6 +22,7 @@ vi.mock("./ShellPreferenceController", () => ({
 
 const resumeBridge = vi.mocked(resumeWaitingRunOverBridge);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
+const notify = vi.mocked(notifyLocalAction);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -52,6 +54,12 @@ describe("resumeSchedulerRun", () => {
       hasSupportedTestCommand: false,
       runId: "run-1",
     }));
+  });
+
+  it("reports post-resume runnable scheduler decisions as successful", async () => {
+    await resumeSchedulerRun(stateWithPlan(["npm test"]));
+
+    expect(notify).toHaveBeenCalledWith("Tests are next.", "success");
   });
 });
 

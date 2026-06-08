@@ -44,12 +44,48 @@ mod tests {
             .wait_for_approval(&run.id, &proposal.id)
             .unwrap();
 
-        let view =
-            resume_waiting_run_record(&mut thread_store, &approvals, &request(&run.id)).unwrap();
+        let view = resume_waiting_run_record(
+            &mut thread_store,
+            &approvals,
+            &PatchBridgeStore::default(),
+            &TestRunnerBridgeStore::default(),
+            &ReviewBridgeStore::default(),
+            &request(&run.id),
+        )
+        .unwrap();
         let run = thread_store.ledger.get_run(&run.id).unwrap();
 
         assert_eq!(view.kind, "resume_after_approval");
         assert_eq!(view.approval_ids, vec![proposal.id]);
+        assert_eq!(run.status, AgentRunStatus::Running);
+    }
+
+    #[test]
+    fn scheduler_bridge_returns_post_resume_test_decision_when_ready() {
+        let mut thread_store = ThreadRunStore::default();
+        let run = thread_store.ledger.create_run("thread-1").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let proposal = seed_approval(&mut approvals, &run.id, true);
+        thread_store
+            .ledger
+            .wait_for_approval(&run.id, &proposal.id)
+            .unwrap();
+        let mut patches = PatchBridgeStore::default();
+        patches.records.push(applied_patch(&run.id));
+
+        let view = resume_waiting_run_record(
+            &mut thread_store,
+            &approvals,
+            &patches,
+            &TestRunnerBridgeStore::default(),
+            &ReviewBridgeStore::default(),
+            &request(&run.id),
+        )
+        .unwrap();
+        let run = thread_store.ledger.get_run(&run.id).unwrap();
+
+        assert_eq!(view.kind, "run_tests");
+        assert!(view.message.contains("supported test command"));
         assert_eq!(run.status, AgentRunStatus::Running);
     }
 
@@ -101,6 +137,13 @@ mod tests {
             restore_approval_id: None,
             run_id: run_id.to_string(),
             status: "proposed".to_string(),
+        }
+    }
+
+    fn applied_patch(run_id: &str) -> PatchProposalView {
+        PatchProposalView {
+            status: "applied".to_string(),
+            ..patch(run_id, "approval-applied")
         }
     }
 }

@@ -38,5 +38,9 @@ export async function resumeSchedulerRun(state: ResumeRunState) {
     state.setAgentRuns(snapshot.runs);
   }
   state.setThreadState("ready");
-  notifyLocalAction(decision.message, decision.kind === "resume_after_approval" ? "success" : "warning");
+  notifyLocalAction(decision.message, successfulDecision(decision.kind) ? "success" : "warning");
+}
+
+function successfulDecision(kind: string) {
+  return ["ready_for_final_support", "resume_after_approval", "run_patch_apply", "run_review", "run_tests"].includes(kind);
 }

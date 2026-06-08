@@ -75,6 +75,9 @@ pub fn agent_schedule_next(
 pub fn agent_resume_waiting_run(
     threads: tauri::State<ThreadRunBridgeState>,
     approvals: tauri::State<ApprovalBridgeState>,
+    patches: tauri::State<PatchBridgeState>,
+    tests: tauri::State<TestRunnerBridgeState>,
+    reviews: tauri::State<ReviewBridgeState>,
     request: AgentScheduleRequest,
 ) -> Result<AgentScheduleDecisionView, String> {
     approvals.with_engine(|engine| {
@@ -82,7 +85,26 @@ pub fn agent_resume_waiting_run(
             .store
             .lock()
             .map_err(|_| "Thread bridge lock failed.".to_string())?;
-        let decision = resume_waiting_run_record(&mut thread_store, engine, &request)?;
+        let patch_store = patches
+            .store
+            .lock()
+            .map_err(|_| "Patch bridge lock failed.".to_string())?;
+        let test_store = tests
+            .store
+            .lock()
+            .map_err(|_| "Test bridge lock failed.".to_string())?;
+        let review_store = reviews
+            .store
+            .lock()
+            .map_err(|_| "Review bridge lock failed.".to_string())?;
+        let decision = resume_waiting_run_record(
+            &mut thread_store,
+            engine,
+            &patch_store,
+            &test_store,
+            &review_store,
+            &request,
+        )?;
         threads.persist(&thread_store)?;
         Ok(decision)
     })?
@@ -113,6 +135,9 @@ pub fn schedule_next_record(
 pub fn resume_waiting_run_record(
     thread_store: &mut crate::thread_run_bridge::ThreadRunStore,
     approvals: &crate::approval::ApprovalEngine,
+    patches: &crate::patch_bridge::PatchBridgeStore,
+    tests: &crate::test_runner_bridge::TestRunnerBridgeStore,
+    reviews: &crate::review_bridge::ReviewBridgeStore,
     request: &AgentScheduleRequest,
 ) -> Result<AgentScheduleDecisionView, String> {
     let decision = resume_waiting_run(
@@ -121,7 +146,18 @@ pub fn resume_waiting_run_record(
         &request.run_id,
         request.now_ms,
     )?;
-    Ok(decision_view(&request.run_id, decision))
+    if !matches!(decision, AgentScheduleDecision::ResumeAfterApproval { .. }) {
+        return Ok(decision_view(&request.run_id, decision));
+    }
+    let run = thread_store
+        .ledger
+        .get_run(&request.run_id)
+        .map_err(|error| format!("{error:?}"))?;
+    let next = schedule_next_record(run, approvals, patches, tests, reviews, request);
+    if next.kind == "complete" {
+        return Ok(decision_view(&request.run_id, decision));
+    }
+    Ok(next)
 }
 
 fn decision_view(run_id: &str, decision: AgentScheduleDecision) -> AgentScheduleDecisionView {

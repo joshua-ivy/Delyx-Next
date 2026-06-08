@@ -81,10 +81,12 @@ complete:
   render that decision as a next-action line without inventing runtime state.
   Resume actions forward the active plan's supported test-command signal back
   into the scheduler bridge, so resume decisions use the same real plan context
-  as the visible scheduler line. Approval decisions can also trigger that
-  non-risky resume transition when the approved proposal is the last pending
-  approval for the run; file writes and terminal commands are not auto-dispatched
-  by that resume.
+  as the visible scheduler line. After the non-risky resume transition, the
+  bridge returns a post-resume scheduler decision when persisted patch, test, or
+  review work is ready; otherwise it falls back to the visible resume decision.
+  Approval decisions can also trigger that non-risky resume transition when the
+  approved proposal is the last pending approval for the run; file writes and
+  terminal commands are not auto-dispatched by that resume.
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.
