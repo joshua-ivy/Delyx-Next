@@ -1,0 +1,251 @@
+/* Focus build plans, diffs, settings, and overlays. */
+.focus-app .plan,
+.focus-app .peek {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+.focus-app .plan-head,
+.focus-app .peek-head {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 10px;
+  padding: 11px 14px;
+}
+
+.focus-app .ey {
+  color: var(--fg-3);
+  flex: 1;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.focus-app .pstep {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  color: var(--fg-2);
+  display: flex;
+  font-size: 13px;
+  gap: 11px;
+  padding: 10px 14px;
+}
+
+.focus-app .pstep:last-child {
+  border-bottom: 0;
+}
+
+.focus-app .pstep-n {
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  color: var(--fg-3);
+  display: grid;
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  height: 21px;
+  place-items: center;
+  width: 21px;
+}
+
+.focus-app .pstep-n svg {
+  height: 12px;
+  width: 12px;
+}
+
+.focus-app .pstep.done {
+  color: var(--fg-3);
+}
+
+.focus-app .pstep.done .pstep-n {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  border-color: transparent;
+  color: var(--success);
+}
+
+.focus-app .pstep.now {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.focus-app .pstep.now .pstep-n {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-ink);
+}
+
+.focus-app .plan-actions {
+  display: flex;
+  gap: 8px;
+  padding: 11px 14px;
+}
+
+.focus-app .approval-copy {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px 2px;
+}
+
+.focus-app .approval-copy span {
+  color: var(--fg-2);
+}
+
+.focus-app .peek {
+  font-family: var(--font-mono);
+}
+
+.focus-app .peek-head {
+  color: var(--fg-2);
+  font-size: 12px;
+  padding: 9px 14px;
+}
+
+.focus-app .peek-head svg {
+  height: 14px;
+  width: 14px;
+}
+
+.focus-app .stat {
+  color: var(--fg-3);
+  margin-left: auto;
+}
+
+.focus-app .dl {
+  display: grid;
+  font-size: 12px;
+  grid-template-columns: 32px minmax(0, 1fr);
+  line-height: 1.75;
+}
+
+.focus-app .dl .ln {
+  color: var(--fg-3);
+  padding-right: 10px;
+  text-align: right;
+  user-select: none;
+}
+
+.focus-app .dl .tx {
+  overflow-wrap: anywhere;
+  padding-right: 12px;
+  white-space: pre-wrap;
+}
+
+.focus-app .dl.add { background: color-mix(in srgb, var(--success) 12%, transparent); }
+.focus-app .dl.del { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.focus-app .dl.ctx .tx { color: var(--fg-2); }
+
+.focus-app .focus-action-line {
+  align-items: center;
+  color: var(--fg);
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  width: 100%;
+}
+
+.focus-app .focus-action-line svg {
+  color: var(--accent);
+  height: 18px;
+  width: 18px;
+}
+
+.focus-app .think {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.focus-app .think i {
+  background: var(--fg-3);
+  border-radius: 999px;
+  height: 4px;
+  width: 4px;
+}
+
+.focus-app .settings {
+  flex: 1;
+  overflow: auto;
+}
+
+.focus-app .set-wrap {
+  animation: rise .5s cubic-bezier(.2,.7,.2,1) both;
+  margin: 0 auto;
+  max-width: 760px;
+  padding: 30px 28px 60px;
+}
+
+.focus-app .set-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.focus-app .set-lead {
+  color: var(--fg-2);
+  font-size: 14px;
+  margin-bottom: 26px;
+}
+
+.focus-app .set-tabs {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 4px;
+  margin-bottom: 26px;
+  overflow-x: auto;
+}
+
+.focus-app .set-tab {
+  border-bottom: 2px solid transparent;
+  color: var(--fg-3);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: -1px;
+  padding: 9px 13px;
+  white-space: nowrap;
+}
+
+.focus-app .set-tab.on {
+  border-bottom-color: var(--accent);
+  color: var(--fg);
+}
+
+.focus-app .set-sec {
+  margin-bottom: 34px;
+}
+
+.focus-app .row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 16px;
+  padding: 15px 0;
+}
+
+.focus-app .row:first-of-type {
+  border-top: 0;
+}
+
+.focus-app .rmeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.focus-app .rmeta b,
+.focus-app .rmeta span {
+  display: block;
+}
+
+.focus-app .rmeta span {
+  color: var(--fg-3);
+  font-size: 12.5px;
+}
+
+.focus-app .rctl {
+  flex: none;
+}

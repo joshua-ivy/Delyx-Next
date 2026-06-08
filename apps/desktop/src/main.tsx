@@ -11,9 +11,14 @@ import "./styles/threads.css";
 import "./styles/workbench-details.css";
 import "./styles/workspace.css";
 import "./styles/cockpit.css";
+import "./styles/cockpit-stream.css";
 import "./styles/cockpit-empty.css";
 import "./styles/cockpit-runtime.css";
 import "./styles/cockpit-overlays.css";
+import "./styles/focus-layout.css";
+import "./styles/focus-surfaces.css";
+import "./styles/focus-artifacts.css";
+import "./styles/focus-overlays.css";
 
 const rootElement = document.getElementById("root");
 

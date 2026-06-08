@@ -19,6 +19,11 @@ const source = [
   "src/app/runtimeBridge.ts",
   "src/app/workspaceBridge.ts",
   "src/app/cockpitStats.ts",
+  "src/app/FocusShell.tsx",
+  "src/app/FocusHome.tsx",
+  "src/app/FocusThread.tsx",
+  "src/app/FocusSettings.tsx",
+  "src/app/FocusOverlays.tsx",
   "src/features/workspace/WorkspaceOverlay.tsx",
   "src/features/threads/ThreadOverlay.tsx",
   "src/app/cockpitReview.ts",
@@ -39,13 +44,14 @@ for (const action of ["plan-create", "plan-approve", "plan-question", "plan-revi
   check(source.includes(action), `primary workflow action must include ${action}`);
 }
 for (const marker of [
-  "Command Deck workbench",
+  "Home / new thread",
   "deck-empty",
   "Start with an instruction",
-  "Send an instruction below to start a local thread.",
-  "No approval requests",
-  "No test command artifact has been captured",
-  "No external agent run has been approved or captured",
+  "What should Delyx do?",
+  "Message Delyx with a real local instruction",
+  "No active threads in this project.",
+  "Everything Delyx needs to run locally.",
+  "No local models loaded",
   "Web preview / Rust bridge unavailable",
   "No indexed files are loaded for this query",
 ]) {

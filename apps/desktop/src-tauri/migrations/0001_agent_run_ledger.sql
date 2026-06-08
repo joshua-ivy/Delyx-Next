@@ -296,3 +296,14 @@ CREATE TABLE IF NOT EXISTS external_agent_run_tests (
   test_artifact_id TEXT NOT NULL,
   PRIMARY KEY (artifact_id, test_index)
 );
+
+CREATE TABLE IF NOT EXISTS research_evidence_records (
+  id TEXT PRIMARY KEY NOT NULL,
+  run_id TEXT NOT NULL,
+  source_kind TEXT NOT NULL,
+  title TEXT NOT NULL,
+  locator TEXT NOT NULL,
+  excerpt TEXT NOT NULL,
+  stance TEXT NOT NULL,
+  claim_key TEXT NOT NULL
+);

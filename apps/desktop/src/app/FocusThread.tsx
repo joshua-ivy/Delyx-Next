@@ -1,0 +1,182 @@
+import { useState } from "react";
+import type { ActionProposalView } from "../features/approvals/approvalTypes";
+import type { PatchProposalView } from "../features/patches/patchTypes";
+import type { PlanView } from "../features/plans/planTypes";
+import type { AgentRunView } from "../features/runs/agentRunTypes";
+import type { TestArtifactView } from "../features/tests/testTypes";
+import type { TaskThread } from "../features/threads/threadTypes";
+import { FocusIcon, Pipe, Think } from "./focusAtoms";
+import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatusLabel, shortTime, type FocusMode } from "./focusFormat";
+
+interface FocusThreadProps {
+  activePlan: PlanView | undefined;
+  mode: FocusMode;
+  model: string;
+  onApprovePlan: () => void;
+  onCreatePlan: () => void;
+  onDecideProposal: (proposalId: string, status: "approved" | "denied") => void;
+  onModeChange: (mode: FocusMode) => void;
+  onOpenPalette: () => void;
+  onSend: (value: string) => void;
+  patches: PatchProposalView[];
+  proposals: ActionProposalView[];
+  run: AgentRunView | undefined;
+  tests: TestArtifactView[];
+  thread: TaskThread;
+}
+
+export function FocusThread(props: FocusThreadProps) {
+  const [value, setValue] = useState("");
+  const pending = props.proposals.filter((proposal) => proposal.status === "pending");
+  const send = () => {
+    const trimmed = value.trim();
+    if (trimmed) {
+      setValue("");
+      props.onSend(trimmed);
+    }
+  };
+  return (
+    <div className="stage" data-mode={props.mode} data-screen-label="Active thread">
+      <div className="strip">
+        <div className="name"><strong>delyx-next</strong> / {props.thread.status}</div>
+        <div className="right">
+          <span className="gchip"><span className={`dot ${statusTone(props.run?.status)}`} />{runStatusLabel(props.run, props.proposals)}</span>
+          <button className="gchip" onClick={props.onOpenPalette} type="button">{props.model || "No model selected"}</button>
+        </div>
+      </div>
+
+      <div className="work">
+        <div className="work-scroll">
+          <div className="wrap">
+            <ThreadHeader mode={props.mode} model={props.model} run={props.run} thread={props.thread} />
+            <RunActivity run={props.run} />
+            {props.thread.messages.map((message, index) => <MessageBlock key={`${index}-${message.role}`} message={message} mode={props.mode} />)}
+            <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} onCreatePlan={props.onCreatePlan} />
+            <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
+            <DiffPeek patches={props.patches} />
+            <TestPeek tests={props.tests} />
+          </div>
+        </div>
+        <div className="dock">
+          <div className="bigcomp">
+            <textarea
+              className="in"
+              onChange={(event) => setValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  send();
+                }
+              }}
+              placeholder="Steer the run, or send a follow-up..."
+              rows={1}
+              value={value}
+            />
+            <div className="ctl">
+              <button className="icon-btn" title="Open commands" type="button" onClick={props.onOpenPalette}><FocusIcon name="plus" /></button>
+              <div className="seg">{focusModes.slice(0, 3).map((item) => <button className={props.mode === item ? "on" : ""} key={item} onClick={() => props.onModeChange(item)} type="button">{modeLabel(item)}</button>)}</div>
+              <button className="btn-send" onClick={send} type="button">Send <span className="kbd">Enter</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ThreadHeader({ mode, model, run, thread }: { mode: FocusMode; model: string; run: AgentRunView | undefined; thread: TaskThread }) {
+  return (
+    <div className="thread-head">
+      <Pipe active={modeStep(mode)} label={`thread / ${thread.id}`} />
+      <h1 className="disp">{thread.title}</h1>
+      <div className="goal">Local thread / {run?.metrics.eventCount ?? 0} event(s) / {model || "no model selected"}</div>
+    </div>
+  );
+}
+
+function RunActivity({ run }: { run: AgentRunView | undefined }) {
+  if (!run) {
+    return null;
+  }
+  return (
+    <div className="focus-activity">
+      <span className={`dot ${statusTone(run.status)}`} />
+      <div><b>{run.status.replaceAll("_", " ")}</b><span>{latestRunEvent(run)}</span></div>
+      <div className="focus-events">
+        {run.events.slice(-4).map((event) => <span key={event.id}>{shortTime(event.createdAt)} / {event.kind} / {event.message}</span>)}
+      </div>
+    </div>
+  );
+}
+
+function MessageBlock({ message }: { message: TaskThread["messages"][number]; mode: FocusMode }) {
+  const isUser = message.role === "user";
+  return (
+    <div className={`msg ${isUser ? "user" : "delyx"}`}>
+      <div className="av">{isUser ? "YOU" : message.role === "assistant" ? "D" : "SYS"}</div>
+      <div className="body">
+        <div className="who">{isUser ? "You" : message.role === "assistant" ? "Delyx" : "System"}</div>
+        <div className="txt">{message.body}</div>
+      </div>
+    </div>
+  );
+}
+
+function PlanBlock({ activePlan, onApprovePlan, onCreatePlan }: { activePlan: PlanView | undefined; onApprovePlan: () => void; onCreatePlan: () => void }) {
+  if (!activePlan) {
+    return <ActionLine icon="plan" label="No plan yet" onClick={onCreatePlan} text="Draft plan" />;
+  }
+  const approved = activePlan.decision === "approved";
+  return (
+    <div className="plan">
+      <div className="plan-head"><span className="ey">Plan / {activePlan.decision.replaceAll("_", " ")}</span><Think /></div>
+      {planProgress(activePlan, approved).map((step, index) => (
+        <div className={`pstep ${step.state}`} key={`${index}-${step.label}`}>
+          <span className="pstep-n">{step.state === "done" ? <FocusIcon name="check" /> : index + 1}</span>{step.label}
+        </div>
+      ))}
+      {!approved && <div className="plan-actions"><button className="select" onClick={onApprovePlan} type="button">Queue approval</button></div>}
+    </div>
+  );
+}
+
+function ApprovalBlock({ onDecideProposal, proposals }: { onDecideProposal: (proposalId: string, status: "approved" | "denied") => void; proposals: ActionProposalView[] }) {
+  if (proposals.length === 0) {
+    return null;
+  }
+  return <>{proposals.map((proposal) => <div className="plan approval-focus" key={proposal.id}>
+    <div className="plan-head"><span className="ey">Approval / {proposal.riskLabel} risk</span><FocusIcon name="shield" /></div>
+    <div className="approval-copy"><b>{proposal.actionType}</b><span>{proposal.rationale}</span><span>{proposal.expectedResult}</span></div>
+    <div className="plan-actions"><button className="select" onClick={() => onDecideProposal(proposal.id, "approved")} type="button">Approve once</button><button className="select danger" onClick={() => onDecideProposal(proposal.id, "denied")} type="button">Deny</button></div>
+  </div>)}</>;
+}
+
+function DiffPeek({ patches }: { patches: PatchProposalView[] }) {
+  const file = patches.flatMap((patch) => patch.files.map((item) => ({ item, patch })))[0];
+  if (!file) {
+    return null;
+  }
+  return <div className="peek"><div className="peek-head"><FocusIcon name="diff" /> {file.item.path}<span className="stat">{file.patch.status}</span></div>{file.item.diff.slice(0, 8).map((line, index) => <div className={`dl ${line.kind === "added" ? "add" : line.kind === "removed" ? "del" : "ctx"}`} key={index}><span className="ln">{line.kind === "added" ? "+" : line.kind === "removed" ? "-" : index + 1}</span><span className="tx">{line.text || " "}</span></div>)}</div>;
+}
+
+function TestPeek({ tests }: { tests: TestArtifactView[] }) {
+  const test = tests[0];
+  if (!test) {
+    return null;
+  }
+  return <ActionLine icon="flask" label={`${test.command} / ${test.status ?? "captured"}`} text={test.failureSummary ?? `Exit ${test.exitCode ?? "unknown"}`} />;
+}
+
+function ActionLine({ icon, label, onClick, text }: { icon: "flask" | "plan"; label: string; onClick?: () => void; text: string }) {
+  return <button className="focus-action-line" onClick={onClick} type="button"><FocusIcon name={icon} /><span><b>{label}</b><em>{text}</em></span></button>;
+}
+
+function statusTone(status: AgentRunView["status"] | undefined) {
+  if (status === "succeeded") {
+    return "success";
+  }
+  if (status === "failed" || status === "blocked" || status === "cancelled") {
+    return "danger";
+  }
+  return status === "waiting_for_approval" ? "warning" : "accent";
+}

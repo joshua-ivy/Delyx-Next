@@ -74,6 +74,15 @@ impl EvidenceStore {
         Self::default()
     }
 
+    pub(crate) fn from_loaded(records: Vec<EvidenceRecord>) -> Self {
+        let next_id = records
+            .iter()
+            .filter_map(|record| record.id.strip_prefix("evidence-")?.parse::<usize>().ok())
+            .max()
+            .unwrap_or(records.len());
+        Self { records, next_id }
+    }
+
     pub fn add(&mut self, input: EvidenceInput) -> EvidenceRecord {
         self.next_id += 1;
         let record = EvidenceRecord {
@@ -99,6 +108,10 @@ impl EvidenceStore {
             .collect();
         records.sort_by_key(|record| record.source_kind);
         records
+    }
+
+    pub(crate) fn all_records(&self) -> &[EvidenceRecord] {
+        &self.records
     }
 }
 

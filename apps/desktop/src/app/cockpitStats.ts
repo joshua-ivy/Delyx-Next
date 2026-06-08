@@ -20,17 +20,22 @@ export function threadStatsBlock(
   }
   const pending = pendingCount(proposals);
   const latestEvent = run.events.at(-1)?.message ?? "Run created. Waiting for the next real action.";
+  const events = run.events.slice(-5);
+  const meta = [
+    activityMeta("Mode", run.mode.replaceAll("_", " ")),
+    pending > 0 ? activityMeta("Approval", `${pending} waiting`) : "",
+    patches.length > 0 ? activityMeta("Diff", `${changedFileCount(patches)} file(s)`) : "",
+    tests.length > 0 ? activityMeta("Tests", latestTestStatus(tests)) : "",
+    run.metrics.commandCount > 0 ? activityMeta("Commands", `${run.metrics.commandCount}`) : "",
+    run.evidence.length > 0 ? activityMeta("Evidence", `${run.evidence.length}`) : "",
+  ].filter(Boolean).join("");
   return `<section class="run-activity">
     <div class="run-activity-main">
       <span class="activity-dot ${activityTone(run.status, pending)}"></span>
       <div><strong>${escapeHtml(activityTitle(run.status, pending))}</strong><span>${escapeHtml(latestEvent)}</span></div>
     </div>
-    <div class="run-activity-meta">
-      ${activityMeta("Plan", run.mode.replaceAll("_", " "))}
-      ${activityMeta("Approval", pending > 0 ? `${pending} waiting` : "clear")}
-      ${activityMeta("Diff", patches.length > 0 ? `${changedFileCount(patches)} file(s)` : "none")}
-      ${activityMeta("Tests", tests.length > 0 ? latestTestStatus(tests) : "not run")}
-    </div>
+    ${events.length > 1 ? `<div class="run-event-stream">${events.map(eventLine).join("")}</div>` : ""}
+    ${meta ? `<div class="run-activity-meta">${meta}</div>` : ""}
   </section>`;
 }
 
@@ -48,6 +53,18 @@ function latestTestStatus(tests: TestArtifactView[]) {
     return "not run";
   }
   return latest.status ?? (latest.exitCode === 0 ? "passed" : "failed");
+}
+
+function eventLine(event: AgentRunView["events"][number]) {
+  return `<div class="run-event"><span>${escapeHtml(shortTime(event.createdAt))}</span><b>${escapeHtml(event.kind.replaceAll("_", " "))}</b><em>${escapeHtml(event.message)}</em></div>`;
+}
+
+function shortTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function activityTitle(status: AgentRunView["status"], pending: number) {

@@ -1,0 +1,292 @@
+/* Focus build controls, providers, menus, and responsive rules. */
+.focus-app .toggle {
+  background: var(--line-2);
+  border-radius: 999px;
+  height: 24px;
+  position: relative;
+  transition: background .16s;
+  width: 42px;
+}
+
+.focus-app .toggle::after {
+  background: #fff;
+  border-radius: 999px;
+  content: "";
+  height: 18px;
+  left: 3px;
+  position: absolute;
+  top: 3px;
+  transition: transform .16s;
+  width: 18px;
+}
+
+.focus-app .toggle.on {
+  background: var(--accent);
+}
+
+.focus-app .toggle.on::after {
+  transform: translateX(18px);
+}
+
+.focus-app .select {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  color: var(--fg);
+  display: inline-flex;
+  font-size: 13px;
+  gap: 9px;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.focus-app .select:hover {
+  border-color: var(--accent-line);
+}
+
+.focus-app .select.danger {
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  color: var(--danger);
+}
+
+.focus-app .tag {
+  border-radius: var(--r-pill);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 3px 8px;
+  text-transform: uppercase;
+}
+
+.focus-app .tag.live,
+.focus-app .mi-meta.active {
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+}
+
+.focus-app .tag.off {
+  background: var(--surface-2);
+  color: var(--fg-3);
+}
+
+.focus-app .provider {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  display: flex;
+  gap: 13px;
+  margin-bottom: 10px;
+  padding: 14px;
+}
+
+.focus-app .provider.on {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+
+.focus-app .pic,
+.focus-app .mi-ic {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--fg-2);
+  display: grid;
+  flex: none;
+  place-items: center;
+}
+
+.focus-app .pic {
+  height: 34px;
+  width: 34px;
+}
+
+.focus-app .pinfo {
+  flex: 1;
+}
+
+.focus-app .pinfo span {
+  color: var(--fg-3);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.focus-app .swatches {
+  display: flex;
+  gap: 9px;
+}
+
+.focus-app .swatch {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  height: 28px;
+  width: 28px;
+}
+
+.focus-app .swatch.build { background: var(--mode-build); }
+.focus-app .swatch.explore { background: var(--mode-explore); }
+.focus-app .swatch.plan { background: var(--mode-plan); }
+.focus-app .swatch.test { background: var(--mode-test); }
+.focus-app .swatch.review { background: var(--mode-review); }
+.focus-app .swatch.on { border-color: var(--fg); }
+
+.focus-app .kgroup {
+  display: flex;
+  gap: 6px;
+}
+
+.focus-app .kcap {
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 8px;
+}
+
+.focus-app .scrim {
+  animation: fade .14s ease both;
+  backdrop-filter: blur(3px);
+  background: rgba(6, 8, 12, .62);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+  z-index: 60;
+}
+
+.focus-app .scrim.top {
+  align-items: flex-start;
+  padding-top: 11vh;
+}
+
+.focus-app .scrim.center {
+  align-items: center;
+}
+
+.focus-app .palette,
+.focus-app .menu {
+  animation: pop .18s cubic-bezier(.2,.8,.2,1) both;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+
+.focus-app .palette {
+  border-radius: var(--r-xl);
+  width: min(620px, 92vw);
+}
+
+.focus-app .pal-input {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 12px;
+  padding: 15px 18px;
+}
+
+.focus-app .pal-input input {
+  background: none;
+  border: 0;
+  color: var(--fg);
+  flex: 1;
+  font-size: 16px;
+  outline: none;
+}
+
+.focus-app .pal-list,
+.focus-app .menu-list {
+  max-height: 380px;
+  overflow: auto;
+  padding: 8px;
+}
+
+.focus-app .pal-group {
+  color: var(--fg-3);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  padding: 10px 10px 6px;
+  text-transform: uppercase;
+}
+
+.focus-app .pal-item,
+.focus-app .menu-item {
+  align-items: center;
+  border-radius: var(--r-md);
+  display: flex;
+  gap: 12px;
+  padding: 10px 11px;
+  text-align: left;
+  width: 100%;
+}
+
+.focus-app .pal-item.on,
+.focus-app .pal-item:hover,
+.focus-app .menu-item:hover {
+  background: var(--accent-soft);
+}
+
+.focus-app .pl,
+.focus-app .mi-tx {
+  flex: 1;
+  min-width: 0;
+}
+
+.focus-app .pl small,
+.focus-app .mi-tx span {
+  color: var(--fg-3);
+  display: block;
+  font-size: 11.5px;
+}
+
+.focus-app .pk,
+.focus-app .mi-meta {
+  color: var(--fg-3);
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.focus-app .pal-foot {
+  border-top: 1px solid var(--line);
+  color: var(--fg-3);
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  gap: 18px;
+  padding: 10px 16px;
+}
+
+.focus-app .menu {
+  border-radius: var(--r-lg);
+  width: min(420px, 92vw);
+}
+
+.focus-app .menu-head {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 16px 10px;
+}
+
+.focus-app .menu-head h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+
+.focus-app .mi-ic {
+  height: 30px;
+  width: 30px;
+}
+
+.focus-app .menu-empty {
+  color: var(--fg-3);
+  padding: 16px;
+}
+
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.985); } to { opacity: 1; transform: none; } }

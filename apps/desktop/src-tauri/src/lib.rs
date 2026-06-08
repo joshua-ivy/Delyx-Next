@@ -69,6 +69,8 @@ pub mod release_persistence;
 mod release_persistence_tests;
 mod release_tests;
 pub mod research;
+pub mod research_persistence;
+mod research_persistence_tests;
 mod research_tests;
 pub mod review;
 pub mod review_bridge;

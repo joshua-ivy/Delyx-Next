@@ -52,6 +52,19 @@ export function bindComposerForm(state: ComposerBindingState, form: Element | nu
   return () => form.removeEventListener("submit", submit);
 }
 
+export function sendComposerInstruction(state: ComposerBindingState, text: string) {
+  const body = text.trim();
+  if (!body) {
+    notifyLocalAction("Type a local instruction before sending", "warning");
+    return;
+  }
+  if (!state.activeThread) {
+    void createThreadFromComposer(state, body);
+    return;
+  }
+  continueThreadFromComposer(state, body);
+}
+
 async function createThreadFromComposer(state: ComposerBindingState, goal: string) {
   const createdAt = new Date().toISOString();
   const record = await createThreadRunOverBridge(state.activeProject.id, goal, createdAt);

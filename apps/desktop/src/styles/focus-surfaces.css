@@ -1,0 +1,283 @@
+/* Focus build controls, overlays, settings, and artifacts. */
+.focus-app .bigcomp {
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-pop);
+  padding: 16px 16px 12px;
+  transition: border-color .14s, box-shadow .14s;
+}
+
+.focus-app .bigcomp:focus-within {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-pop);
+}
+
+.focus-app .bigcomp .in {
+  background: none;
+  border: 0;
+  color: var(--fg);
+  font-size: 16px;
+  min-height: 46px;
+  outline: none;
+  padding: 4px 4px 16px;
+  resize: none;
+  width: 100%;
+}
+
+.focus-app .bigcomp .in::placeholder {
+  color: var(--fg-3);
+}
+
+.focus-app .ctl {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.focus-app .icon-btn {
+  border-radius: 8px;
+  color: var(--fg-3);
+  display: grid;
+  height: 30px;
+  place-items: center;
+  width: 30px;
+}
+
+.focus-app .icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--fg-2);
+}
+
+.focus-app .seg {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+}
+
+.focus-app .seg button {
+  border-radius: var(--r-pill);
+  color: var(--fg-3);
+  font-size: 12px;
+  font-weight: 600;
+  height: 26px;
+  padding: 0 13px;
+}
+
+.focus-app .seg button.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.focus-app .btn-send {
+  align-items: center;
+  background: var(--accent);
+  border-radius: var(--r-md);
+  color: var(--accent-ink);
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+  height: 36px;
+  margin-left: auto;
+  overflow: hidden;
+  padding: 0 17px;
+  position: relative;
+}
+
+.focus-app .kbd,
+.focus-app .kbd-mini {
+  font-family: var(--font-mono);
+}
+
+.focus-app .kbd {
+  font-size: 11px;
+  opacity: .72;
+}
+
+.focus-app .hints {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.focus-app .hint-link {
+  background: var(--surface);
+  color: var(--fg-2);
+  font-size: 12.5px;
+  height: 30px;
+  padding: 0 13px;
+}
+
+.focus-app .hint-link.static {
+  cursor: default;
+}
+
+.focus-app .kbd-mini {
+  border: 1px solid var(--line-2);
+  border-radius: 5px;
+  color: var(--fg-2);
+  font-size: 10px;
+  padding: 1px 5px;
+}
+
+.focus-app .warn {
+  color: var(--accent);
+}
+
+.focus-app .work {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.focus-app .work-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 0 28px;
+}
+
+.focus-app .wrap {
+  margin: 0 auto;
+  max-width: 760px;
+  padding: 0 28px;
+}
+
+.focus-app .thread-head {
+  animation: rise .5s cubic-bezier(.2,.7,.2,1) both;
+  padding: 14px 0 8px;
+}
+
+.focus-app .thread-head h1 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.12;
+  margin: 8px 0 6px;
+}
+
+.focus-app .goal {
+  color: var(--fg-2);
+  font-size: 14px;
+}
+
+.focus-app .focus-activity,
+.focus-app .focus-action-line {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  margin: 12px 0;
+}
+
+.focus-app .focus-activity {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 12px 14px;
+}
+
+.focus-app .focus-activity b,
+.focus-app .focus-activity span,
+.focus-app .focus-action-line b,
+.focus-app .focus-action-line em {
+  display: block;
+}
+
+.focus-app .focus-activity b {
+  text-transform: capitalize;
+}
+
+.focus-app .focus-activity span,
+.focus-app .focus-action-line em {
+  color: var(--fg-2);
+  font-style: normal;
+  font-size: 12.5px;
+}
+
+.focus-app .focus-events {
+  border-left: 1px solid var(--line-2);
+  grid-column: 2;
+  padding-left: 10px;
+}
+
+.focus-app .msg {
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 13px;
+  padding: 14px 0;
+}
+
+.focus-app .av {
+  border-radius: 8px;
+  display: grid;
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  height: 28px;
+  place-items: center;
+  width: 28px;
+}
+
+.focus-app .msg.user .av {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--fg-2);
+}
+
+.focus-app .msg.delyx .av {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.focus-app .body {
+  flex: 1;
+  min-width: 0;
+}
+
+.focus-app .who {
+  color: var(--fg-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.focus-app .txt {
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.focus-app .dock {
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  flex: none;
+  padding: 12px 28px 16px;
+}
+
+.focus-app .dock .bigcomp {
+  border-radius: var(--r-lg);
+  box-shadow: none;
+  margin: 0 auto;
+  max-width: 760px;
+  padding: 10px 10px 8px;
+}
+
+.focus-app .dock .in {
+  font-size: 15px;
+  min-height: 24px;
+  padding: 6px 4px 10px;
+}

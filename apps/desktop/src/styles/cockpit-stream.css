@@ -1,0 +1,88 @@
+/* Compact thread stream and artifact-first inspector behavior. */
+.deckC:has(.deck-inspect:not(:has(.appro, .dfile, .sec-h, .rcpt, .deck-ins-card))) {
+  grid-template-columns: 56px minmax(0, 1fr);
+}
+
+.deckC:has(.deck-inspect:not(:has(.appro, .dfile, .sec-h, .rcpt, .deck-ins-card))) .deck-inspect,
+.deckC:has(.deck-inspect:not(:has(.appro, .dfile, .sec-h, .rcpt, .deck-ins-card))) .resize-review {
+  display: none;
+}
+
+.deckC:has(.deck-inspect:not(:has(.appro, .dfile, .sec-h, .rcpt, .deck-ins-card))) .deck-bar,
+.deckC:has(.deck-inspect:not(:has(.appro, .dfile, .sec-h, .rcpt, .deck-ins-card))) .deck-hintbar {
+  grid-column: 2;
+}
+
+.run-event-stream {
+  border-left: 1px solid var(--line-2);
+  display: grid;
+  gap: 7px;
+  margin-left: 4px;
+  padding-left: 13px;
+}
+
+.run-event {
+  align-items: baseline;
+  color: var(--fg-2);
+  column-gap: 8px;
+  display: grid;
+  font-size: var(--fs-sm);
+  grid-template-columns: auto auto minmax(0, 1fr);
+}
+
+.run-event span {
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+.run-event b {
+  color: var(--fg);
+  font-weight: 650;
+}
+
+.run-event em {
+  font-style: normal;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deck-msg-bub {
+  max-width: min(860px, 100%);
+  overflow-wrap: anywhere;
+}
+
+.deck-msg.you .deck-msg-bub {
+  max-width: min(680px, 100%);
+}
+
+.msg-brief {
+  max-height: 220px;
+  overflow: hidden;
+}
+
+.deck-raw-text {
+  max-height: 360px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 860px) {
+  .deckC {
+    min-width: 0;
+  }
+
+  .deck-msg {
+    max-width: 100%;
+  }
+
+  .run-event {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .run-event em {
+    grid-column: 1 / -1;
+    white-space: normal;
+  }
+}

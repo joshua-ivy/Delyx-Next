@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { CommandPalette } from "../design-system/CommandPalette";
+import { useEffect, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
 import { useApprovalPolicy } from "./appShellApprovalPolicy";
 import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { canTransition, createThread, modeForThreadStatus } from "./appShellThreadActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
-import { buildCockpitMarkup } from "./cockpitView";
-import { useCockpitDomBindings } from "./useCockpitDomBindings";
+import { sendComposerInstruction } from "./cockpitComposerBindings";
+import { decideFocusApproval } from "./focusApprovalDecision";
+import { FocusShell } from "./FocusShell";
 import { currentActionProposals } from "../features/approvals/approvalData";
 import { externalAgentBridgeUnavailableState, loadExternalAgentStatus } from "../features/externalAgents/externalAgentClient";
 import { currentExternalAgentState } from "../features/externalAgents/externalAgentData";
@@ -19,9 +19,7 @@ import { currentPatchProposals } from "../features/patches/patchData";
 import type { PlanView } from "../features/plans/planTypes";
 import { currentReviewReports } from "../features/review/reviewData";
 import { currentAgentRuns } from "../features/runs/agentRunData";
-import { currentResearchAnswers } from "../features/research/researchData";
 import { currentTestArtifacts } from "../features/tests/testData";
-import { ThreadOverlay } from "../features/threads/ThreadOverlay";
 import { archiveThreadOverBridge, createThreadRunOverBridge, loadThreadRunSnapshot, updateThreadStatusOverBridge } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
@@ -54,30 +52,6 @@ export function AppShell() {
   const activeRun = agentRuns.find((run) => run.id === activeThread?.activeRunId)
     ?? agentRuns.find((run) => run.threadId === activeThread?.id);
   const activePlan = plans.find((plan) => plan.threadId === activeThread?.id);
-  const cockpitHtml = useMemo(
-    () => buildCockpitMarkup(
-      activeProject,
-      activeThread,
-      activeRun,
-      activePlan,
-      actionProposals,
-      currentPatchProposals,
-      currentTestArtifacts,
-      currentReviewReports,
-      modelSettings,
-      externalAgentState,
-      currentResearchAnswers,
-      memoryState,
-      skillState,
-      automationState,
-      currentMobileState,
-      releaseState,
-      visibleThreads,
-      runtimeBridge,
-      riskPolicy,
-    ),
-    [actionProposals, activePlan, activeProject, activeRun, activeThread, automationState, externalAgentState, memoryState, modelSettings, releaseState, riskPolicy, runtimeBridge, skillState, visibleThreads],
-  );
   useEffect(() => {
     let cancelled = false;
     void loadRuntimeBridgeState().then(async (state) => {
@@ -159,25 +133,6 @@ export function AppShell() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-  useCockpitDomBindings({
-    actionProposals,
-    activePlan,
-    activeProject,
-    activeRun,
-    activeThread,
-    cockpitHtml,
-    modelSettings,
-    setActionProposals,
-    setActiveThreadId,
-    setAgentRuns,
-    setPaletteOpen,
-    setPlans,
-    setThreadOpen,
-    setThreadState,
-    setThreads,
-    setWorkspaceOpen,
-    threads,
-  });
   const runPaletteCommand = (commandId: string) => {
     runAppShellCommand(commandId, {
       actionProposals,
@@ -199,6 +154,52 @@ export function AppShell() {
     });
     setPaletteOpen(false);
   };
+  const sendInstruction = (value: string) => {
+    sendComposerInstruction({
+      activeProject,
+      activeRun,
+      activeThread,
+      modelSettings,
+      setActiveThreadId,
+      setAgentRuns,
+      setThreads,
+      setThreadState,
+      threads,
+    }, value);
+  };
+  const selectModel = (modelId: string) => {
+    setModelSettings((current) => ({
+      ...current,
+      routes: [
+        { modelId, providerId: "ollama-local", role: "coding", saved: false },
+        ...current.routes.filter((route) => !(route.providerId === "ollama-local" && route.role === "coding")),
+      ],
+      selectedProviderId: "ollama-local",
+    }));
+  };
+  const decideProposal = (proposalId: string, status: "approved" | "denied") => {
+    void decideFocusApproval({
+      activeRun,
+      activeThread,
+      actionProposals,
+      setActionProposals,
+      setAgentRuns,
+      setThreads,
+      setThreadState,
+    }, proposalId, status);
+  };
+  const archiveActiveThread = () => {
+    if (!activeThread) {
+      setThreadState("empty");
+      return;
+    }
+    const now = new Date().toISOString();
+    void archiveThreadOverBridge(activeThread.id, now);
+    setThreads((current) => current.map((thread) => (
+      thread.id === activeThread.id ? { ...thread, archived: true, updatedAt: now } : thread
+    )));
+    setThreadState(visibleThreads.length <= 1 ? "empty" : "ready");
+  };
   const addWorkspaceProject = (path: string) => {
     setWorkspaceState("loading");
     void loadWorkspaceProject(path).then((project) => {
@@ -210,65 +211,29 @@ export function AppShell() {
   };
   return (
     <>
-      <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} onRun={runPaletteCommand} open={paletteOpen} />
       <ShellPreferenceController />
-      <div dangerouslySetInnerHTML={{ __html: cockpitHtml }} />
-      <ThreadOverlay
+      <FocusShell
+        activePlan={activePlan}
+        activeProject={activeProject}
+        activeRun={activeRun}
         activeThread={activeThread}
-        onArchiveActive={() => {
-          if (!activeThread) {
-            setThreadState("empty");
-            return;
-          }
-          const now = new Date().toISOString();
-          void archiveThreadOverBridge(activeThread.id, now);
-          setThreads((current) => current.map((thread) => (
-            thread.id === activeThread.id ? { ...thread, archived: true, updatedAt: now } : thread
-          )));
-          setThreadState(visibleThreads.length <= 1 ? "empty" : "ready");
-        }}
-        onClose={() => setThreadOpen(false)}
-        onCreateThread={(goal) => {
-          const createdAt = new Date().toISOString();
-          void createThreadRunOverBridge(activeProject.id, goal, createdAt).then((record) => {
-            const thread = record?.thread ?? createThread(goal, activeProject.id, threads.length + 1);
-            const run = record?.run ?? (thread ? createRunForThread(thread, activeProject.id, threads.length + 1) : undefined);
-            const runnableThread = thread && run ? (record?.thread ?? threadWithRun(thread, run)) : undefined;
-            if (!runnableThread || !run) {
-              setThreadState("error");
-              return;
-            }
-            setAgentRuns((current) => [run, ...current]);
-            setThreads((current) => [runnableThread, ...current]);
-            setActiveThreadId(runnableThread.id);
-            setThreadState("ready");
-          }).catch(() => {
-            setThreadState("error");
-          });
-        }}
+        modelSettings={modelSettings}
+        onArchiveActive={archiveActiveThread}
+        onApprovePlan={() => runPaletteCommand("plan.approve")}
+        onCreatePlan={() => runPaletteCommand("plan.create")}
+        onDecideProposal={decideProposal}
+        onOpenWorkspace={() => setWorkspaceOpen(true)}
+        onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
+        onRunCommand={runPaletteCommand}
+        onSelectModel={selectModel}
         onSelectThread={(threadId) => {
           setActiveThreadId(threadId);
           setThreadState("ready");
         }}
-        onSetStatus={(status) => {
-          if (!activeThread) {
-            setThreadState("empty");
-            return;
-          }
-          if (!canTransition(activeThread.status, status)) {
-            setThreadState("error");
-            return;
-          }
-          const now = new Date().toISOString();
-          void updateThreadStatusOverBridge(activeThread.id, status, now);
-          setAgentRuns((current) => updateRunsForThreadStatus(current, activeThread, status, now));
-          setThreads((current) => current.map((thread) => (
-            thread.id === activeThread.id ? { ...thread, mode: modeForThreadStatus(status), status, updatedAt: now } : thread
-          )));
-          setThreadState("ready");
-        }}
-        open={threadOpen}
-        state={threadState}
+        onSendInstruction={sendInstruction}
+        patches={currentPatchProposals}
+        proposals={actionProposals}
+        tests={currentTestArtifacts}
         threads={threads}
       />
       <WorkspaceOverlay

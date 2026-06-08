@@ -1,7 +1,9 @@
 import type { TaskThread } from "../features/threads/threadTypes";
 import { escapeHtml } from "./html";
 
-const longTextLimit = 900;
+const assistantPreviewLimit = 560;
+const longTextLimit = 760;
+const userPreviewLimit = 360;
 
 export function threadGoalBlock(thread: TaskThread | undefined) {
   const goal = thread?.goal ?? "Send an instruction below to start a local thread.";
@@ -19,10 +21,7 @@ export function conversationBlock(thread: TaskThread | undefined) {
   if (!thread) {
     return "";
   }
-  const messages = thread.messages.map(messageBlock).join("");
-  const hasAssistant = thread.messages.some((message) => message.role === "assistant");
-  const assistantState = hasAssistant ? "" : systemMessage("No assistant message has been generated for this thread yet.");
-  return `${messages}${assistantState}`;
+  return thread.messages.map(messageBlock).join("");
 }
 
 function messageBlock(message: TaskThread["messages"][number]) {
@@ -31,21 +30,17 @@ function messageBlock(message: TaskThread["messages"][number]) {
   return `<div class="deck-msg ${role}">${avatar}<div class="deck-msg-bub">${messageBody(message.body, role)}</div></div>`;
 }
 
-function systemMessage(body: string) {
-  return `<div class="deck-msg system"><div class="deck-msg-bub">${escapeHtml(body)}</div></div>`;
-}
-
 function messageBody(body: string, role: "you" | "delyx" | "system") {
   const text = body.trim();
   if (role === "you" && text.length > longTextLimit) {
-    return `<div class="msg-brief">${formatPlainText(excerpt(text, 520))}</div>
+    return `<div class="msg-brief">${formatPlainText(excerpt(text, userPreviewLimit))}</div>
       <details class="deck-disclosure">
         <summary>Full request</summary>
         <div class="deck-raw-text">${formatPlainText(text)}</div>
       </details>`;
   }
   if (role === "delyx" && text.length > longTextLimit) {
-    return `${formatRichText(excerpt(text, 1200))}
+    return `<div class="msg-brief">${formatRichText(excerpt(text, assistantPreviewLimit))}</div>
       <details class="deck-disclosure">
         <summary>Full model output</summary>
         <div class="deck-raw-text">${formatRichText(text)}</div>

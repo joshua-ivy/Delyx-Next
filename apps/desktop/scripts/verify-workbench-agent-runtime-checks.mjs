@@ -49,6 +49,8 @@ export const agentRuntimeChecks = [
   ["src-tauri/src/research.rs", "ClaimAudit"],
   ["src-tauri/src/research.rs", "insufficient evidence"],
   ["src-tauri/src/research.rs", "Contradiction"],
+  ["src-tauri/src/research_persistence.rs", "research_evidence_records"],
+  ["src-tauri/src/research_persistence_tests.rs", "evidence_store_survives_sqlite_reload"],
   ["src-tauri/src/memory.rs", "MemoryStore"],
   ["src-tauri/src/memory.rs", "promote_approved"],
   ["src-tauri/src/memory.rs", "FailedRunCannotPromote"],

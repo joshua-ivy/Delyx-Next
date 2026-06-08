@@ -5,7 +5,7 @@ import { externalAgentBlock } from "./cockpitExternalAgents";
 import { hasMemoryForRun, memoryBlock } from "./cockpitMemory";
 import { hasMobileActivity, mobileBlock } from "./cockpitMobile";
 import { hasReleaseReadiness, releaseBlock } from "./cockpitRelease";
-import { approvalBlock, diffBlock, emptyApprovalBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
+import { approvalBlock, diffBlock, pendingCount, reviewBlock, testBlock } from "./cockpitReview";
 import { runLabel } from "./cockpitRuns";
 import { hasSkills, skillBlock } from "./cockpitSkills";
 import { threadStatsBlock } from "./cockpitStats";
@@ -73,9 +73,26 @@ export function buildCockpitMarkup(
     ? releaseBlock(releaseState)
     : undefined;
   const externalAgentStream = externalAgentBlock(externalAgents, activeRun?.id);
+  const inspector = activeThread ? inspectorBlock({
+    activeProposals,
+    activePatches,
+    activeEvidence,
+    activeMemory,
+    activeSkills,
+    activeAutomations,
+    activeMobile,
+    activeRelease,
+    activeTests,
+    activeReview,
+    activeRun,
+    riskPolicy,
+  }) : "";
+  const shellClass = [activeThread ? "" : "deck-empty", inspector.trim() ? "" : "deck-no-inspect"]
+    .filter(Boolean)
+    .join(" ");
 
   return cockpitMarkup
-    .replace("__EMPTY_CLASS__", activeThread ? "" : "deck-empty")
+    .replace("__EMPTY_CLASS__", shellClass)
     .replace("__SPINE_PIPE__", spinePipeline(activeThread?.status))
     .replace("__MODE_LABEL__", modeLabel(activeThread?.mode))
     .replace("__STATUS_PILL__", barStatusPill(activeThread, activeRun, activeProposals))
@@ -93,20 +110,7 @@ export function buildCockpitMarkup(
     .replace("__COMPOSER_MODE__", composerMode(activeThread?.mode))
     .replace("__INSPECTOR_LABEL__", inspectorLabel(activeProposals, activeRun))
     .replace("__INSPECTOR_STATUS__", inspectorStatus(activeProposals, activeRun))
-    .replace("__INSPECTOR__", activeThread ? inspectorBlock({
-      activeProposals,
-      activePatches,
-      activeEvidence,
-      activeMemory,
-      activeSkills,
-      activeAutomations,
-      activeMobile,
-      activeRelease,
-      activeTests,
-      activeReview,
-      activeRun,
-      riskPolicy,
-    }) : "")
+    .replace("__INSPECTOR__", inspector)
     .replace("__HINTBAR__", hintbarBlock(activeRun));
 }
 
@@ -262,30 +266,5 @@ function inspectorBlock(state: InspectorState) {
       state.activeRelease ?? "",
     ].join("");
   }
-  if (state.activeRun) {
-    const latest = state.activeRun.events.at(-1)?.message ?? "Run created. Waiting for the next real action.";
-    return `<div class="appro">
-        <div class="at"><span class="pill accent">Run activity</span><span class="meta-id">${escapeHtml(state.activeRun.id)}</span></div>
-        <h4>${escapeHtml(state.activeRun.status.replaceAll("_", " "))}</h4>
-        <div class="kv"><span class="k">Now</span><span class="v">${escapeHtml(latest)}</span></div>
-        <div class="kv"><span class="k">Next</span><span class="v">${escapeHtml(nextRunHint(state.activeRun))}</span></div>
-      </div>`;
-  }
-  return emptyApprovalBlock(state.riskPolicy);
-}
-
-function nextRunHint(run: AgentRunView) {
-  if (run.status === "running" && run.events.at(-1)?.kind === "model_call.started") {
-    return "Waiting for the local model response.";
-  }
-  if (run.status === "created") {
-    return "Create a plan or send another instruction.";
-  }
-  if (run.status === "waiting_for_approval") {
-    return "Review the approval request.";
-  }
-  if (run.status === "succeeded") {
-    return "Review receipts before making final claims.";
-  }
-  return "Check the active work pane for the next available action.";
+  return "";
 }

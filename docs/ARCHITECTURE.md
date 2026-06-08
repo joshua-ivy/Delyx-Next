@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, review-report, and external-agent-run persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, review-report, external-agent-run, and research-evidence persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -43,20 +43,21 @@ complete:
   The Rust automation engine persists mission contracts and scheduled-run
   records, and a read-only Tauri snapshot bridge feeds the cockpit. Release profile
   and redacted support-bundle state persist to SQLite. Approved test artifacts,
-  proposed patch diffs, review reports, and external-agent run artifacts persist
-  receipt data to SQLite and reload into the desktop bridge on startup.
-  Governance mutation bridges are still not live.
+  proposed patch diffs, review reports, external-agent run artifacts, and
+  research EvidenceStore receipts persist receipt data to SQLite and reload
+  with ID continuity. Governance mutation bridges are still not live.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
   component/interaction tests.
-- The Command Deck cockpit currently uses `buildCockpitMarkup` string rendering
-  plus manual DOM bindings. That is a Phase 1 implementation choice awaiting an
-  explicit architecture decision or migration. Current cockpit rendering avoids
-  shipped fake data, formats long messages/readable lists, shows a compact live
-  activity strip for real run events, keeps evidence coverage compact, and shows
-  a minimal no-thread prompt/composer instead of unbacked progress, diff,
-  terminal, inspector, or zero-count dashboard furniture.
+- The default workbench now uses a React Focus shell ported from the provided
+  Focus prototype: centered first-run composer, rail navigation, command
+  palette, thread switcher, model picker, settings, and artifact-driven active
+  thread view. Legacy `buildCockpitMarkup` string-rendered files remain in
+  source as the older cockpit implementation and smoke-contract reference, but
+  they are not the mounted primary workbench. The Focus UI avoids shipped fake
+  data and renders real project, thread, model, run, approval, diff, and test
+  state only.
 
 ## Codex Reference Integration
 
@@ -183,7 +184,9 @@ Plan -> Approve -> Build -> Diff -> Test -> Review execution loop remains
 Phase 2 work. AgentRun save/load, Tauri thread/run bridge session reload,
 approval bridge reload, recent workspace project reload, test artifact bridge
 reload, patch proposal bridge reload, review report reload, and external-agent
-run artifact reload now use SQLite.
+run artifact reload now use SQLite. Research EvidenceStore receipts also
+persist to SQLite, including source kind, locator, excerpt, stance, and
+normalized claim keys.
 
 ## Permission Engine
 
@@ -402,6 +405,11 @@ Owns:
 - final answer support
 
 Evidence records should make claim support inspectable.
+The Rust `EvidenceStore` now persists source-backed research receipts to
+SQLite, including run IDs, source kind, title, locator, excerpt, stance, and
+normalized claim keys. This preserves research receipts across restart, but it
+does not yet build final-answer support records automatically from every file,
+diff, command, test, approval, model call, or external-agent artifact.
 
 ## Data Models
 
