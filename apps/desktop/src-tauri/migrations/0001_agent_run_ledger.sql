@@ -245,3 +245,27 @@ CREATE TABLE IF NOT EXISTS patch_diff_lines (
     REFERENCES patch_proposal_files(proposal_id, file_index)
     ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS review_report_records (
+  id TEXT PRIMARY KEY NOT NULL,
+  run_id TEXT NOT NULL,
+  mode TEXT NOT NULL,
+  decision TEXT NOT NULL,
+  risk_summary TEXT NOT NULL,
+  test_summary TEXT NOT NULL,
+  evidence_summary TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS review_findings (
+  report_id TEXT NOT NULL REFERENCES review_report_records(id) ON DELETE CASCADE,
+  finding_index INTEGER NOT NULL,
+  id TEXT NOT NULL,
+  priority TEXT NOT NULL,
+  title TEXT NOT NULL,
+  detail TEXT NOT NULL,
+  risk_label TEXT NOT NULL,
+  suggested_fix TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  hunk_label TEXT NOT NULL,
+  PRIMARY KEY (report_id, finding_index)
+);

@@ -9,12 +9,30 @@ use std::sync::Mutex;
 #[derive(Default)]
 pub struct ReviewBridgeState {
     store: Mutex<ReviewBridgeStore>,
+    database_path: Option<PathBuf>,
+}
+
+impl ReviewBridgeState {
+    pub fn persistent(database_path: PathBuf) -> Result<Self, String> {
+        let store = crate::review_persistence::load_from_path(&database_path)?;
+        Ok(Self {
+            store: Mutex::new(store),
+            database_path: Some(database_path),
+        })
+    }
+
+    fn save_if_persistent(&self, store: &ReviewBridgeStore) -> Result<(), String> {
+        match &self.database_path {
+            Some(path) => crate::review_persistence::save_to_path(store, path),
+            None => Ok(()),
+        }
+    }
 }
 
 #[derive(Default)]
 pub struct ReviewBridgeStore {
-    agent: ReviewAgent,
-    reports: Vec<ReviewReportView>,
+    pub(crate) agent: ReviewAgent,
+    pub(crate) reports: Vec<ReviewReportView>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -100,7 +118,9 @@ pub fn review_create(
         .store
         .lock()
         .map_err(|_| "Review bridge lock failed.".to_string())?;
-    create_review_record(&mut store, request)
+    let view = create_review_record(&mut store, request)?;
+    state.save_if_persistent(&store)?;
+    Ok(view)
 }
 
 #[tauri::command]

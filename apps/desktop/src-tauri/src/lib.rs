@@ -73,6 +73,8 @@ pub mod review_bridge;
 mod review_bridge_keys;
 mod review_bridge_tests;
 mod review_helpers;
+pub mod review_persistence;
+mod review_persistence_tests;
 mod review_tests;
 pub mod runtime_bridge;
 mod runtime_bridge_tests;

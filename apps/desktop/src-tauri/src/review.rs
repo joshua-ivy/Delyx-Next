@@ -86,6 +86,14 @@ impl ReviewAgent {
         Self::default()
     }
 
+    pub(crate) fn with_loaded_counters(next_report_id: usize, next_finding_id: usize) -> Self {
+        Self {
+            reports: Vec::new(),
+            next_finding_id,
+            next_report_id,
+        }
+    }
+
     pub fn capabilities() -> Vec<ReviewCapability> {
         vec![
             ReviewCapability::ReadDiff,

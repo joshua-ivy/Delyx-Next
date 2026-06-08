@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, and patch-proposal persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, and review-report persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -42,9 +42,10 @@ complete:
   hashes, and ID continuity, and a read-only Tauri snapshot bridge feeds the cockpit.
   The Rust automation engine persists mission contracts and scheduled-run
   records, and a read-only Tauri snapshot bridge feeds the cockpit. Release profile
-  and redacted support-bundle state persist to SQLite. Approved test artifacts
-  and proposed patch diffs persist receipt data to SQLite and reload into the
-  desktop bridge on startup. Governance mutation bridges are still not live.
+  and redacted support-bundle state persist to SQLite. Approved test artifacts,
+  proposed patch diffs, and review reports persist receipt data to SQLite and
+  reload into the desktop bridge on startup. Governance mutation bridges are
+  still not live.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -241,6 +242,10 @@ The Tauri `review_create` bridge exposes the read-only Rust ReviewAgent for
 real patch and test artifacts. It returns UI-ready ReviewReportView findings
 without write capability and rejects not-run test artifacts so review cannot
 turn missing execution into tested claims.
+Review reports persist to SQLite, including summaries, decisions, ordered
+findings, hunk labels, priorities, and suggested fixes. This preserves what
+Delyx reviewed across restart; it does not make the full build/test/review loop
+autonomous yet.
 Codex CLI and Claude Code adapter detection reads PATH only. Their typed
 command contracts produce visible `codex exec` and `claude -p` command arrays
 with explicit permission mode, transcript format, working directory, and Delyx

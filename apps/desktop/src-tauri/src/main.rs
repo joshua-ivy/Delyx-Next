@@ -17,7 +17,12 @@ fn main() {
             )
             .expect("patch SQLite state should open"),
         )
-        .manage(delyx_next_desktop::review_bridge::ReviewBridgeState::default())
+        .manage(
+            delyx_next_desktop::review_bridge::ReviewBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("review SQLite state should open"),
+        )
         .manage(
             delyx_next_desktop::runtime_bridge::RuntimeBridgeState::persistent(
                 delyx_next_desktop::sqlite_store::default_database_path(),
