@@ -119,7 +119,7 @@ complete:
   approved proposal is the last pending approval for the run. A focused
   renderer dispatcher can then run post-resume scheduler-selected actions:
   apply-approval request, Rust-owned approved patch apply, Rust-owned approved
-  tests, approval-queued tests, read-only review, or final-support recording. After each dispatched action it asks the Rust
+  tests, approval-queued tests, Rust-owned read-only review, or final-support recording. After each dispatched action it asks the Rust
   scheduler for a bounded next decision, stopping on passive/repeated states or
   the depth limit. The current bound is large enough for a generated patch
   path to continue through patch draft, apply approval, patch apply, tests,
@@ -140,6 +140,11 @@ complete:
   states, and executes the existing test bridge. Missing test approvals still
   queue visible approval cards before execution; approved test execution no
   longer receives command or approval authority from the renderer.
+  Scheduler-selected review now uses `agent_run_review_step`, which re-asks the
+  Rust scheduler for the current `run_review` decision, reads persisted
+  patch/test artifacts by run ID, moves the visible thread to reviewing, and
+  executes the existing read-only review bridge. The mounted renderer supplies
+  only run/clock/timestamp inputs for scheduler-selected review.
   PatchDraft approval readiness is discovered in Rust from persisted plan,
   workspace, review, patch, and approval records: the approval must be an
   executable same-run FileWrite approval with the exact plan or repair node ID
@@ -211,10 +216,11 @@ Current Codex-inspired local adaptation:
   duplicated, denied approvals block launch, and expired external-agent or
   terminal approvals are requeued with fresh bridge client IDs so persisted
   approval dedupe cannot revive stale execution authority.
-- Claude Code is intentionally detection and command-contract preview only in
-  Phase 2. Adapter status strings label that scope explicitly; no Claude launch
-  path is exposed until isolation, approval, transcript, and diff behavior are
-  implemented and tested.
+- Claude Code is currently detection and command-contract preview only. The
+  Phase 2 checklist now tracks live Claude launch depth, but no Claude launch
+  path should be exposed until corrected CLI flags, approval gates, isolation,
+  transcript parsing, diff capture, and failure mapping are implemented and
+  tested.
 
 ## Source File Size Budget
 
@@ -358,7 +364,9 @@ scheduler decision, preventing generated patches from relying on stale renderer
 state. Other runtime islands execute real work
 outside the full graph: Ollama chat/plan calls, the generic terminal-worker
 bridge, and Codex CLI read-only launches. The full Explore -> Plan -> Approve
--> Build -> Diff -> Test -> Review execution loop remains Phase 2 work. AgentRun
+-> Build -> Diff -> Test -> Review execution loop remains Phase 2 work until
+a Rust-owned bounded driver replaces the renderer scheduler-dispatch loop.
+AgentRun
   save/load, Tauri
   thread/run bridge session reload, approval bridge reload, plan record reload, recent workspace
 project reload, test artifact bridge reload, patch proposal bridge reload,

@@ -22,6 +22,8 @@ mod agent_review_executor_bridge_tests;
 mod agent_review_executor_tests;
 pub mod agent_review_revision_bridge;
 mod agent_review_revision_bridge_tests;
+pub mod agent_review_step;
+mod agent_review_step_tests;
 pub mod agent_run;
 pub mod agent_run_commands;
 mod agent_run_evidence_persistence;

@@ -47,7 +47,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - OpenAI-compatible providers are health/config stubs only.
 - Codex CLI has an approval-gated read-only launch bridge with captured terminal output and UI artifacts.
 - Codex write-capable launch now creates real checkpoint receipts for planned files before execution; worktree isolation can still come later.
-- Claude external agent support is detection/contract-preview only.
+- Claude external agent support is currently detection/contract-preview only; live Claude launch depth is now tracked below as open Phase 2 work.
 - Generic terminal worker execution exists behind external-agent and terminal-command approvals.
 - Frontend coverage now includes broad Vitest/React Testing Library behavior tests for project/thread creation, planning, approvals, artifacts, evidence support, error, blocked, expired, and empty states. Older smoke/source-contract verifier scripts remain guardrails, not proof of behavior.
 - The default workbench is now a React Focus shell ported from the provided Focus prototype. Legacy `buildCockpitMarkup` string-rendered cockpit files remain in source as an older implementation and smoke-contract reference, but they are no longer the mounted primary workbench.
@@ -124,25 +124,25 @@ autonomous Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop
 is still missing. It is also not "barely started": most core infrastructure
 now has real persisted or approval-gated functional islands.
 
-- [x] ~~D4, D6, D8, D9, and D10 are fully complete.~~
+- [x] ~~D3, D4, D6, D9, and D10 are fully complete; D8 is reopened for live Claude bridge depth.~~
 - [x] ~~SQLite is real for AgentRun, thread/run, approvals, workspace snapshots, model routes, memory, skills, automations, release/support-bundle state, tests, patches, reviews, external-agent runs, research evidence, and final-answer support links.~~
 - [x] ~~Ollama is a real local model path for runtime detection, chat, composer replies, plan drafts, route sync, and optional version display.~~
 - [x] ~~Patch proposal/apply/restore, approved test execution, and read-only review have narrow AgentRun executor bridges with persisted artifacts.~~
 - [x] ~~Stored review findings now block final support until accepted or repaired, and exact findings can create persisted repair-request markers plus scoped repair PatchDraft approvals.~~
 - [x] ~~Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.~~
 - [x] ~~Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.~~
-- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, Rust-owned PatchDraft/apply/test steps, and one-step approval-safe dispatcher now exist.
-- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft/apply/test scheduler steps are Rust-owned now, but the remaining gap is making the full repair/build loop autonomous instead of renderer-triggered.
+- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, Rust-owned PatchDraft/apply/test/review steps, and one-step approval-safe dispatcher now exist.
+- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft/apply/test/review scheduler steps are Rust-owned now, but the remaining gap is making the full repair/build loop autonomous instead of renderer-triggered.
 - [x] ~~Broad frontend behavior coverage now covers project/thread creation, planning, approvals, diff/test/review artifacts, evidence support, error, blocked, expired, and empty states with React Testing Library component/action tests.~~
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
 Progress board:
 
-- Phase 2 checkbox progress: 191/212 checked, 21 open, 90.1%.
-- Phase 2 track progress: 6/12 complete, 6/12 in progress.
-- Complete tracks: D3, D4, D6, D8, D9, D10.
-- In-progress tracks: D1, D2, D5, D7, D11, D12.
-- Open item hotspots: D2/D5 autonomous executor spine, D1 remaining action persistence tail, D7 provider depth, D11 remaining Codex salvage, and D12 signing/updater/install smoke.
+- Phase 2 checkbox progress: 192/238 checked, 46 open, 80.7%.
+- Phase 2 track progress: 5/12 complete, 7/12 in progress.
+- Complete tracks: D3, D4, D6, D9, D10.
+- In-progress tracks: D1, D2, D5, D7, D8, D11, D12.
+- Open item hotspots: D2/D5 autonomous executor spine, D8 live Claude bridge, D1 remaining action persistence tail, D7 provider depth, D11 remaining Codex salvage, and D12 signing/updater/install smoke.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
 - Largest remaining risk remains concentrated in D2 and D5.
 
@@ -178,6 +178,18 @@ Progress board:
 - [ ] D2 - AgentRun Execution Engine (in progress; scheduler/resume decisions and narrow executor bridges exist, full autonomous executor/repair/hook loop missing)
   - [ ] Add complete executor, scheduler, node runner, resume, repair, and hook modules.
   - [ ] Make AgentRun the real execution graph for the full loop, not only an inspector artifact plus narrow executor islands.
+  - [ ] Add `agent_drive.rs`: a bounded Rust driver loop over `schedule_next` that dispatches scheduler decisions to executor steps and returns a typed audit trail.
+  - [ ] Add `agent_drive_bridge.rs`: a Tauri `agent_drive_run` command that the renderer can call once per run/resume instead of ping-ponging scheduler decisions through TypeScript.
+  - [ ] Define typed drive results: `DriveOutcome`, `DriveStep`, and `DriveStop` for awaiting approval, approval proposal needed, repair queued, completed, blocked, failed, or step-budget exhausted.
+  - [ ] Keep the driver autonomous only between approval boundaries; file writes, terminal commands, connector actions, durable memory saves, scheduled risky actions, and external agents must still stop for approvals.
+  - [ ] Persist/checkpoint after every driver progress step so restart never hides a partial apply/test/review/final-support transition.
+  - [ ] Establish one canonical lock order for thread, patch, test, review, approval, plan, workspace, and external-agent stores before the driver holds multiple stores.
+  - [ ] Thread one command-entry `now_ms` through every scheduler/approval check in the driver instead of rereading time per step.
+  - [ ] Add a progress/no-repeat guard in addition to `MAX_DRIVE_STEPS` so non-progressing decisions block instead of looping.
+  - [ ] Shrink the renderer scheduler dispatcher into a thin `agent_drive_run` caller once the Rust driver covers the same decisions.
+  - [ ] Add driver tests for ungranted apply approval, apply -> tests -> review -> final support, failed node halt, step-budget halt, and no approval bypass.
+  - [ ] Optional safety-depth: add a run-scoped `AutoApprovePolicy` with file globs, max writes, expiry, and visible `auto_granted` approval records before any Codex-like "approve once for this scope" behavior.
+  - [ ] Decide the PatchDraft worker route for the driver: local Ollama remains default, while live Claude or a direct Anthropic route can become explicit opt-in stronger workers after their gates exist.
   - [x] ~~Added `AgentScheduler`: it reads real AgentRun, approval, patch, test, and review stores and returns conservative next-step decisions for wait, single-approval resume, patch-apply approval request, verified patch apply, tests, review, final-support readiness, terminal, complete, or blocked states.~~
   - [x] ~~Added `resume_waiting_run`: it resumes a run only when exactly one approval for that run is executable; multiple ready approvals, missing approvals, pending approvals, and zero clocks stay blocked or waiting instead of guessing.~~
   - [x] ~~Added Tauri scheduler commands: `agent_schedule_next` exposes the current scheduler decision to the UI, and `agent_resume_waiting_run` persists a non-risky resume transition only after the Rust scheduler finds exactly one executable approval.~~
@@ -204,6 +216,7 @@ Progress board:
   - [x] ~~Added `agent_run_patch_apply_step`: Rust now asks the scheduler for the current `run_patch_apply` decision, derives the exact persisted proposal/apply approval, loads approved roots from the persisted workspace project, validates the thread can move to testing before file writes, and then executes the existing checkpointed apply bridge.~~
   - [x] ~~Scheduler test readiness is now hydrated in Rust from persisted plan records and approval bridge records: unsafe shell-control test text is cleared, React test hints are ignored, and only an exact executable same-run terminal approval whose scope includes the persisted command is returned.~~
   - [x] ~~Added `agent_run_test_step`: Rust now asks the scheduler for the current approved `run_tests` decision, derives the persisted test command, workspace root, working directory, and exact terminal approval, moves the visible thread through testing/reviewing or failed states, and executes the existing test bridge.~~
+  - [x] ~~Added `agent_run_review_step`: Rust now asks the scheduler for the current `run_review` decision, reads persisted patch/test artifacts by run ID, moves the visible thread to reviewing, and executes the existing read-only review bridge without renderer-supplied artifacts.~~
   - [x] ~~Scheduler PatchDraft readiness is now hydrated in Rust from persisted plan, workspace, review, patch, and approval records: plan and repair draft approvals must be executable same-run FileWrite approvals with exact plan/repair node IDs and matching file scope, stale UI hints are cleared, existing patches block duplicate plan drafts, and generic same-run FileWrite approvals are rejected.~~
   - [x] ~~Added `agent_run_patch_draft_step`: Rust now asks the scheduler for the current `run_patch_draft` decision, derives the exact persisted approval, re-verifies that decision, and only then executes the PatchDraft bridge.~~
   - [x] ~~Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.~~
@@ -302,6 +315,7 @@ Progress board:
   - [x] ~~The scheduler dispatcher can automatically queue/run the scheduler-selected test step after the final approval resumes the run, and can dispatch read-only review/final-support steps from persisted artifacts.~~
   - [x] ~~`agent_resume_waiting_run` and `agent_schedule_next` now hydrate test readiness from persisted plan records, verify an exact executable same-run `TerminalCommand` approval from the approval ledger, and return that ID on the `run_tests` decision; the Focus dispatcher passes that exact ID into `agent_execute_test_run`.~~
   - [x] ~~Scheduler-dispatched approved tests now call the Rust scheduler-step bridge with only run/clock/timestamps; React no longer passes test approval IDs, command program/args, working directory, approved roots, or timeout authority for approved scheduler-selected test execution. Missing test approvals still queue visible approval cards before execution.~~
+  - [x] ~~Scheduler-dispatched review now calls the Rust scheduler-step bridge with only run/clock/timestamp inputs; React no longer passes patch lists, test artifacts, or review authority for scheduler-selected review.~~
   - [x] ~~The scheduler dispatcher can continue from a completed dispatched action to the next scheduler-selected test/review/final-support step within a bounded loop.~~
   - [x] ~~Review reports with unresolved findings now block final support, and an exact finding-level repair request is persisted before the run can move back toward build.~~
   - [x] ~~Approved repair requests now flow back to build through persisted review status, a scoped approval card, scheduler-selected PatchDraft, and tests covering that handoff; generated repair outputs can continue through apply, test, review, and final-support scheduling when approvals and receipts exist.~~
@@ -314,14 +328,26 @@ Progress board:
   - [x] ~~Runtime status now optionally probes real local Ollama `/api/version` and surfaces the version in Settings when available; missing version data does not override the model-readiness probe.~~
   - [ ] Add pull-progress UI only when backed by real local state.
 
-- [x] ~~D8 - External Agent Integration Depth (complete; Codex read-only launch works, write-capable Codex creates checkpoint receipts for planned files, and Claude remains preview-only)~~
+- [ ] D8 - External Agent Integration Depth (in progress; Codex read/write path exists, live Claude bridge depth is now tracked)
   - [x] ~~Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.~~
   - [x] ~~External-agent run receipts now survive restart through SQLite, including transcript and linked test IDs.~~
   - [x] ~~Codex external-agent approval selection now rejects expired approved approvals, avoids duplicate pending approvals, blocks denied approvals, and queues fresh bridge client IDs for expired external-agent or terminal approvals before any launch.~~
   - [x] ~~Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.~~
   - [x] ~~Add real changed-file/diff capture from external-agent runs instead of review placeholders.~~
-  - [x] ~~Claude launch is out of Phase 2 scope beyond detection and command-contract preview.~~
+  - [x] ~~Old Phase 2 scope kept Claude at detection and command-contract preview only; live Claude launch is now reopened as explicit depth work below.~~
   - [x] ~~Claude adapter status now labels detection/contract-preview-only scope instead of implying launch support.~~
+  - [ ] Verify the installed Claude Code CLI contract before launch work; do not assume stale flags.
+  - [ ] Fix Claude command args to use `--allowedTools`, add `--verbose` for `stream-json`, and add a bounded `--max-turns`.
+  - [ ] Generalize Codex-named external-agent launch request/record helpers into one contract-run path shared by Codex and Claude.
+  - [ ] Add `external_agent_run_claude` as a thin approval-gated command over the generic external-agent worker path.
+  - [ ] Ship read-only Claude launch first with `--permission-mode plan`, scoped cwd, terminal/external-agent approvals, and captured artifacts.
+  - [ ] Add a Claude `stream-json` parser that extracts assistant text, tool use, edit/write file paths, final result text, and error state.
+  - [ ] Map parsed Claude stream events into the existing transcript UI instead of showing only raw stdout/stderr lines.
+  - [ ] Feed parser-derived edited file paths into diff capture and cross-check them against checkpoint bytes.
+  - [ ] Mark Claude artifacts failed when `result.is_error` is true even if the process exits 0.
+  - [ ] Add write-capable Claude launch only with `acceptEdits`, mandatory checkpoint isolation, no Bash tools, scoped cwd, diff review, and rollback receipts.
+  - [ ] Consider optional `--add-dir` and `--model` only after the basic read-only/write-gated path is tested.
+  - [ ] Add Claude tests for corrected args, required approvals, write isolation, stream-json edit extraction, and stream error failure mapping.
 
 - [x] ~~D9 - Evidence and Final Answer Receipts (complete; final support links existing evidence, file-read/model/diff/review/approval/command receipts, and passed tests without generating prose)~~
   - [x] ~~Added a narrow final-answer support synthesis bridge for existing AgentRun evidence and passed persisted test artifacts.~~

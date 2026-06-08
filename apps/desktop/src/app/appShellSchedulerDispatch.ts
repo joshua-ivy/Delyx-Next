@@ -5,13 +5,17 @@ import type { ModelSettingsView } from "../features/models/modelTypes";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
+import { loadReviewSnapshot } from "../features/review/reviewClient";
 import type { ReviewReportView } from "../features/review/reviewTypes";
 import {
   runPatchApplySchedulerStepOverBridge,
   scheduleNextRunActionOverBridge,
   type AgentScheduleDecisionView,
 } from "../features/runs/agentExecutorClient";
-import { runTestSchedulerStepOverBridge } from "../features/runs/agentSchedulerStepClient";
+import {
+  runReviewSchedulerStepOverBridge,
+  runTestSchedulerStepOverBridge,
+} from "../features/runs/agentSchedulerStepClient";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { loadTestSnapshot } from "../features/tests/testClient";
 import type { TestArtifactView } from "../features/tests/testTypes";
@@ -21,7 +25,6 @@ import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { proposeApprovedPlanPatchWithOllama } from "./appShellOllamaPatchActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
-import { runReviewForActiveRun } from "./appShellReviewActions";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { patchApplyApprovalIdForScheduler } from "./patchApplyApproval";
 import { notifyLocalAction } from "./ShellPreferenceController";
@@ -111,12 +114,8 @@ async function dispatchOneSchedulerDecision(
     return { handled: true, nextState: testReloadedState(state, result) };
   }
   if (decision.kind === "run_review") {
-    await runReviewForActiveRun({
-      ...state,
-      patches: state.activeRun ? state.patches.filter((patch) => patch.runId === state.activeRun?.id) : [],
-      schedulerConfirmedArtifacts: true,
-    });
-    return { handled: true };
+    const result = await runSchedulerReviewStep(state);
+    return { handled: true, nextState: reviewReloadedState(state, result) };
   }
   if (decision.kind === "ready_for_final_support") {
     await recordFinalSupportForActiveThread(state);
@@ -208,6 +207,51 @@ function testReloadedState(
     ...state,
     activeRun: result?.snapshot?.runs.find((run) => run.id === state.activeRun?.id) ?? state.activeRun,
     tests: result?.tests ?? state.tests,
+  };
+}
+
+async function runSchedulerReviewStep(state: SchedulerDispatchState) {
+  if (!state.activeRun) {
+    notifyLocalAction("Create a run before reviewing scheduler-selected artifacts", "warning");
+    return undefined;
+  }
+  const now = new Date();
+  const result = await runReviewSchedulerStepOverBridge({
+    nowMs: now.getTime(),
+    runId: state.activeRun.id,
+    updatedAt: now.toISOString(),
+  });
+  if (!result) {
+    notifyLocalAction("Desktop bridge is required to review scheduler-selected artifacts", "warning");
+    return undefined;
+  }
+  const [reviews, snapshot] = await Promise.all([
+    loadReviewSnapshot(state.activeRun.id),
+    loadThreadRunSnapshot(state.activeProject.id),
+  ]);
+  if (reviews) {
+    state.setReviews((current) => [
+      ...reviews,
+      ...current.filter((report) => report.runId !== state.activeRun?.id),
+    ]);
+  }
+  if (snapshot) {
+    state.setThreads(snapshot.threads);
+    state.setAgentRuns(snapshot.runs);
+  }
+  state.setThreadState("ready");
+  notifyLocalAction(result.message, result.status === "completed" ? "success" : "warning");
+  return { reviews, snapshot };
+}
+
+function reviewReloadedState(
+  state: SchedulerDispatchState,
+  result: Awaited<ReturnType<typeof runSchedulerReviewStep>>,
+) {
+  return {
+    ...state,
+    activeRun: result?.snapshot?.runs.find((run) => run.id === state.activeRun?.id) ?? state.activeRun,
+    reviews: result?.reviews ?? state.reviews,
   };
 }
 

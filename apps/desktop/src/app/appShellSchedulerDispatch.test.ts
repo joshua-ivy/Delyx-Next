@@ -2,39 +2,42 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
+import { loadReviewSnapshot } from "../features/review/reviewClient";
 import {
   runPatchApplySchedulerStepOverBridge,
   scheduleNextRunActionOverBridge,
   type AgentScheduleDecisionView,
 } from "../features/runs/agentExecutorClient";
+import { runReviewSchedulerStepOverBridge } from "../features/runs/agentSchedulerStepClient";
 import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { proposeApprovedPlanPatchWithOllama } from "./appShellOllamaPatchActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
-import { runReviewForActiveRun } from "./appShellReviewActions";
 import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
 import { runTestsForActiveRun } from "./appShellTestActions";
 
 vi.mock("./appShellFinalAnswerActions", () => ({ recordFinalSupportForActiveThread: vi.fn() }));
 vi.mock("./appShellOllamaPatchActions", () => ({ proposeApprovedPlanPatchWithOllama: vi.fn() }));
 vi.mock("./appShellPatchActions", () => ({ applyApprovedPatchForActiveRun: vi.fn() }));
-vi.mock("./appShellReviewActions", () => ({ runReviewForActiveRun: vi.fn() }));
 vi.mock("./appShellTestActions", () => ({ runTestsForActiveRun: vi.fn() }));
 vi.mock("../features/patches/patchClient", () => ({ loadPatchSnapshot: vi.fn() }));
+vi.mock("../features/review/reviewClient", () => ({ loadReviewSnapshot: vi.fn() }));
 vi.mock("../features/threads/threadClient", () => ({ loadThreadRunSnapshot: vi.fn() }));
 vi.mock("./ShellPreferenceController", () => ({ notifyLocalAction: vi.fn() }));
 vi.mock("../features/runs/agentExecutorClient", () => ({
   runPatchApplySchedulerStepOverBridge: vi.fn(),
   scheduleNextRunActionOverBridge: vi.fn(),
 }));
+vi.mock("../features/runs/agentSchedulerStepClient", () => ({ runReviewSchedulerStepOverBridge: vi.fn() }));
 
 const applyPatch = vi.mocked(applyApprovedPatchForActiveRun);
 const draftPatch = vi.mocked(proposeApprovedPlanPatchWithOllama);
 const loadPatches = vi.mocked(loadPatchSnapshot);
+const loadReviews = vi.mocked(loadReviewSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const recordFinal = vi.mocked(recordFinalSupportForActiveThread);
 const runApplyStep = vi.mocked(runPatchApplySchedulerStepOverBridge);
-const runReview = vi.mocked(runReviewForActiveRun);
+const runReviewStep = vi.mocked(runReviewSchedulerStepOverBridge);
 const runTests = vi.mocked(runTestsForActiveRun);
 const scheduleNext = vi.mocked(scheduleNextRunActionOverBridge);
 
@@ -47,7 +50,14 @@ beforeEach(() => {
     status: "completed",
   });
   loadPatches.mockResolvedValue([patchView("applied")]);
+  loadReviews.mockResolvedValue([{ decision: "approved", findings: [], id: "review-1", runId: "run-1" } as never]);
   loadSnapshot.mockResolvedValue({ runs: [{ id: "run-1" }] as never, threads: [] });
+  runReviewStep.mockResolvedValue({
+    message: "Review report review-1 captured with 0 finding(s).",
+    reviewReportId: "review-1",
+    runId: "run-1",
+    status: "completed",
+  });
 });
 
 describe("dispatchSchedulerDecision", () => {
@@ -60,7 +70,7 @@ describe("dispatchSchedulerDecision", () => {
     await dispatchSchedulerDecision(base, decision("ready_for_final_support"));
 
     expect(runTests).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedRunTests: true }));
-    expect(runReview).toHaveBeenCalledWith(expect.objectContaining({ patches: [patchView()] }));
+    expect(runReviewStep).toHaveBeenCalledWith(expect.objectContaining({ runId: "run-1" }));
     expect(recordFinal).toHaveBeenCalledWith(base);
   });
 
@@ -103,7 +113,7 @@ describe("dispatchSchedulerDecision", () => {
     expect(runApplyStep).toHaveBeenCalledWith(expect.objectContaining({ runId: "run-1" }));
     expect(applyPatch).not.toHaveBeenCalled();
     expect(runTests).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedRunTests: true }));
-    expect(runReview).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedArtifacts: true }));
+    expect(runReviewStep).toHaveBeenCalledWith(expect.objectContaining({ runId: "run-1" }));
     expect(recordFinal).toHaveBeenCalledTimes(1);
   });
 
@@ -129,7 +139,7 @@ describe("dispatchSchedulerDecision", () => {
     expect(handled).toBe(false);
     expect(applyPatch).not.toHaveBeenCalled();
     expect(runTests).not.toHaveBeenCalled();
-    expect(runReview).not.toHaveBeenCalled();
+    expect(runReviewStep).not.toHaveBeenCalled();
     expect(recordFinal).not.toHaveBeenCalled();
   });
 });
