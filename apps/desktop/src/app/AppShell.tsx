@@ -8,7 +8,6 @@ import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { sendComposerInstruction } from "./cockpitComposerBindings";
 import { decideFocusApproval } from "./focusApprovalDecision";
 import { FocusShell } from "./FocusShell";
-import { currentActionProposals } from "../features/approvals/approvalData";
 import { externalAgentBridgeUnavailableState, loadExternalAgentStatus } from "../features/externalAgents/externalAgentClient";
 import { currentExternalAgentState } from "../features/externalAgents/externalAgentData";
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
@@ -25,12 +24,12 @@ import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, webRuntimeBridge, type RuntimeBridgeState } from "./runtimeBridge";
 import { usePersistedInspectorState } from "./usePersistedInspectorState";
+import { useRunApprovals } from "./useRunApprovals";
 import { useRunReceipts } from "./useRunReceipts";
 import { loadWorkspaceProject } from "./workspaceBridge";
 
 export function AppShell() {
   const [activeThreadId, setActiveThreadId] = useState<string | undefined>();
-  const [actionProposals, setActionProposals] = useState(currentActionProposals);
   const [plans, setPlans] = useState<PlanView[]>([]);
   const [threadOpen, setThreadOpen] = useState(false);
   const [threads, setThreads] = useState<TaskThread[]>([]);
@@ -51,6 +50,7 @@ export function AppShell() {
   const activeRun = agentRuns.find((run) => run.id === activeThread?.activeRunId)
     ?? agentRuns.find((run) => run.threadId === activeThread?.id);
   const activePlan = plans.find((plan) => plan.threadId === activeThread?.id);
+  const { actionProposals, setActionProposals } = useRunApprovals(activeRun?.id);
   const { patches, reviews, setReviews, tests } = useRunReceipts(activeRun?.id);
   useEffect(() => {
     let cancelled = false;

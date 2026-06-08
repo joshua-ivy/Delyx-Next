@@ -262,7 +262,9 @@ pending, approved, denied, and expired cards remain inspectable after restart.
 The `approval_taxonomy` command exposes the Rust risk taxonomy as a read-only
 UI snapshot. The renderer merges that snapshot into its web-preview fallback so
 approval policy labels come from the same minimum-risk floors used by execution
-gates when Tauri is available.
+gates when Tauri is available. Focus state also reloads persisted approval
+proposals and decisions for the active run so patch/test controls can reason
+from real approval status instead of renderer-only memory.
 
 ## Tool Layer
 

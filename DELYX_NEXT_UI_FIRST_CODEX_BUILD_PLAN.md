@@ -179,6 +179,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Runtime can now execute an explicit approved PatchProposal restore node through AgentRun. This is real rollback I/O through the existing restore approval, stale-after, and checkpoint receipt gates, but it is not yet automatically chained from review rejection.
   - Focus UI now loads persisted patch snapshots for the active run instead of passing a static empty patch array, so real PatchProposal diffs can appear when the runtime creates them.
   - Focus approval decisions no longer mark the thread as `building` by themselves; approval returns to the next-step state or keeps waiting when more approvals are pending until an actual executor/tool action starts.
+  - Focus state now loads persisted approval proposals/decisions for the active run instead of relying only on the current renderer session, which is required before safe patch/test action buttons can reason about approval status.
   - Patch apply and restore now have persisted approval-gated bridges with stale-file protection and checkpoint receipts; the runtime engine still needs to call them automatically from the build flow.
   - Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - Surface real diffs and rollback state in the UI.
