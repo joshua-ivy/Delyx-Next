@@ -27,6 +27,19 @@ impl ApprovalBridgeState {
         Ok(read(&store.engine))
     }
 
+    pub fn with_store_mut<R>(
+        &self,
+        write: impl FnOnce(&mut ApprovalBridgeStore) -> Result<R, String>,
+    ) -> Result<R, String> {
+        let mut store = self
+            .store
+            .lock()
+            .map_err(|_| "Approval bridge lock failed.".to_string())?;
+        let result = write(&mut store)?;
+        self.persist(&store)?;
+        Ok(result)
+    }
+
     fn persist(&self, store: &ApprovalBridgeStore) -> Result<(), String> {
         if let Some(path) = &self.database_path {
             crate::approval_persistence::save_to_path(store, path)?;

@@ -1,10 +1,12 @@
 use crate::approval::ApprovalEngine;
-use crate::approval_bridge::ApprovalBridgeState;
-use crate::automation::{
-    ActiveHours, AutomationEngine, MissionContract, MissionContractInput, MissionStatus,
-    ScheduledRun, ScheduledRunStatus,
+use crate::approval_bridge::{
+    ApprovalBridgeRecord, ApprovalBridgeState, ApprovalBridgeStore, PermissionScopeView,
 };
-use serde::{Deserialize, Serialize};
+use crate::automation::{ActiveHours, AutomationEngine, MissionContractInput, ScheduledRun};
+pub use crate::automation_bridge_views::{
+    automation_snapshot_from_engine, AutomationStateView, MissionContractView, ScheduledRunView,
+};
+use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
@@ -29,38 +31,6 @@ impl AutomationBridgeState {
             None => Ok(()),
         }
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AutomationStateView {
-    pub contracts: Vec<MissionContractView>,
-    pub scheduled_runs: Vec<ScheduledRunView>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct MissionContractView {
-    pub id: String,
-    pub title: String,
-    pub status: String,
-    pub scope: String,
-    pub allowed_tools: Vec<String>,
-    pub active_hours: String,
-    pub timezone: String,
-    pub delivery_targets: Vec<String>,
-    pub stop_condition: String,
-    pub workspace_fingerprint: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ScheduledRunView {
-    pub id: String,
-    pub contract_id: String,
-    pub status: String,
-    pub reason: String,
-    pub approval_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -89,6 +59,14 @@ pub struct MissionApproveRequest {
 #[serde(rename_all = "camelCase")]
 pub struct MissionActionRequest {
     pub contract_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScheduledRunRequest {
+    pub contract_id: String,
+    pub workspace_fingerprint: String,
+    pub requested_at_ms: u64,
 }
 
 #[tauri::command]
@@ -147,16 +125,26 @@ pub fn automation_contract_pause(
     Ok(view)
 }
 
+#[tauri::command]
+pub fn automation_schedule_due_run(
+    state: tauri::State<AutomationBridgeState>,
+    approvals: tauri::State<ApprovalBridgeState>,
+    request: ScheduledRunRequest,
+) -> Result<AutomationStateView, String> {
+    approvals.with_store_mut(|approval_store| {
+        let mut engine = state
+            .engine
+            .lock()
+            .map_err(|_| "Automation bridge lock failed.".to_string())?;
+        let view = schedule_due_run_record(&mut engine, approval_store, request)?;
+        state.save_if_persistent(&engine)?;
+        Ok(view)
+    })
+}
+
 pub fn automation_snapshot_from_path(path: &Path) -> Result<AutomationStateView, String> {
     let engine = crate::automation_persistence::load_from_path(path)?;
     Ok(automation_snapshot_from_engine(&engine))
-}
-
-pub fn automation_snapshot_from_engine(engine: &AutomationEngine) -> AutomationStateView {
-    AutomationStateView {
-        contracts: engine.contracts().iter().map(contract_view).collect(),
-        scheduled_runs: engine.scheduled_runs().iter().map(run_view).collect(),
-    }
 }
 
 pub fn create_contract_record(
@@ -212,48 +200,68 @@ pub fn pause_contract_record(
     Ok(automation_snapshot_from_engine(engine))
 }
 
-fn contract_view(contract: &MissionContract) -> MissionContractView {
-    MissionContractView {
-        id: contract.id.clone(),
-        title: contract.title.clone(),
-        status: status_key(contract.status).to_string(),
-        scope: contract.scope.clone(),
-        allowed_tools: contract.allowed_tools.clone(),
-        active_hours: format!(
-            "{:02}:00-{:02}:00",
-            contract.active_hours.start_hour, contract.active_hours.end_hour
-        ),
-        timezone: contract.timezone.clone(),
-        delivery_targets: contract.delivery_targets.clone(),
-        stop_condition: contract.stop_condition.clone(),
-        workspace_fingerprint: contract.workspace_fingerprint.clone(),
+pub fn schedule_due_run_record(
+    engine: &mut AutomationEngine,
+    approval_store: &mut ApprovalBridgeStore,
+    request: ScheduledRunRequest,
+) -> Result<AutomationStateView, String> {
+    validate_scheduled_run_request(&request)?;
+    let run = engine
+        .schedule_due_run(
+            &request.contract_id,
+            &request.workspace_fingerprint,
+            request.requested_at_ms,
+            &mut approval_store.engine,
+        )
+        .map_err(|error| format!("{error:?}"))?;
+    if let Some(approval_id) = run.approval_id.as_deref() {
+        record_generated_schedule_approval(engine, approval_store, &run, approval_id)?;
     }
+    Ok(automation_snapshot_from_engine(engine))
 }
 
-fn run_view(run: &ScheduledRun) -> ScheduledRunView {
-    ScheduledRunView {
-        id: run.id.clone(),
-        contract_id: run.contract_id.clone(),
-        status: run_status_key(run.status).to_string(),
-        reason: run.reason.clone(),
-        approval_id: run.approval_id.clone(),
+fn record_generated_schedule_approval(
+    engine: &AutomationEngine,
+    approval_store: &mut ApprovalBridgeStore,
+    run: &ScheduledRun,
+    approval_id: &str,
+) -> Result<(), String> {
+    if approval_store
+        .records
+        .iter()
+        .any(|record| record.proposal_id == approval_id)
+    {
+        return Ok(());
     }
-}
-
-fn status_key(status: MissionStatus) -> &'static str {
-    match status {
-        MissionStatus::Active => "active",
-        MissionStatus::Blocked => "blocked",
-        MissionStatus::Paused => "paused",
-    }
-}
-
-fn run_status_key(status: ScheduledRunStatus) -> &'static str {
-    match status {
-        ScheduledRunStatus::Blocked => "blocked",
-        ScheduledRunStatus::Created => "created",
-        ScheduledRunStatus::WaitingForApproval => "waiting_for_approval",
-    }
+    let proposal = approval_store
+        .engine
+        .all_proposals()
+        .iter()
+        .find(|proposal| proposal.id == approval_id)
+        .ok_or_else(|| "Generated scheduled-run approval not found.".to_string())?;
+    let tools = engine
+        .contracts()
+        .iter()
+        .find(|contract| contract.id == run.contract_id)
+        .map(|contract| contract.allowed_tools.clone());
+    approval_store.records.push(ApprovalBridgeRecord {
+        action_type: "schedule_work".to_string(),
+        client_id: format!("automation-scheduled-run-{}", run.id),
+        expires_at: format!("epoch_ms:{}", proposal.expires_at),
+        proposal_id: approval_id.to_string(),
+        required_permission: "schedule_work".to_string(),
+        run_id: proposal.run_id.clone(),
+        scope: PermissionScopeView {
+            commands: tools,
+            connector_id: None,
+            kind: "automation".to_string(),
+            paths: None,
+            project_id: None,
+            root: None,
+            summary: proposal.scope.clone(),
+        },
+    });
+    Ok(())
 }
 
 fn validate_contract_request(request: &MissionContractRequest) -> Result<(), String> {
@@ -270,6 +278,16 @@ fn validate_contract_request(request: &MissionContractRequest) -> Result<(), Str
     }
     if request.active_start_hour >= request.active_end_hour || request.active_end_hour > 24 {
         return Err("Mission active hours must be an increasing 0-24 range.".to_string());
+    }
+    Ok(())
+}
+
+fn validate_scheduled_run_request(request: &ScheduledRunRequest) -> Result<(), String> {
+    if request.contract_id.trim().is_empty() || request.workspace_fingerprint.trim().is_empty() {
+        return Err("Scheduled run requires contract ID and workspace fingerprint.".to_string());
+    }
+    if request.requested_at_ms == 0 {
+        return Err("Scheduled run requires a request timestamp.".to_string());
     }
     Ok(())
 }

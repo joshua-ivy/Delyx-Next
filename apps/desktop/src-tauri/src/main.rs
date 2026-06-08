@@ -83,6 +83,7 @@ fn main() {
             delyx_next_desktop::automation_bridge::automation_contract_approve,
             delyx_next_desktop::automation_bridge::automation_contract_create,
             delyx_next_desktop::automation_bridge::automation_contract_pause,
+            delyx_next_desktop::automation_bridge::automation_schedule_due_run,
             delyx_next_desktop::automation_bridge::automation_snapshot,
             delyx_next_desktop::external_agent_contract_bridge::external_agent_contract_preview,
             delyx_next_desktop::external_agent_run_bridge::external_agent_run_codex,

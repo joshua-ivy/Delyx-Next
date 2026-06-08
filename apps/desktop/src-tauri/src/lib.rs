@@ -19,6 +19,7 @@ mod approval_types;
 pub mod automation;
 pub mod automation_bridge;
 mod automation_bridge_tests;
+mod automation_bridge_views;
 pub mod automation_persistence;
 mod automation_persistence_tests;
 mod automation_tests;
