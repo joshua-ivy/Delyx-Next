@@ -3,6 +3,7 @@ import { ShellPreferenceController } from "./ShellPreferenceController";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { runReviewForActiveRun } from "./appShellReviewActions";
+import { resumeSchedulerRun } from "./appShellSchedulerActions";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { sendComposerInstruction } from "./cockpitComposerBindings";
@@ -24,6 +25,7 @@ import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/w
 import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, webRuntimeBridge, type RuntimeBridgeState } from "./runtimeBridge";
 import { useRunApprovals } from "./useRunApprovals";
 import { useRunReceipts } from "./useRunReceipts";
+import { useSchedulerDecision } from "./useSchedulerDecision";
 import { loadWorkspaceProject } from "./workspaceBridge";
 
 export function AppShell() {
@@ -47,6 +49,7 @@ export function AppShell() {
   const activePlan = plans.find((plan) => plan.threadId === activeThread?.id);
   const { actionProposals, setActionProposals } = useRunApprovals(activeRun?.id);
   const { patches, reviews, setPatches, setReviews, setTests, tests } = useRunReceipts(activeRun?.id);
+  const schedulerDecision = useSchedulerDecision({ activePlan, activeRun, patches, proposals: actionProposals, reviews, tests });
   useEffect(() => {
     let cancelled = false;
     void loadRuntimeBridgeState().then(async (state) => {
@@ -255,6 +258,7 @@ export function AppShell() {
         onApplyPatch={applyPatch}
         onRecordFinal={recordFinal}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
+        onResumeRun={() => { void resumeSchedulerRun({ activeProject, activeRun, setAgentRuns, setThreads, setThreadState }); }}
         onRunReview={runReview}
         onRunTests={runTests}
         onRunCommand={runPaletteCommand}
@@ -267,6 +271,7 @@ export function AppShell() {
         patches={patches}
         proposals={actionProposals}
         reviews={reviews}
+        schedulerDecision={schedulerDecision}
         tests={tests}
         threads={threads}
       />

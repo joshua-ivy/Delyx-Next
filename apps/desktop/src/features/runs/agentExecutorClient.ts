@@ -31,6 +31,33 @@ export interface AgentReviewExecutionBridgeView {
   message: string;
 }
 
+export interface AgentScheduleDecisionView {
+  kind:
+    | "blocked"
+    | "complete"
+    | "ready_for_final_support"
+    | "resume_after_approval"
+    | "run_patch_apply"
+    | "run_review"
+    | "run_tests"
+    | "terminal"
+    | "wait_for_approval";
+  runId: string;
+  message: string;
+  approvalIds: string[];
+  proposalId?: string;
+  reviewReportId?: string;
+  patchCount: number;
+  testCount: number;
+  status?: string;
+}
+
+export interface AgentScheduleRequestView {
+  runId: string;
+  hasSupportedTestCommand: boolean;
+  nowMs: number;
+}
+
 export async function executePatchProposalNodeOverBridge(
   request: AgentPatchProposalExecuteRequest,
 ): Promise<AgentExecutionBridgeView | undefined> {
@@ -93,6 +120,32 @@ export async function executeReviewNodeOverBridge(
     return await invoke<AgentReviewExecutionBridgeView>("agent_execute_review", {
       request: { runId },
     });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function scheduleNextRunActionOverBridge(
+  request: AgentScheduleRequestView,
+): Promise<AgentScheduleDecisionView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<AgentScheduleDecisionView>("agent_schedule_next", { request });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function resumeWaitingRunOverBridge(
+  request: AgentScheduleRequestView,
+): Promise<AgentScheduleDecisionView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<AgentScheduleDecisionView>("agent_resume_waiting_run", { request });
   } catch {
     return undefined;
   }

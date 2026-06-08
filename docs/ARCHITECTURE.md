@@ -74,10 +74,11 @@ complete:
   approval, cwd, timeout, output capture, and persistence path before recording
   AgentRun test receipts. Review nodes gather persisted PatchProposal and
   TestArtifact records by run ID, then create ReviewReport receipts without
-  write capability. A narrow AgentScheduler now reads the persisted AgentRun,
-  approval, patch, test, and review stores to choose conservative next-step
-  decisions: wait, single-approval resume, patch apply, tests, review,
-  final-support readiness, terminal, complete, or blocked.
+  write capability. A narrow AgentScheduler bridge now reads the persisted
+  AgentRun, approval, patch, test, and review stores to choose conservative
+  next-step decisions: wait, single-approval resume, patch apply, tests, review,
+  final-support readiness, terminal, complete, or blocked. The Focus UI can
+  render that decision as a next-action line without inventing runtime state.
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.
@@ -217,8 +218,10 @@ with narrow scheduling and execution paths. `AgentScheduler` can identify
 approval waits, resume exactly one ready approval, select approved proposed
 patches for apply, require supported test-command evidence after applied
 patches, select review from stored patch/test artifacts, and report
-final-support readiness after a stored review. It does not yet dispatch the
-whole loop by itself. The `agent_execute_patch_proposal` bridge can
+final-support readiness after a stored review. `agent_schedule_next` exposes
+that decision to the UI, and `agent_resume_waiting_run` persists the non-risky
+resume transition when exactly one approval is executable. It does not yet
+dispatch the whole loop by itself. The `agent_execute_patch_proposal` bridge can
 advance a run from a pending approval boundary into an approved patch-proposal
 node, persist the patch proposal, and record node events, artifact IDs, and diff
 evidence receipts. The `agent_execute_patch_apply` bridge can advance an
@@ -233,9 +236,10 @@ test-execution node, run only commands accepted by the TestRunner, persist the
 TestArtifact, and record test evidence. The `agent_execute_review` bridge can
 advance persisted patch/test artifacts into a read-only review node and
 ReviewReport artifact. The Focus thread view loads persisted patch, test, and
-review receipts for the active run; it can trigger that read-only review action
-only when actual patch or test artifacts exist, then reloads persisted
-ReviewReports for inline display. Other runtime islands execute real work
+review receipts for the active run; it shows scheduler-selected next actions
+from the Rust bridge, can resume a single ready approval, and can trigger
+existing patch/test/review/final-support actions only from real receipts. Other
+runtime islands execute real work
 outside the full graph: Ollama chat/plan calls, the generic terminal-worker
 bridge, and Codex CLI read-only launches. The full Explore -> Plan -> Approve
 -> Build -> Diff -> Test -> Review execution loop remains Phase 2 work. AgentRun

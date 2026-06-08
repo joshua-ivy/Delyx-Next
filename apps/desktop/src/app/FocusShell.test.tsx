@@ -55,6 +55,7 @@ function renderShell({ onSendInstruction = vi.fn() } = {}) {
       onOpenWorkspace={vi.fn()}
       onRecordFinal={vi.fn()}
       onRefreshModels={vi.fn()}
+      onResumeRun={vi.fn()}
       onRunCommand={vi.fn()}
       onRunReview={vi.fn()}
       onRunTests={vi.fn()}
@@ -64,6 +65,7 @@ function renderShell({ onSendInstruction = vi.fn() } = {}) {
       patches={[]}
       proposals={[]}
       reviews={[]}
+      schedulerDecision={undefined}
       tests={[]}
       threads={[]}
     />,

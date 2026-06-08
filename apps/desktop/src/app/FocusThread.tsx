@@ -3,13 +3,14 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import type { ReviewReportView } from "../features/review/reviewTypes";
+import type { AgentScheduleDecisionView } from "../features/runs/agentExecutorClient";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusIcon, Pipe, Think } from "./focusAtoms";
 import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatusLabel, type FocusMode } from "./focusFormat";
 import { MarkdownMessage } from "./focusMarkdown";
-import { FocusActionLine, FocusOutcomePeek, FocusTestPeek } from "./FocusThreadArtifacts";
+import { FocusActionLine, FocusOutcomePeek, FocusSchedulerPeek, FocusTestPeek } from "./FocusThreadArtifacts";
 
 interface FocusThreadProps {
   activePlan: PlanView | undefined;
@@ -21,6 +22,7 @@ interface FocusThreadProps {
   onModeChange: (mode: FocusMode) => void;
   onOpenPalette: () => void;
   onRecordFinal: () => void;
+  onResumeRun: () => void;
   onRunReview: () => void;
   onRunTests: () => void;
   onSend: (value: string) => void;
@@ -28,6 +30,7 @@ interface FocusThreadProps {
   proposals: ActionProposalView[];
   reviews: ReviewReportView[];
   run: AgentRunView | undefined;
+  schedulerDecision: AgentScheduleDecisionView | undefined;
   tests: TestArtifactView[];
   thread: TaskThread;
 }
@@ -57,6 +60,7 @@ export function FocusThread(props: FocusThreadProps) {
           <div className="wrap">
             <ThreadHeader mode={props.mode} model={props.model} run={props.run} thread={props.thread} />
             <ThreadTimeline messages={props.thread.messages} mode={props.mode} run={props.run} />
+            <FocusSchedulerPeek decision={props.schedulerDecision} onApplyPatch={props.onApplyPatch} onRecordFinal={props.onRecordFinal} onResumeRun={props.onResumeRun} onRunReview={props.onRunReview} onRunTests={props.onRunTests} />
             <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} />
             <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
             <DiffPeek onApplyPatch={props.onApplyPatch} patches={props.patches} proposals={props.proposals} />

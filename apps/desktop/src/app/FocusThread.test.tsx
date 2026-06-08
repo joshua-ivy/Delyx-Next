@@ -146,6 +146,7 @@ function renderThread({
       onModeChange={vi.fn()}
       onOpenPalette={vi.fn()}
       onRecordFinal={onRecordFinal}
+      onResumeRun={vi.fn()}
       onRunReview={vi.fn()}
       onRunTests={onRunTests}
       onSend={vi.fn()}
@@ -153,6 +154,7 @@ function renderThread({
       proposals={proposals ?? [approval(approvalStatus)]}
       reviews={[]}
       run={run}
+      schedulerDecision={undefined}
       tests={[]}
       thread={thread(messages)}
     />,

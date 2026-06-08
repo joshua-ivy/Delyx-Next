@@ -41,7 +41,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - PR 1-18.1 breadth is skeleton-complete.
 - SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state and file-export receipts, approved test artifacts, patch proposal/apply/restore receipts, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automation contracts/scheduled runs, release/support-bundle state, support-bundle file export, patch apply/restore, and final-answer support synthesis have narrow persisted mutation bridges; remaining action bridges are still missing.
-- There is no full execution engine: no multi-node autonomous executor, repair loop, or hook runner. A narrow scheduler/resume layer can now choose the next safe action from persisted approvals, patches, tests, and reviews, while narrow AgentRun executor nodes can run approval-gated patch proposal/apply/restore, approved test-command work, and read-only review work while recording run events/artifacts/evidence.
+- There is no full execution engine: no multi-node autonomous executor, repair loop, or hook runner. A narrow scheduler/resume bridge can now choose and expose the next safe action from persisted approvals, patches, tests, and reviews, while narrow AgentRun executor nodes can run approval-gated patch proposal/apply/restore, approved test-command work, and read-only review work while recording run events/artifacts/evidence.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
 - OpenAI-compatible providers are health/config stubs only.
@@ -130,153 +130,157 @@ now has real persisted or approval-gated functional islands.
 - [x] Patch proposal/apply/restore, approved test execution, and read-only review have narrow AgentRun executor bridges with persisted artifacts.
 - [x] Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.
 - [x] Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.
-- [ ] The full autonomous executor/resume/repair/hook loop is still the main missing spine; a conservative scheduler decision layer now exists.
+- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge and UI next-action line now exist.
 - [ ] Approved plan -> generated patch -> apply -> test -> review is not yet automatically chained end-to-end.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 1/12 depth tracks fully complete, 11/12 in progress, with the
-largest remaining risk concentrated in D2, D5, D6, and D3.
+Progress read: 101/140 visible Phase 2 checkboxes are checked. Only 1/12 depth
+tracks is fully complete, and 11/12 are in progress. The subchecks below show
+the real completed work; the largest remaining risk is still concentrated in
+D2, D5, D6, and D3.
 
 - [ ] D1 - Real SQLite Local Store (in progress; broad persistence exists, remaining action bridges still open)
-  - Added `rusqlite` with bundled SQLite for local Windows-safe storage.
-  - AgentRun `save_to_path` / `load_from_path` now use the SQLite migration instead of a tab-separated text helper.
-  - Tauri thread/run bridge state now saves threads, messages, run links, and AgentRun rows to SQLite and reloads them on desktop startup.
-  - Tauri approval bridge state now saves proposals, scope, status, decisions, and decision notes to SQLite and reloads them on desktop startup.
-  - Recent workspace project snapshots now save project metadata, rules files, approved roots, Git metadata, and indexed file names to SQLite.
-  - Model role routes now save to SQLite; runtime status reloads a valid saved coding route before falling back to the first ready Ollama model.
-  - The Rust memory governance store now saves candidates, promoted records, suppression state, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
-  - Memory candidate propose, approved promotion, candidate suppression, and record suppression now run through a Tauri bridge backed by the persisted MemoryStore. Durable memory promotion still requires a matching approved `DurableMemorySave` proposal and a completed source run.
-  - The Rust skill registry now saves imported skills, trust, activation status, permissions, source hashes, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
-  - Skill import, activation with explicit permissions, disable, and suppression now run through a Tauri bridge backed by the persisted SkillRegistry. Activation changes local registry state only; it does not execute scripts, edit files, or use network by itself.
-  - The Rust automation engine now saves mission contracts, active/paused status, schedules, allowed tools, scheduled run records, approval links, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
-  - Automation contract create, approved activation, pause, and due-run scheduling now run through a Tauri bridge backed by the persisted AutomationEngine. Contract activation still requires a matching approved `ScheduledRiskyAction` proposal. Risky scheduled runs generate persisted, UI-visible approval cards through the approval bridge before execution.
-  - Release profile and latest redacted support bundle now save to SQLite; a Tauri bridge feeds the cockpit.
-  - Release profile save, release smoke capture, latest redacted support-bundle export, and approval-gated support-bundle file export now run through Tauri bridges backed by SQLite. Support-bundle config/log entries are redacted by the release domain before persistence; file export requires a matching approved `FileWrite` proposal and an approved root. Signing execution and update publishing are still not implemented.
-  - Approved test artifact bridge records now save command, cwd, approval/run IDs, exit status, stdout/stderr, parsed failures, output truncation, and command exec events to SQLite and reload on desktop startup.
-  - Patch proposal, apply, and restore bridge records now save proposal IDs, approval/run IDs, status, checkpoint IDs, restore approval IDs, file paths, before/after text, diff lines, and checkpoint file receipts to SQLite and reload on desktop startup. `patch_apply_approved` requires a matching approved `FileWrite` proposal, approved root, unchanged file contents since proposal, and then writes through the checkpointing PatchEngine. `patch_restore_approved` requires a matching approved `FileWrite` proposal, approved root, unchanged file contents since apply, and then restores/removes checkpointed files.
-  - Review report bridge records now save report IDs, decisions, summaries, finding order, hunk labels, priorities, and suggested fixes to SQLite and reload on desktop startup.
-  - External-agent run bridge records now save adapter IDs, status, scope summary, terminal output, diff summary, review-required state, ordered transcript events, and linked test artifact IDs to SQLite and reload on desktop startup.
-  - Research EvidenceStore records now save run IDs, source kind, title, locator, excerpt, stance, normalized claim keys, and post-reload ID continuity to SQLite.
-  - AgentRun EvidenceRecords now save source IDs, URIs, quotes, hashes, retrieval timestamps, and relevance metadata to SQLite; thread/run snapshots expose those receipts back to the UI instead of returning an empty evidence array.
-  - AgentOutcome now saves linked evidence record IDs and test artifact IDs to SQLite; thread/run snapshots expose those support links to the UI.
-  - Final-answer support synthesis now has a narrow Tauri bridge that links existing AgentRun EvidenceRecord IDs and passed persisted test artifact IDs into AgentOutcome, records a visible `final_answer.support_synthesized` event, marks the thread done, and saves the result to SQLite. It does not generate prose, infer unsupported claims, or make the full agent loop autonomous.
-  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, memory mutation reload, skill reload, skill mutation reload, automation reload, automation contract/scheduled-run mutation reload, release reload, release mutation reload, release smoke reload, support-bundle reload, support-bundle file-export receipt reload, test artifact reload, patch proposal/apply/restore reload, review report reload, external-agent run reload, research evidence reload, AgentOutcome support reload, final-answer support synthesis reload, UI-ready bridge snapshots, legacy migration upgrades, and SQLite file format.
-  - Persist remaining action bridges that still live only inside detached runtime state.
-  - Next: add mutation/action bridges for the remaining persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
-  - Add migration/repository tests that prove data survives reload.
+  - [x] Added `rusqlite` with bundled SQLite for local Windows-safe storage.
+  - [x] AgentRun `save_to_path` / `load_from_path` now use the SQLite migration instead of a tab-separated text helper.
+  - [x] Tauri thread/run bridge state now saves threads, messages, run links, and AgentRun rows to SQLite and reloads them on desktop startup.
+  - [x] Tauri approval bridge state now saves proposals, scope, status, decisions, and decision notes to SQLite and reloads them on desktop startup.
+  - [x] Recent workspace project snapshots now save project metadata, rules files, approved roots, Git metadata, and indexed file names to SQLite.
+  - [x] Model role routes now save to SQLite; runtime status reloads a valid saved coding route before falling back to the first ready Ollama model.
+  - [x] The Rust memory governance store now saves candidates, promoted records, suppression state, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
+  - [x] Memory candidate propose, approved promotion, candidate suppression, and record suppression now run through a Tauri bridge backed by the persisted MemoryStore. Durable memory promotion still requires a matching approved `DurableMemorySave` proposal and a completed source run.
+  - [x] The Rust skill registry now saves imported skills, trust, activation status, permissions, source hashes, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
+  - [x] Skill import, activation with explicit permissions, disable, and suppression now run through a Tauri bridge backed by the persisted SkillRegistry. Activation changes local registry state only; it does not execute scripts, edit files, or use network by itself.
+  - [x] The Rust automation engine now saves mission contracts, active/paused status, schedules, allowed tools, scheduled run records, approval links, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
+  - [x] Automation contract create, approved activation, pause, and due-run scheduling now run through a Tauri bridge backed by the persisted AutomationEngine. Contract activation still requires a matching approved `ScheduledRiskyAction` proposal. Risky scheduled runs generate persisted, UI-visible approval cards through the approval bridge before execution.
+  - [x] Release profile and latest redacted support bundle now save to SQLite; a Tauri bridge feeds the cockpit.
+  - [x] Release profile save, release smoke capture, latest redacted support-bundle export, and approval-gated support-bundle file export now run through Tauri bridges backed by SQLite. Support-bundle config/log entries are redacted by the release domain before persistence; file export requires a matching approved `FileWrite` proposal and an approved root. Signing execution and update publishing are still not implemented.
+  - [x] Approved test artifact bridge records now save command, cwd, approval/run IDs, exit status, stdout/stderr, parsed failures, output truncation, and command exec events to SQLite and reload on desktop startup.
+  - [x] Patch proposal, apply, and restore bridge records now save proposal IDs, approval/run IDs, status, checkpoint IDs, restore approval IDs, file paths, before/after text, diff lines, and checkpoint file receipts to SQLite and reload on desktop startup. `patch_apply_approved` requires a matching approved `FileWrite` proposal, approved root, unchanged file contents since proposal, and then writes through the checkpointing PatchEngine. `patch_restore_approved` requires a matching approved `FileWrite` proposal, approved root, unchanged file contents since apply, and then restores/removes checkpointed files.
+  - [x] Review report bridge records now save report IDs, decisions, summaries, finding order, hunk labels, priorities, and suggested fixes to SQLite and reload on desktop startup.
+  - [x] External-agent run bridge records now save adapter IDs, status, scope summary, terminal output, diff summary, review-required state, ordered transcript events, and linked test artifact IDs to SQLite and reload on desktop startup.
+  - [x] Research EvidenceStore records now save run IDs, source kind, title, locator, excerpt, stance, normalized claim keys, and post-reload ID continuity to SQLite.
+  - [x] AgentRun EvidenceRecords now save source IDs, URIs, quotes, hashes, retrieval timestamps, and relevance metadata to SQLite; thread/run snapshots expose those receipts back to the UI instead of returning an empty evidence array.
+  - [x] AgentOutcome now saves linked evidence record IDs and test artifact IDs to SQLite; thread/run snapshots expose those support links to the UI.
+  - [x] Final-answer support synthesis now has a narrow Tauri bridge that links existing AgentRun EvidenceRecord IDs and passed persisted test artifact IDs into AgentOutcome, records a visible `final_answer.support_synthesized` event, marks the thread done, and saves the result to SQLite. It does not generate prose, infer unsupported claims, or make the full agent loop autonomous.
+  - [x] SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, memory mutation reload, skill reload, skill mutation reload, automation reload, automation contract/scheduled-run mutation reload, release reload, release mutation reload, release smoke reload, support-bundle reload, support-bundle file-export receipt reload, test artifact reload, patch proposal/apply/restore reload, review report reload, external-agent run reload, research evidence reload, AgentOutcome support reload, final-answer support synthesis reload, UI-ready bridge snapshots, legacy migration upgrades, and SQLite file format.
+  - [ ] Persist remaining action bridges that still live only inside detached runtime state.
+  - [ ] Next: add mutation/action bridges for the remaining persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
+  - [ ] Add migration/repository tests that prove remaining action bridges survive reload.
 
 - [ ] D2 - AgentRun Execution Engine (in progress; scheduler/resume decisions and narrow executor bridges exist, full autonomous executor/repair/hook loop missing)
-  - Add executor, scheduler, node runner, resume, repair, and hook modules.
-  - Make AgentRun the real execution graph, not only an inspector artifact.
-  - Added `AgentScheduler`: it reads real AgentRun, approval, patch, test, and review stores and returns conservative next-step decisions for wait, single-approval resume, patch apply, tests, review, final-support readiness, terminal, complete, or blocked states.
-  - Added `resume_waiting_run`: it resumes a run only when exactly one approval for that run is executable; multiple ready approvals, missing approvals, pending approvals, and zero clocks stay blocked or waiting instead of guessing.
-  - Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
-  - Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
-  - Added a narrow `agent_execute_patch_apply` bridge that waits on pending `FileWrite` approvals, applies an existing PatchProposal through the stale-file/checkpoint PatchEngine path, writes only after approval, and records AgentRun node events, patch-apply artifacts, and diff evidence receipts.
-  - Added a narrow `agent_execute_patch_restore` bridge that requires a separate executable `FileWrite` approval, restores/removes checkpointed files only when current contents still match the applied patch, and records AgentRun rollback events, artifacts, and evidence receipts.
-  - Added a narrow `agent_execute_test_run` bridge that waits on pending `TerminalCommand` approvals, runs only commands accepted by the TestRunner, captures the persisted TestArtifact, and records AgentRun test-execution events, artifacts, and evidence receipts.
-  - Added a narrow `agent_execute_review` bridge that reads persisted PatchProposal and TestArtifact records for the run, creates a read-only ReviewReport, and records AgentRun review events and report artifacts.
-  - Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.
-  - Scheduler tests prove pending approvals stay waiting, approved single approvals resume, approved proposed patches schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, and stored reviews move to final-support readiness.
-  - Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
-  - Use Codex thread/start vs turn/start and command/exec protocol shapes as reference.
-  - Keep all risky actions approval-gated.
+  - [ ] Add complete executor, scheduler, node runner, resume, repair, and hook modules.
+  - [ ] Make AgentRun the real execution graph for the full loop, not only an inspector artifact plus narrow executor islands.
+  - [x] Added `AgentScheduler`: it reads real AgentRun, approval, patch, test, and review stores and returns conservative next-step decisions for wait, single-approval resume, patch apply, tests, review, final-support readiness, terminal, complete, or blocked states.
+  - [x] Added `resume_waiting_run`: it resumes a run only when exactly one approval for that run is executable; multiple ready approvals, missing approvals, pending approvals, and zero clocks stay blocked or waiting instead of guessing.
+  - [x] Added Tauri scheduler commands: `agent_schedule_next` exposes the current scheduler decision to the UI, and `agent_resume_waiting_run` persists a non-risky resume transition only after the Rust scheduler finds exactly one executable approval.
+  - [x] Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
+  - [x] Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
+  - [x] Added a narrow `agent_execute_patch_apply` bridge that waits on pending `FileWrite` approvals, applies an existing PatchProposal through the stale-file/checkpoint PatchEngine path, writes only after approval, and records AgentRun node events, patch-apply artifacts, and diff evidence receipts.
+  - [x] Added a narrow `agent_execute_patch_restore` bridge that requires a separate executable `FileWrite` approval, restores/removes checkpointed files only when current contents still match the applied patch, and records AgentRun rollback events, artifacts, and evidence receipts.
+  - [x] Added a narrow `agent_execute_test_run` bridge that waits on pending `TerminalCommand` approvals, runs only commands accepted by the TestRunner, captures the persisted TestArtifact, and records AgentRun test-execution events, artifacts, and evidence receipts.
+  - [x] Added a narrow `agent_execute_review` bridge that reads persisted PatchProposal and TestArtifact records for the run, creates a read-only ReviewReport, and records AgentRun review events and report artifacts.
+  - [x] Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.
+  - [x] Scheduler and bridge tests prove pending approvals stay waiting, approved single approvals resume, approved proposed patches schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, stored reviews move to final-support readiness, and UI-ready decision views map from real stores.
+  - [ ] Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
+  - [ ] Finish adapting Codex thread/start vs turn/start and command/exec protocol shapes where they reduce risk.
+  - [x] Keep all risky action executor islands approval-gated.
 
 - [ ] D3 - Behavioral Frontend Tests (in progress; focused React tests exist, broad workflow coverage missing)
-  - Add Vitest + React Testing Library or Playwright interaction tests.
-  - Added Vitest + React Testing Library as a real component-test path, separate from the existing smoke/source-contract verifiers.
-  - First behavior test covers FocusThread patch apply visibility/click behavior: Apply appears only for proposed patches with matching approved approvals.
-  - Added a MarkdownMessage component test proving headings, lists, bold, inline code, and fenced code render as elements instead of raw markdown text.
-  - Added FocusShell behavior coverage for the home composer send path and keyboard-opened Settings desktop-shell state.
-  - Added FocusThread behavior coverage for live run placement: latest user message, single running activity line, then assistant reply.
-  - Added FocusThread empty-artifact coverage so plan/diff/test/review placeholder blocks stay hidden until real artifacts exist.
-  - Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
-  - Keep grep/source verifiers only as smoke guards.
-  - Stop using source-substring checks as proof of UI behavior.
+  - [x] Add Vitest + React Testing Library or Playwright interaction tests.
+  - [x] Added Vitest + React Testing Library as a real component-test path, separate from the existing smoke/source-contract verifiers.
+  - [x] First behavior test covers FocusThread patch apply visibility/click behavior: Apply appears only for proposed patches with matching approved approvals.
+  - [x] Added a MarkdownMessage component test proving headings, lists, bold, inline code, and fenced code render as elements instead of raw markdown text.
+  - [x] Added FocusShell behavior coverage for the home composer send path and keyboard-opened Settings desktop-shell state.
+  - [x] Added FocusThread behavior coverage for live run placement: latest user message, single running activity line, then assistant reply.
+  - [x] Added FocusThread empty-artifact coverage so plan/diff/test/review placeholder blocks stay hidden until real artifacts exist.
+  - [x] Added FocusSchedulerPeek behavior coverage for scheduler-selected patch apply and scheduler-selected resume actions.
+  - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
+  - [x] Keep grep/source verifiers only as smoke guards.
+  - [x] Stop using source-substring checks as proof of UI behavior.
 
 - [ ] D4 - UI Architecture Decision (in progress; FocusShell is live, legacy cleanup and target-stack reconciliation remain)
-  - Default workbench migrated to focused React components using the provided Focus prototype as visual source.
-  - Legacy string-rendered cockpit files are formally deprecated as mounted UI and retained only as older smoke-contract/reference code until they can be safely deleted.
-  - `docs/ARCHITECTURE.md` records FocusShell as the live workbench and legacy cockpit as non-mounted reference code.
-  - Add behavior tests around the Focus component tree and direct action callbacks.
-  - Reconcile the plan with Radix/TanStack/Zustand targets.
-  - Completed now: no-thread cockpit hides unbacked progress, diff, terminal, inspector, and metric-card furniture; Focus home centers the real composer and keeps setup nudges tied to real repo/model state.
+  - [x] Default workbench migrated to focused React components using the provided Focus prototype as visual source.
+  - [x] Legacy string-rendered cockpit files are formally deprecated as mounted UI and retained only as older smoke-contract/reference code until they can be safely deleted.
+  - [x] `docs/ARCHITECTURE.md` records FocusShell as the live workbench and legacy cockpit as non-mounted reference code.
+  - [x] Add focused behavior tests around the Focus component tree and direct action callbacks.
+  - [ ] Reconcile the plan with Radix/TanStack/Zustand targets.
+  - [x] No-thread cockpit hides unbacked progress, diff, terminal, inspector, and metric-card furniture; Focus home centers the real composer and keeps setup nudges tied to real repo/model state.
 
 - [ ] D5 - Functional Build Flow (in progress; manual patch/apply islands exist, automatic build chain missing)
-  - Convert approved plans into patch proposals through the runtime engine.
-  - Runtime can now convert an explicit approved patch-proposal request into a persisted AgentRun patch node; it is not yet wired from the UI plan/build flow and does not generate patch content by itself.
-  - Runtime can now execute an explicit approved PatchProposal apply node through AgentRun. This is real file I/O through the existing stale-file and checkpoint gates, but it is not yet automatically chained from plan approval.
-  - Runtime can now execute an explicit approved PatchProposal restore node through AgentRun. This is real rollback I/O through the existing restore approval, stale-after, and checkpoint receipt gates, but it is not yet automatically chained from review rejection.
-  - Focus UI now loads persisted patch snapshots for the active run instead of passing a static empty patch array, so real PatchProposal diffs can appear when the runtime creates them.
-  - Focus approval decisions no longer mark the thread as `building` by themselves; approval returns to the next-step state or keeps waiting when more approvals are pending until an actual executor/tool action starts.
-  - Focus state now loads persisted approval proposals/decisions for the active run instead of relying only on the current renderer session, which is required before safe patch/test action buttons can reason about approval status.
-  - Focus diff UI can now call the AgentRun patch-apply bridge for a proposed patch only when its matching approval is visibly approved; Rust still enforces approval, approved root, stale-file, and checkpoint gates before any write.
-  - Patch apply and restore now have persisted approval-gated bridges with stale-file protection and checkpoint receipts; the runtime engine still needs to call them automatically from the build flow.
-  - AgentScheduler can now identify an approved proposed patch as ready for patch apply from persisted stores, but it does not yet dispatch that apply automatically from plan approval.
-  - Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
-  - Surface real diffs and rollback state in the UI.
-  - Connect build outputs to test and review steps.
+  - [ ] Convert approved plans into patch proposals through the runtime engine.
+  - [x] Runtime can now convert an explicit approved patch-proposal request into a persisted AgentRun patch node; it is not yet wired from the UI plan/build flow and does not generate patch content by itself.
+  - [x] Runtime can now execute an explicit approved PatchProposal apply node through AgentRun. This is real file I/O through the existing stale-file and checkpoint gates, but it is not yet automatically chained from plan approval.
+  - [x] Runtime can now execute an explicit approved PatchProposal restore node through AgentRun. This is real rollback I/O through the existing restore approval, stale-after, and checkpoint receipt gates, but it is not yet automatically chained from review rejection.
+  - [x] Focus UI now loads persisted patch snapshots for the active run instead of passing a static empty patch array, so real PatchProposal diffs can appear when the runtime creates them.
+  - [x] Focus approval decisions no longer mark the thread as `building` by themselves; approval returns to the next-step state or keeps waiting when more approvals are pending until an actual executor/tool action starts.
+  - [x] Focus state now loads persisted approval proposals/decisions for the active run instead of relying only on the current renderer session, which is required before safe patch/test action buttons can reason about approval status.
+  - [x] Focus diff UI can now call the AgentRun patch-apply bridge for a proposed patch only when its matching approval is visibly approved; Rust still enforces approval, approved root, stale-file, and checkpoint gates before any write.
+  - [x] Patch apply and restore now have persisted approval-gated bridges with stale-file protection and checkpoint receipts; the runtime engine still needs to call them automatically from the build flow.
+  - [x] AgentScheduler can now identify an approved proposed patch as ready for patch apply from persisted stores; Focus UI shows that real next action and can call the existing patch-apply bridge, but it does not yet dispatch automatically from plan approval.
+  - [ ] Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
+  - [ ] Surface full rollback state in the UI beyond existing patch/apply/restore receipts.
+  - [ ] Connect build outputs to test and review steps automatically.
 
 - [ ] D6 - Functional Test/Review Loop (in progress; manual approved tests/review exist, automatic post-build loop missing)
-  - Run approved tests from the agent loop.
-  - Runtime can now execute an explicit approved test command through AgentRun. It reuses the existing TestRunner approval, cwd, command-shape, timeout, output-capture, and artifact persistence gates, but it is not yet automatically chained from patch apply.
-  - Focus thread UI now loads persisted test artifacts for the active run instead of passing a static empty test array, so real TestRunner receipts can appear when the runtime creates them.
-  - Focus thread UI can now show a manual `Run tests` action after an applied patch when the active plan contains a supported direct test command. If terminal approval is missing, it queues a visible approval first; execution uses the AgentRun test bridge only after approval.
-  - Plan command discovery now prefers the bundled `.tools\npm.cmd test` wrapper when the project index proves it exists, avoiding fake PATH assumptions on Windows.
-  - Generate review reports from actual patch/test artifacts.
-  - Runtime can now execute an explicit read-only review node through AgentRun. The bridge gathers persisted patch and test artifacts by run ID before creating the ReviewReport, so review input is actual stored receipt data rather than caller-supplied mock state.
-  - Focus thread UI can now run that read-only review action when the active run has real patch or test artifacts, reload persisted ReviewReports, and display the resulting review receipt inline.
-  - AgentScheduler can now identify applied patches that need tests, block when no supported test command exists, schedule review from real patch/test artifacts, and report final-support readiness after a stored review.
-  - Prevent final "tested" claims unless linked artifacts exist.
+  - [ ] Run approved tests from the full agent loop automatically.
+  - [x] Runtime can now execute an explicit approved test command through AgentRun. It reuses the existing TestRunner approval, cwd, command-shape, timeout, output-capture, and artifact persistence gates, but it is not yet automatically chained from patch apply.
+  - [x] Focus thread UI now loads persisted test artifacts for the active run instead of passing a static empty test array, so real TestRunner receipts can appear when the runtime creates them.
+  - [x] Focus thread UI can now show a manual `Run tests` action after an applied patch when the active plan contains a supported direct test command. If terminal approval is missing, it queues a visible approval first; execution uses the AgentRun test bridge only after approval.
+  - [x] Plan command discovery now prefers the bundled `.tools\npm.cmd test` wrapper when the project index proves it exists, avoiding fake PATH assumptions on Windows.
+  - [x] Generate review reports from actual patch/test artifacts.
+  - [x] Runtime can now execute an explicit read-only review node through AgentRun. The bridge gathers persisted patch and test artifacts by run ID before creating the ReviewReport, so review input is actual stored receipt data rather than caller-supplied mock state.
+  - [x] Focus thread UI can now run that read-only review action when the active run has real patch or test artifacts, reload persisted ReviewReports, and display the resulting review receipt inline.
+  - [x] AgentScheduler can now identify applied patches that need tests, block when no supported test command exists, schedule review from real patch/test artifacts, and report final-support readiness after a stored review; Focus UI shows those real next actions when the desktop bridge is available.
+  - [x] Prevent final "tested" claims unless linked artifacts exist.
 
 - [ ] D7 - Model Integration Depth (in progress; Ollama is real, OpenAI-compatible remains out of live scope)
-  - OpenAI-compatible providers are out of live scope for now. The frontend maps the typed backend stub to an unavailable/not-wired UI state instead of suggesting a missing API key would make it usable.
-  - Revisit only with real calls, keyring-backed secret handling, health checks, and tests.
-  - Runtime status now optionally probes real local Ollama `/api/version` and surfaces the version in Settings when available; missing version data does not override the model-readiness probe.
-  - Add Ollama version/readiness and optional pull-progress UI only when backed by real local state.
+  - [x] OpenAI-compatible providers are out of live scope for now. The frontend maps the typed backend stub to an unavailable/not-wired UI state instead of suggesting a missing API key would make it usable.
+  - [ ] Revisit OpenAI-compatible providers only with real calls, keyring-backed secret handling, health checks, and tests.
+  - [x] Runtime status now optionally probes real local Ollama `/api/version` and surfaces the version in Settings when available; missing version data does not override the model-readiness probe.
+  - [ ] Add pull-progress UI only when backed by real local state.
 
 - [ ] D8 - External Agent Integration Depth (in progress; Codex read-only launch works, write-capable isolation/diff capture missing)
-  - Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.
-  - External-agent run receipts now survive restart through SQLite, including transcript and linked test IDs.
-  - Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.
-  - Add real changed-file/diff capture from external-agent runs instead of review placeholders.
-  - Decide whether Claude launch is in scope beyond detection and contract preview.
-  - If no, keep them detection/contract-preview only and label them that way in UI.
+  - [x] Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.
+  - [x] External-agent run receipts now survive restart through SQLite, including transcript and linked test IDs.
+  - [ ] Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.
+  - [ ] Add real changed-file/diff capture from external-agent runs instead of review placeholders.
+  - [ ] Decide whether Claude launch is in scope beyond detection and contract preview.
+  - [ ] If no, keep them detection/contract-preview only and label them that way in UI.
 
 - [ ] D9 - Evidence and Final Answer Receipts (in progress; final support bridge exists, broader claim support synthesis missing)
-  - Added a narrow final-answer support synthesis bridge for existing AgentRun evidence and passed persisted test artifacts.
-  - Focus thread UI now shows final support receipt counts when AgentOutcome exists.
-  - Focus can record final support from an existing assistant message only; it links existing AgentRun evidence and passed persisted tests through the Tauri bridge and does not generate new prose or infer claims.
-  - Build final-answer support records from files read, commands run, tests executed, diffs produced, model calls, approvals, and evidence.
-  - Make unsupported, insufficient, partial, and untested final-answer states visible.
+  - [x] Added a narrow final-answer support synthesis bridge for existing AgentRun evidence and passed persisted test artifacts.
+  - [x] Focus thread UI now shows final support receipt counts when AgentOutcome exists.
+  - [x] Focus can record final support from an existing assistant message only; it links existing AgentRun evidence and passed persisted tests through the Tauri bridge and does not generate new prose or infer claims.
+  - [ ] Build final-answer support records from files read, commands run, tests executed, diffs produced, model calls, approvals, and evidence.
+  - [ ] Make unsupported, insufficient, partial, and untested final-answer states visible.
 
 - [x] D10 - Architecture Reconciliation
-  - Recorded the current single-crate Rust decision in `docs/ARCHITECTURE.md`.
-  - Split crates only when real pressure justifies it.
-  - Keep target architecture as an extraction map, not a fake repo shape.
+  - [x] Recorded the current single-crate Rust decision in `docs/ARCHITECTURE.md`.
+  - [x] Split crates only when real pressure justifies it.
+  - [x] Keep target architecture as an extraction map, not a fake repo shape.
 
 - [ ] D11 - Codex Reference Salvage Track (in progress; command prep/receipts/read-only Codex launch adapted)
-  - Use `docs/CODEX_REFERENCE_AUDIT.md` as the pick list.
-  - Pull only pieces that reduce risk or save real implementation time.
-  - Candidate direct/adapt pieces: exec policy decisions, command exec artifacts, thread/turn protocol shape, apply-patch deltas, keyring store, Ollama readiness, Git baseline/diff helpers, sandbox capability detection.
-  - Pulled/adapted: PowerShell UTF-8 command prep, read-only Codex CLI launch contract, and typed command execution receipts.
-  - Avoid importing Codex core, generated protocol macros, cloud auth, or broad parser stacks until a PR proves the need.
-  - Every Codex-derived change needs tests, UI-visible state, approval gates, and dependency justification.
+  - [x] Use `docs/CODEX_REFERENCE_AUDIT.md` as the pick list.
+  - [x] Pull only pieces that reduce risk or save real implementation time.
+  - [ ] Candidate direct/adapt pieces still open: exec policy decisions, apply-patch deltas, keyring store, Git baseline/diff helpers, and sandbox capability detection.
+  - [x] Pulled/adapted: PowerShell UTF-8 command prep, read-only Codex CLI launch contract, typed command execution receipts, and scheduler next-action state.
+  - [x] Avoid importing Codex core, generated protocol macros, cloud auth, or broad parser stacks until a PR proves the need.
+  - [x] Every Codex-derived change so far has tests, UI-visible state, approval gates, and dependency justification.
 
 - [ ] D12 - Refined Windows Desktop App (in progress; dev desktop package refined, production signing/updater depth missing)
-  - Current truth: Delyx Next has a usable Tauri Windows desktop shell and NSIS package path, but it is still an unsigned dev product without updater/signing polish.
-  - Added explicit `dev:desktop` scripts for the Tauri Windows shell; `dev` remains the browser/Vite preview.
-  - Tauri config now declares the stable main window label, centered native decorated window behavior, native dark theme, bundle publisher/descriptions, and app/installer icon paths.
-  - Desktop metadata now uses the shared `0.1.0` dev baseline across root package, desktop package, Cargo package, and Tauri config instead of shipping a `0.0.0` installer identity.
-  - Added an editable `app-icon.svg` source and generated Windows/desktop icon assets for app, installer, and bundle use.
-  - Release smoke now checks desktop launch script wiring, primary window basics, aligned version metadata, bundle metadata, dark-theme config, source icon presence, desktop icon assets, and NSIS icon configuration.
-  - Added the official Tauri single-instance plugin so launching Delyx Next again focuses the existing main window instead of creating a second desktop session.
-  - Runtime status now exposes desktop shell policy to the UI: main window label, renderer-command menu policy, startup focus behavior, single-instance reopen behavior, and unsigned dev signing status.
-  - Settings now shows the real Windows shell state when the Rust bridge is available.
-  - Packaged Windows verification passed: `.\.tools\npm.cmd run package:windows` produced `target\release\bundle\nsis\Delyx Next_0.1.0_x64-setup.exe`, and `.\.tools\npm.cmd run smoke:tauri` verified that exact configured installer.
-  - Next desktop depth: signing, updater policy, install/upgrade smoke, native file associations/deep links only if the product needs them.
-  - Keep the desktop shell tied to real local runtime state; do not use packaging polish to hide missing agent behavior.
+  - [x] Current truth: Delyx Next has a usable Tauri Windows desktop shell and NSIS package path, but it is still an unsigned dev product without updater/signing polish.
+  - [x] Added explicit `dev:desktop` scripts for the Tauri Windows shell; `dev` remains the browser/Vite preview.
+  - [x] Tauri config now declares the stable main window label, centered native decorated window behavior, native dark theme, bundle publisher/descriptions, and app/installer icon paths.
+  - [x] Desktop metadata now uses the shared `0.1.0` dev baseline across root package, desktop package, Cargo package, and Tauri config instead of shipping a `0.0.0` installer identity.
+  - [x] Added an editable `app-icon.svg` source and generated Windows/desktop icon assets for app, installer, and bundle use.
+  - [x] Release smoke now checks desktop launch script wiring, primary window basics, aligned version metadata, bundle metadata, dark-theme config, source icon presence, desktop icon assets, and NSIS icon configuration.
+  - [x] Added the official Tauri single-instance plugin so launching Delyx Next again focuses the existing main window instead of creating a second desktop session.
+  - [x] Runtime status now exposes desktop shell policy to the UI: main window label, renderer-command menu policy, startup focus behavior, single-instance reopen behavior, and unsigned dev signing status.
+  - [x] Settings now shows the real Windows shell state when the Rust bridge is available.
+  - [x] Packaged Windows verification passed: `.\.tools\npm.cmd run package:windows` produced `target\release\bundle\nsis\Delyx Next_0.1.0_x64-setup.exe`, and `.\.tools\npm.cmd run smoke:tauri` verified that exact configured installer.
+  - [ ] Next desktop depth: signing, updater policy, install/upgrade smoke, native file associations/deep links only if the product needs them.
+  - [x] Keep the desktop shell tied to real local runtime state; do not use packaging polish to hide missing agent behavior.
 
 ## Validation Gates
 
