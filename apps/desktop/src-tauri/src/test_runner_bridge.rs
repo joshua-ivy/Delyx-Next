@@ -9,11 +9,29 @@ use std::sync::Mutex;
 #[derive(Default)]
 pub struct TestRunnerBridgeState {
     store: Mutex<TestRunnerBridgeStore>,
+    database_path: Option<PathBuf>,
 }
 
 #[derive(Default)]
 pub struct TestRunnerBridgeStore {
-    artifacts: Vec<TestArtifactView>,
+    pub(crate) artifacts: Vec<TestArtifactView>,
+}
+
+impl TestRunnerBridgeState {
+    pub fn persistent(database_path: PathBuf) -> Result<Self, String> {
+        let store = crate::test_runner_persistence::load_from_path(&database_path)?;
+        Ok(Self {
+            store: Mutex::new(store),
+            database_path: Some(database_path),
+        })
+    }
+
+    fn save_if_persistent(&self, store: &TestRunnerBridgeStore) -> Result<(), String> {
+        match &self.database_path {
+            Some(path) => crate::test_runner_persistence::save_to_path(store, path),
+            None => Ok(()),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -75,7 +93,9 @@ pub fn test_run_approved(
 ) -> Result<TestArtifactView, String> {
     approvals.with_engine(|engine| {
         let mut store = state.store.lock().map_err(|_| "Test bridge lock failed.".to_string())?;
-        run_test_record(&mut store, engine, request)
+        let artifact = run_test_record(&mut store, engine, request)?;
+        state.save_if_persistent(&store)?;
+        Ok(artifact)
     })?
 }
 
@@ -111,13 +131,18 @@ pub fn run_test_record(
             approvals,
         )
         .map_err(|error| format!("{error:?}"))?;
-    let view = artifact_view(&artifact, request.started_at, completed_at);
+    let view = artifact_view(&artifact, request.started_at, completed_at, next_artifact_id(store));
     store.artifacts.push(view.clone());
     Ok(view)
 }
 
 pub fn test_snapshot_from_store(store: &TestRunnerBridgeStore, run_id: &str) -> Vec<TestArtifactView> {
-    store.artifacts.iter().filter(|artifact| artifact.run_id == run_id).cloned().collect()
+    store
+        .artifacts
+        .iter()
+        .filter(|artifact| artifact.run_id == run_id)
+        .cloned()
+        .collect()
 }
 
 fn validate_request(request: &TestRunRequest) -> Result<(), String> {
@@ -134,9 +159,10 @@ fn artifact_view(
     artifact: &crate::test_runner::TestArtifact,
     started_at: String,
     completed_at: String,
+    id: String,
 ) -> TestArtifactView {
     let parsed_failures = artifact.failure_summary.as_ref().map(|message| vec![ParsedFailureView {
-        id: format!("{}-failure-1", artifact.id),
+        id: format!("{id}-failure-1"),
         message: message.clone(),
     }]);
     TestArtifactView {
@@ -147,7 +173,7 @@ fn artifact_view(
         duration_ms: artifact.duration_ms,
         exit_code: artifact.exit_code,
         failure_summary: artifact.failure_summary.clone(),
-        id: artifact.id.clone(),
+        id,
         parsed_failures,
         run_id: artifact.run_id.clone(),
         started_at,
@@ -156,6 +182,17 @@ fn artifact_view(
         stdout: artifact.stdout.clone(),
         output_truncated: artifact.output_truncated,
         exec_events: artifact.exec_events.iter().map(exec_event_view).collect(),
+    }
+}
+
+fn next_artifact_id(store: &TestRunnerBridgeStore) -> String {
+    let mut sequence = store.artifacts.len() + 1;
+    loop {
+        let id = format!("test-artifact-{sequence}");
+        if !store.artifacts.iter().any(|artifact| artifact.id == id) {
+            return id;
+        }
+        sequence += 1;
     }
 }
 

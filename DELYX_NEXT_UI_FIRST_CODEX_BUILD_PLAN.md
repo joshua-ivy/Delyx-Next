@@ -7,7 +7,7 @@ Last updated: 2026-06-07.
 Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
-- `cargo test --workspace`: 207 passed, 0 failed.
+- `cargo test --workspace`: 208 passed, 0 failed.
 - `npm run typecheck`, `npm test` (smoke/source-contract), and `npm run smoke:ui`: pass.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
@@ -39,7 +39,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Current Reality
 
 - PR 1-18.1 breadth is skeleton-complete.
-- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, and release/support-bundle state now use a real SQLite database and migration; deeper artifact/evidence-first stores and mutation bridges are still missing.
+- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state, and approved test artifacts now use a real SQLite database and migration; deeper artifact/evidence-first stores and mutation bridges are still missing.
 - There is no full execution engine: no scheduler, executor, resume engine, repair loop, or hook runner.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
@@ -127,7 +127,8 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - The Rust skill registry now saves imported skills, trust, activation status, permissions, source hashes, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
   - The Rust automation engine now saves mission contracts, active/paused status, schedules, allowed tools, scheduled run records, approval links, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
   - Release profile and latest redacted support bundle now save to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
-  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, skill reload, automation reload, release reload, support-bundle reload, UI-ready bridge snapshots, and SQLite file format.
+  - Approved test artifact bridge records now save command, cwd, approval/run IDs, exit status, stdout/stderr, parsed failures, output truncation, and command exec events to SQLite and reload on desktop startup.
+  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, skill reload, automation reload, release reload, support-bundle reload, test artifact reload, UI-ready bridge snapshots, and SQLite file format.
   - Persist remaining artifact/evidence-first stores that still live only inside AgentRun rows.
   - Next: add mutation/action bridges for persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
   - Add migration/repository tests that prove data survives reload.

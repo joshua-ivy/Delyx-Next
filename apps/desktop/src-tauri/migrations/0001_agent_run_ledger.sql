@@ -184,3 +184,37 @@ CREATE TABLE IF NOT EXISTS support_bundles (
   logs_json TEXT NOT NULL,
   secret_policy TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS test_artifact_records (
+  id TEXT PRIMARY KEY NOT NULL,
+  run_id TEXT NOT NULL,
+  command TEXT NOT NULL,
+  cwd TEXT NOT NULL,
+  exit_code INTEGER,
+  duration_ms INTEGER NOT NULL,
+  stdout TEXT NOT NULL,
+  stderr TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  completed_at TEXT NOT NULL,
+  approval_id TEXT,
+  status TEXT NOT NULL,
+  failure_summary TEXT,
+  output_truncated INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS test_parsed_failures (
+  artifact_id TEXT NOT NULL REFERENCES test_artifact_records(id) ON DELETE CASCADE,
+  failure_index INTEGER NOT NULL,
+  id TEXT NOT NULL,
+  message TEXT NOT NULL,
+  PRIMARY KEY (artifact_id, failure_index)
+);
+
+CREATE TABLE IF NOT EXISTS test_exec_events (
+  artifact_id TEXT NOT NULL REFERENCES test_artifact_records(id) ON DELETE CASCADE,
+  event_index INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  message TEXT NOT NULL,
+  timestamp_ms INTEGER NOT NULL,
+  PRIMARY KEY (artifact_id, event_index)
+);

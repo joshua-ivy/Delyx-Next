@@ -42,8 +42,9 @@ complete:
   hashes, and ID continuity, and a read-only Tauri snapshot bridge feeds the cockpit.
   The Rust automation engine persists mission contracts and scheduled-run
   records, and a read-only Tauri snapshot bridge feeds the cockpit. Release profile
-  and redacted support-bundle state persist to SQLite, but there is no live
-  mutation bridge yet.
+  and redacted support-bundle state persist to SQLite. Approved test artifacts
+  persist command execution receipt data to SQLite and reload into the desktop
+  bridge on startup. Governance mutation bridges are still not live.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -175,7 +176,8 @@ approval-gated test commands, patch/checkpoint primitives, the generic
 terminal-worker bridge, and Codex CLI read-only launches. The full Explore ->
 Plan -> Approve -> Build -> Diff -> Test -> Review execution loop remains
 Phase 2 work. AgentRun save/load, Tauri thread/run bridge session reload,
-approval bridge reload, and recent workspace project reload now use SQLite.
+approval bridge reload, recent workspace project reload, and test artifact
+bridge reload now use SQLite.
 
 ## Permission Engine
 
@@ -227,7 +229,9 @@ The Tauri `test_run_approved` bridge exposes approved test-command execution
 through the Rust TestRunner. It reads the same Rust ApprovalEngine owned by the
 approval bridge, rejects pending or mismatched approvals, captures stdout,
 stderr, exit code, duration, output truncation state, command execution events,
-and failure summary, and stores UI-ready TestArtifactView records by run.
+and failure summary, and stores UI-ready TestArtifactView records by run. The
+desktop bridge persists those test artifacts, parsed failures, and command exec
+events to SQLite so test receipts survive restart.
 The Tauri `review_create` bridge exposes the read-only Rust ReviewAgent for
 real patch and test artifacts. It returns UI-ready ReviewReportView findings
 without write capability and rejects not-run test artifacts so review cannot
