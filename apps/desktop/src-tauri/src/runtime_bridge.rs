@@ -29,6 +29,7 @@ impl RuntimeBridgeState {
 pub struct RuntimeStatusView {
     pub app_name: String,
     pub app_identifier: String,
+    pub desktop_shell: DesktopShellStatusView,
     pub milestone: String,
     pub providers: Vec<ModelProviderStatusView>,
     pub coding_route: Option<RoleRouteStatusView>,
@@ -50,6 +51,16 @@ pub struct ModelProviderStatusView {
 pub struct RoleRouteStatusView {
     pub provider_id: String,
     pub model_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DesktopShellStatusView {
+    pub main_window_label: String,
+    pub native_menu_policy: String,
+    pub reopen_behavior: String,
+    pub signing_policy: String,
+    pub startup_behavior: String,
 }
 
 #[tauri::command]
@@ -115,6 +126,13 @@ pub fn runtime_status_from_registry(registry: &ModelRegistry) -> RuntimeStatusVi
                 model_id: route.model_id.clone(),
                 provider_id: route.provider_id.clone(),
             }),
+        desktop_shell: DesktopShellStatusView {
+            main_window_label: shell.main_window_label.to_string(),
+            native_menu_policy: shell.native_menu_policy.to_string(),
+            reopen_behavior: shell.reopen_behavior.to_string(),
+            signing_policy: shell.signing_policy.to_string(),
+            startup_behavior: shell.startup_behavior.to_string(),
+        },
         milestone: shell.milestone.to_string(),
         providers: registry
             .list_providers()

@@ -40,6 +40,7 @@ mod automation_persistence_tests;
 mod automation_tests;
 pub mod command_exec;
 mod command_exec_tests;
+pub mod desktop_shell;
 pub mod explore_plan;
 mod explore_plan_tests;
 pub mod external_agent;
@@ -151,33 +152,4 @@ pub mod workspace_persistence;
 mod workspace_persistence_tests;
 mod workspace_tests;
 
-pub const APP_NAME: &str = "Delyx Next";
-pub const APP_IDENTIFIER: &str = "com.geaux.delyxnext";
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DesktopShellInfo {
-    pub name: &'static str,
-    pub identifier: &'static str,
-    pub milestone: &'static str,
-}
-
-pub fn desktop_shell_info() -> DesktopShellInfo {
-    DesktopShellInfo {
-        name: APP_NAME,
-        identifier: APP_IDENTIFIER,
-        milestone: "PR 18 Packaging and release",
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn exposes_separate_app_identity() {
-        let info = desktop_shell_info();
-
-        assert_eq!(info.name, "Delyx Next");
-        assert_eq!(info.identifier, "com.geaux.delyxnext");
-    }
-}
+pub use desktop_shell::{desktop_shell_info, DesktopShellInfo, APP_IDENTIFIER, APP_NAME};

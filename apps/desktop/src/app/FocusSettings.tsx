@@ -5,11 +5,13 @@ import type { TaskThread } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { FocusIcon } from "./focusAtoms";
 import { gitChangeLabel, modeLabel, selectedModel, selectedProvider, type FocusMode } from "./focusFormat";
+import type { DesktopShellStatusView } from "./runtimeBridge";
 
 type SettingsTab = "general" | "models" | "workspace" | "privacy" | "appearance" | "keys";
 
 interface FocusSettingsProps {
   activeRun: AgentRunView | undefined;
+  desktopShell: DesktopShellStatusView | undefined;
   mode: FocusMode;
   modelSettings: ModelSettingsView;
   onModeChange: (mode: FocusMode) => void;
@@ -39,7 +41,7 @@ export function FocusSettings(props: FocusSettingsProps) {
           <div className="set-title disp">Settings</div>
           <div className="set-lead">Everything Delyx needs to run locally. Nothing leaves this machine unless you approve it.</div>
           <div className="set-tabs">{tabs.map(([id, label]) => <button className={`set-tab${tab === id ? " on" : ""}`} key={id} onClick={() => setTab(id)} type="button">{label}</button>)}</div>
-          {tab === "general" && <General mode={props.mode} onModeChange={props.onModeChange} />}
+          {tab === "general" && <General desktopShell={props.desktopShell} mode={props.mode} onModeChange={props.onModeChange} />}
           {tab === "models" && <Models modelSettings={props.modelSettings} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} />}
           {tab === "workspace" && <Workspace activeRun={props.activeRun} project={props.project} threads={props.threads} />}
           {tab === "privacy" && <Privacy />}
@@ -51,11 +53,12 @@ export function FocusSettings(props: FocusSettingsProps) {
   );
 }
 
-function General({ mode, onModeChange }: { mode: FocusMode; onModeChange: (mode: FocusMode) => void }) {
+function General({ desktopShell, mode, onModeChange }: { desktopShell: DesktopShellStatusView | undefined; mode: FocusMode; onModeChange: (mode: FocusMode) => void }) {
   return <Section label="Behaviour">
     <Row title="Default mode" detail="The mode new instructions visually start in."><SelectButton label={modeLabel(mode)} onClick={() => onModeChange(nextMode(mode))} /></Row>
     <Row title="Plan before build" detail="Use the real PlanAgent command before queueing risky actions."><span className="tag live">approval-gated</span></Row>
     <Row title="Runtime visibility" detail="Run events, approvals, diffs, tests, and receipts stay visible when present."><span className="tag live">on</span></Row>
+    {desktopShell && <Row title="Windows shell" detail={desktopShellDetail(desktopShell)}><span className="tag live">desktop</span></Row>}
   </Section>;
 }
 
@@ -133,6 +136,13 @@ function SelectButton({ label, onClick }: { label: string; onClick: () => void }
 
 function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   return <button aria-checked={on} className={`toggle${on ? " on" : ""}`} onClick={onClick} role="switch" type="button" />;
+}
+
+function desktopShellDetail(shell: DesktopShellStatusView) {
+  const menu = shell.nativeMenuPolicy === "renderer_command_ui" ? "renderer commands" : shell.nativeMenuPolicy.replaceAll("_", " ");
+  const reopen = shell.reopenBehavior === "single_instance_focus_main_window" ? "single instance" : shell.reopenBehavior.replaceAll("_", " ");
+  const signing = shell.signingPolicy === "unsigned_dev_build" ? "unsigned dev build" : shell.signingPolicy.replaceAll("_", " ");
+  return `${reopen}; ${menu}; ${signing}`;
 }
 
 function nextMode(mode: FocusMode): FocusMode {

@@ -229,6 +229,9 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Added explicit `dev:desktop` scripts for the Tauri Windows shell; `dev` remains the browser/Vite preview.
   - Tauri config now declares the stable main window label, centered native decorated window behavior, bundle publisher/descriptions, and app/installer icon paths.
   - Release smoke now checks desktop launch script wiring, primary window basics, bundle metadata, and NSIS icon configuration.
+  - Added the official Tauri single-instance plugin so launching Delyx Next again focuses the existing main window instead of creating a second desktop session.
+  - Runtime status now exposes desktop shell policy to the UI: main window label, renderer-command menu policy, startup focus behavior, single-instance reopen behavior, and unsigned dev signing status.
+  - Settings now shows the real Windows shell state when the Rust bridge is available.
   - Add Windows app identity, icon assets, installer metadata, window sizing, native menu decisions, startup/reopen behavior, release smoke checks, and packaged build verification.
   - Keep the desktop shell tied to real local runtime state; do not use packaging polish to hide missing agent behavior.
 

@@ -18,6 +18,11 @@ mod tests {
 
         assert_eq!(status.app_name, "Delyx Next");
         assert_eq!(status.app_identifier, "com.geaux.delyxnext");
+        assert_eq!(
+            status.desktop_shell.reopen_behavior,
+            "single_instance_focus_main_window"
+        );
+        assert_eq!(status.desktop_shell.signing_policy, "unsigned_dev_build");
         assert!(status.coding_route.is_none());
         assert!(!status
             .providers

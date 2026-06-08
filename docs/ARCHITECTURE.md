@@ -449,6 +449,14 @@ connector, memory, scheduled-work, or external-agent authority.
 The frontend model view type does not include a live mock provider kind; unknown
 or unsupported runtime provider kinds map to an unavailable UI state.
 
+The Windows desktop shell is explicit runtime state, not hidden packaging
+metadata. Tauri owns the stable `main` window, focuses it on startup, and uses
+the official single-instance plugin to bring the existing window forward when
+the app is launched again. Native menu policy is intentionally
+`renderer_command_ui` for now because command palette/settings controls are the
+primary UI surface. Dev packaging remains unsigned and is reported as
+`unsigned_dev_build`.
+
 Model roles:
 
 - answer
@@ -668,3 +676,9 @@ Reason: Packaging should be testable without pretending production signing exist
 Decision: `npm run dev` starts the local Vite web preview, and `npm run dev:desktop` starts the Tauri Windows desktop shell.
 
 Reason: Delyx Next needs a fast browser preview for UI iteration and a clear native desktop path for app-shell QA. The two paths should not be confused when judging Windows desktop polish.
+
+### ADR-0006: Windows Single-Instance Desktop Shell
+
+Decision: Delyx Next uses Tauri's official single-instance plugin and keeps native app menus disabled in favor of the renderer command UI.
+
+Reason: A refined Windows desktop app should not create duplicate local-agent sessions when launched twice. The dependency is narrow and official, and the renderer command palette remains the product's visible trust/control surface.

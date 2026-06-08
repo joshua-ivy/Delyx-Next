@@ -13,6 +13,7 @@ import { FocusSettings } from "./FocusSettings";
 import { FocusThread } from "./FocusThread";
 import { FocusIcon, RailIconButton } from "./focusAtoms";
 import { focusMode, selectedModel, type FocusMode } from "./focusFormat";
+import type { DesktopShellStatusView } from "./runtimeBridge";
 
 type FocusView = "home" | "thread" | "settings";
 type FocusOverlay = "palette" | "threads" | "models" | undefined;
@@ -22,6 +23,7 @@ interface FocusShellProps {
   activeProject: WorkspaceProject;
   activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
+  desktopShell: DesktopShellStatusView | undefined;
   modelSettings: ModelSettingsView;
   onArchiveActive: () => void;
   onApprovePlan: () => void;
@@ -93,7 +95,7 @@ export function FocusShell(props: FocusShellProps) {
       {view === "home" && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} />}
       {view === "thread" && props.activeThread && <FocusThread activePlan={props.activePlan} mode={mode} model={selectedModel(props.modelSettings)} onApprovePlan={props.onApprovePlan} onCreatePlan={props.onCreatePlan} onDecideProposal={props.onDecideProposal} onModeChange={setMode} onOpenPalette={() => setOverlay("palette")} onSend={send} patches={activePatches} proposals={activeProposals} run={props.activeRun} tests={activeTests} thread={props.activeThread} />}
       {view === "thread" && !props.activeThread && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} />}
-      {view === "settings" && <FocusSettings activeRun={props.activeRun} mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} project={props.activeProject} threads={visibleThreads} />}
+      {view === "settings" && <FocusSettings activeRun={props.activeRun} desktopShell={props.desktopShell} mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} project={props.activeProject} threads={visibleThreads} />}
 
       {overlay === "palette" && <FocusCommandPalette onArchiveActive={props.onArchiveActive} onClose={() => setOverlay(undefined)} onOpenModels={() => setOverlay("models")} onOpenThreads={() => setOverlay("threads")} onOpenWorkspace={props.onOpenWorkspace} onRunCommand={props.onRunCommand} onView={(next) => setView(next)} />}
       {overlay === "threads" && <FocusThreadsMenu activeThreadId={props.activeThread?.id} onClose={() => setOverlay(undefined)} onNewThread={() => setView("home")} onSelectThread={(threadId) => { props.onSelectThread(threadId); setView("thread"); }} threads={visibleThreads} />}

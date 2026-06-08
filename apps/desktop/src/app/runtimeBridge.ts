@@ -19,6 +19,7 @@ export interface RuntimeStatusView {
     modelId: string;
     providerId: string;
   };
+  desktopShell: DesktopShellStatusView;
   milestone: string;
   providers: Array<{
     id: string;
@@ -28,6 +29,14 @@ export interface RuntimeStatusView {
     models: string[];
     status: string;
   }>;
+}
+
+export interface DesktopShellStatusView {
+  mainWindowLabel: string;
+  nativeMenuPolicy: string;
+  reopenBehavior: string;
+  signingPolicy: string;
+  startupBehavior: string;
 }
 
 export async function loadRuntimeBridgeState(): Promise<RuntimeBridgeState> {

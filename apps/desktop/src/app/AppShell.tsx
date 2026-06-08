@@ -236,6 +236,7 @@ export function AppShell() {
         activeProject={activeProject}
         activeRun={activeRun}
         activeThread={activeThread}
+        desktopShell={runtimeBridge.status?.desktopShell}
         modelSettings={modelSettings}
         onArchiveActive={archiveActiveThread}
         onApprovePlan={() => runPaletteCommand("plan.approve")}

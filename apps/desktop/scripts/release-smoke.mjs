@@ -45,7 +45,13 @@ check(tauriConfig.bundle?.windows?.nsis?.installerIcon === "icons/icon.ico", "NS
 check(tauriConfig.bundle?.windows?.nsis?.uninstallerIcon === "icons/icon.ico", "NSIS uninstaller icon must use the app icon");
 check(cargoToml.includes("tauri ="), "Cargo.toml must include the Tauri runtime dependency");
 check(cargoToml.includes("tauri-build"), "Cargo.toml must include tauri-build for packaging resources");
+check(cargoToml.includes("tauri-plugin-single-instance"), "Cargo.toml must include the single-instance desktop plugin");
+check(tauriMain.includes("tauri_plugin_single_instance::init"), "Rust main must install the single-instance plugin");
+check(tauriMain.includes("setup_desktop_shell"), "Rust main must run desktop shell startup setup");
 check(tauriMain.includes("tauri::Builder"), "Rust main must launch the Tauri runtime");
+check(readFileSync(join(desktopRoot, "src-tauri", "src", "desktop_shell.rs"), "utf8").includes("single_instance_focus_main_window"), "desktop shell policy must describe reopen behavior");
+check(readFileSync(join(desktopRoot, "src-tauri", "src", "runtime_bridge.rs"), "utf8").includes("desktop_shell"), "runtime status must expose desktop shell state");
+check(readFileSync(join(desktopRoot, "src", "app", "FocusSettings.tsx"), "utf8").includes("Windows shell"), "settings must expose desktop shell state");
 
 if (failures.length > 0) {
   console.error(failures.join("\n"));

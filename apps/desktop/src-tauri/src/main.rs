@@ -1,5 +1,9 @@
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            delyx_next_desktop::desktop_shell::focus_existing_main_window(app);
+        }))
+        .setup(delyx_next_desktop::desktop_shell::setup_desktop_shell)
         .manage(
             delyx_next_desktop::approval_bridge::ApprovalBridgeState::persistent(
                 delyx_next_desktop::sqlite_store::default_database_path(),
