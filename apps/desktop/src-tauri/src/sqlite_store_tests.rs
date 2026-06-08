@@ -11,13 +11,13 @@ mod tests {
         let connection = open_migrated_memory_database().unwrap();
         let count: i64 = connection
             .query_row(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('agent_runs', 'agent_events', 'artifacts', 'task_threads', 'thread_messages', 'thread_run_records', 'action_proposals', 'approval_bridge_records', 'workspace_project_snapshots', 'model_role_routes', 'memory_candidates', 'memory_records', 'skill_manifests', 'automation_contracts', 'scheduled_runs', 'release_profiles', 'support_bundles', 'support_bundle_file_exports', 'release_smoke_records', 'test_artifact_records', 'test_parsed_failures', 'test_exec_events', 'patch_proposal_records', 'patch_proposal_files', 'patch_diff_lines', 'review_report_records', 'review_findings', 'external_agent_run_records', 'external_agent_run_events', 'external_agent_run_tests', 'research_evidence_records')",
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('agent_runs', 'agent_events', 'artifacts', 'task_threads', 'thread_messages', 'thread_run_records', 'action_proposals', 'approval_bridge_records', 'workspace_project_snapshots', 'model_role_routes', 'memory_candidates', 'memory_records', 'skill_manifests', 'automation_contracts', 'scheduled_runs', 'release_profiles', 'support_bundles', 'support_bundle_file_exports', 'release_smoke_records', 'test_artifact_records', 'test_parsed_failures', 'test_exec_events', 'patch_proposal_records', 'patch_proposal_files', 'patch_checkpoint_files', 'patch_diff_lines', 'review_report_records', 'review_findings', 'external_agent_run_records', 'external_agent_run_events', 'external_agent_run_tests', 'research_evidence_records')",
                 [],
                 |row| row.get(0),
             )
             .unwrap();
 
-        assert_eq!(count, 31);
+        assert_eq!(count, 32);
     }
 
     #[test]
@@ -63,6 +63,45 @@ mod tests {
         assert!(columns.contains(&"source_id".to_string()));
         assert!(columns.contains(&"retrieved_at".to_string()));
         assert!(columns.contains(&"relevance_reason".to_string()));
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn migration_upgrades_legacy_patch_file_columns() {
+        let path = temp_path("legacy-patch-files");
+        let legacy = Connection::open(&path).unwrap();
+        legacy
+            .execute_batch(
+                "CREATE TABLE patch_proposal_records (
+                   id TEXT PRIMARY KEY NOT NULL,
+                   run_id TEXT NOT NULL,
+                   approval_id TEXT NOT NULL,
+                   status TEXT NOT NULL,
+                   checkpoint_id TEXT
+                 );
+                 CREATE TABLE patch_proposal_files (
+                   proposal_id TEXT NOT NULL,
+                   file_index INTEGER NOT NULL,
+                   path TEXT NOT NULL,
+                   PRIMARY KEY (proposal_id, file_index)
+                 );",
+            )
+            .unwrap();
+        drop(legacy);
+
+        let connection = open_migrated_database(&path).unwrap();
+        let columns = table_columns(&connection, "patch_proposal_files");
+        let checkpoint_table_count: i64 = connection
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'patch_checkpoint_files'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+
+        assert!(columns.contains(&"before_text".to_string()));
+        assert!(columns.contains(&"after_text".to_string()));
+        assert_eq!(checkpoint_table_count, 1);
         let _ = fs::remove_file(path);
     }
 

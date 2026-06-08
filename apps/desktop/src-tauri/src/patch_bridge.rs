@@ -57,6 +57,7 @@ pub struct PatchProposalView {
     pub approval_id: String,
     pub status: String,
     pub checkpoint_id: Option<String>,
+    pub checkpoint_files: Vec<PatchCheckpointFileView>,
     pub files: Vec<PatchFileView>,
 }
 
@@ -64,7 +65,16 @@ pub struct PatchProposalView {
 #[serde(rename_all = "camelCase")]
 pub struct PatchFileView {
     pub path: String,
+    pub before: String,
+    pub after: String,
     pub diff: Vec<DiffLineView>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PatchCheckpointFileView {
+    pub path: String,
+    pub contents: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -86,6 +96,23 @@ pub fn patch_propose(
     let proposal = propose_patch_record(&mut store, request)?;
     state.save_if_persistent(&store)?;
     Ok(proposal)
+}
+
+#[tauri::command]
+pub fn patch_apply_approved(
+    state: tauri::State<PatchBridgeState>,
+    approvals: tauri::State<crate::approval_bridge::ApprovalBridgeState>,
+    request: crate::patch_apply_bridge::PatchApplyRequest,
+) -> Result<PatchProposalView, String> {
+    approvals.with_engine(|engine| {
+        let mut store = state
+            .store
+            .lock()
+            .map_err(|_| "Patch bridge lock failed.".to_string())?;
+        let proposal = crate::patch_apply_bridge::apply_patch_record(&mut store, engine, request)?;
+        state.save_if_persistent(&store)?;
+        Ok(proposal)
+    })?
 }
 
 #[tauri::command]
@@ -169,6 +196,7 @@ fn patch_view(proposal: &PatchProposal, id: String) -> PatchProposalView {
     PatchProposalView {
         approval_id: proposal.approval_id.clone(),
         checkpoint_id: proposal.checkpoint_id.clone(),
+        checkpoint_files: Vec::new(),
         files: proposal.files.iter().map(file_view).collect(),
         id,
         run_id: proposal.run_id.clone(),
@@ -178,6 +206,8 @@ fn patch_view(proposal: &PatchProposal, id: String) -> PatchProposalView {
 
 fn file_view(file: &crate::patch::PatchFile) -> PatchFileView {
     PatchFileView {
+        after: file.after.clone(),
+        before: file.before.clone(),
         diff: file.diff.iter().map(diff_view).collect(),
         path: file.path.display().to_string(),
     }

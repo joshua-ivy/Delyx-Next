@@ -253,10 +253,15 @@ Owns:
 Tool output should become artifacts or evidence records when relevant.
 The Tauri `patch_propose` bridge exposes proposal-only diffs from explicit
 approved-root file content requests. It uses the Rust PatchEngine to read
-before contents and build UI-ready diff records, but it does not apply writes
-or create checkpoints. Patch apply and restore remain separate approval-gated
-runtime actions. Proposed patch records, file paths, and diff lines persist to
-SQLite so diff receipts survive restart.
+before contents and build UI-ready diff records. Proposed patch records persist
+proposal IDs, approval/run IDs, status, checkpoint IDs, file paths, before/after
+text, and diff lines to SQLite so diff receipts survive restart. The
+`patch_apply_approved` bridge applies an existing proposal only when the
+matching `FileWrite` approval is executable, the file still matches the proposed
+before text, and the target stays inside approved roots. It writes through the
+checkpointing PatchEngine and persists checkpoint file receipts for review and
+future restore work. Patch restore remains a separate approval-gated runtime
+action.
 The Tauri `test_run_approved` bridge exposes approved test-command execution
 through the Rust TestRunner. It reads the same Rust ApprovalEngine owned by the
 approval bridge, rejects pending or mismatched approvals, captures stdout,

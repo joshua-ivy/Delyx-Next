@@ -8,7 +8,14 @@ export interface DiffLineView {
 
 export interface PatchFileView {
   path: string;
+  before: string;
+  after: string;
   diff: DiffLineView[];
+}
+
+export interface PatchCheckpointFileView {
+  path: string;
+  contents?: string;
 }
 
 export interface PatchProposalView {
@@ -17,5 +24,6 @@ export interface PatchProposalView {
   approvalId: string;
   status: PatchStatus;
   checkpointId?: string;
+  checkpointFiles: PatchCheckpointFileView[];
   files: PatchFileView[];
 }

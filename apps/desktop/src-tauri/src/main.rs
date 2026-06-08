@@ -94,6 +94,7 @@ fn main() {
             delyx_next_desktop::memory_bridge::memory_promote_approved,
             delyx_next_desktop::memory_bridge::memory_record_suppress,
             delyx_next_desktop::memory_bridge::memory_snapshot,
+            delyx_next_desktop::patch_bridge::patch_apply_approved,
             delyx_next_desktop::patch_bridge::patch_propose,
             delyx_next_desktop::patch_bridge::patch_snapshot,
             delyx_next_desktop::release_bridge::release_profile_save,

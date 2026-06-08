@@ -64,6 +64,8 @@ pub mod model_provider_persistence;
 mod model_provider_persistence_tests;
 mod model_provider_tests;
 pub mod patch;
+mod patch_apply_bridge;
+mod patch_apply_bridge_tests;
 pub mod patch_bridge;
 mod patch_bridge_tests;
 pub mod patch_persistence;

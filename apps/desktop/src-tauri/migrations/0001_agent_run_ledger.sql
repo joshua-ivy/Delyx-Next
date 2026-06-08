@@ -259,6 +259,16 @@ CREATE TABLE IF NOT EXISTS patch_proposal_files (
   proposal_id TEXT NOT NULL REFERENCES patch_proposal_records(id) ON DELETE CASCADE,
   file_index INTEGER NOT NULL,
   path TEXT NOT NULL,
+  before_text TEXT NOT NULL DEFAULT '',
+  after_text TEXT NOT NULL DEFAULT '',
+  PRIMARY KEY (proposal_id, file_index)
+);
+
+CREATE TABLE IF NOT EXISTS patch_checkpoint_files (
+  proposal_id TEXT NOT NULL REFERENCES patch_proposal_records(id) ON DELETE CASCADE,
+  file_index INTEGER NOT NULL,
+  path TEXT NOT NULL,
+  contents TEXT,
   PRIMARY KEY (proposal_id, file_index)
 );
 

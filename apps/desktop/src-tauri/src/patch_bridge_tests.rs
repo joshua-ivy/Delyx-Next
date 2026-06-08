@@ -23,6 +23,9 @@ mod tests {
 
         assert_eq!(proposal.id, "patch-client-1");
         assert_eq!(proposal.status, "proposed");
+        assert_eq!(proposal.files[0].before, "network = true\n");
+        assert_eq!(proposal.files[0].after, "network = false\n");
+        assert!(proposal.checkpoint_files.is_empty());
         assert_eq!(proposal.files.len(), 1);
         assert!(proposal.files[0]
             .diff
