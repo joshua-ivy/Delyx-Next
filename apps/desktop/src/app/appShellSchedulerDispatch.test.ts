@@ -81,7 +81,7 @@ describe("dispatchSchedulerDecision", () => {
 
     expect(draftPatch).toHaveBeenCalledWith(expect.objectContaining({
       actionProposals: [approval()],
-    }), "approval-1");
+    }));
     expect(applyPatch).not.toHaveBeenCalled();
   });
 
@@ -114,7 +114,7 @@ describe("dispatchSchedulerDecision", () => {
     expect(recordFinal).toHaveBeenCalledTimes(1);
   });
 
-  it("dispatches repair patch draft decisions by scheduler approval id", async () => {
+  it("dispatches repair patch draft decisions through the scheduler step", async () => {
     const repair = repairApproval();
     draftPatch.mockResolvedValue({ created: true, patches: [], snapshot: undefined });
     scheduleNext.mockResolvedValue(undefined);
@@ -126,7 +126,7 @@ describe("dispatchSchedulerDecision", () => {
 
     expect(draftPatch).toHaveBeenCalledWith(expect.objectContaining({
       actionProposals: [repair],
-    }), repair.id);
+    }));
   });
 
   it("leaves passive scheduler decisions unhandled", async () => {

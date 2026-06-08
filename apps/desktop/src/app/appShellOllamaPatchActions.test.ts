@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { dispatchPatchDraftFromContextOverBridge } from "../features/runs/agentExecutorClient";
+import { runPatchDraftSchedulerStepOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { proposeApprovedPlanPatchWithOllama, type OllamaPatchProposalState } from "./appShellOllamaPatchActions";
 
@@ -12,7 +12,7 @@ vi.mock("../features/models/ollamaClient", () => ({
 }));
 
 vi.mock("../features/runs/agentExecutorClient", () => ({
-  dispatchPatchDraftFromContextOverBridge: vi.fn(),
+  runPatchDraftSchedulerStepOverBridge: vi.fn(),
 }));
 
 vi.mock("../features/patches/patchClient", () => ({
@@ -28,7 +28,7 @@ vi.mock("./ShellPreferenceController", () => ({
   notifyLocalAction: vi.fn(),
 }));
 
-const dispatchPatchDraft = vi.mocked(dispatchPatchDraftFromContextOverBridge);
+const dispatchPatchDraft = vi.mocked(runPatchDraftSchedulerStepOverBridge);
 const loadPatches = vi.mocked(loadPatchSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const model = vi.mocked(selectedOllamaModel);
@@ -52,26 +52,30 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
   it("turns an approved plan into a proposed patch artifact", async () => {
     const state = actionState();
 
-    const result = await proposeApprovedPlanPatchWithOllama(state, approval.id);
+    const result = await proposeApprovedPlanPatchWithOllama(state);
 
     expect(result.created).toBe(true);
     expect(dispatchPatchDraft).toHaveBeenCalledWith(expect.objectContaining({
-      approvalId: "approval-1",
-      hasSupportedTestCommand: false,
       maxBytesPerFile: 20_000,
       model: "qwen3-coder:30b",
       projectId: "project-1",
       runId: "run-1",
     }));
+    expect(dispatchPatchDraft.mock.calls[0]?.[0]).not.toHaveProperty("approvalId");
+    expect(dispatchPatchDraft.mock.calls[0]?.[0]).not.toHaveProperty("hasSupportedTestCommand");
     expect(dispatchPatchDraft.mock.calls[0]?.[0]).not.toHaveProperty("testApprovalId");
     expect(state.setPatches).toHaveBeenCalledWith([patch]);
     expect(appendThreadMessageOverBridge).toHaveBeenCalled();
   });
 
-  it("skips drafting without a scheduler-provided approval id", async () => {
+  it("skips drafting without an active thread and run", async () => {
     const state = actionState();
 
-    const result = await proposeApprovedPlanPatchWithOllama(state, "");
+    const result = await proposeApprovedPlanPatchWithOllama({
+      ...state,
+      activeRun: undefined,
+      activeThread: undefined,
+    });
 
     expect(result.created).toBe(false);
     expect(dispatchPatchDraft).not.toHaveBeenCalled();
@@ -85,14 +89,14 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
       reviews: [repairReview()],
     });
 
-    const result = await proposeApprovedPlanPatchWithOllama(state, repair.id);
+    const result = await proposeApprovedPlanPatchWithOllama(state);
 
     expect(result.created).toBe(true);
     expect(dispatchPatchDraft).toHaveBeenCalledWith(expect.objectContaining({
-      approvalId: repair.id,
       projectId: "project-1",
       runId: "run-1",
     }));
+    expect(dispatchPatchDraft.mock.calls[0]?.[0]).not.toHaveProperty("approvalId");
   });
 });
 

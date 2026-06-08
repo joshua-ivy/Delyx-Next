@@ -92,8 +92,7 @@ async function dispatchOneSchedulerDecision(
     return { handled: true };
   }
   if (decision.kind === "run_patch_draft") {
-    const approvalId = decision.approvalIds[0];
-    const result = approvalId ? await proposeApprovedPlanPatchWithOllama(state, approvalId) : undefined;
+    const result = await proposeApprovedPlanPatchWithOllama(state);
     return {
       handled: true,
       nextState: {

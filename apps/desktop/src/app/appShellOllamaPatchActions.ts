@@ -2,7 +2,7 @@ import type { ModelSettingsView } from "../features/models/modelTypes";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { dispatchPatchDraftFromContextOverBridge } from "../features/runs/agentExecutorClient";
+import { runPatchDraftSchedulerStepOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { ThreadRunSnapshotView } from "../features/threads/threadClient";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
@@ -18,11 +18,7 @@ export interface OllamaPatchProposalState extends SchedulerDispatchState {
 
 export async function proposeApprovedPlanPatchWithOllama(
   state: OllamaPatchProposalState,
-  approvalId: string,
 ): Promise<PatchDraftDispatchResult> {
-  if (!approvalId.trim()) {
-    return { created: false };
-  }
   if (!state.activeThread || !state.activeRun) {
     return { created: false };
   }
@@ -37,9 +33,7 @@ export async function proposeApprovedPlanPatchWithOllama(
   try {
     startPatchDraft(state, thread, model);
     const createdAtMs = Date.now();
-    const result = await dispatchPatchDraftFromContextOverBridge({
-      approvalId,
-      hasSupportedTestCommand: false,
+    const result = await runPatchDraftSchedulerStepOverBridge({
       maxBytesPerFile: 20_000,
       model,
       nowMs: createdAtMs,

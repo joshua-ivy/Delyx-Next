@@ -10,6 +10,8 @@ mod agent_patch_draft_context_tests;
 pub mod agent_patch_draft_dispatch;
 mod agent_patch_draft_parser;
 mod agent_patch_draft_receipts;
+pub mod agent_patch_draft_step;
+mod agent_patch_draft_step_tests;
 pub mod agent_patch_restore_executor;
 mod agent_patch_restore_executor_tests;
 pub mod agent_review_executor;

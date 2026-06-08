@@ -44,6 +44,14 @@ export interface AgentPatchDraftContextRequest {
   testApprovalId?: string;
 }
 
+export interface AgentPatchDraftStepRequest {
+  maxBytesPerFile?: number;
+  model: string;
+  nowMs: number;
+  projectId: string;
+  runId: string;
+}
+
 export interface AgentExecutionBridgeView {
   status: "completed" | "failed" | "waiting_for_approval";
   runId: string;
@@ -147,6 +155,19 @@ export async function dispatchPatchDraftFromContextOverBridge(
   }
   try {
     return await invoke<AgentPatchDraftBridgeView>("agent_dispatch_patch_draft_from_context", { request });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function runPatchDraftSchedulerStepOverBridge(
+  request: AgentPatchDraftStepRequest,
+): Promise<AgentPatchDraftBridgeView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<AgentPatchDraftBridgeView>("agent_run_patch_draft_step", { request });
   } catch {
     return undefined;
   }
