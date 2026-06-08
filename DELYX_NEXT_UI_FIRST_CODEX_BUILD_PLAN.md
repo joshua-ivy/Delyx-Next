@@ -164,6 +164,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Added Vitest + React Testing Library as a real component-test path, separate from the existing smoke/source-contract verifiers.
   - First behavior test covers FocusThread patch apply visibility/click behavior: Apply appears only for proposed patches with matching approved approvals.
   - Added a MarkdownMessage component test proving headings, lists, bold, inline code, and fenced code render as elements instead of raw markdown text.
+  - Added FocusShell behavior coverage for the home composer send path and keyboard-opened Settings desktop-shell state.
   - Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - Keep grep/source verifiers only as smoke guards.
   - Stop using source-substring checks as proof of UI behavior.
