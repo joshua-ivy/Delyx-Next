@@ -7,6 +7,7 @@ import type { AgentScheduleDecisionView } from "../features/runs/agentExecutorCl
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
+import { FocusApprovalBlock, visibleApprovalProposals } from "./FocusApprovals";
 import { FocusIcon, Pipe, Think } from "./focusAtoms";
 import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatusLabel, type FocusMode } from "./focusFormat";
 import { FocusDiffPeek } from "./FocusDiffPeek";
@@ -39,7 +40,7 @@ interface FocusThreadProps {
 
 export function FocusThread(props: FocusThreadProps) {
   const [value, setValue] = useState("");
-  const pending = props.proposals.filter((proposal) => proposal.status === "pending");
+  const visibleApprovals = visibleApprovalProposals(props.proposals);
   const send = () => {
     const trimmed = value.trim();
     if (trimmed) {
@@ -64,7 +65,7 @@ export function FocusThread(props: FocusThreadProps) {
             <ThreadTimeline messages={props.thread.messages} mode={props.mode} run={props.run} />
             <FocusSchedulerPeek decision={props.schedulerDecision} onApplyPatch={props.onApplyPatch} onRecordFinal={props.onRecordFinal} onResumeRun={props.onResumeRun} onRunReview={props.onRunReview} onRunTests={props.onRunTests} />
             <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} />
-            <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
+            <FocusApprovalBlock onDecideProposal={props.onDecideProposal} proposals={visibleApprovals} />
             <FocusDiffPeek onPatchAction={props.onApplyPatch} patches={props.patches} proposals={props.proposals} run={props.run} />
             <FocusTestPeek activePlan={props.activePlan} onRunTests={props.onRunTests} patches={props.patches} tests={props.tests} />
             <ReviewPeek onRequestRepair={props.onRequestRepair} onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
@@ -199,17 +200,6 @@ function PlanBlock({ activePlan, onApprovePlan }: { activePlan: PlanView | undef
       {!approved && <div className="plan-actions"><button className="select" onClick={onApprovePlan} type="button">Queue approval</button></div>}
     </div>
   );
-}
-
-function ApprovalBlock({ onDecideProposal, proposals }: { onDecideProposal: (proposalId: string, status: "approved" | "denied") => void; proposals: ActionProposalView[] }) {
-  if (proposals.length === 0) {
-    return null;
-  }
-  return <>{proposals.map((proposal) => <div className="plan approval-focus" key={proposal.id}>
-    <div className="plan-head"><span className="ey">Approval / {proposal.riskLabel} risk</span><FocusIcon name="shield" /></div>
-    <div className="approval-copy"><b>{proposal.actionType}</b><span>{proposal.rationale}</span><span>{proposal.expectedResult}</span></div>
-    <div className="plan-actions"><button className="select" onClick={() => onDecideProposal(proposal.id, "approved")} type="button">Approve once</button><button className="select danger" onClick={() => onDecideProposal(proposal.id, "denied")} type="button">Deny</button></div>
-  </div>)}</>;
 }
 
 function ReviewPeek({ onRequestRepair, onRunReview, patches, reports, tests }: { onRequestRepair: (reportId: string, findingId: string) => void; onRunReview: () => void; patches: PatchProposalView[]; reports: ReviewReportView[]; tests: TestArtifactView[] }) {

@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 152/187 checked, 35 open.
+- Visible checkbox progress: 153/188 checked, 35 open.
 - Parent track boxes are status gates; they stay open until the full track is functionally complete.
 - Depth tracks: 1/12 complete, 11/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
@@ -213,6 +213,7 @@ Progress board:
   - [x] Added approval-decision resume policy coverage for approved, denied, and still-pending approval sets.
   - [x] Added approval orchestration coverage proving safe resume is called only when the approval policy allows it and receives the freshly decided approval state before scheduler dispatch.
   - [x] Added repair-flow behavior coverage for finding-level repair approval queueing, repair PatchDraft prompt/scope handoff, scheduler resume hints, and Rust scheduler/bridge repair PatchDraft decisions.
+  - [x] Focus approval UI now keeps denied and expired approval states visible without action buttons, with behavior coverage so failed/expired trust states cannot silently disappear.
   - [x] Added scheduler dispatcher coverage for patch apply, tests, review, final support, and passive wait decisions.
   - [x] Added scheduler dispatcher continuation coverage proving an approved patch apply can continue into a scheduler-selected test step.
   - [x] Added deterministic PatchDraftAgent Rust parser/bridge coverage plus frontend handoff coverage for approved generated patches, unapproved paths, unchanged output, truncated reads, and approval-flow orchestration.

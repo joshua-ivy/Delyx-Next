@@ -132,7 +132,9 @@ complete:
   source as the older cockpit implementation and smoke-contract reference, but
   they are not the mounted primary workbench. The Focus UI avoids shipped fake
   data and renders real project, thread, model, run, approval, diff, and test
-  state only.
+  state only. Denied and expired approval cards stay visible without approve or
+  deny buttons, so trust-boundary failures remain inspectable instead of
+  disappearing from the thread.
 
 ## Codex Reference Integration
 
