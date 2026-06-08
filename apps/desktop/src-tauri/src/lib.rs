@@ -88,6 +88,7 @@ pub mod runtime_bridge;
 mod runtime_bridge_tests;
 pub mod skills;
 pub mod skills_bridge;
+mod skills_bridge_tests;
 pub mod skills_persistence;
 mod skills_persistence_tests;
 mod skills_tests;

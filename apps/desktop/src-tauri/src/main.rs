@@ -35,6 +35,12 @@ fn main() {
             ),
         )
         .manage(
+            delyx_next_desktop::skills_bridge::SkillBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("skill SQLite state should open"),
+        )
+        .manage(
             delyx_next_desktop::test_runner_bridge::TestRunnerBridgeState::persistent(
                 delyx_next_desktop::sqlite_store::default_database_path(),
             )
@@ -79,7 +85,11 @@ fn main() {
             delyx_next_desktop::review_bridge::review_snapshot,
             delyx_next_desktop::runtime_bridge::ollama_chat,
             delyx_next_desktop::runtime_bridge::runtime_status,
+            delyx_next_desktop::skills_bridge::skill_activate,
+            delyx_next_desktop::skills_bridge::skill_disable,
+            delyx_next_desktop::skills_bridge::skill_import,
             delyx_next_desktop::skills_bridge::skill_snapshot,
+            delyx_next_desktop::skills_bridge::skill_suppress,
             delyx_next_desktop::test_runner_bridge::test_run_approved,
             delyx_next_desktop::test_runner_bridge::test_snapshot,
             delyx_next_desktop::thread_run_bridge::thread_archive,

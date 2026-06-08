@@ -41,9 +41,11 @@ complete:
   ID continuity. Its Tauri bridge now exposes persisted candidate propose,
   approved promote, candidate suppress, record suppress, and snapshot commands.
   Durable memory promotion still requires a matching approved memory-save
-  proposal and a completed source run. The Rust skill
-  registry persists imported manifests, trust, permissions, status, source
-  hashes, and ID continuity, and a read-only Tauri snapshot bridge feeds the cockpit.
+  proposal and a completed source run. The Rust skill registry persists imported
+  manifests, trust, permissions, status, source hashes, and ID continuity. Its
+  Tauri bridge exposes persisted import, activate, disable, suppress, and
+  snapshot commands; activation changes registry state only and does not execute
+  any skill capability by itself.
   The Rust automation engine persists mission contracts and scheduled-run
   records, and a read-only Tauri snapshot bridge feeds the cockpit. Release profile
   and redacted support-bundle state persist to SQLite. Approved test artifacts,
@@ -306,9 +308,12 @@ Owns:
 
 The Rust `SkillRegistry` persists imported manifests to SQLite, including trust,
 status, permissions, source hashes, and post-reload ID continuity. The Tauri
-`skill_snapshot` command exposes a read-only UI-ready view to the cockpit. Skill
-import, activation, disable, and suppression mutation workflows still need
-explicit bridges before this becomes an end-to-end user workflow.
+skill bridge exposes UI-ready snapshots plus persisted import, activate,
+disable, and suppress commands. Activation requires explicit permission flags
+and only changes local registry state; separate execution paths must still check
+those permissions before running scripts, editing files, or using network.
+Frontend controls for those mutations are still shallow; the bridge and
+snapshots are the current source of truth.
 
 ## Automations
 
