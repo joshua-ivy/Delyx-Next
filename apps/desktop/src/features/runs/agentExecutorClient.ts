@@ -51,11 +51,21 @@ export interface AgentReviewExecutionBridgeView {
   message: string;
 }
 
+export interface AgentReviewRevisionBridgeView {
+  status: "revise_requested";
+  runId: string;
+  reviewReportId: string;
+  findingId: string;
+  nextFlow: string[];
+  message: string;
+}
+
 export interface AgentScheduleDecisionView {
   kind:
     | "blocked"
     | "complete"
     | "ready_for_final_support"
+    | "repair_requested"
     | "resume_after_approval"
     | "run_patch_draft"
     | "run_patch_apply"
@@ -66,6 +76,7 @@ export interface AgentScheduleDecisionView {
   runId: string;
   message: string;
   approvalIds: string[];
+  findingId?: string;
   proposalId?: string;
   reviewReportId?: string;
   patchCount: number;
@@ -155,6 +166,23 @@ export async function executeReviewNodeOverBridge(
   try {
     return await invoke<AgentReviewExecutionBridgeView>("agent_execute_review", {
       request: { runId },
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function requestReviewRevisionOverBridge(
+  runId: string,
+  reviewReportId: string,
+  findingId: string,
+): Promise<AgentReviewRevisionBridgeView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<AgentReviewRevisionBridgeView>("agent_request_review_revision", {
+      request: { findingId, reviewReportId, runId, updatedAt: new Date().toISOString() },
     });
   } catch {
     return undefined;

@@ -23,6 +23,7 @@ interface FocusThreadProps {
   onModeChange: (mode: FocusMode) => void;
   onOpenPalette: () => void;
   onRecordFinal: () => void;
+  onRequestRepair: (reportId: string, findingId: string) => void;
   onResumeRun: () => void;
   onRunReview: () => void;
   onRunTests: () => void;
@@ -66,8 +67,8 @@ export function FocusThread(props: FocusThreadProps) {
             <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
             <FocusDiffPeek onPatchAction={props.onApplyPatch} patches={props.patches} proposals={props.proposals} run={props.run} />
             <FocusTestPeek activePlan={props.activePlan} onRunTests={props.onRunTests} patches={props.patches} tests={props.tests} />
-            <ReviewPeek onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
-            <FocusOutcomePeek canRecord={hasAssistantSummary(props.thread)} onRecordFinal={props.onRecordFinal} run={props.run} tests={props.tests} />
+            <ReviewPeek onRequestRepair={props.onRequestRepair} onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
+            <FocusOutcomePeek canRecord={hasAssistantSummary(props.thread)} onRecordFinal={props.onRecordFinal} reviews={props.reviews} run={props.run} tests={props.tests} />
           </div>
         </div>
         <div className="dock">
@@ -211,7 +212,7 @@ function ApprovalBlock({ onDecideProposal, proposals }: { onDecideProposal: (pro
   </div>)}</>;
 }
 
-function ReviewPeek({ onRunReview, patches, reports, tests }: { onRunReview: () => void; patches: PatchProposalView[]; reports: ReviewReportView[]; tests: TestArtifactView[] }) {
+function ReviewPeek({ onRequestRepair, onRunReview, patches, reports, tests }: { onRequestRepair: (reportId: string, findingId: string) => void; onRunReview: () => void; patches: PatchProposalView[]; reports: ReviewReportView[]; tests: TestArtifactView[] }) {
   const report = reports[0];
   const canRun = patches.length > 0 || tests.length > 0;
   if (!report && !canRun) {
@@ -224,7 +225,10 @@ function ReviewPeek({ onRunReview, patches, reports, tests }: { onRunReview: () 
   return <div className="peek">
     <div className="peek-head"><FocusIcon name="doc" /> Review / {report.decision}<span className="stat">{report.findings.length} finding(s)</span></div>
     <div className="approval-copy"><b>{finding?.title ?? report.riskSummary}</b><span>{finding?.detail ?? report.testSummary}</span><span>{report.evidenceSummary}</span></div>
-    {canRun && <div className="plan-actions"><button className="select" onClick={onRunReview} type="button">Refresh review</button></div>}
+    <div className="plan-actions">
+      {finding && report.decision !== "revise_requested" && <button className="select" onClick={() => onRequestRepair(report.id, finding.id)} type="button">Request repair</button>}
+      {canRun && <button className="select" onClick={onRunReview} type="button">Refresh review</button>}
+    </div>
   </div>;
 }
 

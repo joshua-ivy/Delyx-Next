@@ -1,5 +1,6 @@
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
+import type { ReviewReportView } from "../features/review/reviewTypes";
 import type { AgentScheduleDecisionView } from "../features/runs/agentExecutorClient";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
@@ -39,6 +40,9 @@ export function FocusSchedulerPeek({
   if (decision.kind === "ready_for_final_support") {
     return <FocusActionLine icon="doc" label="Next / final support" onClick={onRecordFinal} text={decision.message} />;
   }
+  if (decision.kind === "repair_requested") {
+    return <FocusActionLine icon="plan" label="Next / repair requested" text={decision.message} />;
+  }
   if (decision.kind === "resume_after_approval") {
     return <FocusActionLine icon="plan" label="Next / resume run" onClick={onResumeRun} text={decision.message} />;
   }
@@ -71,11 +75,13 @@ export function FocusOutcomePeek({
   canRecord,
   onRecordFinal,
   run,
+  reviews = [],
   tests,
 }: {
   canRecord: boolean;
   onRecordFinal: () => void;
   run: AgentRunView | undefined;
+  reviews?: ReviewReportView[];
   tests: TestArtifactView[];
 }) {
   if (run?.outcome) {
@@ -87,11 +93,20 @@ export function FocusOutcomePeek({
   if (!run) {
     return null;
   }
+  const blockedReview = unresolvedReview(reviews, run.id);
+  if (blockedReview) {
+    return <FocusActionLine icon="doc" label="Final support / review blocked" text={`Review ${blockedReview.id} has ${blockedReview.findings.length} finding(s). Request repair before final support.`} />;
+  }
   const support = finalSupportState(run.evidence.length, passedTestCount(tests));
   if (!canRecord) {
     return <FocusActionLine icon="doc" label="Final support / insufficient" text={`Needs an assistant answer before support can be recorded. ${support.text}`} />;
   }
   return <FocusActionLine icon="doc" label="Record final support" onClick={onRecordFinal} text={`${support.text} No new claims are generated.`} />;
+}
+
+function unresolvedReview(reviews: ReviewReportView[], runId: string) {
+  const report = [...reviews].reverse().find((item) => item.runId === runId);
+  return report && report.decision !== "accepted" && report.findings.length > 0 ? report : undefined;
 }
 
 function passedTestCount(tests: TestArtifactView[]) {

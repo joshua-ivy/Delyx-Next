@@ -128,17 +128,20 @@ now has real persisted or approval-gated functional islands.
 - [x] SQLite is real for AgentRun, thread/run, approvals, workspace snapshots, model routes, memory, skills, automations, release/support-bundle state, tests, patches, reviews, external-agent runs, research evidence, and final-answer support links.
 - [x] Ollama is a real local model path for runtime detection, chat, composer replies, plan drafts, route sync, and optional version display.
 - [x] Patch proposal/apply/restore, approved test execution, and read-only review have narrow AgentRun executor bridges with persisted artifacts.
+- [x] Stored review findings now block final support until accepted or repaired, and exact findings can create persisted repair-request markers.
 - [x] Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.
 - [x] Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.
-- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, and one-step approval-safe dispatcher now exist.
+- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, and one-step approval-safe dispatcher now exist.
 - [ ] Approved plan -> generated patch proposal now re-enters the scheduler and can queue/continue apply -> test -> review steps through approval boundaries, but the complete repair-capable loop is still open.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 141/176 visible Phase 2 checkboxes are checked. Only 1/12 depth
-tracks is fully complete, and 11/12 are in progress. The subchecks below show
-the real completed work; the largest remaining risk is still concentrated in
-D2, D5, D6, and D3.
+Progress board:
+
+- Visible checkbox progress: 147/182 checked, 35 open.
+- Depth tracks: 1/12 complete, 11/12 in progress.
+- Parent track boxes stay open until that track is functionally complete end-to-end.
+- Largest remaining risk remains concentrated in D2, D5, D6, and D3.
 
 - [ ] D1 - Real SQLite Local Store (in progress; broad persistence exists, remaining action bridges still open)
   - [x] Added `rusqlite` with bundled SQLite for local Windows-safe storage.
@@ -187,8 +190,9 @@ D2, D5, D6, and D3.
   - [x] Added a narrow `agent_execute_patch_restore` bridge that requires a separate executable `FileWrite` approval, restores/removes checkpointed files only when current contents still match the applied patch, and records AgentRun rollback events, artifacts, and evidence receipts.
   - [x] Added a narrow `agent_execute_test_run` bridge that waits on pending `TerminalCommand` approvals, runs only commands accepted by the TestRunner, captures the persisted TestArtifact, and records AgentRun test-execution events, artifacts, and evidence receipts.
   - [x] Added a narrow `agent_execute_review` bridge that reads persisted PatchProposal and TestArtifact records for the run, creates a read-only ReviewReport, and records AgentRun review events and report artifacts.
+  - [x] Added a narrow `agent_request_review_revision` bridge that validates a stored review report/finding for the run, marks the report `revise_requested`, records a completed AgentRun `repair` node, a `repair.requested` event, and a `review_revision` artifact, then moves the thread back to build state without writing files or running tools.
   - [x] Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.
-  - [x] Scheduler and bridge tests prove pending approvals stay waiting, approved single approvals resume, approved proposed patches schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, stored reviews move to final-support readiness, and UI-ready decision views map from real stores.
+  - [x] Scheduler and bridge tests prove pending approvals stay waiting, approved single approvals resume, approved proposed patches schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, clean stored reviews move to final-support readiness, unresolved review findings block final support, repair-requested reviews surface `repair_requested`, and UI-ready decision views map from real stores.
   - [ ] Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
   - [ ] Finish adapting Codex thread/start vs turn/start and command/exec protocol shapes where they reduce risk.
   - [x] Keep all risky action executor islands approval-gated.
@@ -215,6 +219,7 @@ D2, D5, D6, and D3.
   - [x] Added behavior coverage proving applied diffs surface checkpoint rollback state and require a separate restore approval before invoking the restore bridge.
   - [x] Added behavior coverage proving rollback receipt UI shows checkpoint files, restore approval IDs, stale-restore failures, and post-restore guidance from real patch/run state.
   - [x] Added behavior coverage proving final support UI names supported, unsupported, insufficient, partial, and untested states from real evidence/test receipt counts.
+  - [x] Added behavior coverage proving review findings expose an exact `Request repair` action, repair actions call the bridge with real report/finding IDs, and final support shows a review-blocked state while findings are unresolved.
   - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - [x] Keep grep/source verifiers only as smoke guards.
   - [x] Stop using source-substring checks as proof of UI behavior.
@@ -249,6 +254,7 @@ D2, D5, D6, and D3.
   - [x] PatchDraft selection is now scheduler-owned: `agent_resume_waiting_run` and `agent_schedule_next` can return a typed `run_patch_draft` decision only after verifying an executable same-run `FileWrite` approval, and the Focus dispatcher handles it alongside apply, test, review, and final-support decisions.
   - [x] After PatchDraft creates a persisted proposed diff, the renderer reloads real patch/run receipts, asks the Rust scheduler for the next action, and dispatches that decision with the reloaded patch list. This can queue the separate apply approval or continue through already-approved apply/test/review steps without using stale UI state.
   - [x] Focus diff UI now surfaces applied checkpoint state and can queue or execute a separate approval-gated patch restore action through the existing AgentRun restore bridge.
+  - [x] Review findings can now request a bounded repair marker that re-enters build state; the full repair loop still must generate the next patch through the executor rather than treating the marker as a completed repair.
   - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.
   - [x] Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - [x] Surface richer rollback detail in the UI: checkpoint file list, restore approval ID, stale-restore failures, and post-restore review guidance.
@@ -267,6 +273,7 @@ D2, D5, D6, and D3.
   - [x] The scheduler dispatcher can automatically queue/run the scheduler-selected test step after the final approval resumes the run, and can dispatch read-only review/final-support steps from persisted artifacts.
   - [x] `agent_resume_waiting_run` and `agent_schedule_next` now accept a test approval hint, verify it as an executable same-run `TerminalCommand`, and return it on the `run_tests` decision; the Focus dispatcher passes that exact ID into `agent_execute_test_run`.
   - [x] The scheduler dispatcher can continue from a completed dispatched action to the next scheduler-selected test/review/final-support step within a bounded loop.
+  - [x] Review reports with unresolved findings now block final support, and an exact finding-level repair request is persisted before the run can move back toward build.
   - [x] Prevent final "tested" claims unless linked artifacts exist.
 
 - [ ] D7 - Model Integration Depth (in progress; Ollama is real, OpenAI-compatible remains out of live scope)
@@ -289,6 +296,7 @@ D2, D5, D6, and D3.
   - [x] Focus can record final support from an existing assistant message only; it links existing AgentRun evidence and passed persisted tests through the Tauri bridge and does not generate new prose or infer claims.
   - [ ] Build final-answer support records from files read, commands run, tests executed, diffs produced, model calls, approvals, and evidence.
   - [x] Make unsupported, insufficient, partial, and untested final-answer states visible.
+  - [x] Block final-support recording while the latest review for the run has unresolved findings; the UI shows `review blocked` instead of inviting an unsupported final receipt.
 
 - [x] D10 - Architecture Reconciliation
   - [x] Recorded the current single-crate Rust decision in `docs/ARCHITECTURE.md`.

@@ -85,6 +85,7 @@ fn main() {
             delyx_next_desktop::agent_executor_bridge::agent_execute_patch_proposal,
             delyx_next_desktop::agent_executor_bridge::agent_execute_patch_restore,
             delyx_next_desktop::agent_review_executor_bridge::agent_execute_review,
+            delyx_next_desktop::agent_review_revision_bridge::agent_request_review_revision,
             delyx_next_desktop::agent_scheduler_bridge::agent_resume_waiting_run,
             delyx_next_desktop::agent_scheduler_bridge::agent_schedule_next,
             delyx_next_desktop::agent_test_executor_bridge::agent_execute_test_run,

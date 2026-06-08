@@ -286,7 +286,7 @@ mod tests {
 
     fn review_report(run_id: &str) -> ReviewReportView {
         ReviewReportView {
-            decision: "accept".to_string(),
+            decision: "accepted".to_string(),
             evidence_summary: "1 stored review receipt.".to_string(),
             findings: Vec::new(),
             id: "review-1".to_string(),

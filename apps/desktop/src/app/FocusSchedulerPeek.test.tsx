@@ -96,6 +96,22 @@ describe("FocusSchedulerPeek", () => {
     expect(onRecordFinal).toHaveBeenCalledTimes(1);
   });
 
+  it("renders repair-requested state without firing actions", () => {
+    const onRecordFinal = vi.fn();
+    renderScheduler({
+      decision: {
+        ...decision("repair_requested", "Repair requested from review review-1 finding finding-1."),
+        findingId: "finding-1",
+        reviewReportId: "review-1",
+      },
+      onRecordFinal,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Next \/ repair requested/ }));
+
+    expect(onRecordFinal).not.toHaveBeenCalled();
+  });
+
   it("renders wait states without triggering scheduler work", () => {
     const actions = {
       onApplyPatch: vi.fn(),

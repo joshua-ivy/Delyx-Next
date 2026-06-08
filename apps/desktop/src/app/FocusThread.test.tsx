@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
@@ -91,15 +92,28 @@ describe("FocusThread artifact visibility", () => {
   });
 });
 
+describe("FocusThread review repair", () => {
+  it("requests repair for the exact review finding", () => {
+    const onRequestRepair = vi.fn();
+    renderThread({ approvalStatus: "pending", onApplyPatch: vi.fn(), onRequestRepair, reviews: [reviewReport()] });
+
+    fireEvent.click(screen.getByRole("button", { name: /Request repair/ }));
+
+    expect(onRequestRepair).toHaveBeenCalledWith("review-1", "finding-1");
+  });
+});
+
 function renderThread({
   activePlan,
   approvalStatus,
   messages,
   onApplyPatch,
   onRecordFinal = vi.fn(),
+  onRequestRepair = vi.fn(),
   onRunTests = vi.fn(),
   patches = [patch()],
   proposals,
+  reviews = [],
   run,
 }: {
   activePlan?: PlanView;
@@ -107,9 +121,11 @@ function renderThread({
   messages?: TaskThread["messages"];
   onApplyPatch: (patchId: string) => void;
   onRecordFinal?: () => void;
+  onRequestRepair?: (reportId: string, findingId: string) => void;
   onRunTests?: () => void;
   patches?: PatchProposalView[];
   proposals?: ActionProposalView[];
+  reviews?: ComponentProps<typeof FocusThread>["reviews"];
   run?: AgentRunView;
 }) {
   return render(
@@ -123,19 +139,42 @@ function renderThread({
       onModeChange={vi.fn()}
       onOpenPalette={vi.fn()}
       onRecordFinal={onRecordFinal}
+      onRequestRepair={onRequestRepair}
       onResumeRun={vi.fn()}
       onRunReview={vi.fn()}
       onRunTests={onRunTests}
       onSend={vi.fn()}
       patches={patches}
       proposals={proposals ?? [approval(approvalStatus)]}
-      reviews={[]}
+      reviews={reviews}
       run={run}
       schedulerDecision={undefined}
       tests={[]}
       thread={thread(messages)}
     />,
   );
+}
+
+function reviewReport(): ComponentProps<typeof FocusThread>["reviews"][number] {
+  return {
+    decision: "pending",
+    evidenceSummary: "Review used stored diff receipts.",
+    findings: [{
+      detail: "Runtime panic risk in new code.",
+      filePath: "src/main.rs",
+      hunkLabel: "patch-1:0",
+      id: "finding-1",
+      priority: "p1",
+      riskLabel: "panic",
+      suggestedFix: "Handle the None/Err case explicitly.",
+      title: "Added unwrap can panic",
+    }],
+    id: "review-1",
+    mode: "read_only",
+    riskSummary: "1 prioritized finding.",
+    runId: "run-1",
+    testSummary: "Tests passed.",
+  };
 }
 
 function thread(messages: TaskThread["messages"] = [{ body: "Apply this change", role: "user" }]): TaskThread {

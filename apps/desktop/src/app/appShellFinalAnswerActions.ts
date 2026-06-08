@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import type { AgentRunView } from "../features/runs/agentRunTypes";
+import type { ReviewReportView } from "../features/review/reviewTypes";
 import { finalizeThreadRunOverBridge } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import { notifyLocalAction } from "./ShellPreferenceController";
@@ -8,6 +9,7 @@ import { notifyLocalAction } from "./ShellPreferenceController";
 interface FinalAnswerState {
   activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
+  reviews?: ReviewReportView[];
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setThreads: Dispatch<SetStateAction<TaskThread[]>>;
   setThreadState: Dispatch<SetStateAction<ThreadUiState>>;
@@ -20,6 +22,10 @@ export async function recordFinalSupportForActiveThread(state: FinalAnswerState)
   }
   if (state.activeRun.outcome) {
     notifyLocalAction("Final support is already recorded for this run", "warning");
+    return;
+  }
+  if (hasUnresolvedReviewFindings(state.reviews, state.activeRun.id)) {
+    notifyLocalAction("Resolve review findings before recording final support", "warning");
     return;
   }
   const summary = latestAssistantSummary(state.activeThread);
@@ -40,6 +46,11 @@ export async function recordFinalSupportForActiveThread(state: FinalAnswerState)
   )));
   state.setThreadState("ready");
   notifyLocalAction("Final support linked existing evidence and passed tests", "success");
+}
+
+function hasUnresolvedReviewFindings(reviews: ReviewReportView[] | undefined, runId: string) {
+  const report = [...(reviews ?? [])].reverse().find((item) => item.runId === runId);
+  return Boolean(report && report.decision !== "accepted" && report.findings.length > 0);
 }
 
 function latestAssistantSummary(thread: TaskThread) {

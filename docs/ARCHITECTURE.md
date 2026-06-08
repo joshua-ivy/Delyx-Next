@@ -74,7 +74,15 @@ complete:
   approval, cwd, timeout, output capture, and persistence path before recording
   AgentRun test receipts. Review nodes gather persisted PatchProposal and
   TestArtifact records by run ID, then create ReviewReport receipts without
-  write capability. A narrow AgentScheduler bridge now reads the persisted
+  write capability. Review findings can now create a bounded repair-request
+  marker through `agent_request_review_revision`: the bridge validates the
+  stored report/finding/run, marks the review `revise_requested`, records a
+  completed AgentRun repair node, a `repair.requested` event, and a
+  `review_revision` artifact, then moves the thread back toward build without
+  writing files or running tools. Reviews with unresolved findings block
+  scheduler final-support readiness and manual final-support recording until
+  the findings are accepted or repaired. A narrow AgentScheduler bridge now
+  reads the persisted
   AgentRun, approval, patch, test, and review stores to choose conservative
   next-step decisions: wait, single-approval resume, patch apply, tests, review,
   final-support readiness, terminal, complete, or blocked. The Focus UI can

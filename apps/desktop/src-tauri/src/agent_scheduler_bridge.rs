@@ -27,6 +27,7 @@ pub struct AgentScheduleDecisionView {
     pub run_id: String,
     pub message: String,
     pub approval_ids: Vec<String>,
+    pub finding_id: Option<String>,
     pub proposal_id: Option<String>,
     pub review_report_id: Option<String>,
     pub patch_count: usize,
@@ -179,6 +180,19 @@ fn decision_view(run_id: &str, decision: AgentScheduleDecision) -> AgentSchedule
             output.review_report_id = Some(review_report_id);
             output
         }
+        AgentScheduleDecision::RepairRequested {
+            finding_id,
+            review_report_id,
+        } => {
+            let mut output = view(
+                "repair_requested",
+                run_id,
+                format!("Repair requested from review {review_report_id} finding {finding_id}."),
+            );
+            output.finding_id = Some(finding_id);
+            output.review_report_id = Some(review_report_id);
+            output
+        }
         AgentScheduleDecision::ResumeAfterApproval { approval_id } => {
             let mut output = view(
                 "resume_after_approval",
@@ -251,6 +265,7 @@ fn decision_view(run_id: &str, decision: AgentScheduleDecision) -> AgentSchedule
 fn view(kind: &str, run_id: &str, message: impl Into<String>) -> AgentScheduleDecisionView {
     AgentScheduleDecisionView {
         approval_ids: Vec::new(),
+        finding_id: None,
         kind: kind.to_string(),
         message: message.into(),
         patch_count: 0,

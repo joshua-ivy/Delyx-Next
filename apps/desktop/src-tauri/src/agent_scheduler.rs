@@ -15,6 +15,10 @@ pub enum AgentScheduleDecision {
     ReadyForFinalSupport {
         review_report_id: String,
     },
+    RepairRequested {
+        review_report_id: String,
+        finding_id: String,
+    },
     ResumeAfterApproval {
         approval_id: String,
     },
@@ -92,9 +96,7 @@ pub fn schedule_next(context: AgentSchedulerContext<'_>) -> AgentScheduleDecisio
         };
     }
     if let Some(report) = reviews.last() {
-        return AgentScheduleDecision::ReadyForFinalSupport {
-            review_report_id: report.id.clone(),
-        };
+        return review_decision(report);
     }
     if let Some(approval_id) = context.patch_draft_approval_id {
         if patch_draft_approval_ready(
@@ -213,6 +215,34 @@ fn test_reason(approval_id: Option<&str>) -> String {
     match approval_id {
         Some(id) => format!("Approved test command {id} is ready to run."),
         None => "An applied patch exists and a supported test command is available.".to_string(),
+    }
+}
+
+fn review_decision(report: &crate::review_bridge::ReviewReportView) -> AgentScheduleDecision {
+    if report.decision == "revise_requested" {
+        return match report.findings.first() {
+            Some(finding) => AgentScheduleDecision::RepairRequested {
+                finding_id: finding.id.clone(),
+                review_report_id: report.id.clone(),
+            },
+            None => blocked("Review requested repair but has no linked finding."),
+        };
+    }
+    if report.decision == "revert_requested" {
+        return blocked(format!(
+            "Review {} requested revert before final support.",
+            report.id
+        ));
+    }
+    if report.decision == "pending" && !report.findings.is_empty() {
+        return blocked(format!(
+            "Review {} has {} finding(s); request repair before final support.",
+            report.id,
+            report.findings.len()
+        ));
+    }
+    AgentScheduleDecision::ReadyForFinalSupport {
+        review_report_id: report.id.clone(),
     }
 }
 

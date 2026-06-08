@@ -139,6 +139,47 @@ mod tests {
         assert!(view.message.contains("Approved test command"));
     }
 
+    #[test]
+    fn scheduler_bridge_maps_repair_requested_decision_for_ui() {
+        let mut thread_store = ThreadRunStore::default();
+        let run = thread_store.ledger.create_run("thread-1").unwrap();
+        let mut reviews = ReviewBridgeStore::default();
+        reviews
+            .reports
+            .push(crate::review_bridge::ReviewReportView {
+                decision: "revise_requested".to_string(),
+                evidence_summary: "Stored review receipt.".to_string(),
+                findings: vec![crate::review_bridge::ReviewFindingView {
+                    detail: "Runtime panic risk in new code.".to_string(),
+                    file_path: "src/main.rs".to_string(),
+                    hunk_label: "patch-1:0".to_string(),
+                    id: "finding-1".to_string(),
+                    priority: "p1".to_string(),
+                    risk_label: "panic".to_string(),
+                    suggested_fix: "Handle the None/Err case explicitly.".to_string(),
+                    title: "Added unwrap can panic".to_string(),
+                }],
+                id: "review-1".to_string(),
+                mode: "read_only".to_string(),
+                risk_summary: "1 prioritized finding.".to_string(),
+                run_id: run.id.clone(),
+                test_summary: "Tests passed.".to_string(),
+            });
+
+        let view = schedule_next_record(
+            thread_store.ledger.get_run(&run.id).unwrap(),
+            &ApprovalEngine::new(),
+            &PatchBridgeStore::default(),
+            &TestRunnerBridgeStore::default(),
+            &reviews,
+            &request(&run.id),
+        );
+
+        assert_eq!(view.kind, "repair_requested");
+        assert_eq!(view.review_report_id.as_deref(), Some("review-1"));
+        assert_eq!(view.finding_id.as_deref(), Some("finding-1"));
+    }
+
     fn seed_approval(
         approvals: &mut ApprovalEngine,
         run_id: &str,

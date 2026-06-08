@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 
-import { executeReviewNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { executeReviewNodeOverBridge, requestReviewRevisionOverBridge } from "../features/runs/agentExecutorClient";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { loadReviewSnapshot } from "../features/review/reviewClient";
 import type { ReviewReportView } from "../features/review/reviewTypes";
@@ -16,12 +16,24 @@ export interface ReviewRunState {
   activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
   patches: PatchProposalView[];
+  reviews?: ReviewReportView[];
   schedulerConfirmedArtifacts?: boolean;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setReviews: Dispatch<SetStateAction<ReviewReportView[]>>;
   setThreads: Dispatch<SetStateAction<TaskThread[]>>;
   setThreadState: Dispatch<SetStateAction<ThreadUiState>>;
   tests: TestArtifactView[];
+}
+
+export interface ReviewRepairState {
+  activeProject: WorkspaceProject;
+  activeRun: AgentRunView | undefined;
+  activeThread: TaskThread | undefined;
+  reviews?: ReviewReportView[];
+  setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
+  setReviews: Dispatch<SetStateAction<ReviewReportView[]>>;
+  setThreads: Dispatch<SetStateAction<TaskThread[]>>;
+  setThreadState: Dispatch<SetStateAction<ThreadUiState>>;
 }
 
 export async function runReviewForActiveRun(state: ReviewRunState) {
@@ -49,7 +61,32 @@ export async function runReviewForActiveRun(state: ReviewRunState) {
   notifyLocalAction(result.message, result.status === "completed" ? "success" : "warning");
 }
 
-async function reloadReviewState(state: ReviewRunState) {
+export async function requestRepairForReviewFinding(
+  state: ReviewRepairState,
+  reportId: string,
+  findingId: string,
+) {
+  if (!state.activeRun || !state.activeThread) {
+    notifyLocalAction("Create a thread with a run before requesting repair", "warning");
+    return;
+  }
+  const report = state.reviews?.find((item) => item.id === reportId && item.runId === state.activeRun?.id);
+  const finding = report?.findings.find((item) => item.id === findingId);
+  if (!report || !finding) {
+    notifyLocalAction("Select a real review finding before requesting repair", "warning");
+    return;
+  }
+  const result = await requestReviewRevisionOverBridge(state.activeRun.id, report.id, finding.id);
+  if (!result) {
+    notifyLocalAction("Desktop bridge is required to request review repair", "warning");
+    return;
+  }
+  await reloadReviewState(state);
+  state.setThreadState("ready");
+  notifyLocalAction(result.message, "success");
+}
+
+async function reloadReviewState(state: ReviewRepairState) {
   const [reports, snapshot] = await Promise.all([
     loadReviewSnapshot(state.activeRun?.id ?? ""),
     loadThreadRunSnapshot(state.activeProject.id),

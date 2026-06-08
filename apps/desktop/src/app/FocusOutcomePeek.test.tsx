@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { AgentOutcome, AgentRunView } from "../features/runs/agentRunTypes";
+import type { ReviewReportView } from "../features/review/reviewTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import { FocusOutcomePeek } from "./FocusThreadArtifacts";
 
@@ -45,20 +46,52 @@ describe("FocusOutcomePeek final support states", () => {
     expect(screen.getByText("Needs an assistant answer before support can be recorded. 1 evidence receipt(s), 1 passed test receipt(s).")).not.toBeNull();
     expect(screen.queryByRole("button", { name: /Record final support/ })).toBeNull();
   });
+
+  it("shows review-blocked support while findings are unresolved", () => {
+    renderOutcome({ reviews: [reviewWithFinding()], run: runView({ evidence: 1 }) });
+
+    expect(screen.getByText("Final support / review blocked")).not.toBeNull();
+    expect(screen.getByText("Review review-1 has 1 finding(s). Request repair before final support.")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: /Record final support/ })).toBeNull();
+  });
 });
 
 function renderOutcome({
   canRecord = true,
   onRecordFinal = vi.fn(),
+  reviews = [],
   run,
   tests = [],
 }: {
   canRecord?: boolean;
   onRecordFinal?: () => void;
+  reviews?: ReviewReportView[];
   run?: AgentRunView;
   tests?: TestArtifactView[];
 }) {
-  return render(<FocusOutcomePeek canRecord={canRecord} onRecordFinal={onRecordFinal} run={run} tests={tests} />);
+  return render(<FocusOutcomePeek canRecord={canRecord} onRecordFinal={onRecordFinal} reviews={reviews} run={run} tests={tests} />);
+}
+
+function reviewWithFinding(): ReviewReportView {
+  return {
+    decision: "pending",
+    evidenceSummary: "Stored review receipt.",
+    findings: [{
+      detail: "Runtime panic risk in new code.",
+      filePath: "src/main.rs",
+      hunkLabel: "patch-1:0",
+      id: "finding-1",
+      priority: "p1",
+      riskLabel: "panic",
+      suggestedFix: "Handle the None/Err case explicitly.",
+      title: "Added unwrap can panic",
+    }],
+    id: "review-1",
+    mode: "read_only",
+    riskSummary: "1 prioritized finding.",
+    runId: "run-1",
+    testSummary: "Tests passed.",
+  };
 }
 
 function runView({

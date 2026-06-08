@@ -55,6 +55,7 @@ function renderShell({ onSendInstruction = vi.fn() } = {}) {
       onOpenWorkspace={vi.fn()}
       onRecordFinal={vi.fn()}
       onRefreshModels={vi.fn()}
+      onRequestRepair={vi.fn()}
       onResumeRun={vi.fn()}
       onRunCommand={vi.fn()}
       onRunReview={vi.fn()}

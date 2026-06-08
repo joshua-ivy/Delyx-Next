@@ -3,7 +3,7 @@ import { ShellPreferenceController } from "./ShellPreferenceController";
 import { decideApprovalAndMaybeResume } from "./appShellApprovalDecisionActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
-import { runReviewForActiveRun } from "./appShellReviewActions";
+import { requestRepairForReviewFinding, runReviewForActiveRun } from "./appShellReviewActions";
 import { resumeSchedulerRun } from "./appShellSchedulerActions";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
@@ -124,8 +124,7 @@ export function AppShell() {
       actionProposals,
       activePlan,
       activeProject,
-      activeRun,
-      activeThread,
+      activeRun, activeThread,
       modelSettings,
       setActionProposals,
       setAgentRuns,
@@ -187,11 +186,13 @@ export function AppShell() {
     void recordFinalSupportForActiveThread({
       activeRun,
       activeThread,
+      reviews,
       setAgentRuns,
       setThreads,
       setThreadState,
     });
   };
+  const requestRepair = (reportId: string, findingId: string) => { void requestRepairForReviewFinding({ activeProject, activeRun, activeThread, reviews, setAgentRuns, setReviews, setThreads, setThreadState }, reportId, findingId); };
   const applyPatch = (patchId: string) => {
     void applyApprovedPatchForActiveRun({
       actionProposals, activeProject, activeRun, activeThread,
@@ -259,6 +260,7 @@ export function AppShell() {
         onOpenWorkspace={() => setWorkspaceOpen(true)}
         onApplyPatch={applyPatch}
         onRecordFinal={recordFinal}
+        onRequestRepair={requestRepair}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
         onResumeRun={() => { void resumeSchedulerRun({ actionProposals, activePlan, activeProject, activeRun, patches, setAgentRuns, setThreads, setThreadState }); }}
         onRunReview={runReview}
