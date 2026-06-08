@@ -74,7 +74,10 @@ complete:
   approval, cwd, timeout, output capture, and persistence path before recording
   AgentRun test receipts. Review nodes gather persisted PatchProposal and
   TestArtifact records by run ID, then create ReviewReport receipts without
-  write capability. Review findings can now create a bounded repair-request
+  write capability. Test approval queueing keeps pending approvals singular,
+  treats denied approvals as blocked, and gives expired approval requests a
+  fresh bridge client ID so SQLite-backed approval dedupe cannot return a stale
+  record as if it were new. Review findings can now create a bounded repair-request
   marker through `agent_request_review_revision`: the bridge validates the
   stored report/finding/run, marks the review `revise_requested`, records a
   completed AgentRun repair node, a `repair.requested` event, and a

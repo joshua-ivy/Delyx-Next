@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 153/188 checked, 35 open.
+- Visible checkbox progress: 154/189 checked, 35 open.
 - Parent track boxes are status gates; they stay open until the full track is functionally complete.
 - Depth tracks: 1/12 complete, 11/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
@@ -281,6 +281,7 @@ Progress board:
   - [x] The scheduler dispatcher can continue from a completed dispatched action to the next scheduler-selected test/review/final-support step within a bounded loop.
   - [x] Review reports with unresolved findings now block final support, and an exact finding-level repair request is persisted before the run can move back toward build.
   - [x] Approved repair requests now flow back to build through persisted review status, a scoped approval card, scheduler-selected PatchDraft, and tests covering that handoff; automatic post-repair apply/test/review chaining still remains open.
+  - [x] Test approval queueing now treats pending, denied, and expired approvals truthfully: pending approvals are not duplicated, denied approvals do not rerun, and expired approvals use a fresh bridge client ID instead of reviving stale approval records.
   - [x] Prevent final "tested" claims unless linked artifacts exist.
 
 - [ ] D7 - Model Integration Depth (in progress; Ollama is real, OpenAI-compatible remains out of live scope)

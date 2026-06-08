@@ -61,7 +61,7 @@ export async function runTestsForActiveRun(state: TestRunState) {
   }
   const approval = schedulerApproval ?? reusableTestApproval(state, command);
   if (!approval || approval.status !== "approved") {
-    await queueTestApproval(state, command, approval);
+    await queueTestApproval(state, command, approval ?? latestTestApproval(state, command));
     return;
   }
   await executeApprovedTest(state, command, approval);
@@ -72,7 +72,18 @@ async function queueTestApproval(
   command: RunnableTestCommand,
   existing: ActionProposalView | undefined,
 ) {
-  const proposal = existing ?? testApprovalProposal(state, command);
+  if (existing?.status === "pending" && !approvalExpired(existing)) {
+    notifyLocalAction("Approve the test command, then run tests again", "warning");
+    return;
+  }
+  if (existing?.status === "denied") {
+    notifyLocalAction("Test approval was denied; Delyx will not run that command", "warning");
+    return;
+  }
+  const fallback = testApprovalProposal(state, command);
+  const proposal = existing && approvalExpired(existing)
+    ? { ...fallback, id: `${fallback.id}-${Date.now()}` }
+    : fallback;
   const recorded = await proposeApprovalOverBridge(proposal) ?? proposal;
   state.setActionProposals((current) => upsertActionProposal(current, recorded));
   if (state.activeThread) {
@@ -126,15 +137,33 @@ async function reloadTestState(state: TestRunState) {
 }
 
 function reusableTestApproval(state: TestRunState, command: RunnableTestCommand) {
-  const now = Date.now();
   return state.actionProposals.find((proposal) => (
+    matchesTestApproval(state, proposal, command)
+    && proposal.status !== "denied"
+    && proposal.status !== "expired"
+    && !approvalExpired(proposal)
+  ));
+}
+
+function latestTestApproval(state: TestRunState, command: RunnableTestCommand) {
+  return state.actionProposals.find((proposal) => matchesTestApproval(state, proposal, command));
+}
+
+function matchesTestApproval(
+  state: TestRunState,
+  proposal: ActionProposalView,
+  command: RunnableTestCommand,
+) {
+  return (
     proposal.runId === state.activeRun?.id
     && proposal.actionType === "run_terminal"
     && proposal.scope.commands?.includes(command.label)
-    && proposal.status !== "denied"
-    && proposal.status !== "expired"
-    && Date.parse(proposal.expiresAt) > now
-  ));
+  );
+}
+
+function approvalExpired(proposal: ActionProposalView) {
+  const expiresAt = Date.parse(proposal.expiresAt);
+  return proposal.status === "expired" || !Number.isFinite(expiresAt) || expiresAt <= Date.now();
 }
 
 function testApprovalProposal(state: TestRunState, command: RunnableTestCommand): ActionProposalView {

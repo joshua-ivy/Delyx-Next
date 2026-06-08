@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { proposeApprovalOverBridge } from "../features/approvals/approvalClient";
 import { executeTestRunNodeOverBridge } from "../features/runs/agentExecutorClient";
 import { loadTestSnapshot } from "../features/tests/testClient";
 import { loadThreadRunSnapshot, updateThreadStatusOverBridge } from "../features/threads/threadClient";
@@ -19,6 +20,7 @@ const executeTest = vi.mocked(executeTestRunNodeOverBridge);
 const loadTests = vi.mocked(loadTestSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const notify = vi.mocked(notifyLocalAction);
+const proposeApproval = vi.mocked(proposeApprovalOverBridge);
 const updateThread = vi.mocked(updateThreadStatusOverBridge);
 
 beforeEach(() => {
@@ -31,6 +33,7 @@ beforeEach(() => {
   });
   loadTests.mockResolvedValue([]);
   loadSnapshot.mockResolvedValue({ runs: [], threads: [] });
+  proposeApproval.mockImplementation(async (proposal) => proposal);
   updateThread.mockResolvedValue(undefined);
 });
 
@@ -55,11 +58,47 @@ describe("runTestsForActiveRun", () => {
       "warning",
     );
   });
+
+  it("does not duplicate a pending test approval", async () => {
+    await runTestsForActiveRun(state({ actionProposals: [testApproval("pending")] }));
+
+    expect(proposeApproval).not.toHaveBeenCalled();
+    expect(executeTest).not.toHaveBeenCalled();
+    expect(notify).toHaveBeenCalledWith("Approve the test command, then run tests again", "warning");
+  });
+
+  it("does not requeue a denied test approval", async () => {
+    await runTestsForActiveRun(state({ actionProposals: [testApproval("denied")] }));
+
+    expect(proposeApproval).not.toHaveBeenCalled();
+    expect(executeTest).not.toHaveBeenCalled();
+    expect(notify).toHaveBeenCalledWith(
+      "Test approval was denied; Delyx will not run that command",
+      "warning",
+    );
+  });
+
+  it("queues a fresh approval after an expired test approval", async () => {
+    await runTestsForActiveRun(state({ actionProposals: [testApproval("expired")] }));
+
+    expect(proposeApproval).toHaveBeenCalledWith(expect.objectContaining({
+      id: expect.stringMatching(/^approval-run-1-test-npm-test-\d+$/),
+      nodeId: "run-1-test-npm-test",
+      status: "pending",
+    }));
+    expect(executeTest).not.toHaveBeenCalled();
+  });
 });
 
-function state({ schedulerTestApprovalId }: { schedulerTestApprovalId?: string } = {}) {
+function state({
+  actionProposals = [testApproval("approved")],
+  schedulerTestApprovalId,
+}: {
+  actionProposals?: ReturnType<typeof testApproval>[];
+  schedulerTestApprovalId?: string;
+} = {}) {
   return {
-    actionProposals: [testApproval()],
+    actionProposals,
     activePlan: {
       decision: "approved" as const,
       explore: {
@@ -106,18 +145,18 @@ function state({ schedulerTestApprovalId }: { schedulerTestApprovalId?: string }
   } as never;
 }
 
-function testApproval() {
+function testApproval(status: "approved" | "denied" | "expired" | "pending") {
   return {
     actionType: "run_terminal" as const,
     expectedResult: "Run tests.",
     expiresAt: "2999-01-01T00:00:00.000Z",
-    id: "approval-test",
-    nodeId: "node-test",
+    id: status === "approved" ? "approval-test" : "approval-run-1-test-npm-test",
+    nodeId: status === "approved" ? "node-test" : "run-1-test-npm-test",
     rationale: "Validate patch.",
     requiredPermission: "terminal_command",
     riskLabel: "medium" as const,
     runId: "run-1",
     scope: { commands: ["npm test"], kind: "terminal" as const, root: "C:\\repo", summary: "Run tests" },
-    status: "approved" as const,
+    status,
   };
 }
