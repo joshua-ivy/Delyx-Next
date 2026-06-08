@@ -216,6 +216,9 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - [ ] D12 - Refined Windows Desktop App
   - Current truth: Delyx Next runs through Tauri, but it is not yet a refined Windows desktop product.
+  - Added explicit `dev:desktop` scripts for the Tauri Windows shell; `dev` remains the browser/Vite preview.
+  - Tauri config now declares the stable main window label, centered native decorated window behavior, bundle publisher/descriptions, and app/installer icon paths.
+  - Release smoke now checks desktop launch script wiring, primary window basics, bundle metadata, and NSIS icon configuration.
   - Add Windows app identity, icon assets, installer metadata, window sizing, native menu decisions, startup/reopen behavior, release smoke checks, and packaged build verification.
   - Keep the desktop shell tied to real local runtime state; do not use packaging polish to hide missing agent behavior.
 

@@ -639,3 +639,9 @@ Reason: The app needs stable product-specific tokens and a small, controlled des
 Decision: PR 18 targets Windows NSIS packaging first. Dev builds are explicitly unsigned until certificate, digest, timestamp, and sign command inputs are configured together.
 
 Reason: Packaging should be testable without pretending production signing exists. Support bundles redact logs and config summaries before export, and update metadata remains a disabled local placeholder.
+
+### ADR-0005: Separate Web Preview And Desktop Dev Commands
+
+Decision: `npm run dev` starts the local Vite web preview, and `npm run dev:desktop` starts the Tauri Windows desktop shell.
+
+Reason: Delyx Next needs a fast browser preview for UI iteration and a clear native desktop path for app-shell QA. The two paths should not be confused when judging Windows desktop polish.

@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": ".\\.tools\\npm.cmd --workspace @delyx/desktop run dev",
+    "dev:desktop": ".\\.tools\\npm.cmd --workspace @delyx/desktop run dev:desktop",
     "typecheck": ".\\.tools\\npm.cmd --workspace @delyx/desktop run typecheck",
     "test": ".\\.tools\\npm.cmd --workspace @delyx/desktop run test",
     "build": ".\\.tools\\npm.cmd --workspace @delyx/desktop run build",

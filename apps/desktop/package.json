@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\vite\\bin\\vite.js --host 127.0.0.1 --port 1420 --configLoader runner",
+    "dev:desktop": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\@tauri-apps\\cli\\tauri.js dev",
     "build": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\typescript\\bin\\tsc -b && ..\\..\\.tools\\node.cmd ..\\..\\node_modules\\vite\\bin\\vite.js build --configLoader runner",
     "typecheck": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\typescript\\bin\\tsc -b",
     "test": "..\\..\\.tools\\node.cmd ./scripts/verify-workbench.mjs && ..\\..\\.tools\\node.cmd ./scripts/verify-markdown-render.mjs && ..\\..\\.tools\\node.cmd ./scripts/verify-ollama-agent.mjs && ..\\..\\.tools\\node.cmd ./scripts/release-smoke.mjs",

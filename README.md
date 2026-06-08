@@ -28,10 +28,16 @@ From PowerShell:
 .\.tools\npm.cmd run dev
 ```
 
-Then open:
+Then open the web preview:
 
 ```text
 http://127.0.0.1:1420
+```
+
+To run the actual Windows desktop shell:
+
+```powershell
+.\.tools\npm.cmd run dev:desktop
 ```
 
 ## Validate

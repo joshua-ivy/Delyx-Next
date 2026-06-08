@@ -12,11 +12,17 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Delyx Next",
         "width": 1440,
         "height": 920,
         "minWidth": 1120,
-        "minHeight": 760
+        "minHeight": 760,
+        "center": true,
+        "resizable": true,
+        "decorations": true,
+        "fullscreen": false,
+        "visible": true
       }
     ],
     "security": {
@@ -25,6 +31,12 @@
   },
   "bundle": {
     "active": true,
+    "publisher": "Joshua Ivy",
+    "shortDescription": "Local-first AI workbench",
+    "longDescription": "Delyx Next is a local-first, UI-first AI workbench for project threads, plans, approvals, diffs, tests, and evidence.",
+    "icon": [
+      "icons/icon.ico"
+    ],
     "targets": [
       "nsis"
     ],
@@ -42,6 +54,8 @@
       },
       "nsis": {
         "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/icon.ico",
         "languages": [
           "English"
         ]
