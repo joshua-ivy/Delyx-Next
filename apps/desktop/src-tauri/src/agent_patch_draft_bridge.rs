@@ -48,11 +48,10 @@ pub struct AgentPatchDraftBridgeView {
     pub provider_id: String,
 }
 
-#[tauri::command]
-pub fn agent_execute_patch_draft(
-    threads: tauri::State<ThreadRunBridgeState>,
-    patches: tauri::State<PatchBridgeState>,
-    approvals: tauri::State<ApprovalBridgeState>,
+pub(crate) fn execute_patch_draft_record(
+    threads: &ThreadRunBridgeState,
+    patches: &PatchBridgeState,
+    approvals: &ApprovalBridgeState,
     request: AgentPatchDraftExecuteRequest,
 ) -> Result<AgentPatchDraftBridgeView, String> {
     validate_request(&request)?;

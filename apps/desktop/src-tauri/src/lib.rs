@@ -5,6 +5,7 @@ mod agent_executor_bridge_tests;
 mod agent_executor_tests;
 pub mod agent_patch_draft_bridge;
 mod agent_patch_draft_bridge_tests;
+pub mod agent_patch_draft_dispatch;
 mod agent_patch_draft_parser;
 mod agent_patch_draft_receipts;
 pub mod agent_patch_restore_executor;

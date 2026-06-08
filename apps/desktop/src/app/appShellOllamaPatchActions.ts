@@ -3,7 +3,7 @@ import type { ModelSettingsView } from "../features/models/modelTypes";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { executePatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { dispatchPatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { ThreadRunSnapshotView } from "../features/threads/threadClient";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
@@ -18,6 +18,8 @@ import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
 import type { SchedulerDispatchState } from "./appShellSchedulerDispatch";
+import { activeTestApprovalId } from "./appShellTestApprovalDecision";
+import { firstRunnableTestCommand } from "./testCommand";
 
 export interface OllamaPatchProposalState extends SchedulerDispatchState {
   modelSettings: ModelSettingsView;
@@ -45,19 +47,26 @@ export async function proposeApprovedPlanPatchWithOllama(
     const paths = approvedPatchDraftFiles(state, approval);
     const prompt = patchDraftPrompt(state, approval, thread.goal);
     startPatchDraft(state, thread, model);
-    const result = await executePatchDraftNodeOverBridge({
-      approvalId: approval.id,
-      approvedRoots: state.activeProject.approvedRoots,
-      clientId: `patch-${run.id}-${approval.id}`,
-      createdAtMs: Date.now(),
-      filesLikelyInvolved: paths,
-      goal: prompt.goal,
-      maxBytesPerFile: 20_000,
-      model,
-      planSteps: prompt.planSteps,
-      projectPath: state.activeProject.path,
-      runId: run.id,
-      scopePaths: patchDraftScopePaths(state, approval),
+    const createdAtMs = Date.now();
+    const result = await dispatchPatchDraftNodeOverBridge({
+      execute: {
+        approvalId: approval.id,
+        approvedRoots: state.activeProject.approvedRoots,
+        clientId: `patch-${run.id}-${approval.id}`,
+        createdAtMs,
+        filesLikelyInvolved: paths,
+        goal: prompt.goal,
+        maxBytesPerFile: 20_000,
+        model,
+        planSteps: prompt.planSteps,
+        projectPath: state.activeProject.path,
+        runId: run.id,
+        scopePaths: patchDraftScopePaths(state, approval),
+      },
+      hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
+      nowMs: createdAtMs,
+      patchDraftApprovalId: approval.id,
+      testApprovalId: activeTestApprovalId(state),
     });
     if (!result || result.status !== "completed") {
       throw new Error(result?.message ?? "Desktop bridge did not capture the patch proposal.");

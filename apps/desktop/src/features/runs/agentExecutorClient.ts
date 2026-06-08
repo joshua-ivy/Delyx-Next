@@ -25,6 +25,14 @@ export interface AgentPatchDraftExecuteRequest {
   scopePaths: string[];
 }
 
+export interface AgentPatchDraftDispatchRequest {
+  execute: AgentPatchDraftExecuteRequest;
+  hasSupportedTestCommand: boolean;
+  patchDraftApprovalId?: string;
+  testApprovalId?: string;
+  nowMs: number;
+}
+
 export interface AgentExecutionBridgeView {
   status: "completed" | "failed" | "waiting_for_approval";
   runId: string;
@@ -105,14 +113,14 @@ export async function executePatchProposalNodeOverBridge(
   }
 }
 
-export async function executePatchDraftNodeOverBridge(
-  request: AgentPatchDraftExecuteRequest,
+export async function dispatchPatchDraftNodeOverBridge(
+  request: AgentPatchDraftDispatchRequest,
 ): Promise<AgentPatchDraftBridgeView | undefined> {
   if (!hasTauriRuntime()) {
     return undefined;
   }
   try {
-    return await invoke<AgentPatchDraftBridgeView>("agent_execute_patch_draft", { request });
+    return await invoke<AgentPatchDraftBridgeView>("agent_dispatch_patch_draft", { request });
   } catch {
     return undefined;
   }

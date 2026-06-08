@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { executePatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { dispatchPatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { proposeApprovedPlanPatchWithOllama, type OllamaPatchProposalState } from "./appShellOllamaPatchActions";
 
@@ -12,7 +12,7 @@ vi.mock("../features/models/ollamaClient", () => ({
 }));
 
 vi.mock("../features/runs/agentExecutorClient", () => ({
-  executePatchDraftNodeOverBridge: vi.fn(),
+  dispatchPatchDraftNodeOverBridge: vi.fn(),
 }));
 
 vi.mock("../features/patches/patchClient", () => ({
@@ -28,7 +28,7 @@ vi.mock("./ShellPreferenceController", () => ({
   notifyLocalAction: vi.fn(),
 }));
 
-const executePatchDraft = vi.mocked(executePatchDraftNodeOverBridge);
+const dispatchPatchDraft = vi.mocked(dispatchPatchDraftNodeOverBridge);
 const loadPatches = vi.mocked(loadPatchSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const model = vi.mocked(selectedOllamaModel);
@@ -36,7 +36,7 @@ const model = vi.mocked(selectedOllamaModel);
 beforeEach(() => {
   vi.clearAllMocks();
   model.mockReturnValue("qwen3-coder:30b");
-  executePatchDraft.mockResolvedValue({
+  dispatchPatchDraft.mockResolvedValue({
     message: "Patch proposal patch-1 captured.",
     model: "qwen3-coder:30b",
     patchId: "patch-1",
@@ -55,17 +55,21 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
     const result = await proposeApprovedPlanPatchWithOllama(state, approval);
 
     expect(result.created).toBe(true);
-    expect(executePatchDraft).toHaveBeenCalledWith(expect.objectContaining({
-      approvalId: "approval-1",
-      approvedRoots: ["C:/repo"],
-      clientId: "patch-run-1-approval-1",
-      filesLikelyInvolved: ["src/main.ts"],
-      goal: "Update value.",
-      model: "qwen3-coder:30b",
-      planSteps: ["Update value"],
-      projectPath: "C:/repo",
-      runId: "run-1",
-      scopePaths: ["src/main.ts"],
+    expect(dispatchPatchDraft).toHaveBeenCalledWith(expect.objectContaining({
+      execute: expect.objectContaining({
+        approvalId: "approval-1",
+        approvedRoots: ["C:/repo"],
+        clientId: "patch-run-1-approval-1",
+        filesLikelyInvolved: ["src/main.ts"],
+        goal: "Update value.",
+        model: "qwen3-coder:30b",
+        planSteps: ["Update value"],
+        projectPath: "C:/repo",
+        runId: "run-1",
+        scopePaths: ["src/main.ts"],
+      }),
+      hasSupportedTestCommand: true,
+      patchDraftApprovalId: "approval-1",
     }));
     expect(state.setPatches).toHaveBeenCalledWith([patch]);
     expect(appendThreadMessageOverBridge).toHaveBeenCalled();
@@ -77,7 +81,7 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
     const result = await proposeApprovedPlanPatchWithOllama(state, approval);
 
     expect(result.created).toBe(false);
-    expect(executePatchDraft).not.toHaveBeenCalled();
+    expect(dispatchPatchDraft).not.toHaveBeenCalled();
   });
 
   it("turns an approved repair finding into a proposed repair patch", async () => {
@@ -91,12 +95,15 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
     const result = await proposeApprovedPlanPatchWithOllama(state, repair);
 
     expect(result.created).toBe(true);
-    expect(executePatchDraft).toHaveBeenCalledWith(expect.objectContaining({
-      approvalId: repair.id,
-      filesLikelyInvolved: ["src/main.ts"],
-      goal: expect.stringContaining("Repair review finding"),
-      planSteps: expect.arrayContaining([expect.stringContaining("Suggested fix")]),
-      scopePaths: ["src/main.ts"],
+    expect(dispatchPatchDraft).toHaveBeenCalledWith(expect.objectContaining({
+      execute: expect.objectContaining({
+        approvalId: repair.id,
+        filesLikelyInvolved: ["src/main.ts"],
+        goal: expect.stringContaining("Repair review finding"),
+        planSteps: expect.arrayContaining([expect.stringContaining("Suggested fix")]),
+        scopePaths: ["src/main.ts"],
+      }),
+      patchDraftApprovalId: repair.id,
     }));
   });
 });

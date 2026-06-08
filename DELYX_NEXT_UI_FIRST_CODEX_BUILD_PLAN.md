@@ -124,7 +124,7 @@ autonomous Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop
 is still missing. It is also not "barely started": most core infrastructure
 now has real persisted or approval-gated functional islands.
 
-- [x] ~~D4, D8, and D10 are fully complete.~~
+- [x] ~~D4, D6, D8, and D10 are fully complete.~~
 - [x] ~~SQLite is real for AgentRun, thread/run, approvals, workspace snapshots, model routes, memory, skills, automations, release/support-bundle state, tests, patches, reviews, external-agent runs, research evidence, and final-answer support links.~~
 - [x] ~~Ollama is a real local model path for runtime detection, chat, composer replies, plan drafts, route sync, and optional version display.~~
 - [x] ~~Patch proposal/apply/restore, approved test execution, and read-only review have narrow AgentRun executor bridges with persisted artifacts.~~
@@ -138,8 +138,9 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 165/191 checked, 26 open.
-- Parent track boxes are status gates; they stay open until the full track is functionally complete.
+- Phase 2 checkbox progress: 166/192 checked, 26 open, 86.5%.
+- Complete tracks: D4, D6, D8, D10.
+- In-progress tracks: D1, D2, D3, D5, D7, D9, D11, D12.
 - Depth tracks: 4/12 complete, 8/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
 - Largest remaining risk remains concentrated in D2, D5, and D3.
@@ -185,7 +186,7 @@ Progress board:
   - [x] ~~Added a one-step scheduler dispatcher that can run the post-resume scheduler-selected action for approved patch apply, approved/approval-queued tests, read-only review, or final-support recording from real persisted artifacts.~~
   - [x] ~~The scheduler dispatcher now asks the Rust scheduler for a bounded next decision after each dispatched action and can continue through ready patch/test/review/final-support steps without inventing artifacts.~~
   - [x] ~~Manual scheduler resume now dispatches the returned scheduler decision, and the visible PatchDraft next-action line can trigger that same resume/dispatch path after reload.~~
-  - [x] ~~Approved plan approvals now trigger a narrow `agent_execute_patch_draft` path that reads only approved plan files, asks local Ollama for complete replacement contents, records model-call receipts, parses structured JSON in Rust, and records the resulting diff through `agent_execute_patch_proposal`.~~
+  - [x] ~~Approved plan approvals now trigger a narrow PatchDraft bridge path that reads only approved plan files, asks local Ollama for complete replacement contents, records model-call receipts, parses structured JSON in Rust, and records the resulting diff through `agent_execute_patch_proposal`.~~
   - [x] ~~Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.~~
   - [x] ~~Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.~~
   - [x] ~~Added a narrow `agent_execute_patch_apply` bridge that waits on pending `FileWrite` approvals, applies an existing PatchProposal through the stale-file/checkpoint PatchEngine path, writes only after approval, and records AgentRun node events, patch-apply artifacts, and diff evidence receipts.~~
@@ -255,13 +256,14 @@ Progress board:
   - [x] ~~Approval flow now resumes the waiting run, lets the Rust scheduler return `run_patch_draft` when the build approval is final and no patch already exists, then dispatches PatchDraftAgent through the bounded scheduler loop; it does not auto-apply that generated patch.~~
   - [x] ~~Patch apply now requires a separate apply approval ID in the Tauri/Rust apply request. The proposal approval can create a diff, but it no longer authorizes the disk write path by itself.~~
   - [x] ~~Focus diff actions now request a persisted apply approval card first, then pass the real approved bridge proposal ID into the patch apply executor before any file write.~~
-  - [x] ~~Moved PatchDraft file-read, local Ollama call, JSON parse, model-call receipts, and patch-proposal capture out of renderer glue into the `agent_execute_patch_draft` Tauri bridge.~~
+  - [x] ~~Moved PatchDraft file-read, local Ollama call, JSON parse, model-call receipts, and patch-proposal capture out of renderer glue into the Rust PatchDraft bridge.~~
   - [x] ~~PatchDraft selection is now scheduler-owned: `agent_resume_waiting_run` and `agent_schedule_next` can return a typed `run_patch_draft` decision only after verifying an executable same-run `FileWrite` approval, and the Focus dispatcher handles it alongside apply, test, review, and final-support decisions.~~
   - [x] ~~After PatchDraft creates a persisted proposed diff, the renderer reloads real patch/run receipts, asks the Rust scheduler for the next action, and dispatches that decision with the reloaded patch list. This can queue the separate apply approval or continue through already-approved apply/test/review steps without using stale UI state.~~
   - [x] ~~Focus diff UI now surfaces applied checkpoint state and can queue or execute a separate approval-gated patch restore action through the existing AgentRun restore bridge.~~
   - [x] ~~Review findings can now request a bounded repair marker that re-enters build state; the full repair loop still must generate the next patch through the executor rather than treating the marker as a completed repair.~~
   - [x] ~~Exact review repair requests now queue a scoped `FileWrite` approval for the finding path and can re-enter the existing PatchDraft path to propose a follow-up diff; generated repair patches still require the separate apply approval before disk writes.~~
   - [x] ~~Scheduler-dispatched PatchDraft now uses the scheduler-provided approval ID, so approved repair drafts and approved plan drafts share the same dispatch path instead of silently handling only plan approvals.~~
+  - [x] ~~PatchDraft dispatch now re-verifies the Rust scheduler decision inside the registered Tauri command before executing the PatchDraft bridge, so the Focus path can pass plan context without directly selecting PatchDraft execution authority.~~
   - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.
   - [x] ~~Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.~~
   - [x] ~~Surface richer rollback detail in the UI: checkpoint file list, restore approval ID, stale-restore failures, and post-restore review guidance.~~

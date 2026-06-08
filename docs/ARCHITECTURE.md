@@ -118,11 +118,12 @@ complete:
   resume-then-dispatch helper, including reload-time PatchDraft decisions.
   PatchDraft dispatch uses the scheduler-provided approval ID,
   so plan drafts and repair drafts enter the same approval-checked bridge path.
-  A separate `agent_execute_patch_draft` bridge can perform the
-  approved plan-or-repair file read, local Ollama PatchDraftAgent call, Rust
-  JSON parse, model-call receipt recording, and patch-proposal capture path.
-  That bridge is still a narrow renderer-invoked command, not the full
-  executor/repair loop.
+  `agent_dispatch_patch_draft` now re-checks the Rust scheduler decision before
+  calling the PatchDraft bridge helper, which performs the approved
+  plan-or-repair file read, local Ollama PatchDraftAgent call, Rust JSON parse,
+  model-call receipt recording, and patch-proposal capture path. This is still
+  a narrow renderer-coordinated command because the renderer supplies plan
+  context and triggers dispatch; it is not the full executor/repair loop.
   After the bridge persists a proposed diff, the renderer reloads patch/run
   receipts and re-enters the scheduler dispatcher with the fresh patch list so
   the next apply/test/review decision can be queued or continued through normal
@@ -286,12 +287,14 @@ resume transition when exactly one approval is executable. It does not yet
 dispatch the whole loop by itself. The `agent_execute_patch_proposal` bridge can
 advance a run from a pending approval boundary into an approved patch-proposal
 node, persist the patch proposal, and record node events, artifact IDs, and diff
-evidence receipts. The `agent_execute_patch_draft` bridge owns the approved
-generated-patch slice before that proposal node: it reads only scoped approved
-plan or repair files, calls local Ollama, records model-call receipts, rejects
-truncated, unapproved, empty, duplicate, or unchanged generated file contents,
-and then feeds the approved proposal bridge. It remains a narrow command
-invoked by the renderer after approval, not an autonomous repair-loop node. The
+evidence receipts. The `agent_dispatch_patch_draft` command re-verifies the
+Rust scheduler's `run_patch_draft` decision before calling the PatchDraft
+bridge helper, which owns the approved generated-patch slice
+before that proposal node: it reads only scoped approved plan or repair files,
+calls local Ollama, records model-call receipts, rejects truncated, unapproved,
+empty, duplicate, or unchanged generated file contents, and then feeds the
+approved proposal bridge. This remains a narrow renderer-coordinated command,
+not an autonomous repair-loop node. The
 `agent_execute_patch_apply` bridge can advance an
 approved existing PatchProposal into a patch-apply node, write files through the
 stale-file/checkpoint PatchEngine path, and record patch-apply receipts. The
@@ -832,7 +835,7 @@ isolation start paying for the added workspace shape.
 ### ADR-0009: PatchDraftAgent Proposes, It Does Not Apply
 
 Decision: Approved plan/build approval can trigger a narrow
-`agent_execute_patch_draft` PatchDraftAgent bridge. The bridge reads only scoped
+`agent_dispatch_patch_draft` PatchDraftAgent bridge. The bridge reads only scoped
 approved plan files, asks local Ollama for structured complete replacement
 contents, records model-call receipts, parses and validates the returned JSON in
 Rust, and records a proposed diff through the AgentRun patch proposal bridge.
@@ -848,9 +851,11 @@ queues or requires the apply-specific approval before any file write occurs.
 PatchDraft selection now flows through the Rust scheduler as a typed
 `run_patch_draft` decision after approval resume, and the scheduler verifies the
 hint against an executable same-run `FileWrite` approval before returning it.
-The renderer no longer runs a separate after-approval side path. The bridge
-removes renderer-side PatchDraft parsing/orchestration, but it is not yet the
-full autonomous executor/repair loop.
+The renderer no longer runs a separate after-approval side path.
+`agent_dispatch_patch_draft` re-checks that scheduler decision inside Rust
+before executing the PatchDraft bridge. The bridge removes renderer-side
+PatchDraft parsing/orchestration, but it is not yet the full autonomous
+executor/repair loop.
 
 Scheduler-selected tests follow the same rule for terminal approvals. The
 renderer may pass the active plan's approved test approval ID as a scheduler
