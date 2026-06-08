@@ -3,9 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { executePatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { executePatchDraftNodeOverBridge, scheduleNextRunActionOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { proposeApprovedPlanPatchWithOllama, type OllamaPatchProposalState } from "./appShellOllamaPatchActions";
+import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
 
 vi.mock("../features/models/ollamaClient", () => ({
   selectedOllamaModel: vi.fn(),
@@ -13,6 +14,7 @@ vi.mock("../features/models/ollamaClient", () => ({
 
 vi.mock("../features/runs/agentExecutorClient", () => ({
   executePatchDraftNodeOverBridge: vi.fn(),
+  scheduleNextRunActionOverBridge: vi.fn(),
 }));
 
 vi.mock("../features/patches/patchClient", () => ({
@@ -28,10 +30,16 @@ vi.mock("./ShellPreferenceController", () => ({
   notifyLocalAction: vi.fn(),
 }));
 
+vi.mock("./appShellSchedulerDispatch", () => ({
+  dispatchSchedulerDecision: vi.fn(),
+}));
+
+const dispatchDecision = vi.mocked(dispatchSchedulerDecision);
 const executePatchDraft = vi.mocked(executePatchDraftNodeOverBridge);
 const loadPatches = vi.mocked(loadPatchSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const model = vi.mocked(selectedOllamaModel);
+const scheduleNext = vi.mocked(scheduleNextRunActionOverBridge);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -46,6 +54,15 @@ beforeEach(() => {
   });
   loadPatches.mockResolvedValue([patch]);
   loadSnapshot.mockResolvedValue({ runs: [run], threads: [thread] });
+  scheduleNext.mockResolvedValue({
+    approvalIds: [],
+    kind: "run_patch_apply",
+    message: "Patch is ready to apply.",
+    patchCount: 1,
+    proposalId: "patch-1",
+    runId: "run-1",
+    testCount: 0,
+  });
 });
 
 describe("proposeApprovedPlanPatchWithOllama", () => {
@@ -68,6 +85,14 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
       scopePaths: ["src/main.ts"],
     }));
     expect(state.setPatches).toHaveBeenCalledWith([patch]);
+    expect(scheduleNext).toHaveBeenCalledWith(expect.objectContaining({
+      hasSupportedTestCommand: true,
+      runId: "run-1",
+    }));
+    expect(dispatchDecision).toHaveBeenCalledWith(expect.objectContaining({
+      activeRun: run,
+      patches: [patch],
+    }), expect.objectContaining({ kind: "run_patch_apply", proposalId: "patch-1" }));
     expect(appendThreadMessageOverBridge).toHaveBeenCalled();
   });
 
@@ -78,6 +103,7 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
 
     expect(created).toBe(false);
     expect(executePatchDraft).not.toHaveBeenCalled();
+    expect(scheduleNext).not.toHaveBeenCalled();
   });
 });
 

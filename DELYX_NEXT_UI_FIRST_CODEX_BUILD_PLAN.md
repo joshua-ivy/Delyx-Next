@@ -131,11 +131,11 @@ now has real persisted or approval-gated functional islands.
 - [x] Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.
 - [x] Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.
 - [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, and one-step approval-safe dispatcher now exist.
-- [ ] Approved plan -> generated patch proposal is real, but generated patch -> apply -> test -> review is not yet automatically chained end-to-end.
+- [ ] Approved plan -> generated patch proposal now re-enters the scheduler and can queue/continue apply -> test -> review steps through approval boundaries, but the complete repair-capable loop is still open.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 126/165 visible Phase 2 checkboxes are checked. Only 1/12 depth
+Progress read: 127/166 visible Phase 2 checkboxes are checked. Only 1/12 depth
 tracks is fully complete, and 11/12 are in progress. The subchecks below show
 the real completed work; the largest remaining risk is still concentrated in
 D2, D5, D6, and D3.
@@ -240,6 +240,7 @@ D2, D5, D6, and D3.
   - [x] Patch apply now requires a separate apply approval ID in the Tauri/Rust apply request. The proposal approval can create a diff, but it no longer authorizes the disk write path by itself.
   - [x] Focus diff actions now request a persisted apply approval card first, then pass the real approved bridge proposal ID into the patch apply executor before any file write.
   - [x] Moved PatchDraft file-read, local Ollama call, JSON parse, model-call receipts, and patch-proposal capture out of renderer glue into the `agent_execute_patch_draft` Tauri bridge.
+  - [x] After PatchDraft creates a persisted proposed diff, the renderer reloads real patch/run receipts, asks the Rust scheduler for the next action, and dispatches that decision with the reloaded patch list. This can queue the separate apply approval or continue through already-approved apply/test/review steps without using stale UI state.
   - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.
   - [ ] Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - [ ] Surface full rollback state in the UI beyond existing patch/apply/restore receipts.

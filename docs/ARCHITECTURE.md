@@ -93,8 +93,12 @@ complete:
   the depth limit. A separate `agent_execute_patch_draft` bridge can perform the
   approved plan-file read, local Ollama PatchDraftAgent call, Rust JSON parse,
   model-call receipt recording, and patch-proposal capture path. That bridge is
-  still a narrow renderer-invoked command, not the full executor/repair loop. It
-  does not apply generated patches, bypass approvals, or run arbitrary tools.
+  still a narrow renderer-invoked command, not the full executor/repair loop.
+  After the bridge persists a proposed diff, the renderer reloads patch/run
+  receipts and re-enters the scheduler dispatcher with the fresh patch list so
+  the next apply/test/review decision can be queued or continued through normal
+  approval boundaries. It does not apply generated patches, bypass approvals, or
+  run arbitrary tools.
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.
@@ -260,8 +264,10 @@ advance persisted patch/test artifacts into a read-only review node and
 ReviewReport artifact. The Focus thread view loads persisted patch, test, and
 review receipts for the active run; it shows scheduler-selected next actions
 from the Rust bridge, can resume a single ready approval, and can trigger
-existing patch/test/review/final-support actions only from real receipts. Other
-runtime islands execute real work
+existing patch/test/review/final-support actions only from real receipts.
+PatchDraft success also reloads real receipts before dispatching the next
+scheduler decision, preventing generated patches from relying on stale renderer
+state. Other runtime islands execute real work
 outside the full graph: Ollama chat/plan calls, the generic terminal-worker
 bridge, and Codex CLI read-only launches. The full Explore -> Plan -> Approve
 -> Build -> Diff -> Test -> Review execution loop remains Phase 2 work. AgentRun

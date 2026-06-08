@@ -2,13 +2,16 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
-import { executePatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { executePatchDraftNodeOverBridge, scheduleNextRunActionOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
+import type { ThreadRunSnapshotView } from "../features/threads/threadClient";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
 import { recordModelCallFailure } from "./appShellModelRunActions";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
+import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
 import { notifyLocalAction } from "./ShellPreferenceController";
+import { firstRunnableTestCommand } from "./testCommand";
 import type { SchedulerDispatchState } from "./appShellSchedulerDispatch";
 
 export interface OllamaPatchProposalState extends SchedulerDispatchState {
@@ -50,8 +53,9 @@ export async function proposeApprovedPlanPatchWithOllama(
     if (!result || result.status !== "completed") {
       throw new Error(result?.message ?? "Desktop bridge did not capture the patch proposal.");
     }
-    await reloadPatchDraftState(state, run.id);
+    const reloaded = await reloadPatchDraftState(state, run.id);
     completePatchDraft(state, thread, result.message);
+    await dispatchNextAfterPatchDraft(state, reloaded);
     return true;
   } catch (error) {
     await reloadPatchDraftState(state, run.id);
@@ -136,6 +140,29 @@ async function reloadPatchDraftState(state: OllamaPatchProposalState, runId: str
     state.setThreads(snapshot.threads);
     state.setAgentRuns(snapshot.runs);
   }
+  return { patches, snapshot };
+}
+
+async function dispatchNextAfterPatchDraft(
+  state: OllamaPatchProposalState,
+  reloaded: PatchDraftReload,
+) {
+  if (!state.activeRun || !reloaded.patches) {
+    return;
+  }
+  const decision = await scheduleNextRunActionOverBridge({
+    hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
+    nowMs: Date.now(),
+    runId: state.activeRun.id,
+  });
+  if (!decision) {
+    return;
+  }
+  await dispatchSchedulerDecision({
+    ...state,
+    activeRun: reloaded.snapshot?.runs.find((run) => run.id === state.activeRun?.id) ?? state.activeRun,
+    patches: reloaded.patches,
+  }, decision);
 }
 
 function appendMessage(
@@ -160,4 +187,11 @@ function patchDraftErrorMessage(error: unknown) {
 
 function normalizePath(path: string) {
   return path.replace(/\\/g, "/").replace(/^\.\//, "").toLowerCase();
+}
+
+type PatchProposalSnapshot = Awaited<ReturnType<typeof loadPatchSnapshot>>;
+
+interface PatchDraftReload {
+  patches: PatchProposalSnapshot;
+  snapshot: ThreadRunSnapshotView | undefined;
 }
