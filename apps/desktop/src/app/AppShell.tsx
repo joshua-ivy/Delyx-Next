@@ -23,6 +23,7 @@ import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, webRuntimeBridge, type RuntimeBridgeState } from "./runtimeBridge";
+import { selectOllamaCodingModel } from "./modelSelection";
 import { useRunApprovals } from "./useRunApprovals";
 import { useRunReceipts } from "./useRunReceipts";
 import { useSchedulerDecision } from "./useSchedulerDecision";
@@ -152,14 +153,7 @@ export function AppShell() {
     }, value);
   };
   const selectModel = (modelId: string) => {
-    setModelSettings((current) => ({
-      ...current,
-      routes: [
-        { modelId, providerId: "ollama-local", role: "coding", saved: false },
-        ...current.routes.filter((route) => !(route.providerId === "ollama-local" && route.role === "coding")),
-      ],
-      selectedProviderId: "ollama-local",
-    }));
+    setModelSettings((current) => selectOllamaCodingModel(current, modelId));
   };
   const runReview = () => {
     void runReviewForActiveRun({
@@ -216,10 +210,16 @@ export function AppShell() {
       activeRun,
       activeThread,
       actionProposals,
+      patches,
+      reviews,
       setActionProposals,
       setAgentRuns,
+      setPatches,
+      setReviews,
+      setTests,
       setThreads,
       setThreadState,
+      tests,
     }, proposalId, status);
   };
   const archiveActiveThread = () => {

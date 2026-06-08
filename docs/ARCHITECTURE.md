@@ -85,8 +85,11 @@ complete:
   bridge returns a post-resume scheduler decision when persisted patch, test, or
   review work is ready; otherwise it falls back to the visible resume decision.
   Approval decisions can also trigger that non-risky resume transition when the
-  approved proposal is the last pending approval for the run; file writes and
-  terminal commands are not auto-dispatched by that resume.
+  approved proposal is the last pending approval for the run. A focused
+  renderer dispatcher can then run exactly one post-resume scheduler-selected
+  action: approved patch apply, approved or approval-queued tests, read-only
+  review, or final-support recording. It does not generate patch content,
+  bypass approvals, or run arbitrary tools.
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.

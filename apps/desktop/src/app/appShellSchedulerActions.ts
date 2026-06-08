@@ -21,7 +21,7 @@ interface ResumeRunState {
 export async function resumeSchedulerRun(state: ResumeRunState) {
   if (!state.activeRun) {
     notifyLocalAction("Create a run before resuming scheduler state", "warning");
-    return;
+    return undefined;
   }
   const decision = await resumeWaitingRunOverBridge({
     hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
@@ -30,7 +30,7 @@ export async function resumeSchedulerRun(state: ResumeRunState) {
   });
   if (!decision) {
     notifyLocalAction("Desktop bridge is required to resume the run", "warning");
-    return;
+    return undefined;
   }
   const snapshot = await loadThreadRunSnapshot(state.activeProject.id);
   if (snapshot) {
@@ -39,6 +39,7 @@ export async function resumeSchedulerRun(state: ResumeRunState) {
   }
   state.setThreadState("ready");
   notifyLocalAction(decision.message, successfulDecision(decision.kind) ? "success" : "warning");
+  return decision;
 }
 
 function successfulDecision(kind: string) {

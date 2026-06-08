@@ -1,27 +1,10 @@
-import type { Dispatch, SetStateAction } from "react";
-
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
-import type { PlanView } from "../features/plans/planTypes";
-import type { AgentRunView } from "../features/runs/agentRunTypes";
-import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
-import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { resumeSchedulerRun } from "./appShellSchedulerActions";
+import { dispatchSchedulerDecision, type SchedulerDispatchState } from "./appShellSchedulerDispatch";
 import { decideFocusApproval, shouldResumeAfterApprovalDecision } from "./focusApprovalDecision";
 
-interface ApprovalDecisionActionState {
-  activePlan: PlanView | undefined;
-  activeProject: WorkspaceProject;
-  activeRun: AgentRunView | undefined;
-  activeThread: TaskThread | undefined;
-  actionProposals: ActionProposalView[];
-  setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
-  setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
-  setThreads: Dispatch<SetStateAction<TaskThread[]>>;
-  setThreadState: Dispatch<SetStateAction<ThreadUiState>>;
-}
-
 export async function decideApprovalAndMaybeResume(
-  state: ApprovalDecisionActionState,
+  state: SchedulerDispatchState,
   proposalId: string,
   status: "approved" | "denied",
 ) {
@@ -29,5 +12,17 @@ export async function decideApprovalAndMaybeResume(
   if (!decided || !shouldResumeAfterApprovalDecision(decided, state.actionProposals, proposalId)) {
     return;
   }
-  await resumeSchedulerRun(state);
+  const decision = await resumeSchedulerRun(state);
+  if (decision) {
+    await dispatchSchedulerDecision(withDecidedProposal(state, decided), decision);
+  }
+}
+
+function withDecidedProposal(state: SchedulerDispatchState, decided: ActionProposalView): SchedulerDispatchState {
+  return {
+    ...state,
+    actionProposals: state.actionProposals.map((proposal) => (
+      proposal.id === decided.id ? decided : proposal
+    )),
+  };
 }

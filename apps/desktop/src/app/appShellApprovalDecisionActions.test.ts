@@ -3,10 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import { decideApprovalAndMaybeResume } from "./appShellApprovalDecisionActions";
 import { resumeSchedulerRun } from "./appShellSchedulerActions";
+import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
 import { decideFocusApproval, shouldResumeAfterApprovalDecision } from "./focusApprovalDecision";
 
 vi.mock("./appShellSchedulerActions", () => ({
   resumeSchedulerRun: vi.fn(),
+}));
+
+vi.mock("./appShellSchedulerDispatch", () => ({
+  dispatchSchedulerDecision: vi.fn(),
 }));
 
 vi.mock("./focusApprovalDecision", () => ({
@@ -15,6 +20,7 @@ vi.mock("./focusApprovalDecision", () => ({
 }));
 
 const decideApproval = vi.mocked(decideFocusApproval);
+const dispatchDecision = vi.mocked(dispatchSchedulerDecision);
 const shouldResume = vi.mocked(shouldResumeAfterApprovalDecision);
 const resumeRun = vi.mocked(resumeSchedulerRun);
 
@@ -25,24 +31,31 @@ beforeEach(() => {
 describe("decideApprovalAndMaybeResume", () => {
   it("resumes through the scheduler when the final approval is ready", async () => {
     const decided = approval("approved");
+    const pending = approval("pending");
     decideApproval.mockResolvedValue(decided);
+    resumeRun.mockResolvedValue(decision());
     shouldResume.mockReturnValue(true);
 
-    const state = actionState([decided]);
+    const state = actionState([pending]);
     await decideApprovalAndMaybeResume(state, decided.id, "approved");
 
     expect(decideApproval).toHaveBeenCalledWith(state, decided.id, "approved");
     expect(resumeRun).toHaveBeenCalledWith(state);
+    expect(dispatchDecision).toHaveBeenCalledWith(expect.objectContaining({
+      actionProposals: [decided],
+    }), decision());
   });
 
   it("does not resume when approval policy says more approvals are pending", async () => {
     const decided = approval("approved");
     decideApproval.mockResolvedValue(decided);
+    resumeRun.mockResolvedValue(decision());
     shouldResume.mockReturnValue(false);
 
     await decideApprovalAndMaybeResume(actionState([decided]), decided.id, "approved");
 
     expect(resumeRun).not.toHaveBeenCalled();
+    expect(dispatchDecision).not.toHaveBeenCalled();
   });
 });
 
@@ -65,10 +78,27 @@ function actionState(actionProposals: ActionProposalView[]) {
     activeRun: undefined,
     activeThread: undefined,
     actionProposals,
+    patches: [],
+    reviews: [],
     setActionProposals: vi.fn(),
     setAgentRuns: vi.fn(),
+    setPatches: vi.fn(),
+    setReviews: vi.fn(),
+    setTests: vi.fn(),
     setThreadState: vi.fn(),
     setThreads: vi.fn(),
+    tests: [],
+  };
+}
+
+function decision() {
+  return {
+    approvalIds: [],
+    kind: "run_tests" as const,
+    message: "Tests are next.",
+    patchCount: 0,
+    runId: "run-1",
+    testCount: 0,
   };
 }
 
