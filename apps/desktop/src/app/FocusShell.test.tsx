@@ -51,12 +51,12 @@ function renderShell({ onSendInstruction = vi.fn() } = {}) {
       onApplyPatch={vi.fn()}
       onArchiveActive={vi.fn()}
       onApprovePlan={vi.fn()}
-      onCreatePlan={vi.fn()}
       onDecideProposal={vi.fn()}
       onOpenWorkspace={vi.fn()}
       onRefreshModels={vi.fn()}
       onRunCommand={vi.fn()}
       onRunReview={vi.fn()}
+      onRunTests={vi.fn()}
       onSelectModel={vi.fn()}
       onSelectThread={vi.fn()}
       onSendInstruction={onSendInstruction}

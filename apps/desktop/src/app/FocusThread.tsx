@@ -9,6 +9,7 @@ import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusIcon, Pipe, Think } from "./focusAtoms";
 import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatusLabel, type FocusMode } from "./focusFormat";
 import { MarkdownMessage } from "./focusMarkdown";
+import { firstRunnableTestCommand } from "./testCommand";
 
 interface FocusThreadProps {
   activePlan: PlanView | undefined;
@@ -16,11 +17,11 @@ interface FocusThreadProps {
   model: string;
   onApplyPatch: (patchId: string) => void;
   onApprovePlan: () => void;
-  onCreatePlan: () => void;
   onDecideProposal: (proposalId: string, status: "approved" | "denied") => void;
   onModeChange: (mode: FocusMode) => void;
   onOpenPalette: () => void;
   onRunReview: () => void;
+  onRunTests: () => void;
   onSend: (value: string) => void;
   patches: PatchProposalView[];
   proposals: ActionProposalView[];
@@ -58,7 +59,7 @@ export function FocusThread(props: FocusThreadProps) {
             <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} />
             <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
             <DiffPeek onApplyPatch={props.onApplyPatch} patches={props.patches} proposals={props.proposals} />
-            <TestPeek tests={props.tests} />
+            <TestPeek activePlan={props.activePlan} onRunTests={props.onRunTests} patches={props.patches} tests={props.tests} />
             <ReviewPeek onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
           </div>
         </div>
@@ -213,10 +214,24 @@ function DiffPeek({ onApplyPatch, patches, proposals }: { onApplyPatch: (patchId
   return <div className="peek"><div className="peek-head"><FocusIcon name="diff" /> {file.item.path}<span className="stat">{file.patch.status}</span></div>{file.item.diff.slice(0, 8).map((line, index) => <div className={`dl ${line.kind === "added" ? "add" : line.kind === "removed" ? "del" : "ctx"}`} key={index}><span className="ln">{line.kind === "added" ? "+" : line.kind === "removed" ? "-" : index + 1}</span><span className="tx">{line.text || " "}</span></div>)}{canApply && <div className="plan-actions"><button className="select" onClick={() => onApplyPatch(file.patch.id)} type="button">Apply patch</button></div>}</div>;
 }
 
-function TestPeek({ tests }: { tests: TestArtifactView[] }) {
+function TestPeek({
+  activePlan,
+  onRunTests,
+  patches,
+  tests,
+}: {
+  activePlan: PlanView | undefined;
+  onRunTests: () => void;
+  patches: PatchProposalView[];
+  tests: TestArtifactView[];
+}) {
   const test = tests[0];
   if (!test) {
-    return null;
+    const command = firstRunnableTestCommand(activePlan?.testsToRun);
+    if (!command || !patches.some((patch) => patch.status === "applied")) {
+      return null;
+    }
+    return <ActionLine icon="flask" label="Run tests" onClick={onRunTests} text={command.label} />;
   }
   return <ActionLine icon="flask" label={`${test.command} / ${test.status ?? "captured"}`} text={test.failureSummary ?? `Exit ${test.exitCode ?? "unknown"}`} />;
 }

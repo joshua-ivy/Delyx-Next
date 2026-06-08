@@ -136,9 +136,13 @@ function projectCommands(project: WorkspaceProject) {
     commands.push("cargo test --workspace");
   }
   if (project.indexedFiles.includes("package.json")) {
-    commands.push("npm test");
+    commands.push(hasBundledNpm(project) ? ".\\.tools\\npm.cmd test" : "npm test");
   }
   return commands.length > 0 ? commands : ["No project test command discovered yet."];
+}
+
+function hasBundledNpm(project: WorkspaceProject) {
+  return project.indexedFiles.some((file) => file.replace(/\\/g, "/") === ".tools/npm.cmd");
 }
 
 function stackSummary(project: WorkspaceProject) {

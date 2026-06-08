@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
-import { useApprovalPolicy } from "./appShellApprovalPolicy";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
-import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { runReviewForActiveRun } from "./appShellReviewActions";
-import { canTransition, createThread, modeForThreadStatus } from "./appShellThreadActions";
+import { runTestsForActiveRun } from "./appShellTestActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { sendComposerInstruction } from "./cockpitComposerBindings";
 import { decideFocusApproval } from "./focusApprovalDecision";
@@ -12,19 +10,17 @@ import { FocusShell } from "./FocusShell";
 import { externalAgentBridgeUnavailableState, loadExternalAgentStatus } from "../features/externalAgents/externalAgentClient";
 import { currentExternalAgentState } from "../features/externalAgents/externalAgentData";
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
-import { currentMobileState } from "../features/mobile/mobileData";
 import { currentModelSettings } from "../features/models/modelData";
 import { refreshOllamaSettings } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import { currentAgentRuns } from "../features/runs/agentRunData";
-import { archiveThreadOverBridge, createThreadRunOverBridge, loadThreadRunSnapshot, updateThreadStatusOverBridge } from "../features/threads/threadClient";
+import { archiveThreadOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, webRuntimeBridge, type RuntimeBridgeState } from "./runtimeBridge";
-import { usePersistedInspectorState } from "./usePersistedInspectorState";
 import { useRunApprovals } from "./useRunApprovals";
 import { useRunReceipts } from "./useRunReceipts";
 import { loadWorkspaceProject } from "./workspaceBridge";
@@ -36,15 +32,12 @@ export function AppShell() {
   const [threads, setThreads] = useState<TaskThread[]>([]);
   const [agentRuns, setAgentRuns] = useState(currentAgentRuns);
   const [threadState, setThreadState] = useState<ThreadUiState>("empty");
-  const [paletteOpen, setPaletteOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [projects, setProjects] = useState<WorkspaceProject[]>([currentWorkspaceProject]);
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
   const [modelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
-  const { automationState, memoryState, releaseState, skillState } = usePersistedInspectorState();
-  const riskPolicy = useApprovalPolicy();
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
   const activeThread = visibleThreads.find((thread) => thread.id === activeThreadId) ?? visibleThreads[0];
@@ -52,7 +45,7 @@ export function AppShell() {
     ?? agentRuns.find((run) => run.threadId === activeThread?.id);
   const activePlan = plans.find((plan) => plan.threadId === activeThread?.id);
   const { actionProposals, setActionProposals } = useRunApprovals(activeRun?.id);
-  const { patches, reviews, setPatches, setReviews, tests } = useRunReceipts(activeRun?.id);
+  const { patches, reviews, setPatches, setReviews, setTests, tests } = useRunReceipts(activeRun?.id);
   useEffect(() => {
     let cancelled = false;
     void loadRuntimeBridgeState().then(async (state) => {
@@ -121,19 +114,6 @@ export function AppShell() {
   useEffect(() => {
     document.documentElement.dataset.mode = activeThread?.mode ?? "build";
   }, [activeThread?.mode]);
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setPaletteOpen(true);
-      }
-      if (event.key === "Escape") {
-        setPaletteOpen(false);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
   const runPaletteCommand = (commandId: string) => {
     runAppShellCommand(commandId, {
       actionProposals,
@@ -153,7 +133,6 @@ export function AppShell() {
       setWorkspaceOpen,
       threads,
     });
-    setPaletteOpen(false);
   };
   const sendInstruction = (value: string) => {
     sendComposerInstruction({
@@ -189,6 +168,21 @@ export function AppShell() {
       setThreads,
       setThreadState,
       tests,
+    });
+  };
+  const runTests = () => {
+    void runTestsForActiveRun({
+      actionProposals,
+      activePlan,
+      activeProject,
+      activeRun,
+      activeThread,
+      patches,
+      setActionProposals,
+      setAgentRuns,
+      setTests,
+      setThreads,
+      setThreadState,
     });
   };
   const applyPatch = (patchId: string) => {
@@ -246,12 +240,12 @@ export function AppShell() {
         modelSettings={modelSettings}
         onArchiveActive={archiveActiveThread}
         onApprovePlan={() => runPaletteCommand("plan.approve")}
-        onCreatePlan={() => runPaletteCommand("plan.create")}
         onDecideProposal={decideProposal}
         onOpenWorkspace={() => setWorkspaceOpen(true)}
         onApplyPatch={applyPatch}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
         onRunReview={runReview}
+        onRunTests={runTests}
         onRunCommand={runPaletteCommand}
         onSelectModel={selectModel}
         onSelectThread={(threadId) => {

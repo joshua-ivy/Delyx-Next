@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
+import type { PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusThread } from "./FocusThread";
@@ -23,6 +24,23 @@ describe("FocusThread patch actions", () => {
     renderThread({ approvalStatus: "pending", onApplyPatch: vi.fn() });
 
     expect(screen.queryByRole("button", { name: "Apply patch" })).toBeNull();
+  });
+});
+
+describe("FocusThread test actions", () => {
+  it("shows run tests only after an applied patch and supported plan command", () => {
+    const onRunTests = vi.fn();
+    renderThread({
+      activePlan: plan(),
+      approvalStatus: "pending",
+      onApplyPatch: vi.fn(),
+      onRunTests,
+      patches: [patch("applied")],
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Run tests/ }));
+
+    expect(onRunTests).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -66,32 +84,36 @@ describe("FocusThread artifact visibility", () => {
 });
 
 function renderThread({
+  activePlan,
   approvalStatus,
   messages,
   onApplyPatch,
+  onRunTests = vi.fn(),
   patches = [patch()],
   proposals,
   run,
 }: {
+  activePlan?: PlanView;
   approvalStatus: ActionProposalView["status"];
   messages?: TaskThread["messages"];
   onApplyPatch: (patchId: string) => void;
+  onRunTests?: () => void;
   patches?: PatchProposalView[];
   proposals?: ActionProposalView[];
   run?: AgentRunView;
 }) {
   return render(
     <FocusThread
-      activePlan={undefined}
+      activePlan={activePlan}
       mode="build"
       model="qwen3-coder:30b"
       onApplyPatch={onApplyPatch}
       onApprovePlan={vi.fn()}
-      onCreatePlan={vi.fn()}
       onDecideProposal={vi.fn()}
       onModeChange={vi.fn()}
       onOpenPalette={vi.fn()}
       onRunReview={vi.fn()}
+      onRunTests={onRunTests}
       onSend={vi.fn()}
       patches={patches}
       proposals={proposals ?? [approval(approvalStatus)]}
@@ -151,7 +173,30 @@ function runningRun(): AgentRunView {
   };
 }
 
-function patch(): PatchProposalView {
+function plan(): PlanView {
+  return {
+    decision: "approved",
+    explore: {
+      architectureSummary: "TypeScript project.",
+      projectCommands: [".\\.tools\\npm.cmd test"],
+      relevantFiles: ["src/app.ts"],
+      relevantSymbols: [],
+      risks: [],
+      suggestedNextSteps: [],
+      unknowns: [],
+    },
+    filesLikelyInvolved: ["src/app.ts"],
+    goalUnderstanding: "Apply and test the patch.",
+    permissionsNeeded: ["approval required before terminal commands"],
+    risks: [],
+    rollbackStrategy: "Restore checkpoint.",
+    steps: ["Apply patch", "Run tests"],
+    testsToRun: [".\\.tools\\npm.cmd test"],
+    threadId: "thread-1",
+  };
+}
+
+function patch(status: PatchProposalView["status"] = "proposed"): PatchProposalView {
   return {
     approvalId: "approval-1",
     checkpointFiles: [],
@@ -163,7 +208,7 @@ function patch(): PatchProposalView {
     }],
     id: "patch-1",
     runId: "run-1",
-    status: "proposed",
+    status,
   };
 }
 

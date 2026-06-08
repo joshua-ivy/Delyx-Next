@@ -197,6 +197,8 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Run approved tests from the agent loop.
   - Runtime can now execute an explicit approved test command through AgentRun. It reuses the existing TestRunner approval, cwd, command-shape, timeout, output-capture, and artifact persistence gates, but it is not yet automatically chained from patch apply.
   - Focus thread UI now loads persisted test artifacts for the active run instead of passing a static empty test array, so real TestRunner receipts can appear when the runtime creates them.
+  - Focus thread UI can now show a manual `Run tests` action after an applied patch when the active plan contains a supported direct test command. If terminal approval is missing, it queues a visible approval first; execution uses the AgentRun test bridge only after approval.
+  - Plan command discovery now prefers the bundled `.tools\npm.cmd test` wrapper when the project index proves it exists, avoiding fake PATH assumptions on Windows.
   - Generate review reports from actual patch/test artifacts.
   - Runtime can now execute an explicit read-only review node through AgentRun. The bridge gathers persisted patch and test artifacts by run ID before creating the ReviewReport, so review input is actual stored receipt data rather than caller-supplied mock state.
   - Focus thread UI can now run that read-only review action when the active run has real patch or test artifacts, reload persisted ReviewReports, and display the resulting review receipt inline.

@@ -5,7 +5,7 @@ import { workspaceChecks } from "./verify-workbench-workspace-checks.mjs";
 
 export const requiredChecks = [
   ["src/app/AppShell.tsx", "document.documentElement.dataset.mode"],
-  ["src/app/AppShell.tsx", "ctrlKey"],
+  ["src/app/FocusShell.tsx", "ctrlKey"],
   ["src/app/useCockpitDomBindings.ts", "activateOnKeyboard"],
   ["src/app/useCockpitDomBindings.ts", "bindPlanControls"],
   ["src/app/cockpitPlanBindings.ts", "const planEdit"],
@@ -16,7 +16,7 @@ export const requiredChecks = [
   ["src/app/cockpitPlanBindings.ts", "planReviewMode, switchToReviewMode"],
   ["src/app/cockpitPlanBindings.ts", "Create a plan before changing its decision"],
   ["src/app/cockpitPlanBindings.ts", "Create a thread before switching to review"],
-  ["src/app/AppShell.tsx", "setPaletteOpen"],
+  ["src/app/FocusShell.tsx", "setOverlay((current) => current === \"palette\" ? undefined : \"palette\")"],
   ["src/app/useCockpitDomBindings.ts", "review-revise"],
   ["src/app/useCockpitDomBindings.ts", "useCockpitDomBindings"],
   ["src/app/cockpitStateTransitions.ts", "updateThreadAndRunStatus"],
