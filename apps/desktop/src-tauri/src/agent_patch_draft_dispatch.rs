@@ -36,7 +36,7 @@ pub fn agent_dispatch_patch_draft(
     execute_patch_draft_record(&threads, &patches, &approvals, request.execute)
 }
 
-fn verify_scheduler_patch_draft(
+pub(crate) fn verify_scheduler_patch_draft(
     threads: &ThreadRunBridgeState,
     patches: &PatchBridgeState,
     tests: &TestRunnerBridgeState,

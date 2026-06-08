@@ -3,16 +3,13 @@ import type { ModelSettingsView } from "../features/models/modelTypes";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { dispatchPatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { dispatchPatchDraftFromContextOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { ThreadRunSnapshotView } from "../features/threads/threadClient";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
 import { recordModelCallFailure } from "./appShellModelRunActions";
 import {
-  approvedPatchDraftFiles,
   patchDraftApprovalId,
-  patchDraftPrompt,
-  patchDraftScopePaths,
 } from "./appShellPatchDraftDecision";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
@@ -44,28 +41,16 @@ export async function proposeApprovedPlanPatchWithOllama(
   }
 
   try {
-    const paths = approvedPatchDraftFiles(state, approval);
-    const prompt = patchDraftPrompt(state, approval, thread.goal);
     startPatchDraft(state, thread, model);
     const createdAtMs = Date.now();
-    const result = await dispatchPatchDraftNodeOverBridge({
-      execute: {
-        approvalId: approval.id,
-        approvedRoots: state.activeProject.approvedRoots,
-        clientId: `patch-${run.id}-${approval.id}`,
-        createdAtMs,
-        filesLikelyInvolved: paths,
-        goal: prompt.goal,
-        maxBytesPerFile: 20_000,
-        model,
-        planSteps: prompt.planSteps,
-        projectPath: state.activeProject.path,
-        runId: run.id,
-        scopePaths: patchDraftScopePaths(state, approval),
-      },
+    const result = await dispatchPatchDraftFromContextOverBridge({
+      approvalId: approval.id,
       hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
+      maxBytesPerFile: 20_000,
+      model,
       nowMs: createdAtMs,
-      patchDraftApprovalId: approval.id,
+      projectId: state.activeProject.id,
+      runId: run.id,
       testApprovalId: activeTestApprovalId(state),
     });
     if (!result || result.status !== "completed") {

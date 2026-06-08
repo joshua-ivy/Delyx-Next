@@ -31,6 +31,24 @@ pub fn load_recent_project(path: &Path) -> Result<Option<WorkspaceProjectView>, 
         .transpose()
 }
 
+pub fn load_project_by_id(
+    path: &Path,
+    project_id: &str,
+) -> Result<Option<WorkspaceProjectView>, String> {
+    let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_string)?;
+    let project_json = connection
+        .query_row(
+            "SELECT project_json FROM workspace_project_snapshots WHERE id = ?1 ORDER BY updated_at DESC, rowid DESC LIMIT 1",
+            [project_id],
+            |row| row.get::<_, String>(0),
+        )
+        .optional()
+        .map_err(sql_string)?;
+    project_json
+        .map(|value| serde_json::from_str(&value).map_err(|error| error.to_string()))
+        .transpose()
+}
+
 fn sql_string(error: rusqlite::Error) -> String {
     error.to_string()
 }

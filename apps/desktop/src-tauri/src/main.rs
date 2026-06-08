@@ -86,6 +86,7 @@ fn main() {
         )
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::agent_patch_draft_dispatch::agent_dispatch_patch_draft,
+            delyx_next_desktop::agent_patch_draft_context::agent_dispatch_patch_draft_from_context,
             delyx_next_desktop::agent_executor_bridge::agent_execute_patch_apply,
             delyx_next_desktop::agent_executor_bridge::agent_execute_patch_proposal,
             delyx_next_desktop::agent_executor_bridge::agent_execute_patch_restore,

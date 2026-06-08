@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { dispatchPatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { dispatchPatchDraftFromContextOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { proposeApprovedPlanPatchWithOllama, type OllamaPatchProposalState } from "./appShellOllamaPatchActions";
 
@@ -12,7 +12,7 @@ vi.mock("../features/models/ollamaClient", () => ({
 }));
 
 vi.mock("../features/runs/agentExecutorClient", () => ({
-  dispatchPatchDraftNodeOverBridge: vi.fn(),
+  dispatchPatchDraftFromContextOverBridge: vi.fn(),
 }));
 
 vi.mock("../features/patches/patchClient", () => ({
@@ -28,7 +28,7 @@ vi.mock("./ShellPreferenceController", () => ({
   notifyLocalAction: vi.fn(),
 }));
 
-const dispatchPatchDraft = vi.mocked(dispatchPatchDraftNodeOverBridge);
+const dispatchPatchDraft = vi.mocked(dispatchPatchDraftFromContextOverBridge);
 const loadPatches = vi.mocked(loadPatchSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const model = vi.mocked(selectedOllamaModel);
@@ -56,20 +56,12 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
 
     expect(result.created).toBe(true);
     expect(dispatchPatchDraft).toHaveBeenCalledWith(expect.objectContaining({
-      execute: expect.objectContaining({
-        approvalId: "approval-1",
-        approvedRoots: ["C:/repo"],
-        clientId: "patch-run-1-approval-1",
-        filesLikelyInvolved: ["src/main.ts"],
-        goal: "Update value.",
-        model: "qwen3-coder:30b",
-        planSteps: ["Update value"],
-        projectPath: "C:/repo",
-        runId: "run-1",
-        scopePaths: ["src/main.ts"],
-      }),
+      approvalId: "approval-1",
       hasSupportedTestCommand: true,
-      patchDraftApprovalId: "approval-1",
+      maxBytesPerFile: 20_000,
+      model: "qwen3-coder:30b",
+      projectId: "project-1",
+      runId: "run-1",
     }));
     expect(state.setPatches).toHaveBeenCalledWith([patch]);
     expect(appendThreadMessageOverBridge).toHaveBeenCalled();
@@ -96,14 +88,9 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
 
     expect(result.created).toBe(true);
     expect(dispatchPatchDraft).toHaveBeenCalledWith(expect.objectContaining({
-      execute: expect.objectContaining({
-        approvalId: repair.id,
-        filesLikelyInvolved: ["src/main.ts"],
-        goal: expect.stringContaining("Repair review finding"),
-        planSteps: expect.arrayContaining([expect.stringContaining("Suggested fix")]),
-        scopePaths: ["src/main.ts"],
-      }),
-      patchDraftApprovalId: repair.id,
+      approvalId: repair.id,
+      projectId: "project-1",
+      runId: "run-1",
     }));
   });
 });

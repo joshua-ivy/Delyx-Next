@@ -6,7 +6,7 @@ use std::sync::Mutex;
 
 #[derive(Default)]
 pub struct ApprovalBridgeState {
-    store: Mutex<ApprovalBridgeStore>,
+    pub(crate) store: Mutex<ApprovalBridgeStore>,
     database_path: Option<PathBuf>,
 }
 

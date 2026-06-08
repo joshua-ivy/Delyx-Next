@@ -132,16 +132,16 @@ now has real persisted or approval-gated functional islands.
 - [x] ~~Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.~~
 - [x] ~~Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.~~
 - [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, and one-step approval-safe dispatcher now exist.
-- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; the remaining gap is making PatchDraft an executor-owned repair/build node instead of a narrow renderer-invoked command.
+- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft context construction is Rust-owned now, but the remaining gap is making PatchDraft a full autonomous executor repair/build node instead of a renderer-triggered command.
 - [x] ~~Broad frontend behavior coverage now covers project/thread creation, planning, approvals, diff/test/review artifacts, evidence support, error, blocked, expired, and empty states with React Testing Library component/action tests.~~
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
 Progress board:
 
-- Phase 2 checkbox progress: 177/198 checked, 21 open, 89.4%.
+- Phase 2 checkbox progress: 179/200 checked, 21 open, 89.5%.
+- Phase 2 track progress: 6/12 complete, 6/12 in progress.
 - Complete tracks: D3, D4, D6, D8, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D11, D12.
-- Depth tracks: 6/12 complete, 6/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
 - Largest remaining risk remains concentrated in D2 and D5.
 
@@ -197,6 +197,7 @@ Progress board:
   - [x] ~~Added a narrow `agent_execute_review` bridge that reads persisted PatchProposal and TestArtifact records for the run, creates a read-only ReviewReport, and records AgentRun review events and report artifacts.~~
   - [x] ~~Added a narrow `agent_request_review_revision` bridge that validates a stored review report/finding for the run, marks the report `revise_requested`, records a completed AgentRun `repair` node, a `repair.requested` event, and a `review_revision` artifact, then moves the thread back to build state without writing files or running tools.~~
   - [x] ~~Approved same-run repair PatchDraft approvals can now be selected by the scheduler for `revise_requested` reviews, and the resume bridge can return that decision even when the run is already in build/running state.~~
+  - [x] ~~PatchDraft context construction now has a Rust-owned dispatch command: it loads the persisted thread/run, approved plan, workspace snapshot, approval scope, and matching repair finding context before executing the scheduler-verified PatchDraft bridge.~~
   - [x] ~~Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.~~
   - [x] ~~Scheduler and bridge tests prove pending approvals stay waiting, approved single approvals resume, approved proposed patches schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, clean stored reviews move to final-support readiness, unresolved review findings block final support, repair-requested reviews surface `repair_requested`, and UI-ready decision views map from real stores.~~
   - [ ] Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
@@ -270,6 +271,7 @@ Progress board:
   - [x] ~~Exact review repair requests now queue a scoped `FileWrite` approval for the finding path and can re-enter the existing PatchDraft path to propose a follow-up diff; generated repair patches still require the separate apply approval before disk writes.~~
   - [x] ~~Scheduler-dispatched PatchDraft now uses the scheduler-provided approval ID, so approved repair drafts and approved plan drafts share the same dispatch path instead of silently handling only plan approvals.~~
   - [x] ~~PatchDraft dispatch now re-verifies the Rust scheduler decision inside the registered Tauri command before executing the PatchDraft bridge, so the Focus path can pass plan context without directly selecting PatchDraft execution authority.~~
+  - [x] ~~The mounted app path now calls the Rust PatchDraft context dispatcher with only run/project/approval/model inputs, so React no longer chooses PatchDraft files, plan steps, approved roots, or project path for generated patch proposals.~~
   - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.
   - [x] ~~Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.~~
   - [x] ~~Surface richer rollback detail in the UI: checkpoint file list, restore approval ID, stale-restore failures, and post-restore review guidance.~~
