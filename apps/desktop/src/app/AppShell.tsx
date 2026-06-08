@@ -210,6 +210,7 @@ export function AppShell() {
       activeRun,
       activeThread,
       actionProposals,
+      modelSettings,
       patches,
       reviews,
       setActionProposals,

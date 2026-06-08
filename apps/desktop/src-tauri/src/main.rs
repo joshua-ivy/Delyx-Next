@@ -132,6 +132,7 @@ fn main() {
             delyx_next_desktop::thread_run_bridge::thread_run_snapshot,
             delyx_next_desktop::thread_run_bridge::thread_status_update,
             delyx_next_desktop::workspace_bridge::workspace_recent_project,
+            delyx_next_desktop::workspace_bridge::workspace_read_files,
             delyx_next_desktop::workspace_bridge::workspace_snapshot
         ])
         .run(tauri::generate_context!())

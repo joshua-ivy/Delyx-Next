@@ -131,11 +131,11 @@ now has real persisted or approval-gated functional islands.
 - [x] Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.
 - [x] Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.
 - [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, and one-step approval-safe dispatcher now exist.
-- [ ] Approved plan -> generated patch -> apply -> test -> review is not yet automatically chained end-to-end.
+- [ ] Approved plan -> generated patch proposal is real, but generated patch -> apply -> test -> review is not yet automatically chained end-to-end.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 116/155 visible Phase 2 checkboxes are checked. Only 1/12 depth
+Progress read: 122/161 visible Phase 2 checkboxes are checked. Only 1/12 depth
 tracks is fully complete, and 11/12 are in progress. The subchecks below show
 the real completed work; the largest remaining risk is still concentrated in
 D2, D5, D6, and D3.
@@ -179,6 +179,7 @@ D2, D5, D6, and D3.
   - [x] Approval decisions now auto-resume through the scheduler bridge only when the approved proposal is the last pending approval for that run.
   - [x] Added a one-step scheduler dispatcher that can run the post-resume scheduler-selected action for approved patch apply, approved/approval-queued tests, read-only review, or final-support recording from real persisted artifacts.
   - [x] The scheduler dispatcher now asks the Rust scheduler for a bounded next decision after each dispatched action and can continue through ready patch/test/review/final-support steps without inventing artifacts.
+  - [x] Approved plan approvals now trigger a narrow PatchDraftAgent path that reads only approved plan files, asks local Ollama for complete replacement contents, and records the resulting diff through `agent_execute_patch_proposal`.
   - [x] Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
   - [x] Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
   - [x] Added a narrow `agent_execute_patch_apply` bridge that waits on pending `FileWrite` approvals, applies an existing PatchProposal through the stale-file/checkpoint PatchEngine path, writes only after approval, and records AgentRun node events, patch-apply artifacts, and diff evidence receipts.
@@ -206,6 +207,7 @@ D2, D5, D6, and D3.
   - [x] Added approval orchestration coverage proving safe resume is called only when the approval policy allows it and receives the freshly decided approval state before scheduler dispatch.
   - [x] Added scheduler dispatcher coverage for patch apply, tests, review, final support, and passive wait decisions.
   - [x] Added scheduler dispatcher continuation coverage proving an approved patch apply can continue into a scheduler-selected test step.
+  - [x] Added deterministic PatchDraftAgent parser/action coverage for approved generated patches, unapproved paths, unchanged output, and approval-flow orchestration.
   - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - [x] Keep grep/source verifiers only as smoke guards.
   - [x] Stop using source-substring checks as proof of UI behavior.
@@ -219,9 +221,9 @@ D2, D5, D6, and D3.
   - [ ] Reconcile the plan with Radix/TanStack/Zustand targets.
   - [x] No-thread cockpit hides unbacked progress, diff, terminal, inspector, and metric-card furniture; Focus home centers the real composer and keeps setup nudges tied to real repo/model state.
 
-- [ ] D5 - Functional Build Flow (in progress; manual patch/apply islands exist, automatic build chain missing)
-  - [ ] Convert approved plans into patch proposals through the runtime engine.
-  - [x] Runtime can now convert an explicit approved patch-proposal request into a persisted AgentRun patch node; it is not yet wired from the UI plan/build flow and does not generate patch content by itself.
+- [ ] D5 - Functional Build Flow (in progress; approved plan -> proposed diff exists, automatic apply/test/review/repair chain missing)
+  - [x] Convert approved plan approvals into generated patch proposals through a narrow runtime bridge.
+  - [x] Runtime can now convert an explicit approved patch-proposal request into a persisted AgentRun patch node. The UI plan/build flow can now generate patch content through local Ollama, but the full autonomous engine/repair loop still does not own that orchestration.
   - [x] Runtime can now execute an explicit approved PatchProposal apply node through AgentRun. This is real file I/O through the existing stale-file and checkpoint gates, but it is not yet automatically chained from plan approval.
   - [x] Runtime can now execute an explicit approved PatchProposal restore node through AgentRun. This is real rollback I/O through the existing restore approval, stale-after, and checkpoint receipt gates, but it is not yet automatically chained from review rejection.
   - [x] Focus UI now loads persisted patch snapshots for the active run instead of passing a static empty patch array, so real PatchProposal diffs can appear when the runtime creates them.
@@ -231,6 +233,10 @@ D2, D5, D6, and D3.
   - [x] Patch apply and restore now have persisted approval-gated bridges with stale-file protection and checkpoint receipts; the runtime engine still needs to call them automatically from the build flow.
   - [x] AgentScheduler can now identify an approved proposed patch as ready for patch apply from persisted stores; Focus UI shows that real next action and can call the existing patch-apply bridge.
   - [x] After the last required approval is recorded, the scheduler dispatcher can automatically execute the scheduler-selected approved patch apply step. It still does not generate patch content from an approved plan.
+  - [x] Added a bounded workspace file-read bridge for PatchDraftAgent: relative project paths only, max four files, byte capped, and still enforced by the workspace approved-root manager.
+  - [x] Added structured Ollama patch JSON parsing that accepts only files actually read from the approved plan, rejects unapproved paths, rejects unchanged output, and feeds exact replacement contents into the patch proposal bridge.
+  - [x] Approval flow now resumes the waiting run, then asks PatchDraftAgent to create a proposed diff when the build approval is final and no patch already exists; it does not auto-apply that generated patch.
+  - [ ] Move the generated-patch step fully into the autonomous runtime executor/repair loop instead of renderer orchestration.
   - [ ] Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - [ ] Surface full rollback state in the UI beyond existing patch/apply/restore receipts.
   - [ ] Connect generated build outputs to test and review steps as a complete repair-capable loop.

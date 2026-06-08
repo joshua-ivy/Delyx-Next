@@ -745,3 +745,16 @@ Reason: Splitting crates now would mostly create architecture theater. The
 current risk is execution depth, persistence, approvals, receipts, and UI truth;
 crate extraction should happen only when compile boundaries, ownership, or test
 isolation start paying for the added workspace shape.
+
+### ADR-0009: PatchDraftAgent Proposes, It Does Not Apply
+
+Decision: Approved plan/build approval can trigger a narrow PatchDraftAgent path
+that reads only approved plan files, asks local Ollama for structured complete
+replacement contents, and records a proposed diff through the AgentRun patch
+proposal bridge. The generated proposal is not automatically applied by that
+same drafting step.
+
+Reason: The current approval copy scopes this action to proposing a patch. File
+writes must remain visible through the existing patch apply/checkpoint gates, so
+generated content and disk mutation stay separate trust boundaries until the
+full executor can model them explicitly.

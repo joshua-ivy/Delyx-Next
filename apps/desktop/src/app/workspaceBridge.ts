@@ -3,6 +3,13 @@ import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 
 const defaultFileLimit = 250;
+const defaultReadBytes = 20_000;
+
+export interface WorkspaceFileReadView {
+  path: string;
+  contents: string;
+  truncated: boolean;
+}
 
 export async function loadWorkspaceProject(path?: string): Promise<WorkspaceProject> {
   if (!path) {
@@ -20,6 +27,19 @@ export async function loadWorkspaceProject(path?: string): Promise<WorkspaceProj
     }
     throw error;
   }
+}
+
+export async function loadWorkspaceFiles(
+  project: WorkspaceProject,
+  paths: string[],
+  maxBytesPerFile = defaultReadBytes,
+): Promise<WorkspaceFileReadView[] | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  return await invoke<WorkspaceFileReadView[]>("workspace_read_files", {
+    request: { maxBytesPerFile, paths, projectPath: project.path },
+  });
 }
 
 async function loadRecentWorkspaceProject(): Promise<WorkspaceProject | undefined> {
