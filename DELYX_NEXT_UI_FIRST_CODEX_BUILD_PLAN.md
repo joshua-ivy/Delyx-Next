@@ -165,6 +165,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - First behavior test covers FocusThread patch apply visibility/click behavior: Apply appears only for proposed patches with matching approved approvals.
   - Added a MarkdownMessage component test proving headings, lists, bold, inline code, and fenced code render as elements instead of raw markdown text.
   - Added FocusShell behavior coverage for the home composer send path and keyboard-opened Settings desktop-shell state.
+  - Added FocusThread behavior coverage for live run placement: latest user message, single running activity line, then assistant reply.
   - Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - Keep grep/source verifiers only as smoke guards.
   - Stop using source-substring checks as proof of UI behavior.

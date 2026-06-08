@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
+import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusThread } from "./FocusThread";
 
@@ -25,12 +26,39 @@ describe("FocusThread patch actions", () => {
   });
 });
 
+describe("FocusThread live run placement", () => {
+  it("places live run activity between the latest user message and assistant reply", () => {
+    const { container } = renderThread({
+      approvalStatus: "pending",
+      messages: [
+        { body: "Need a CLI tool", role: "user" },
+        { body: "I can help with that.", role: "assistant" },
+      ],
+      onApplyPatch: vi.fn(),
+      run: runningRun(),
+    });
+
+    const user = screen.getByText("Need a CLI tool");
+    const running = screen.getByText("Running").closest(".focus-activity");
+    const assistant = screen.getByText("I can help with that.");
+
+    expect(running).not.toBeNull();
+    expect(container.textContent).toContain("Thinking through the latest instruction");
+    expect(user.compareDocumentPosition(running as Element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect((running as Element).compareDocumentPosition(assistant) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
 function renderThread({
   approvalStatus,
+  messages,
   onApplyPatch,
+  run,
 }: {
   approvalStatus: ActionProposalView["status"];
+  messages?: TaskThread["messages"];
   onApplyPatch: (patchId: string) => void;
+  run?: AgentRunView;
 }) {
   return render(
     <FocusThread
@@ -48,27 +76,58 @@ function renderThread({
       patches={[patch()]}
       proposals={[approval(approvalStatus)]}
       reviews={[]}
-      run={undefined}
+      run={run}
       tests={[]}
-      thread={thread()}
+      thread={thread(messages)}
     />,
   );
 }
 
-function thread(): TaskThread {
+function thread(messages: TaskThread["messages"] = [{ body: "Apply this change", role: "user" }]): TaskThread {
   return {
     archived: false,
     createdAt: "2026-06-08T00:00:00.000Z",
     createdLabel: "now",
     goal: "Apply a real patch",
     id: "thread-1",
-    messages: [{ body: "Apply this change", role: "user" }],
+    messages,
     mode: "build",
     projectId: "project-1",
     runIds: ["run-1"],
     status: "building",
     title: "Patch apply",
     updatedAt: "2026-06-08T00:00:00.000Z",
+  };
+}
+
+function runningRun(): AgentRunView {
+  return {
+    artifacts: [],
+    createdAt: "2026-06-08T00:00:00.000Z",
+    events: [{
+      createdAt: "2026-06-08T00:01:00.000Z",
+      id: "event-1",
+      kind: "model_call.started",
+      message: "Ollama request sent to qwen3-coder:30b.",
+      runId: "run-1",
+    }],
+    evidence: [],
+    goal: "Need a CLI tool",
+    id: "run-1",
+    metrics: {
+      approvalCount: 0,
+      artifactCount: 0,
+      commandCount: 0,
+      eventCount: 1,
+      evidenceCount: 0,
+      nodeCount: 1,
+    },
+    mode: "build",
+    nodes: [],
+    projectId: "project-1",
+    status: "running",
+    threadId: "thread-1",
+    updatedAt: "2026-06-08T00:01:00.000Z",
   };
 }
 
