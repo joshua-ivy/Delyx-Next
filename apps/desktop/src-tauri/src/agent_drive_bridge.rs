@@ -18,6 +18,10 @@ pub struct AgentDriveRequest {
     pub timeout_ms: Option<u64>,
 }
 
+/// Canonical store lock order for the driver and any command that holds more
+/// than one bridge store at once. Always acquire in this order to avoid deadlock:
+/// approvals -> threads -> patches -> tests -> reviews -> plans. The driver only
+/// reads approvals today, so it locks that store first and never re-acquires it.
 #[tauri::command]
 pub fn agent_drive_run(
     threads: tauri::State<ThreadRunBridgeState>,

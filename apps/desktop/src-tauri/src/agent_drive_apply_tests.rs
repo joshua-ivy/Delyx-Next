@@ -53,6 +53,45 @@ mod tests {
         fixture.cleanup();
     }
 
+    #[test]
+    fn drive_halts_on_failed_apply_node() {
+        let fixture = Fixture::new("drive-apply-fail");
+        // The file no longer matches the proposal `before`, so apply must fail.
+        fs::write(&fixture.file, "drifted\n").unwrap();
+        let mut threads = ThreadRunStore::default();
+        let record = create_thread_run_record(&mut threads, thread_request()).unwrap();
+        move_to_building(&mut threads, &record.thread.id);
+        let mut patches = PatchBridgeStore::default();
+        patches
+            .records
+            .push(file_patch(&record.run.id, &fixture.file));
+        let mut approvals = ApprovalBridgeStore::default();
+        approved_apply(&mut approvals, &record.run.id);
+        let mut tests = TestRunnerBridgeStore::default();
+        let mut reviews = ReviewBridgeStore::default();
+        save_project(&fixture.db, &fixture.root);
+
+        let outcome = drive_run(
+            &mut context(
+                &mut threads,
+                &approvals,
+                &mut patches,
+                &mut tests,
+                &mut reviews,
+                &fixture.db,
+            ),
+            |_, _, _, _| Ok(()),
+        )
+        .unwrap();
+
+        // Apply is the only step, the driver halts, and no later steps run.
+        assert_eq!(decisions(&outcome), vec!["run_patch_apply"]);
+        assert_eq!(outcome.stopped_because.kind, "failed");
+        assert_ne!(patches.records[0].status, "applied");
+        assert_eq!(fs::read_to_string(&fixture.file).unwrap(), "drifted\n");
+        fixture.cleanup();
+    }
+
     fn context<'a>(
         threads: &'a mut ThreadRunStore,
         approvals: &'a ApprovalBridgeStore,

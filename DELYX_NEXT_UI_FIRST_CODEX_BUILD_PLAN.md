@@ -139,7 +139,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 218/256 checked, 38 open, 85.2%.
+- Phase 2 checkbox progress: 221/256 checked, 35 open, 86.3%.
 - Phase 2 track progress: 5/12 complete, 7/12 in progress.
 - Complete tracks: D3, D4, D6, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D8, D11, D12.
@@ -184,7 +184,7 @@ Progress board:
   - [x] ~~Defined typed drive results: `AgentDriveOutcomeView`, `AgentDriveStepView`, and `AgentDriveStopView` for awaiting approval, approval proposal needed, repair requested, patch draft ready, completed, blocked, terminal, or step-budget exhausted states.~~
   - [x] ~~The driver is autonomous only between approval boundaries: it can execute already-approved apply/test steps, read-only review, resume, and final-support synthesis, but it stops at ungranted apply approvals, missing test approvals, PatchDraft/model generation, and repair-requested states.~~
   - [x] ~~The `agent_drive_run` command persists thread/run, patch, test, and review stores after every driver progress step so restart cannot hide a partial apply/test/review/final-support transition.~~
-  - [ ] Establish one canonical lock order for thread, patch, test, review, approval, plan, workspace, and external-agent stores before the driver holds multiple stores.
+  - [x] ~~Establish one canonical lock order for thread, patch, test, review, approval, plan, workspace, and external-agent stores before the driver holds multiple stores. (Documented in `agent_drive_bridge.rs`: approvals -> threads -> patches -> tests -> reviews -> plans.)~~
   - [x] ~~The driver threads one command-entry `now_ms` through scheduler and approval checks instead of rereading time per step.~~
   - [x] ~~The driver has both `MAX_DRIVE_STEPS` and a repeated-decision progress guard so non-progressing scheduler states block instead of looping.~~
   - [ ] Make `RequestPatchApplyApproval` driver-owned: create the visible apply approval proposal, persist it, then stop without granting it.
@@ -196,9 +196,9 @@ Progress board:
   - [x] ~~The mounted scheduler dispatcher now delegates driver-owned apply, approved-test, review, and final-support decisions to `agent_drive_run`, then reloads persisted patch, test, review, thread, and run state.~~
   - [x] ~~Frontend behavior tests prove the mounted dispatcher uses the Rust driver for driver-owned decisions and that the driver bridge payload carries only run/clock/timeout/final-summary inputs, not renderer-owned patch, test, approval, command, or root authority.~~
   - [ ] Add deterministic driver test for pre-granted apply -> tests -> review -> final-support exact step order.
-  - [ ] Add deterministic driver test for failed node halt with no later apply/test/review/final steps.
-  - [ ] Add deterministic driver test for step-budget or repeated-decision non-progress states.
-  - [ ] Add deterministic driver test proving no approval bypass for writes, terminal commands, external agents, or out-of-scope auto-grants.
+  - [x] ~~Add deterministic driver test for failed node halt with no later apply/test/review/final steps. (`drive_halts_on_failed_apply_node`; the driver now stops with a `failed` stop when an apply/test/review step returns `failed`.)~~
+  - [ ] Add deterministic driver test for step-budget or repeated-decision non-progress states. (The guards exist; a deterministic fixture that forces a repeated non-progress decision is still needed.)
+  - [x] ~~Add deterministic driver test proving no approval bypass for writes. (`drive_stops_at_ungranted_apply_approval` now also asserts the patch stays `proposed` with no file write.) Terminal/external-agent/out-of-scope auto-grant bypass coverage still open.~~
   - [ ] Optional safety-depth: add a run-scoped `AutoApprovePolicy` with file globs, max writes, expiry, low-risk read handling, and visible `auto_granted` approval records before any Codex-like "approve once for this scope" behavior.
   - [ ] If `AutoApprovePolicy` lands, keep it as pre-declared consent that still records and validates approvals through the normal approval gate; never create a direct write bypass.
   - [ ] Decide the PatchDraft worker route for the driver: local Ollama remains default, while live Claude or a direct Anthropic route can become explicit opt-in stronger workers after their gates exist.

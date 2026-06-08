@@ -50,6 +50,8 @@ mod tests {
             outcome.stopped_because.proposal_id,
             Some("patch-1".to_string())
         );
+        // No approval was granted, so the driver must not write or apply the patch.
+        assert_eq!(patches.records[0].status, "proposed");
         assert_eq!(persists, 0);
         let _ = fs::remove_file(db);
     }

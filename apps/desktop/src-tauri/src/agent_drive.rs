@@ -1,7 +1,7 @@
 use crate::agent_drive_steps::{record_final_support, run_patch_apply, run_review, run_tests};
 use crate::agent_drive_types::{
     outcome, step, stop, stop_with_approvals, stop_with_proposal, stop_with_review,
-    stop_with_status, AgentDriveOutcomeView,
+    stop_with_status, AgentDriveOutcomeView, AgentDriveStopView,
 };
 use crate::agent_scheduler_bridge::{
     resume_waiting_run_record, schedule_next_record, AgentScheduleDecisionView,
@@ -57,33 +57,33 @@ pub fn drive_run(
         match decision.kind.as_str() {
             "run_patch_apply" => {
                 last_progress_signature = Some(signature);
-                steps.push(run_patch_apply(context)?);
-                after_progress(
-                    context.threads,
-                    context.patches,
-                    context.tests,
-                    context.reviews,
-                )?;
+                let progress = run_patch_apply(context)?;
+                let halted = progress.status == "failed";
+                steps.push(progress);
+                persist_progress(context, &mut after_progress)?;
+                if halted {
+                    return Ok(outcome(context, steps, halt_stop()));
+                }
             }
             "run_tests" if !decision.approval_ids.is_empty() => {
                 last_progress_signature = Some(signature);
-                steps.push(run_tests(context)?);
-                after_progress(
-                    context.threads,
-                    context.patches,
-                    context.tests,
-                    context.reviews,
-                )?;
+                let progress = run_tests(context)?;
+                let halted = progress.status == "failed";
+                steps.push(progress);
+                persist_progress(context, &mut after_progress)?;
+                if halted {
+                    return Ok(outcome(context, steps, halt_stop()));
+                }
             }
             "run_review" => {
                 last_progress_signature = Some(signature);
-                steps.push(run_review(context)?);
-                after_progress(
-                    context.threads,
-                    context.patches,
-                    context.tests,
-                    context.reviews,
-                )?;
+                let progress = run_review(context)?;
+                let halted = progress.status == "failed";
+                steps.push(progress);
+                persist_progress(context, &mut after_progress)?;
+                if halted {
+                    return Ok(outcome(context, steps, halt_stop()));
+                }
             }
             "ready_for_final_support" => {
                 if final_summary_missing(context) {
@@ -97,12 +97,7 @@ pub fn drive_run(
                     context,
                     decision.review_report_id.clone(),
                 )?);
-                after_progress(
-                    context.threads,
-                    context.patches,
-                    context.tests,
-                    context.reviews,
-                )?;
+                persist_progress(context, &mut after_progress)?;
                 return Ok(outcome(context, steps, stop("completed", "Run completed.")));
             }
             "resume_after_approval" => {
@@ -122,12 +117,7 @@ pub fn drive_run(
                     "completed",
                     format!("Resumed after approval {approval_id}."),
                 ));
-                after_progress(
-                    context.threads,
-                    context.patches,
-                    context.tests,
-                    context.reviews,
-                )?;
+                persist_progress(context, &mut after_progress)?;
                 if resumed.kind == "complete" {
                     return Ok(outcome(context, steps, stop("completed", resumed.message)));
                 }
@@ -197,6 +187,27 @@ pub fn drive_run(
         steps,
         stop("step_budget_exhausted", "Driver step budget was exhausted."),
     ))
+}
+
+fn persist_progress(
+    context: &mut AgentDriveContext<'_>,
+    after_progress: &mut impl FnMut(
+        &ThreadRunStore,
+        &PatchBridgeStore,
+        &TestRunnerBridgeStore,
+        &ReviewBridgeStore,
+    ) -> Result<(), String>,
+) -> Result<(), String> {
+    after_progress(
+        context.threads,
+        context.patches,
+        context.tests,
+        context.reviews,
+    )
+}
+
+fn halt_stop() -> AgentDriveStopView {
+    stop("failed", "Driver halted on a failed node.")
 }
 
 fn next_decision(context: &AgentDriveContext<'_>) -> Result<AgentScheduleDecisionView, String> {
