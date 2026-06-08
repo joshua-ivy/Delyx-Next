@@ -138,9 +138,9 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 157/190 checked, 33 open.
+- Visible checkbox progress: 159/190 checked, 31 open.
 - Parent track boxes are status gates; they stay open until the full track is functionally complete.
-- Depth tracks: 1/12 complete, 11/12 in progress.
+- Depth tracks: 2/12 complete, 10/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
 - Largest remaining risk remains concentrated in D2, D5, D6, and D3.
 
@@ -228,13 +228,13 @@ Progress board:
   - [x] Keep grep/source verifiers only as smoke guards.
   - [x] Stop using source-substring checks as proof of UI behavior.
 
-- [ ] D4 - UI Architecture Decision (in progress; FocusShell is live, legacy cleanup and target-stack reconciliation remain)
+- [x] D4 - UI Architecture Decision (complete; FocusShell is live, legacy cockpit is deprecated as mounted UI, and target-stack reconciliation is recorded)
   - [x] Default workbench migrated to focused React components using the provided Focus prototype as visual source.
   - [x] Legacy string-rendered cockpit files are formally deprecated as mounted UI and retained only as older smoke-contract/reference code until they can be safely deleted.
   - [x] `docs/ARCHITECTURE.md` records FocusShell as the live workbench and legacy cockpit as non-mounted reference code.
   - [x] Add focused behavior tests around the Focus component tree and direct action callbacks.
   - [x] Extracted approval decision plus scheduler resume/dispatch orchestration out of `AppShell.tsx` to keep the shell under the source-file budget.
-  - [ ] Reconcile the plan with Radix/TanStack/Zustand targets.
+  - [x] Reconciled the plan with Radix/TanStack/Zustand targets: do not add those broad dependencies in Phase 2 unless a real primitive/cache/state problem needs them and tests justify the dependency weight.
   - [x] No-thread cockpit hides unbacked progress, diff, terminal, inspector, and metric-card furniture; Focus home centers the real composer and keeps setup nudges tied to real repo/model state.
 
 - [ ] D5 - Functional Build Flow (in progress; approved plan -> proposed diff exists, automatic apply/test/review/repair chain missing)

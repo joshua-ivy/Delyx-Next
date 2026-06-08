@@ -15,8 +15,13 @@ Default stack:
 - SQLite (Phase 2 target; AgentRun, AgentOutcome support links, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, review-report, external-agent-run, and research-evidence persistence are wired first)
 - Vite
 - CSS variables for design tokens
-- Radix UI primitives where useful
 - Lucide icons
+
+Radix UI, TanStack Query, and Zustand are not installed in Phase 2. The live
+Focus workbench uses small React components, local hooks, explicit Tauri bridge
+calls, and typed helper modules. Add those broader libraries only when a real
+component primitive, shared async cache, or global state problem appears with
+tests that justify the dependency weight.
 
 Use old Delyx's Tauri/React/TypeScript/Rust/SQLite direction unless a decision record proves otherwise.
 
@@ -788,6 +793,11 @@ Decision: `FocusShell` is the live mounted workbench. Legacy string-rendered
 cockpit modules, including `buildCockpitMarkup`, are deprecated as product UI
 and remain only as older smoke-contract/reference code until a focused cleanup
 can delete or replace their verifier coverage.
+
+Decision: Do not add Radix UI, TanStack Query, or Zustand merely because the
+Phase 1 target stack mentioned them. Phase 2 reconciles that target by keeping
+the mounted UI on focused React components, local state, and typed bridge
+helpers until the dependency solves a demonstrated product problem.
 
 Reason: The product direction is a simple Codex-like project/thread workspace
 with real runtime receipts. Keeping the old cockpit mounted would preserve the
