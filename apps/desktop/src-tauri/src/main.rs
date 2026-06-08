@@ -30,6 +30,12 @@ fn main() {
             .expect("patch SQLite state should open"),
         )
         .manage(
+            delyx_next_desktop::release_bridge::ReleaseBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("release SQLite state should open"),
+        )
+        .manage(
             delyx_next_desktop::review_bridge::ReviewBridgeState::persistent(
                 delyx_next_desktop::sqlite_store::default_database_path(),
             )
@@ -89,7 +95,9 @@ fn main() {
             delyx_next_desktop::memory_bridge::memory_snapshot,
             delyx_next_desktop::patch_bridge::patch_propose,
             delyx_next_desktop::patch_bridge::patch_snapshot,
+            delyx_next_desktop::release_bridge::release_profile_save,
             delyx_next_desktop::release_bridge::release_snapshot,
+            delyx_next_desktop::release_bridge::release_support_bundle_export,
             delyx_next_desktop::review_bridge::review_create,
             delyx_next_desktop::review_bridge::review_snapshot,
             delyx_next_desktop::runtime_bridge::ollama_chat,

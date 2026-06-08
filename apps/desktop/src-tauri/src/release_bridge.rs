@@ -1,9 +1,45 @@
-use crate::local_store_bridge::LocalStoreBridgeState;
 use crate::release::{
-    check_signing, default_release_profile, ReleaseProfile, SigningStatus, SupportBundle,
+    check_signing, default_release_profile, export_support_bundle, ReleaseProfile, SigningPolicy,
+    SigningStatus, SupportBundle, UpdateMetadata,
 };
-use serde::Serialize;
-use std::path::Path;
+use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
+use std::sync::Mutex;
+
+#[derive(Debug)]
+pub struct ReleaseBridgeState {
+    store: Mutex<ReleaseBridgeStore>,
+    database_path: Option<PathBuf>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ReleaseBridgeStore {
+    pub profile: ReleaseProfile,
+    pub support_bundle: Option<SupportBundle>,
+}
+
+impl ReleaseBridgeState {
+    pub fn persistent(database_path: PathBuf) -> Result<Self, String> {
+        Ok(Self {
+            store: Mutex::new(load_store_from_path(&database_path)?),
+            database_path: Some(database_path),
+        })
+    }
+
+    fn save_profile_if_persistent(&self, profile: &ReleaseProfile) -> Result<(), String> {
+        match &self.database_path {
+            Some(path) => crate::release_persistence::save_profile_to_path(profile, path),
+            None => Ok(()),
+        }
+    }
+
+    fn save_bundle_if_persistent(&self, bundle: &SupportBundle) -> Result<(), String> {
+        match &self.database_path {
+            Some(path) => crate::release_persistence::save_support_bundle_to_path(bundle, path),
+            None => Ok(()),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -38,21 +74,144 @@ pub struct UpdateMetadataStateView {
     pub channel: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReleaseProfileSaveRequest {
+    pub product_name: String,
+    pub version: String,
+    pub target_platform: String,
+    pub bundle_target: String,
+    pub certificate_thumbprint: Option<String>,
+    pub digest_algorithm: Option<String>,
+    pub timestamp_url: Option<String>,
+    pub sign_command: Option<String>,
+    pub tsp: bool,
+    pub update_channel: String,
+    pub update_published: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SupportBundleExportRequest {
+    pub created_at_ms: u64,
+    pub config: Vec<SupportEntryRequest>,
+    pub logs: Vec<SupportLogRequest>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SupportEntryRequest {
+    pub key: String,
+    pub value: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SupportLogRequest {
+    pub source: String,
+    pub line: String,
+}
+
 #[tauri::command]
 pub fn release_snapshot(
-    state: tauri::State<LocalStoreBridgeState>,
+    state: tauri::State<ReleaseBridgeState>,
 ) -> Result<ReleaseStateView, String> {
-    release_snapshot_from_path(state.database_path())
+    let store = state
+        .store
+        .lock()
+        .map_err(|_| "Release bridge lock failed.".to_string())?;
+    Ok(release_snapshot_from_store(&store))
+}
+
+#[tauri::command]
+pub fn release_profile_save(
+    state: tauri::State<ReleaseBridgeState>,
+    request: ReleaseProfileSaveRequest,
+) -> Result<ReleaseStateView, String> {
+    let mut store = state
+        .store
+        .lock()
+        .map_err(|_| "Release bridge lock failed.".to_string())?;
+    let view = save_release_profile_record(&mut store, request)?;
+    state.save_profile_if_persistent(&store.profile)?;
+    Ok(view)
+}
+
+#[tauri::command]
+pub fn release_support_bundle_export(
+    state: tauri::State<ReleaseBridgeState>,
+    request: SupportBundleExportRequest,
+) -> Result<ReleaseStateView, String> {
+    let mut store = state
+        .store
+        .lock()
+        .map_err(|_| "Release bridge lock failed.".to_string())?;
+    let view = export_support_bundle_record(&mut store, request)?;
+    let bundle = store
+        .support_bundle
+        .as_ref()
+        .ok_or_else(|| "Support bundle export failed.".to_string())?;
+    state.save_bundle_if_persistent(bundle)?;
+    Ok(view)
 }
 
 pub fn release_snapshot_from_path(path: &Path) -> Result<ReleaseStateView, String> {
-    let profile = crate::release_persistence::load_profile_from_path(path)?
-        .unwrap_or_else(default_release_profile);
-    let support_bundle = crate::release_persistence::load_support_bundle_from_path(path)?;
-    Ok(release_snapshot_from_parts(
-        &profile,
-        support_bundle.as_ref(),
-    ))
+    Ok(release_snapshot_from_store(&load_store_from_path(path)?))
+}
+
+pub fn release_snapshot_from_store(store: &ReleaseBridgeStore) -> ReleaseStateView {
+    release_snapshot_from_parts(&store.profile, store.support_bundle.as_ref())
+}
+
+pub fn save_release_profile_record(
+    store: &mut ReleaseBridgeStore,
+    request: ReleaseProfileSaveRequest,
+) -> Result<ReleaseStateView, String> {
+    validate_profile_request(&request)?;
+    store.profile = ReleaseProfile {
+        bundle_target: request.bundle_target,
+        product_name: request.product_name,
+        signing: SigningPolicy {
+            certificate_thumbprint: request.certificate_thumbprint,
+            digest_algorithm: request.digest_algorithm,
+            sign_command: request.sign_command,
+            timestamp_url: request.timestamp_url,
+            tsp: request.tsp,
+        },
+        target_platform: request.target_platform,
+        update_metadata: UpdateMetadata {
+            channel: request.update_channel,
+            published: request.update_published,
+        },
+        version: request.version,
+    };
+    Ok(release_snapshot_from_store(store))
+}
+
+pub fn export_support_bundle_record(
+    store: &mut ReleaseBridgeStore,
+    request: SupportBundleExportRequest,
+) -> Result<ReleaseStateView, String> {
+    if request.created_at_ms == 0 {
+        return Err("Support bundle export requires a creation timestamp.".to_string());
+    }
+    let config = request
+        .config
+        .iter()
+        .map(|entry| (entry.key.as_str(), entry.value.as_str()))
+        .collect();
+    let logs = request
+        .logs
+        .iter()
+        .map(|entry| (entry.source.as_str(), entry.line.as_str()))
+        .collect();
+    store.support_bundle = Some(export_support_bundle(
+        &store.profile,
+        config,
+        logs,
+        request.created_at_ms,
+    ));
+    Ok(release_snapshot_from_store(store))
 }
 
 pub fn release_snapshot_from_parts(
@@ -109,4 +268,27 @@ fn installer_label(status: SigningStatus) -> &'static str {
         SigningStatus::Incomplete => "signing incomplete",
         SigningStatus::UnsignedDev => "unsigned dev installer",
     }
+}
+
+fn load_store_from_path(path: &Path) -> Result<ReleaseBridgeStore, String> {
+    Ok(ReleaseBridgeStore {
+        profile: crate::release_persistence::load_profile_from_path(path)?
+            .unwrap_or_else(default_release_profile),
+        support_bundle: crate::release_persistence::load_support_bundle_from_path(path)?,
+    })
+}
+
+fn validate_profile_request(request: &ReleaseProfileSaveRequest) -> Result<(), String> {
+    if request.product_name.trim().is_empty()
+        || request.version.trim().is_empty()
+        || request.target_platform.trim().is_empty()
+        || request.bundle_target.trim().is_empty()
+        || request.update_channel.trim().is_empty()
+    {
+        return Err(
+            "Release profile requires product, version, target, bundle, and update channel."
+                .to_string(),
+        );
+    }
+    Ok(())
 }

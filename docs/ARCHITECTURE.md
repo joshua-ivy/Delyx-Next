@@ -51,8 +51,10 @@ complete:
   activate, pause, and snapshot commands. Activation still requires a matching
   approved scheduled-action proposal. Scheduled-run creation is not exposed from
   the desktop bridge until generated approval cards are persisted and visible.
-  Release profile
-  and redacted support-bundle state persist to SQLite. Approved test artifacts,
+  Release profile and redacted support-bundle state persist to SQLite. The
+  release Tauri bridge exposes persisted profile save, latest support-bundle
+  export, and snapshot commands. Support-bundle config/log entries are redacted
+  before persistence. Approved test artifacts,
   proposed patch diffs, review reports, external-agent run artifacts, and
   research EvidenceStore receipts persist receipt data to SQLite and reload
   with ID continuity. AgentRun EvidenceRecords persist source IDs, locators,
@@ -352,10 +354,12 @@ Owns:
 
 Release profile and the latest redacted support bundle persist to SQLite,
 including signing inputs, update channel/published state, redacted config
-summary, redacted logs, and support-bundle metadata. The Tauri
-`release_snapshot` command exposes a read-only UI-ready view to the cockpit.
-Release smoke capture and support-bundle export mutation workflows still need
-explicit bridges before this becomes an end-to-end user workflow.
+summary, redacted logs, and support-bundle metadata. The Tauri release bridge
+exposes UI-ready snapshots plus persisted profile save and latest support-bundle
+export commands. Support-bundle config/log entries are redacted before they are
+stored. Signing execution, update publishing, release smoke capture mutation,
+and support-bundle file export still need explicit bridges before this becomes
+an end-to-end release workflow.
 
 ## Model Layer
 

@@ -70,6 +70,7 @@ mod patch_persistence_tests;
 mod patch_tests;
 pub mod release;
 pub mod release_bridge;
+mod release_bridge_tests;
 pub mod release_persistence;
 mod release_persistence_tests;
 mod release_tests;
