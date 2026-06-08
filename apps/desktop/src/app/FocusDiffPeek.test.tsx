@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
+import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { FocusDiffPeek } from "./FocusDiffPeek";
 import { patchApplyApprovalId } from "./patchApplyApproval";
 import { patchRestoreApprovalId } from "./patchRestoreApproval";
@@ -44,6 +45,8 @@ describe("FocusDiffPeek patch actions", () => {
 
     expect(onPatchAction).toHaveBeenCalledWith("patch-1");
     expect(screen.getByText("applied / checkpoint-1")).not.toBeNull();
+    expect(screen.getByText("Checkpoint files: src/app.ts")).not.toBeNull();
+    expect(screen.getByText("Restore is allowed only while files still match this applied patch.")).not.toBeNull();
   });
 
   it("shows restore for an applied patch with a matching approved restore approval", () => {
@@ -54,25 +57,41 @@ describe("FocusDiffPeek patch actions", () => {
 
     expect(onPatchAction).toHaveBeenCalledWith("patch-1");
   });
+
+  it("shows restore approval receipts and post-restore guidance", () => {
+    renderPeek({ patches: [patch("restored")] });
+
+    expect(screen.getByText("Restore approval: approval-patch-1-restore")).not.toBeNull();
+    expect(screen.getByText("Review restored files before continuing.")).not.toBeNull();
+  });
+
+  it("shows stale restore failures from the run event stream", () => {
+    renderPeek({ patches: [patch("applied")], run: runWithRestoreFailure() });
+
+    expect(screen.getByText("Restore blocked: Patch restore blocked because a file changed since apply.")).not.toBeNull();
+  });
 });
 
 function renderPeek({
   onPatchAction = vi.fn(),
   patches = [patch()],
   proposals = [approval("approved")],
+  run,
 }: {
   onPatchAction?: (patchId: string) => void;
   patches?: PatchProposalView[];
   proposals?: ActionProposalView[];
+  run?: AgentRunView;
 }) {
-  return render(<FocusDiffPeek onPatchAction={onPatchAction} patches={patches} proposals={proposals} />);
+  return render(<FocusDiffPeek onPatchAction={onPatchAction} patches={patches} proposals={proposals} run={run} />);
 }
 
 function patch(status: PatchProposalView["status"] = "proposed"): PatchProposalView {
+  const hasCheckpoint = status === "applied" || status === "restored";
   return {
     approvalId: "approval-1",
-    checkpointFiles: status === "applied" ? [{ contents: "const value = 1;\n", path: "src/app.ts" }] : [],
-    checkpointId: status === "applied" ? "checkpoint-1" : undefined,
+    checkpointFiles: hasCheckpoint ? [{ contents: "const value = 1;\n", path: "src/app.ts" }] : [],
+    checkpointId: hasCheckpoint ? "checkpoint-1" : undefined,
     files: [{
       after: "const value = 2;\n",
       before: "const value = 1;\n",
@@ -80,8 +99,32 @@ function patch(status: PatchProposalView["status"] = "proposed"): PatchProposalV
       path: "src/app.ts",
     }],
     id: "patch-1",
+    restoreApprovalId: status === "restored" ? patchRestoreApprovalId("patch-1") : undefined,
     runId: "run-1",
     status,
+  };
+}
+
+function runWithRestoreFailure(): AgentRunView {
+  return {
+    artifacts: [],
+    createdAt: "2026-06-08T00:00:00.000Z",
+    events: [{
+      createdAt: "2026-06-08T00:01:00.000Z",
+      id: "event-1",
+      kind: "agent_executor.failed",
+      message: "Patch restore blocked because a file changed since apply.",
+      runId: "run-1",
+    }],
+    evidence: [],
+    goal: "Restore a patch",
+    id: "run-1",
+    metrics: { approvalCount: 0, artifactCount: 0, commandCount: 0, eventCount: 1, evidenceCount: 0, nodeCount: 0 },
+    mode: "build",
+    nodes: [],
+    status: "failed",
+    threadId: "thread-1",
+    updatedAt: "2026-06-08T00:01:00.000Z",
   };
 }
 

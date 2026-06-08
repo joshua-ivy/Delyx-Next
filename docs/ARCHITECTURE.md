@@ -347,7 +347,10 @@ root, stale-file, and checkpoint enforcement before any file write. Applied
 patch cards show checkpoint state and can request a separate restore approval;
 only an approved restore proposal ID is sent to the AgentRun patch-restore
 bridge, which still owns stale-after and approved-root enforcement before any
-rollback write.
+rollback write. The same Focus diff receipt now shows checkpoint file paths,
+the restore approval ID after rollback, stale restore failure messages from the
+AgentRun event stream, and post-restore review guidance without inventing
+rollback state.
 Focus approval decisions do not mark a thread as building by themselves. They
 return to the next-step state, or keep waiting when more approvals are pending,
 until a concrete executor or tool action starts.

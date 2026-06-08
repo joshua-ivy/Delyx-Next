@@ -64,7 +64,7 @@ export function FocusThread(props: FocusThreadProps) {
             <FocusSchedulerPeek decision={props.schedulerDecision} onApplyPatch={props.onApplyPatch} onRecordFinal={props.onRecordFinal} onResumeRun={props.onResumeRun} onRunReview={props.onRunReview} onRunTests={props.onRunTests} />
             <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} />
             <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
-            <FocusDiffPeek onPatchAction={props.onApplyPatch} patches={props.patches} proposals={props.proposals} />
+            <FocusDiffPeek onPatchAction={props.onApplyPatch} patches={props.patches} proposals={props.proposals} run={props.run} />
             <FocusTestPeek activePlan={props.activePlan} onRunTests={props.onRunTests} patches={props.patches} tests={props.tests} />
             <ReviewPeek onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
             <FocusOutcomePeek canRecord={hasAssistantSummary(props.thread)} onRecordFinal={props.onRecordFinal} run={props.run} />
