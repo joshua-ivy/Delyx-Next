@@ -79,6 +79,26 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
     expect(result.created).toBe(false);
     expect(executePatchDraft).not.toHaveBeenCalled();
   });
+
+  it("turns an approved repair finding into a proposed repair patch", async () => {
+    const repair = repairApproval();
+    const state = actionState({
+      actionProposals: [repair],
+      patches: [{ ...patch, approvalId: "old-approval", status: "applied" }],
+      reviews: [repairReview()],
+    });
+
+    const result = await proposeApprovedPlanPatchWithOllama(state, repair);
+
+    expect(result.created).toBe(true);
+    expect(executePatchDraft).toHaveBeenCalledWith(expect.objectContaining({
+      approvalId: repair.id,
+      filesLikelyInvolved: ["src/main.ts"],
+      goal: expect.stringContaining("Repair review finding"),
+      planSteps: expect.arrayContaining([expect.stringContaining("Suggested fix")]),
+      scopePaths: ["src/main.ts"],
+    }));
+  });
 });
 
 function actionState(overrides: Partial<OllamaPatchProposalState> = {}): OllamaPatchProposalState {
@@ -184,6 +204,38 @@ const approval = {
   scope: { kind: "file" as const, paths: ["src/main.ts"], root: "C:/repo", summary: "Edit src/main.ts" },
   status: "approved" as const,
 };
+
+function repairApproval() {
+  return {
+    ...approval,
+    id: "approval-bridge-repair-1",
+    nodeId: "run-1-repair-review-1-finding-1",
+    rationale: "Repair review finding.",
+    scope: { kind: "file" as const, paths: ["src/main.ts"], root: "C:/repo", summary: "Repair finding" },
+  };
+}
+
+function repairReview() {
+  return {
+    decision: "revise_requested" as const,
+    evidenceSummary: "Stored review.",
+    findings: [{
+      detail: "Runtime panic risk in new code.",
+      filePath: "src/main.ts",
+      hunkLabel: "patch-1:0",
+      id: "finding-1",
+      priority: "p1" as const,
+      riskLabel: "panic",
+      suggestedFix: "Handle the None/Err case explicitly.",
+      title: "Added unwrap can panic",
+    }],
+    id: "review-1",
+    mode: "read_only" as const,
+    riskSummary: "1 finding.",
+    runId: "run-1",
+    testSummary: "Tests passed.",
+  };
+}
 
 const patch: PatchProposalView = {
   approvalId: "approval-1",

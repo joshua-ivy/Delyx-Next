@@ -96,6 +96,20 @@ pub fn schedule_next(context: AgentSchedulerContext<'_>) -> AgentScheduleDecisio
         };
     }
     if let Some(report) = reviews.last() {
+        if report.decision == "revise_requested" {
+            if let Some(approval_id) = context.patch_draft_approval_id {
+                if patch_draft_approval_ready(
+                    context.approvals,
+                    approval_id,
+                    context.now_ms,
+                    &context.run.id,
+                ) {
+                    return AgentScheduleDecision::RunPatchDraft {
+                        approval_id: approval_id.to_string(),
+                    };
+                }
+            }
+        }
         return review_decision(report);
     }
     if let Some(approval_id) = context.patch_draft_approval_id {

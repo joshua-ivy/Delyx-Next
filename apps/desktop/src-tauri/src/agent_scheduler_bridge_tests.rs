@@ -144,27 +144,7 @@ mod tests {
         let mut thread_store = ThreadRunStore::default();
         let run = thread_store.ledger.create_run("thread-1").unwrap();
         let mut reviews = ReviewBridgeStore::default();
-        reviews
-            .reports
-            .push(crate::review_bridge::ReviewReportView {
-                decision: "revise_requested".to_string(),
-                evidence_summary: "Stored review receipt.".to_string(),
-                findings: vec![crate::review_bridge::ReviewFindingView {
-                    detail: "Runtime panic risk in new code.".to_string(),
-                    file_path: "src/main.rs".to_string(),
-                    hunk_label: "patch-1:0".to_string(),
-                    id: "finding-1".to_string(),
-                    priority: "p1".to_string(),
-                    risk_label: "panic".to_string(),
-                    suggested_fix: "Handle the None/Err case explicitly.".to_string(),
-                    title: "Added unwrap can panic".to_string(),
-                }],
-                id: "review-1".to_string(),
-                mode: "read_only".to_string(),
-                risk_summary: "1 prioritized finding.".to_string(),
-                run_id: run.id.clone(),
-                test_summary: "Tests passed.".to_string(),
-            });
+        reviews.reports.push(repair_review(&run.id));
 
         let view = schedule_next_record(
             thread_store.ledger.get_run(&run.id).unwrap(),
@@ -178,6 +158,32 @@ mod tests {
         assert_eq!(view.kind, "repair_requested");
         assert_eq!(view.review_report_id.as_deref(), Some("review-1"));
         assert_eq!(view.finding_id.as_deref(), Some("finding-1"));
+    }
+
+    #[test]
+    fn scheduler_bridge_schedules_patch_draft_for_running_repair_approval() {
+        let mut thread_store = ThreadRunStore::default();
+        let run = thread_store.ledger.create_run("thread-1").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let proposal = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
+        let mut reviews = ReviewBridgeStore::default();
+        reviews.reports.push(repair_review(&run.id));
+
+        let view = resume_waiting_run_record(
+            &mut thread_store,
+            &approvals,
+            &PatchBridgeStore::default(),
+            &TestRunnerBridgeStore::default(),
+            &reviews,
+            &AgentScheduleRequest {
+                patch_draft_approval_id: Some(proposal.id.clone()),
+                ..request(&run.id)
+            },
+        )
+        .unwrap();
+
+        assert_eq!(view.kind, "run_patch_draft");
+        assert_eq!(view.approval_ids, vec![proposal.id]);
     }
 
     fn seed_approval(
@@ -239,6 +245,28 @@ mod tests {
         PatchProposalView {
             status: "applied".to_string(),
             ..patch(run_id, "approval-applied")
+        }
+    }
+
+    fn repair_review(run_id: &str) -> crate::review_bridge::ReviewReportView {
+        crate::review_bridge::ReviewReportView {
+            decision: "revise_requested".to_string(),
+            evidence_summary: "Stored review receipt.".to_string(),
+            findings: vec![crate::review_bridge::ReviewFindingView {
+                detail: "Runtime panic risk in new code.".to_string(),
+                file_path: "src/main.rs".to_string(),
+                hunk_label: "patch-1:0".to_string(),
+                id: "finding-1".to_string(),
+                priority: "p1".to_string(),
+                risk_label: "panic".to_string(),
+                suggested_fix: "Handle the None/Err case explicitly.".to_string(),
+                title: "Added unwrap can panic".to_string(),
+            }],
+            id: "review-1".to_string(),
+            mode: "read_only".to_string(),
+            risk_summary: "1 prioritized finding.".to_string(),
+            run_id: run_id.to_string(),
+            test_summary: "Tests passed.".to_string(),
         }
     }
 }

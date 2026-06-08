@@ -4,6 +4,7 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import { resumeWaitingRunOverBridge } from "../features/runs/agentExecutorClient";
 import type { PlanView } from "../features/plans/planTypes";
+import type { ReviewReportView } from "../features/review/reviewTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
@@ -19,6 +20,7 @@ interface ResumeRunState {
   activeProject: WorkspaceProject;
   activeRun: AgentRunView | undefined;
   patches: PatchProposalView[];
+  reviews?: ReviewReportView[];
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setThreads: Dispatch<SetStateAction<TaskThread[]>>;
   setThreadState: Dispatch<SetStateAction<ThreadUiState>>;
@@ -32,7 +34,7 @@ export async function resumeSchedulerRun(state: ResumeRunState) {
   const decision = await resumeWaitingRunOverBridge({
     hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
     nowMs: Date.now(),
-    patchDraftApprovalId: patchDraftApprovalId(state),
+    patchDraftApprovalId: patchDraftApprovalId({ ...state, reviews: state.reviews ?? [] }),
     runId: state.activeRun.id,
     testApprovalId: activeTestApprovalId(state),
   });

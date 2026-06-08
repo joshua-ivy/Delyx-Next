@@ -43,7 +43,7 @@ export function useSchedulerDecision({
     void scheduleNextRunActionOverBridge({
       hasSupportedTestCommand: Boolean(firstRunnableTestCommand(activePlan?.testsToRun)),
       nowMs: Date.now(),
-      patchDraftApprovalId: patchDraftApprovalId({ actionProposals: proposals, activePlan, activeProject, activeRun, patches }),
+      patchDraftApprovalId: patchDraftApprovalId({ actionProposals: proposals, activePlan, activeProject, activeRun, patches, reviews }),
       runId: activeRun.id,
       testApprovalId: activeTestApprovalId({ actionProposals: proposals, activePlan, activeRun }),
     }).then((next) => {

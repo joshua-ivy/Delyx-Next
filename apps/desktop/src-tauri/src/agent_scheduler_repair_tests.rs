@@ -2,7 +2,7 @@
 mod tests {
     use crate::agent_run::AgentRunLedger;
     use crate::agent_scheduler::{schedule_next, AgentScheduleDecision, AgentSchedulerContext};
-    use crate::approval::ApprovalEngine;
+    use crate::approval::{ApprovalEngine, ProposalInput, RiskLevel, RiskyAction};
     use crate::patch_bridge::PatchBridgeStore;
     use crate::review_bridge::{ReviewBridgeStore, ReviewFindingView, ReviewReportView};
     use crate::test_runner_bridge::TestRunnerBridgeStore;
@@ -37,6 +37,34 @@ mod tests {
             AgentScheduleDecision::RepairRequested {
                 finding_id: "finding-1".to_string(),
                 review_report_id: "review-1".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn scheduler_runs_patch_draft_for_approved_repair_finding() {
+        let mut ledger = AgentRunLedger::new();
+        let run = ledger.create_run("thread-1").unwrap();
+        let mut reviews = ReviewBridgeStore::default();
+        let mut stores = Stores::default();
+        let proposal = stores.approvals.propose(proposal_input(&run.id));
+        stores
+            .approvals
+            .approve(&proposal.id, 2, "approved")
+            .unwrap();
+        reviews
+            .reports
+            .push(review_report(&run.id, "revise_requested"));
+
+        let decision = schedule_next(AgentSchedulerContext {
+            patch_draft_approval_id: Some(&proposal.id),
+            ..stores.context(&run, &reviews)
+        });
+
+        assert_eq!(
+            decision,
+            AgentScheduleDecision::RunPatchDraft {
+                approval_id: proposal.id
             }
         );
     }
@@ -87,6 +115,20 @@ mod tests {
             risk_summary: "1 prioritized finding.".to_string(),
             run_id: run_id.to_string(),
             test_summary: "Tests passed.".to_string(),
+        }
+    }
+
+    fn proposal_input(run_id: &str) -> ProposalInput {
+        ProposalInput {
+            action: RiskyAction::FileWrite,
+            expected_result: "Draft a repair patch proposal.".to_string(),
+            expires_at: 10,
+            node_id: "repair-node".to_string(),
+            reason: "Repair review finding.".to_string(),
+            risk: RiskLevel::High,
+            rollback_plan: "PatchDraft does not write files.".to_string(),
+            run_id: run_id.to_string(),
+            scope: "Repair one file.".to_string(),
         }
     }
 }

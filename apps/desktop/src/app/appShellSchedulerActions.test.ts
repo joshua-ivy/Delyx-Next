@@ -111,6 +111,21 @@ describe("resumeSchedulerRun", () => {
       testApprovalId: "approval-run-tests",
     }));
   });
+
+  it("passes an approved repair patch-draft approval id to the scheduler bridge", async () => {
+    await resumeSchedulerRun({
+      ...stateWithPlan(["npm test"]),
+      actionProposals: [repairApproval()],
+      activeProject: { ...project(), path: "C:\\repo" },
+      patches: [{ approvalId: "old-approval", runId: "run-1", status: "applied" } as never],
+      reviews: [repairReview()],
+    });
+
+    expect(resumeBridge).toHaveBeenCalledWith(expect.objectContaining({
+      patchDraftApprovalId: "approval-bridge-repair-1",
+      runId: "run-1",
+    }));
+  });
 });
 
 function stateWithPlan(testsToRun: string[]) {
@@ -180,4 +195,29 @@ function run(): AgentRunView {
     threadId: "thread-1",
     updatedAt: "2026-06-08T00:00:00.000Z",
   };
+}
+
+function repairApproval() {
+  return {
+    actionType: "edit_file" as const,
+    expectedResult: "Draft a repair patch.",
+    expiresAt: "2999-01-01T00:00:00.000Z",
+    id: "approval-bridge-repair-1",
+    nodeId: "run-1-repair-review-1-finding-1",
+    rationale: "Repair finding.",
+    requiredPermission: "edit_file",
+    riskLabel: "high" as const,
+    runId: "run-1",
+    scope: { kind: "file" as const, paths: ["src/main.ts"], root: "C:\\repo", summary: "Repair finding" },
+    status: "approved" as const,
+  };
+}
+
+function repairReview() {
+  return {
+    decision: "revise_requested" as const,
+    findings: [{ filePath: "src/main.ts", id: "finding-1" }],
+    id: "review-1",
+    runId: "run-1",
+  } as never;
 }

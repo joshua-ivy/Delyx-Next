@@ -8,7 +8,12 @@ import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../feature
 import type { ThreadRunSnapshotView } from "../features/threads/threadClient";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
 import { recordModelCallFailure } from "./appShellModelRunActions";
-import { approvedPatchDraftPlanFiles, patchDraftApprovalForApprovedPlan } from "./appShellPatchDraftDecision";
+import {
+  approvedPatchDraftFiles,
+  patchDraftApprovalId,
+  patchDraftPrompt,
+  patchDraftScopePaths,
+} from "./appShellPatchDraftDecision";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
@@ -22,7 +27,7 @@ export async function proposeApprovedPlanPatchWithOllama(
   state: OllamaPatchProposalState,
   approval: ActionProposalView,
 ): Promise<PatchDraftDispatchResult> {
-  if (patchDraftApprovalForApprovedPlan(state)?.id !== approval.id) {
+  if (patchDraftApprovalId(state) !== approval.id) {
     return { created: false };
   }
   if (!state.activeThread || !state.activeRun) {
@@ -37,7 +42,8 @@ export async function proposeApprovedPlanPatchWithOllama(
   }
 
   try {
-    const paths = approvedPatchDraftPlanFiles(state, approval);
+    const paths = approvedPatchDraftFiles(state, approval);
+    const prompt = patchDraftPrompt(state, approval, thread.goal);
     startPatchDraft(state, thread, model);
     const result = await executePatchDraftNodeOverBridge({
       approvalId: approval.id,
@@ -45,13 +51,13 @@ export async function proposeApprovedPlanPatchWithOllama(
       clientId: `patch-${run.id}-${approval.id}`,
       createdAtMs: Date.now(),
       filesLikelyInvolved: paths,
-      goal: thread.goal,
+      goal: prompt.goal,
       maxBytesPerFile: 20_000,
       model,
-      planSteps: state.activePlan!.steps,
+      planSteps: prompt.planSteps,
       projectPath: state.activeProject.path,
       runId: run.id,
-      scopePaths: approval.scope.paths ?? [],
+      scopePaths: patchDraftScopePaths(state, approval),
     });
     if (!result || result.status !== "completed") {
       throw new Error(result?.message ?? "Desktop bridge did not capture the patch proposal.");

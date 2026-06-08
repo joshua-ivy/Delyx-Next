@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { proposeApprovalOverBridge } from "../features/approvals/approvalClient";
 import { requestReviewRevisionOverBridge } from "../features/runs/agentExecutorClient";
 import { loadReviewSnapshot } from "../features/review/reviewClient";
 import { loadThreadRunSnapshot } from "../features/threads/threadClient";
@@ -11,6 +12,7 @@ vi.mock("../features/runs/agentExecutorClient", () => ({
   executeReviewNodeOverBridge: vi.fn(),
   requestReviewRevisionOverBridge: vi.fn(),
 }));
+vi.mock("../features/approvals/approvalClient", () => ({ proposeApprovalOverBridge: vi.fn() }));
 vi.mock("../features/review/reviewClient", () => ({ loadReviewSnapshot: vi.fn() }));
 vi.mock("../features/threads/threadClient", () => ({
   loadThreadRunSnapshot: vi.fn(),
@@ -22,6 +24,7 @@ const requestRevision = vi.mocked(requestReviewRevisionOverBridge);
 const loadReviews = vi.mocked(loadReviewSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const notify = vi.mocked(notifyLocalAction);
+const proposeApproval = vi.mocked(proposeApprovalOverBridge);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -33,6 +36,7 @@ beforeEach(() => {
     runId: "run-1",
     status: "revise_requested",
   });
+  proposeApproval.mockImplementation(async (proposal) => ({ ...proposal, id: "prop-repair-1" }));
   loadReviews.mockResolvedValue([{ ...review(), decision: "revise_requested" }]);
   loadSnapshot.mockResolvedValue({ runs: [run() as never], threads: [thread() as never] });
 });
@@ -47,9 +51,12 @@ describe("requestRepairForReviewFinding", () => {
     expect(loadReviews).toHaveBeenCalledWith("run-1");
     expect(loadSnapshot).toHaveBeenCalledWith("project-1");
     expect(state.setReviews).toHaveBeenCalled();
-    expect(state.setAgentRuns).toHaveBeenCalledWith([run()]);
-    expect(state.setThreads).toHaveBeenCalledWith([thread()]);
-    expect(notify).toHaveBeenCalledWith(expect.stringContaining("Repair requested"), "success");
+    expect(state.setActionProposals).toHaveBeenCalled();
+    expect(proposeApproval).toHaveBeenCalledWith(expect.objectContaining({
+      actionType: "edit_file",
+      scope: expect.objectContaining({ paths: ["src/main.rs"] }),
+    }));
+    expect(notify).toHaveBeenCalledWith(expect.stringContaining("approve"), "success");
   });
 
   it("does not call the bridge for a missing finding", async () => {
@@ -65,10 +72,16 @@ describe("requestRepairForReviewFinding", () => {
 
 function reviewState(): ReviewRepairState {
   return {
-    activeProject: { id: "project-1" } as never,
+    actionProposals: [],
+    activeProject: {
+      approvedRoots: ["C:/repo"],
+      id: "project-1",
+      path: "C:/repo",
+    } as never,
     activeRun: { id: "run-1" } as never,
-    activeThread: { id: "thread-1" } as never,
+    activeThread: { activeRunId: "run-1", id: "thread-1" } as never,
     reviews: [review()],
+    setActionProposals: vi.fn(),
     setAgentRuns: vi.fn(),
     setReviews: vi.fn(),
     setThreadState: vi.fn(),

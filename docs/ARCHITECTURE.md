@@ -79,7 +79,12 @@ complete:
   stored report/finding/run, marks the review `revise_requested`, records a
   completed AgentRun repair node, a `repair.requested` event, and a
   `review_revision` artifact, then moves the thread back toward build without
-  writing files or running tools. Reviews with unresolved findings block
+  writing files or running tools. The Focus repair action then queues a scoped
+  repair PatchDraft `FileWrite` approval for the exact finding path. Once that
+  approval is executable, the scheduler can select `run_patch_draft` for the
+  revised review and the existing PatchDraft bridge can propose a follow-up
+  diff; the generated repair patch still needs the normal separate apply
+  approval before any disk write. Reviews with unresolved findings block
   scheduler final-support readiness and manual final-support recording until
   the findings are accepted or repaired. A narrow AgentScheduler bridge now
   reads the persisted
@@ -99,9 +104,10 @@ complete:
   final-support recording. After each dispatched action it asks the Rust
   scheduler for a bounded next decision, stopping on passive/repeated states or
   the depth limit. A separate `agent_execute_patch_draft` bridge can perform the
-  approved plan-file read, local Ollama PatchDraftAgent call, Rust JSON parse,
-  model-call receipt recording, and patch-proposal capture path. That bridge is
-  still a narrow renderer-invoked command, not the full executor/repair loop.
+  approved plan-or-repair file read, local Ollama PatchDraftAgent call, Rust
+  JSON parse, model-call receipt recording, and patch-proposal capture path.
+  That bridge is still a narrow renderer-invoked command, not the full
+  executor/repair loop.
   After the bridge persists a proposed diff, the renderer reloads patch/run
   receipts and re-enters the scheduler dispatcher with the fresh patch list so
   the next apply/test/review decision can be queued or continued through normal
@@ -256,10 +262,10 @@ advance a run from a pending approval boundary into an approved patch-proposal
 node, persist the patch proposal, and record node events, artifact IDs, and diff
 evidence receipts. The `agent_execute_patch_draft` bridge owns the approved
 generated-patch slice before that proposal node: it reads only scoped approved
-plan files, calls local Ollama, records model-call receipts, rejects truncated,
-unapproved, empty, duplicate, or unchanged generated file contents, and then
-feeds the approved proposal bridge. It remains a narrow command invoked by the
-renderer after approval, not an autonomous repair-loop node. The
+plan or repair files, calls local Ollama, records model-call receipts, rejects
+truncated, unapproved, empty, duplicate, or unchanged generated file contents,
+and then feeds the approved proposal bridge. It remains a narrow command
+invoked by the renderer after approval, not an autonomous repair-loop node. The
 `agent_execute_patch_apply` bridge can advance an
 approved existing PatchProposal into a patch-apply node, write files through the
 stale-file/checkpoint PatchEngine path, and record patch-apply receipts. The

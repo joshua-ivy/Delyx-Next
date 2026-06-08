@@ -192,7 +192,7 @@ export function AppShell() {
       setThreadState,
     });
   };
-  const requestRepair = (reportId: string, findingId: string) => { void requestRepairForReviewFinding({ activeProject, activeRun, activeThread, reviews, setAgentRuns, setReviews, setThreads, setThreadState }, reportId, findingId); };
+  const requestRepair = (reportId: string, findingId: string) => { void requestRepairForReviewFinding({ actionProposals, activeProject, activeRun, activeThread, reviews, setActionProposals, setAgentRuns, setReviews, setThreads, setThreadState }, reportId, findingId); };
   const applyPatch = (patchId: string) => {
     void applyApprovedPatchForActiveRun({
       actionProposals, activeProject, activeRun, activeThread,
@@ -262,7 +262,7 @@ export function AppShell() {
         onRecordFinal={recordFinal}
         onRequestRepair={requestRepair}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
-        onResumeRun={() => { void resumeSchedulerRun({ actionProposals, activePlan, activeProject, activeRun, patches, setAgentRuns, setThreads, setThreadState }); }}
+        onResumeRun={() => { void resumeSchedulerRun({ actionProposals, activePlan, activeProject, activeRun, patches, reviews, setAgentRuns, setThreads, setThreadState }); }}
         onRunReview={runReview}
         onRunTests={runTests}
         onRunCommand={runPaletteCommand}

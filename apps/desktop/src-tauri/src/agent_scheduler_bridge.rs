@@ -1,3 +1,4 @@
+use crate::agent_run::AgentRunStatus;
 use crate::agent_scheduler::{
     resume_waiting_run, schedule_next, AgentScheduleDecision, AgentSchedulerContext,
 };
@@ -147,6 +148,15 @@ pub fn resume_waiting_run_record(
     reviews: &crate::review_bridge::ReviewBridgeStore,
     request: &AgentScheduleRequest,
 ) -> Result<AgentScheduleDecisionView, String> {
+    let run = thread_store
+        .ledger
+        .get_run(&request.run_id)
+        .map_err(|error| format!("{error:?}"))?;
+    if run.status == AgentRunStatus::Running {
+        return Ok(schedule_next_record(
+            run, approvals, patches, tests, reviews, request,
+        ));
+    }
     let decision = resume_waiting_run(
         &mut thread_store.ledger,
         approvals,
