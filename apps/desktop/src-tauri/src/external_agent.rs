@@ -1,6 +1,7 @@
 use crate::approval::{ApprovalEngine, RiskyAction};
 use crate::external_agent_adapters::default_adapters;
 use crate::external_agent_diff::{capture_external_agent_diff, snapshot_external_agent_diff};
+use crate::external_agent_isolation::{checkpoint_events, ensure_external_agent_isolation};
 use crate::external_agent_scope::{checked_approved_path, checked_scoped_path};
 use crate::external_agent_terminal::run_worker_command;
 pub use crate::external_agent_types::{
@@ -79,19 +80,23 @@ impl ExternalAgentBridge {
         }
         self.ensure_available(&request.adapter_id)?;
         self.ensure_task_authority(&request)?;
-        let scope = self.checked_scope(request.scope.clone())?;
-        if request.requires_isolation
-            && scope.checkpoint_id.is_none()
-            && scope.worktree_id.is_none()
-        {
-            return Err(ExternalAgentError::MissingIsolation);
-        }
+        let mut scope = self.checked_scope(request.scope.clone())?;
         let changed_files = request
             .capture_plan
             .changed_files
             .iter()
             .map(|path| checked_scoped_path(path, &scope))
             .collect::<Result<Vec<_>, _>>()?;
+        let checkpoint = ensure_external_agent_isolation(
+            &mut scope,
+            &changed_files,
+            request.requires_isolation,
+            format!(
+                "external-agent-checkpoint-{}-{}",
+                self.next_artifact_id + 1,
+                now
+            ),
+        )?;
         let diff_snapshot = request
             .capture_plan
             .capture_diff
@@ -119,6 +124,9 @@ impl ExternalAgentBridge {
                 "prototype worker command captured",
                 now,
             ));
+        }
+        if let Some(checkpoint) = &checkpoint {
+            transcript.extend(checkpoint_events(checkpoint, now));
         }
         transcript.extend(worker.transcript);
         for command in &request.capture_plan.commands {

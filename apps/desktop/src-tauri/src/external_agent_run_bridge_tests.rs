@@ -77,22 +77,30 @@ mod tests {
     }
 
     #[test]
-    fn missing_isolation_blocks_codex_launch_without_artifact() {
-        let root = temp_workspace("codex-no-isolation");
+    fn write_codex_contract_creates_checkpoint_before_launch() {
+        let root = temp_workspace("codex-auto-checkpoint");
         let (approvals, external_id, terminal_id) = approved_pair(100);
         let mut store = ExternalAgentRunBridgeStore::default();
         let mut bridge = codex_bridge(&root);
 
-        let result = run_contract_agent_record(
+        let artifact = run_contract_agent_record(
             &mut store,
             &approvals,
             request(&external_id, &terminal_id, &root, None),
             fake_codex_write_contract(&root, passing_command()),
             &mut bridge,
-        );
+        )
+        .unwrap();
 
-        assert!(result.unwrap_err().contains("requires a checkpoint"));
-        assert!(external_agent_run_snapshot_from_store(&store, "run-1").is_empty());
+        assert_eq!(artifact.status, "completed");
+        assert!(artifact
+            .scope
+            .contains("checkpoint external-agent-checkpoint"));
+        assert!(artifact
+            .transcript
+            .iter()
+            .any(|event| event.kind == "checkpoint_created"
+                && event.message.contains("checkpointed:")));
     }
 
     #[test]

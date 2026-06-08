@@ -46,7 +46,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - Ollama is the only real live model execution path.
 - OpenAI-compatible providers are health/config stubs only.
 - Codex CLI has an approval-gated read-only launch bridge with captured terminal output and UI artifacts.
-- Codex write-capable launch still needs real checkpoint/worktree isolation and diff depth before it is usable.
+- Codex write-capable launch now creates real checkpoint receipts for planned files before execution; worktree isolation can still come later.
 - Claude external agent support is detection/contract-preview only.
 - Generic terminal worker execution exists behind external-agent and terminal-command approvals.
 - Frontend coverage now includes a narrow Vitest/React Testing Library path plus older smoke/source-contract verifier scripts. Broad behavior coverage is still missing.
@@ -124,7 +124,7 @@ autonomous Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop
 is still missing. It is also not "barely started": most core infrastructure
 now has real persisted or approval-gated functional islands.
 
-- [x] ~~D10 is fully complete.~~
+- [x] ~~D4, D8, and D10 are fully complete.~~
 - [x] ~~SQLite is real for AgentRun, thread/run, approvals, workspace snapshots, model routes, memory, skills, automations, release/support-bundle state, tests, patches, reviews, external-agent runs, research evidence, and final-answer support links.~~
 - [x] ~~Ollama is a real local model path for runtime detection, chat, composer replies, plan drafts, route sync, and optional version display.~~
 - [x] ~~Patch proposal/apply/restore, approved test execution, and read-only review have narrow AgentRun executor bridges with persisted artifacts.~~
@@ -138,9 +138,9 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 161/191 checked, 30 open.
+- Visible checkbox progress: 163/191 checked, 28 open.
 - Parent track boxes are status gates; they stay open until the full track is functionally complete.
-- Depth tracks: 2/12 complete, 10/12 in progress.
+- Depth tracks: 3/12 complete, 9/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
 - Largest remaining risk remains concentrated in D2, D5, D6, and D3.
 
@@ -291,11 +291,11 @@ Progress board:
   - [x] ~~Runtime status now optionally probes real local Ollama `/api/version` and surfaces the version in Settings when available; missing version data does not override the model-readiness probe.~~
   - [ ] Add pull-progress UI only when backed by real local state.
 
-- [ ] D8 - External Agent Integration Depth (in progress; Codex read-only launch works, write-capable isolation still missing)
+- [x] ~~D8 - External Agent Integration Depth (complete; Codex read-only launch works, write-capable Codex creates checkpoint receipts for planned files, and Claude remains preview-only)~~
   - [x] ~~Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.~~
   - [x] ~~External-agent run receipts now survive restart through SQLite, including transcript and linked test IDs.~~
   - [x] ~~Codex external-agent approval selection now rejects expired approved approvals, avoids duplicate pending approvals, blocks denied approvals, and queues fresh bridge client IDs for expired external-agent or terminal approvals before any launch.~~
-  - [ ] Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.
+  - [x] ~~Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.~~
   - [x] ~~Add real changed-file/diff capture from external-agent runs instead of review placeholders.~~
   - [x] ~~Claude launch is out of Phase 2 scope beyond detection and command-contract preview.~~
   - [x] ~~Claude adapter status now labels detection/contract-preview-only scope instead of implying launch support.~~

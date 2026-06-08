@@ -88,10 +88,37 @@ mod tests {
         let mut request = run_request(&approval.id, &root, true, vec![]);
         request.scope.checkpoint_id = None;
         request.scope.worktree_id = None;
+        request.capture_plan.changed_files.clear();
 
         let result = bridge.run_approved_worker(request, 10, &approvals);
 
         assert_eq!(result.unwrap_err(), ExternalAgentError::MissingIsolation);
+    }
+
+    #[test]
+    fn external_agent_creates_checkpoint_before_unisolated_write_run() {
+        let root = temp_workspace("auto-checkpoint");
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(external_agent_input());
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
+        let mut bridge = ExternalAgentBridge::new(vec![root.clone()]).unwrap();
+        let mut request = run_request(&approval.id, &root, true, vec![]);
+        request.scope.checkpoint_id = None;
+        request.scope.worktree_id = None;
+
+        let artifact = bridge.run_approved_worker(request, 10, &approvals).unwrap();
+
+        assert!(artifact
+            .scope
+            .checkpoint_id
+            .unwrap()
+            .starts_with("external-agent-checkpoint-"));
+        assert!(artifact.transcript.iter().any(|event| {
+            event.kind == ExternalAgentEventKind::CheckpointCreated
+                && event.message.contains("checkpointed:")
+        }));
     }
 
     #[test]

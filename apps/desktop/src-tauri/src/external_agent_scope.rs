@@ -18,7 +18,15 @@ pub fn checked_scoped_path(
     path: &Path,
     scope: &ExternalAgentScope,
 ) -> Result<PathBuf, ExternalAgentError> {
-    let normalized = fs::canonicalize(path).map_err(io_error)?;
+    let normalized = fs::canonicalize(path)
+        .or_else(|error| {
+            if error.kind() == std::io::ErrorKind::NotFound {
+                normalize_missing_leaf(path)
+            } else {
+                Err(error)
+            }
+        })
+        .map_err(io_error)?;
     let inside_root = normalized.starts_with(&scope.project_root);
     let inside_allowed = scope
         .allowed_paths
@@ -27,6 +35,15 @@ pub fn checked_scoped_path(
     (inside_root && inside_allowed)
         .then_some(normalized)
         .ok_or(ExternalAgentError::OutsideApprovedRoot)
+}
+
+fn normalize_missing_leaf(path: &Path) -> Result<PathBuf, std::io::Error> {
+    let parent = path.parent().unwrap_or_else(|| Path::new("."));
+    let parent = fs::canonicalize(parent)?;
+    Ok(match path.file_name() {
+        Some(file_name) => parent.join(file_name),
+        None => parent,
+    })
 }
 
 fn io_error(error: std::io::Error) -> ExternalAgentError {

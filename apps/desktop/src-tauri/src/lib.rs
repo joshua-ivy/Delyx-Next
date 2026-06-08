@@ -62,6 +62,7 @@ pub mod external_agent_contract_bridge;
 mod external_agent_contract_bridge_tests;
 mod external_agent_diff;
 mod external_agent_guard_tests;
+mod external_agent_isolation;
 pub mod external_agent_run_bridge;
 mod external_agent_run_bridge_keys;
 mod external_agent_run_bridge_tests;

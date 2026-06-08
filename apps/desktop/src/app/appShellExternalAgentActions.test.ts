@@ -77,6 +77,40 @@ describe("runCodexExternalAgentForRun", () => {
       "warning",
     );
   });
+
+  it("runs write-capable Codex only with planned files for checkpoint scope", async () => {
+    await runCodexExternalAgentForRun(state({
+      actionProposals: [
+        approval("external_agent", "approved", "workspace_write"),
+        approval("run_terminal", "approved", "workspace_write"),
+      ],
+      activePlan: approvedPlan(["src/main.ts"]),
+    }));
+
+    expect(runCodex).toHaveBeenCalledWith(expect.objectContaining({
+      captureDiff: true,
+      changedFiles: ["C:/repo/src/main.ts"],
+      checkpointId: undefined,
+      permissionMode: "workspace_write",
+      worktreeId: undefined,
+    }));
+  });
+
+  it("blocks write-capable Codex when no planned files can be checkpointed", async () => {
+    await runCodexExternalAgentForRun(state({
+      actionProposals: [
+        approval("external_agent", "approved", "workspace_write"),
+        approval("run_terminal", "approved", "workspace_write"),
+      ],
+      activePlan: approvedPlan([]),
+    }));
+
+    expect(runCodex).not.toHaveBeenCalled();
+    expect(notify).toHaveBeenCalledWith(
+      "Codex write mode needs planned files so Delyx can checkpoint before launch",
+      "warning",
+    );
+  });
 });
 
 function state(overrides: Partial<ExternalAgentPreviewState> = {}): ExternalAgentPreviewState {
@@ -109,8 +143,8 @@ function state(overrides: Partial<ExternalAgentPreviewState> = {}): ExternalAgen
 function approval(
   actionType: "external_agent" | "run_terminal",
   status: "approved" | "denied" | "expired" | "pending",
+  permissionMode: "read_only" | "workspace_write" = "read_only",
 ) {
-  const permissionMode = "read_only";
   const runId = "run-1";
   return {
     actionType,
@@ -125,5 +159,28 @@ function approval(
     runId,
     scope: { kind: actionType === "external_agent" ? "external_agent" as const : "terminal" as const, root: "C:/repo", summary: "Codex run" },
     status,
+  };
+}
+
+function approvedPlan(filesLikelyInvolved: string[]) {
+  return {
+    decision: "approved" as const,
+    explore: {
+      architectureSummary: "",
+      projectCommands: [],
+      relevantFiles: [],
+      relevantSymbols: [],
+      risks: [],
+      suggestedNextSteps: [],
+      unknowns: [],
+    },
+    filesLikelyInvolved,
+    goalUnderstanding: "Edit planned files.",
+    permissionsNeeded: ["external_agent"],
+    risks: [],
+    rollbackStrategy: "Checkpoint before edits.",
+    steps: [],
+    testsToRun: [],
+    threadId: "thread-1",
   };
 }

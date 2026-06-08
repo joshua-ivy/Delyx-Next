@@ -423,9 +423,13 @@ same receipt shape as tests.
 Diff-capturing external runs snapshot explicitly reported changed files before
 the approved worker command and compare their bytes afterward, recording
 created, deleted, modified, unchanged, and unreadable receipts instead of a
-review placeholder. Write-capable Codex launch still needs real checkpoint or
-isolated-worktree creation before the UI can enable it. Claude launch remains
-preview-only.
+review placeholder. Write-capable Codex launch uses the approved plan's
+declared files as its checkpoint scope; if no files are declared, the UI keeps
+the launch blocked because Delyx cannot create a useful rollback receipt. When
+files are declared, Rust creates a temp-backed external-agent checkpoint before
+the worker command starts, records checkpoint receipt events, and annotates the
+external-agent scope with the generated checkpoint ID. Isolated worktrees can
+still come later. Claude launch remains preview-only.
 
 ## Memory Governance
 

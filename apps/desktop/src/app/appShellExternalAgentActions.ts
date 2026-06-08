@@ -76,9 +76,9 @@ export async function runCodexExternalAgentForRun(state: ExternalAgentPreviewSta
     return;
   }
   const permissionMode = permissionModeForState(state);
-  const isolation = isolationFromRun(state.activeRun);
-  if (permissionMode === "workspace_write" && !isolation) {
-    notifyLocalAction("Codex write mode needs a real checkpoint or isolated worktree before launch", "warning");
+  const changedFiles = permissionMode === "workspace_write" ? codexChangedFilesFromPlan(state) : [];
+  if (permissionMode === "workspace_write" && changedFiles.length === 0) {
+    notifyLocalAction("Codex write mode needs planned files so Delyx can checkpoint before launch", "warning");
     return;
   }
   try {
@@ -86,8 +86,8 @@ export async function runCodexExternalAgentForRun(state: ExternalAgentPreviewSta
       allowedPaths: state.activeProject.approvedRoots,
       approvedRoots: state.activeProject.approvedRoots,
       captureDiff: permissionMode === "workspace_write",
-      changedFiles: [],
-      checkpointId: isolation?.checkpointId,
+      changedFiles,
+      checkpointId: undefined,
       createdAtMs: Date.now(),
       externalApprovalId: approvals.external.id,
       permissionMode,
@@ -97,7 +97,7 @@ export async function runCodexExternalAgentForRun(state: ExternalAgentPreviewSta
       testArtifactIds: [],
       timeoutMs: 5 * 60 * 1000,
       workingDirectory: state.activeProject.path,
-      worktreeId: isolation?.worktreeId,
+      worktreeId: undefined,
     });
     state.setExternalAgentState((current) => ({
       ...current,
@@ -179,7 +179,7 @@ function codexExternalProposal(state: ExternalAgentPreviewState): ActionProposal
     rationale: `Launch Codex CLI for: ${contractTask(state.activeThread!)}`,
     requiredPermission: "external_agent",
     riskLabel: "high",
-    rollbackPlan: "Read-only Codex launches have no file mutation; write-capable launches require checkpoint or worktree isolation before execution.",
+    rollbackPlan: "Read-only Codex launches have no file mutation; write-capable launches create a checkpoint before execution.",
     runId,
     scope: {
       kind: "external_agent",
@@ -204,7 +204,7 @@ function codexTerminalProposal(state: ExternalAgentPreviewState): ActionProposal
     rationale: "Codex CLI execution is a terminal command and must be captured as an AgentRun artifact.",
     requiredPermission: "terminal_command",
     riskLabel: "high",
-    rollbackPlan: "Discard the captured command artifact; write-capable Codex runs remain blocked until real isolation exists.",
+    rollbackPlan: "Discard the captured command artifact; write-capable Codex runs create checkpoint receipts before execution.",
     runId,
     scope: {
       commands: [`codex exec --json --sandbox ${codexSandbox(permissionMode)} <task>`],
@@ -217,15 +217,25 @@ function codexTerminalProposal(state: ExternalAgentPreviewState): ActionProposal
   };
 }
 
-function isolationFromRun(run: AgentRunView) {
-  const artifact = [...run.artifacts].reverse().find((item) => item.kind === "checkpoint" || item.kind === "worktree");
-  const checkpointId = artifact?.kind === "checkpoint" ? artifact.id : metadataString(artifact?.metadata?.checkpointId);
-  const worktreeId = artifact?.kind === "worktree" ? artifact.id : metadataString(artifact?.metadata?.worktreeId);
-  return checkpointId || worktreeId ? { checkpointId, worktreeId } : undefined;
-}
-
 function permissionModeForState(state: ExternalAgentPreviewState): CodexPermissionMode {
   return state.activePlan?.decision === "approved" ? "workspace_write" : "read_only";
+}
+
+function codexChangedFilesFromPlan(state: ExternalAgentPreviewState) {
+  const root = state.activeProject.path.replace(/[\\/]$/, "");
+  const separator = root.includes("\\") && !root.includes("/") ? "\\" : "/";
+  const files = new Set<string>();
+  for (const file of state.activePlan?.filesLikelyInvolved ?? []) {
+    const clean = file.trim();
+    if (!clean || clean.includes("*")) {
+      continue;
+    }
+    const path = isAbsolutePath(clean)
+      ? clean
+      : `${root}${separator}${clean.replace(/^[/\\]+/, "").replace(/[\\/]/g, separator)}`;
+    files.add(path);
+  }
+  return [...files];
 }
 
 function expiresAt() {
@@ -239,8 +249,8 @@ function codexQueueMessage(result: "denied" | "queued" | "waiting") {
   return "Approve the Codex external-agent and terminal-command proposals, then run Codex again";
 }
 
-function metadataString(value: unknown) {
-  return typeof value === "string" && value.trim() ? value : undefined;
+function isAbsolutePath(path: string) {
+  return /^[a-zA-Z]:[\\/]/.test(path) || path.startsWith("/") || path.startsWith("\\\\");
 }
 
 function contractPreviewError(error: unknown) {

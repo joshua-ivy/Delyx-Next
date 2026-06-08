@@ -19,7 +19,7 @@ artifact-first.
   - Implemented locally through `external_agent_run_bridge`.
   - Requires both `external_agent` and `run_terminal` approvals.
   - Captures stdout, stderr, exit status, duration, transcript events, and UI artifacts.
-  - Write-capable launch remains blocked until real checkpoint/worktree isolation exists.
+  - Write-capable launch creates a local checkpoint for planned files before execution; isolated worktrees remain future depth.
 - Command execution artifact shape from app-server protocol ideas.
   - Implemented locally as `command_exec`.
   - Used by approved test commands and approved external terminal workers.

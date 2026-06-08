@@ -95,6 +95,7 @@ pub struct ExternalAgentEvent {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExternalAgentEventKind {
+    CheckpointCreated,
     Command,
     Completed,
     Started,

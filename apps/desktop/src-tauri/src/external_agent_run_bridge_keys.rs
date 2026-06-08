@@ -21,6 +21,7 @@ pub(crate) fn status_key(status: ExternalAgentRunStatus) -> &'static str {
 
 pub(crate) fn event_kind_key(kind: ExternalAgentEventKind) -> &'static str {
     match kind {
+        ExternalAgentEventKind::CheckpointCreated => "checkpoint_created",
         ExternalAgentEventKind::Command => "command",
         ExternalAgentEventKind::Completed => "completed",
         ExternalAgentEventKind::DiffCaptured => "diff_captured",
