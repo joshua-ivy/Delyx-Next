@@ -11,6 +11,7 @@ import "./styles/threads.css";
 import "./styles/workbench-details.css";
 import "./styles/workspace.css";
 import "./styles/cockpit.css";
+import "./styles/cockpit-markdown.css";
 import "./styles/cockpit-stream.css";
 import "./styles/cockpit-empty.css";
 import "./styles/cockpit-runtime.css";

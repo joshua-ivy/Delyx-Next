@@ -186,44 +186,6 @@
   margin-right: 6px;
 }
 
-.deck-msg-bub p {
-  margin: 0 0 8px;
-}
-
-.deck-msg-bub p:last-child,
-.deck-msg-bub ul:last-child,
-.deck-msg-bub pre:last-child {
-  margin-bottom: 0;
-}
-
-.deck-msg-bub h3 {
-  font-size: 15px;
-  margin: 2px 0 8px;
-}
-
-.deck-msg-bub ul {
-  margin: 0 0 8px;
-  padding-left: 18px;
-}
-
-.deck-msg-bub li {
-  margin: 4px 0;
-}
-
-.msg-code {
-  background: #07090d;
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  color: #dce5ef;
-  font-size: 12px;
-  line-height: 1.45;
-  margin: 8px 0;
-  max-height: 260px;
-  overflow: auto;
-  padding: 10px 12px;
-  white-space: pre;
-}
-
 .deck-progress-empty {
   color: var(--fg-3);
 }
