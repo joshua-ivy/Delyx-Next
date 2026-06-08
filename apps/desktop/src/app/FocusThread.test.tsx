@@ -49,15 +49,35 @@ describe("FocusThread live run placement", () => {
   });
 });
 
+describe("FocusThread artifact visibility", () => {
+  it("does not render empty plan, diff, test, or review placeholders", () => {
+    renderThread({
+      approvalStatus: "pending",
+      onApplyPatch: vi.fn(),
+      patches: [],
+      proposals: [],
+    });
+
+    expect(screen.queryByText("No plan yet")).toBeNull();
+    expect(screen.queryByText("Unified diff artifact")).toBeNull();
+    expect(screen.queryByText("Run review")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Apply patch" })).toBeNull();
+  });
+});
+
 function renderThread({
   approvalStatus,
   messages,
   onApplyPatch,
+  patches = [patch()],
+  proposals,
   run,
 }: {
   approvalStatus: ActionProposalView["status"];
   messages?: TaskThread["messages"];
   onApplyPatch: (patchId: string) => void;
+  patches?: PatchProposalView[];
+  proposals?: ActionProposalView[];
   run?: AgentRunView;
 }) {
   return render(
@@ -73,8 +93,8 @@ function renderThread({
       onOpenPalette={vi.fn()}
       onRunReview={vi.fn()}
       onSend={vi.fn()}
-      patches={[patch()]}
-      proposals={[approval(approvalStatus)]}
+      patches={patches}
+      proposals={proposals ?? [approval(approvalStatus)]}
       reviews={[]}
       run={run}
       tests={[]}
