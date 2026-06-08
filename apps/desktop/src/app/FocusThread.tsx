@@ -14,6 +14,7 @@ interface FocusThreadProps {
   activePlan: PlanView | undefined;
   mode: FocusMode;
   model: string;
+  onApplyPatch: (patchId: string) => void;
   onApprovePlan: () => void;
   onCreatePlan: () => void;
   onDecideProposal: (proposalId: string, status: "approved" | "denied") => void;
@@ -56,7 +57,7 @@ export function FocusThread(props: FocusThreadProps) {
             <ThreadTimeline messages={props.thread.messages} mode={props.mode} run={props.run} />
             <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} />
             <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
-            <DiffPeek patches={props.patches} />
+            <DiffPeek onApplyPatch={props.onApplyPatch} patches={props.patches} proposals={props.proposals} />
             <TestPeek tests={props.tests} />
             <ReviewPeek onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
           </div>
@@ -202,12 +203,14 @@ function ApprovalBlock({ onDecideProposal, proposals }: { onDecideProposal: (pro
   </div>)}</>;
 }
 
-function DiffPeek({ patches }: { patches: PatchProposalView[] }) {
+function DiffPeek({ onApplyPatch, patches, proposals }: { onApplyPatch: (patchId: string) => void; patches: PatchProposalView[]; proposals: ActionProposalView[] }) {
   const file = patches.flatMap((patch) => patch.files.map((item) => ({ item, patch })))[0];
   if (!file) {
     return null;
   }
-  return <div className="peek"><div className="peek-head"><FocusIcon name="diff" /> {file.item.path}<span className="stat">{file.patch.status}</span></div>{file.item.diff.slice(0, 8).map((line, index) => <div className={`dl ${line.kind === "added" ? "add" : line.kind === "removed" ? "del" : "ctx"}`} key={index}><span className="ln">{line.kind === "added" ? "+" : line.kind === "removed" ? "-" : index + 1}</span><span className="tx">{line.text || " "}</span></div>)}</div>;
+  const approval = proposals.find((proposal) => proposal.id === file.patch.approvalId);
+  const canApply = file.patch.status === "proposed" && approval?.status === "approved";
+  return <div className="peek"><div className="peek-head"><FocusIcon name="diff" /> {file.item.path}<span className="stat">{file.patch.status}</span></div>{file.item.diff.slice(0, 8).map((line, index) => <div className={`dl ${line.kind === "added" ? "add" : line.kind === "removed" ? "del" : "ctx"}`} key={index}><span className="ln">{line.kind === "added" ? "+" : line.kind === "removed" ? "-" : index + 1}</span><span className="tx">{line.text || " "}</span></div>)}{canApply && <div className="plan-actions"><button className="select" onClick={() => onApplyPatch(file.patch.id)} type="button">Apply patch</button></div>}</div>;
 }
 
 function TestPeek({ tests }: { tests: TestArtifactView[] }) {

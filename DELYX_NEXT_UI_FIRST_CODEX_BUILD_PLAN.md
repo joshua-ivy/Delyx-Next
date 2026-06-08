@@ -180,6 +180,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Focus UI now loads persisted patch snapshots for the active run instead of passing a static empty patch array, so real PatchProposal diffs can appear when the runtime creates them.
   - Focus approval decisions no longer mark the thread as `building` by themselves; approval returns to the next-step state or keeps waiting when more approvals are pending until an actual executor/tool action starts.
   - Focus state now loads persisted approval proposals/decisions for the active run instead of relying only on the current renderer session, which is required before safe patch/test action buttons can reason about approval status.
+  - Focus diff UI can now call the AgentRun patch-apply bridge for a proposed patch only when its matching approval is visibly approved; Rust still enforces approval, approved root, stale-file, and checkpoint gates before any write.
   - Patch apply and restore now have persisted approval-gated bridges with stale-file protection and checkpoint receipts; the runtime engine still needs to call them automatically from the build flow.
   - Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - Surface real diffs and rollback state in the UI.

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
 import { useApprovalPolicy } from "./appShellApprovalPolicy";
+import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
 import { runReviewForActiveRun } from "./appShellReviewActions";
 import { canTransition, createThread, modeForThreadStatus } from "./appShellThreadActions";
@@ -51,7 +52,7 @@ export function AppShell() {
     ?? agentRuns.find((run) => run.threadId === activeThread?.id);
   const activePlan = plans.find((plan) => plan.threadId === activeThread?.id);
   const { actionProposals, setActionProposals } = useRunApprovals(activeRun?.id);
-  const { patches, reviews, setReviews, tests } = useRunReceipts(activeRun?.id);
+  const { patches, reviews, setPatches, setReviews, tests } = useRunReceipts(activeRun?.id);
   useEffect(() => {
     let cancelled = false;
     void loadRuntimeBridgeState().then(async (state) => {
@@ -190,6 +191,17 @@ export function AppShell() {
       tests,
     });
   };
+  const applyPatch = (patchId: string) => {
+    void applyApprovedPatchForActiveRun({
+      activeProject,
+      activeThread,
+      patch: patches.find((patch) => patch.id === patchId),
+      setAgentRuns,
+      setPatches,
+      setThreads,
+      setThreadState,
+    });
+  };
   const decideProposal = (proposalId: string, status: "approved" | "denied") => {
     void decideFocusApproval({
       activeRun,
@@ -237,6 +249,7 @@ export function AppShell() {
         onCreatePlan={() => runPaletteCommand("plan.create")}
         onDecideProposal={decideProposal}
         onOpenWorkspace={() => setWorkspaceOpen(true)}
+        onApplyPatch={applyPatch}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
         onRunReview={runReview}
         onRunCommand={runPaletteCommand}

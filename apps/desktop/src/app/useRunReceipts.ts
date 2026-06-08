@@ -63,5 +63,5 @@ export function useRunReceipts(runId: string | undefined) {
     };
   }, [runId]);
 
-  return { patches, reviews, setReviews, tests };
+  return { patches, reviews, setPatches, setReviews, tests };
 }

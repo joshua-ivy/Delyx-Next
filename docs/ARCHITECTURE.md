@@ -295,7 +295,10 @@ stays inside approved roots, and then writes or removes files from the persisted
 checkpoint receipts while recording the restore approval ID.
 The Focus UI loads `patch_snapshot` for the active run so persisted patch
 receipts can surface as real diffs; it does not synthesize placeholder diffs
-when the runtime has not produced a PatchProposal.
+when the runtime has not produced a PatchProposal. Focus diff controls may call
+the AgentRun patch-apply bridge only when the matching approval is visibly
+approved in active Focus state. The Rust bridge still owns final approval,
+root, stale-file, and checkpoint enforcement before any file write.
 Focus approval decisions do not mark a thread as building by themselves. They
 return to the next-step state, or keep waiting when more approvals are pending,
 until a concrete executor or tool action starts.
