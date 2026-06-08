@@ -8,7 +8,7 @@ Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - `cargo fmt --check` and `cargo test --workspace`: 212 passed, 0 failed.
-- `npm run typecheck`, `npm test` (smoke/source-contract plus first component behavior test), `npm run build`, `npm run smoke:ui`, and `npm run smoke:tauri`: pass.
+- `npm run typecheck`, `npm test` (smoke/source-contract plus focused Vitest component tests), `npm run build`, `npm run smoke:ui`, and `npm run smoke:tauri`: pass.
 - Browser visual checks passed for the no-thread cockpit at 1280x720 and 390x844 before the Focus port: no fake progress/diff/terminal/metric blocks, no inspector, no horizontal overflow. Focus UI browser checks must stay current after each visual pass.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
@@ -49,7 +49,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - Codex write-capable launch still needs real checkpoint/worktree isolation and diff depth before it is usable.
 - Claude external agent support is detection/contract-preview only.
 - Generic terminal worker execution exists behind external-agent and terminal-command approvals.
-- Frontend tests are smoke/source-contract verifier scripts, not behavioral React/component tests.
+- Frontend coverage now includes a narrow Vitest/React Testing Library path plus older smoke/source-contract verifier scripts. Broad behavior coverage is still missing.
 - The default workbench is now a React Focus shell ported from the provided Focus prototype. Legacy `buildCockpitMarkup` string-rendered cockpit files remain in source as an older implementation and smoke-contract reference, but they are no longer the mounted primary workbench.
 - The repo intentionally has one Rust crate today: `apps/desktop/src-tauri`.
 - `openai/codex` was audited at commit `e093d81` as a reference/salvage pool, not a repo to blindly copy.
@@ -170,7 +170,8 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - [ ] D4 - UI Architecture Decision
   - Default workbench migrated to focused React components using the provided Focus prototype as visual source.
-  - Legacy string-rendered cockpit files still need cleanup or formal deprecation.
+  - Legacy string-rendered cockpit files are formally deprecated as mounted UI and retained only as older smoke-contract/reference code until they can be safely deleted.
+  - `docs/ARCHITECTURE.md` records FocusShell as the live workbench and legacy cockpit as non-mounted reference code.
   - Add behavior tests around the Focus component tree and direct action callbacks.
   - Reconcile the plan with Radix/TanStack/Zustand targets.
   - Completed now: no-thread cockpit hides unbacked progress, diff, terminal, inspector, and metric-card furniture; Focus home centers the real composer and keeps setup nudges tied to real repo/model state.
@@ -230,14 +231,14 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Every Codex-derived change needs tests, UI-visible state, approval gates, and dependency justification.
 
 - [ ] D12 - Refined Windows Desktop App
-  - Current truth: Delyx Next runs through Tauri, but it is not yet a refined Windows desktop product.
+  - Current truth: Delyx Next has a usable Tauri Windows desktop shell and NSIS package path, but it is still an unsigned dev product without updater/signing polish.
   - Added explicit `dev:desktop` scripts for the Tauri Windows shell; `dev` remains the browser/Vite preview.
   - Tauri config now declares the stable main window label, centered native decorated window behavior, bundle publisher/descriptions, and app/installer icon paths.
   - Release smoke now checks desktop launch script wiring, primary window basics, bundle metadata, and NSIS icon configuration.
   - Added the official Tauri single-instance plugin so launching Delyx Next again focuses the existing main window instead of creating a second desktop session.
   - Runtime status now exposes desktop shell policy to the UI: main window label, renderer-command menu policy, startup focus behavior, single-instance reopen behavior, and unsigned dev signing status.
   - Settings now shows the real Windows shell state when the Rust bridge is available.
-  - Add Windows app identity, icon assets, installer metadata, window sizing, native menu decisions, startup/reopen behavior, release smoke checks, and packaged build verification.
+  - Next desktop depth: signing, updater policy, install/upgrade smoke, native file associations/deep links only if the product needs them.
   - Keep the desktop shell tied to real local runtime state; do not use packaging polish to hide missing agent behavior.
 
 ## Validation Gates
@@ -254,7 +255,7 @@ cargo test --workspace
 git diff --check
 ```
 
-Current warning: `npm test` now includes one real component behavior test, but broad frontend behavior coverage is still missing until D3 is expanded.
+Current warning: `npm test` now includes focused real component behavior tests, but broad frontend behavior coverage is still missing until D3 is expanded.
 
 For eval work:
 

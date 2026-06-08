@@ -696,3 +696,16 @@ Reason: Delyx Next needs a fast browser preview for UI iteration and a clear nat
 Decision: Delyx Next uses Tauri's official single-instance plugin and keeps native app menus disabled in favor of the renderer command UI.
 
 Reason: A refined Windows desktop app should not create duplicate local-agent sessions when launched twice. The dependency is narrow and official, and the renderer command palette remains the product's visible trust/control surface.
+
+### ADR-0007: Focus Shell Is The Mounted Workbench
+
+Decision: `FocusShell` is the live mounted workbench. Legacy string-rendered
+cockpit modules, including `buildCockpitMarkup`, are deprecated as product UI
+and remain only as older smoke-contract/reference code until a focused cleanup
+can delete or replace their verifier coverage.
+
+Reason: The product direction is a simple Codex-like project/thread workspace
+with real runtime receipts. Keeping the old cockpit mounted would preserve the
+confusing dashboard furniture the UI cleanup removed, while deleting every old
+contract at once would erase useful guardrails before equivalent Focus behavior
+tests exist.
