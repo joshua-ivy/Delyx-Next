@@ -34,6 +34,11 @@ fn main() {
             .expect("patch SQLite state should open"),
         )
         .manage(
+            delyx_next_desktop::plan_bridge::PlanBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            ),
+        )
+        .manage(
             delyx_next_desktop::release_bridge::ReleaseBridgeState::persistent(
                 delyx_next_desktop::sqlite_store::default_database_path(),
             )
@@ -111,6 +116,8 @@ fn main() {
             delyx_next_desktop::patch_bridge::patch_propose,
             delyx_next_desktop::patch_bridge::patch_restore_approved,
             delyx_next_desktop::patch_bridge::patch_snapshot,
+            delyx_next_desktop::plan_bridge::plan_save,
+            delyx_next_desktop::plan_bridge::plan_snapshot,
             delyx_next_desktop::release_bridge::release_profile_save,
             delyx_next_desktop::release_bridge::release_snapshot,
             delyx_next_desktop::release_bridge::release_smoke_capture,

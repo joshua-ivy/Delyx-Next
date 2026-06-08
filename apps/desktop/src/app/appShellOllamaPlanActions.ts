@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { sendOllamaChat, selectedOllamaModel } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import { createOllamaPlanMessages, createPlanFromOllamaText } from "../features/plans/ollamaPlan";
+import { savePlanOverBridge } from "../features/plans/planClient";
 import type { PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { appendThreadMessageOverBridge } from "../features/threads/threadClient";
@@ -44,11 +45,12 @@ export async function createPlanWithOllama(state: OllamaPlanState) {
   try {
     const response = await sendOllamaChat(state.modelSettings, createOllamaPlanMessages(runnableThread, state.activeProject));
     const plan = createPlanFromOllamaText(runnableThread, state.activeProject, response.text);
+    const savedPlan = await savePlanOverBridge(state.activeProject.id, plan) ?? plan;
     const now = new Date().toISOString();
-    state.setPlans((current) => upsertPlan(current, plan));
+    state.setPlans((current) => upsertPlan(current, savedPlan));
     appendMessage(state, runnableThread.id, {
       role: "assistant",
-      body: `Ollama drafted a read-only plan with ${plan.steps.length} step(s). Review it before any approval.`,
+      body: `Ollama drafted a read-only plan with ${savedPlan.steps.length} step(s). Review it before any approval.`,
     }, "planning");
     state.setAgentRuns((current) => recordModelCallResult(current, runnableThread, response.providerId, response.model, response.text, now, "running"));
     notifyLocalAction(`Ollama plan drafted with ${response.model}`, "success");

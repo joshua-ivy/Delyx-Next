@@ -108,6 +108,13 @@ CREATE TABLE IF NOT EXISTS workspace_project_snapshots (
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS plan_records (
+  thread_id TEXT PRIMARY KEY NOT NULL,
+  project_id TEXT NOT NULL,
+  plan_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS model_role_routes (
   role TEXT PRIMARY KEY NOT NULL,
   provider_id TEXT NOT NULL,

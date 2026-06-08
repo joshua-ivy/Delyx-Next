@@ -16,7 +16,7 @@ import { refreshOllamaSettings } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import { currentAgentRuns } from "../features/runs/agentRunData";
-import { archiveThreadOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
+import { archiveThreadOverBridge } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
@@ -26,6 +26,7 @@ import { selectOllamaCodingModel } from "./modelSelection";
 import { useRunApprovals } from "./useRunApprovals";
 import { useRunReceipts } from "./useRunReceipts";
 import { useSchedulerDecision } from "./useSchedulerDecision";
+import { useProjectSnapshots } from "./useProjectSnapshots";
 import { loadWorkspaceProject } from "./workspaceBridge";
 
 export function AppShell() {
@@ -101,20 +102,7 @@ export function AppShell() {
       cancelled = true;
     };
   }, []);
-  useEffect(() => {
-    let cancelled = false;
-    void loadThreadRunSnapshot(activeProject.id).then((snapshot) => {
-      if (!cancelled && snapshot && snapshot.threads.length > 0) {
-        setThreads((current) => current.length > 0 ? current : snapshot.threads);
-        setAgentRuns((current) => current.length > 0 ? current : snapshot.runs);
-        setActiveThreadId((current) => current ?? snapshot.threads[0]?.id);
-        setThreadState("ready");
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [activeProject.id]);
+  useProjectSnapshots({ projectId: activeProject.id, setActiveThreadId, setAgentRuns, setPlans, setThreads, setThreadState });
   useEffect(() => {
     document.documentElement.dataset.mode = activeThread?.mode ?? "build";
   }, [activeThread?.mode]);

@@ -15,6 +15,7 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
 import { refreshOllamaSettings } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
+import { savePlanOverBridge } from "../features/plans/planClient";
 import type { PlanDecision, PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
@@ -110,9 +111,11 @@ function updatePlanDecision(context: AppShellCommandContext, decision: PlanDecis
     notifyLocalAction("Create a plan before changing its decision", "warning");
     return;
   }
+  const updatedPlan = { ...context.activePlan, decision };
   context.setPlans((current) => current.map((plan) => (
-    plan.threadId === context.activePlan?.threadId ? { ...plan, decision } : plan
+    plan.threadId === updatedPlan.threadId ? updatedPlan : plan
   )));
+  void savePlanOverBridge(context.activeProject.id, updatedPlan);
   const activeThread = context.activeThread;
   if (decision === "approved" && activeThread) {
     void queueBuildApprovalProposal(context, activeThread);

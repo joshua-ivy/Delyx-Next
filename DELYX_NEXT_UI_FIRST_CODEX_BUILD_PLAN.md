@@ -40,7 +40,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Current Reality
 
 - PR 1-18.1 breadth is skeleton-complete.
-- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state and file-export receipts, approved test artifacts, patch proposal/apply/restore receipts, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automation contracts/scheduled runs, release/support-bundle state, support-bundle file export, patch apply/restore, and final-answer support synthesis have narrow persisted mutation bridges; remaining action bridges are still missing.
+- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, typed plan records, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state and file-export receipts, approved test artifacts, patch proposal/apply/restore receipts, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automations, release/support-bundle state, plan save/decision state, support-bundle file export, patch apply/restore, and final-answer support synthesis have narrow persisted mutation bridges; remaining action bridges are still missing.
 - There is no full execution engine: no multi-node autonomous executor, repair loop, or hook runner. A narrow scheduler/resume bridge can now choose and expose the next safe action from persisted approvals, patches, tests, and reviews, while a one-step dispatcher can run the scheduler-selected approved patch apply, test, review, or final-support action from real artifacts. Narrow AgentRun executor nodes can run approval-gated patch draft/proposal/apply/restore, approved test-command work, and read-only review work while recording run events/artifacts/evidence.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 168/192 checked, 24 open, 87.5%.
+- Phase 2 checkbox progress: 171/195 checked, 24 open, 87.7%.
 - Complete tracks: D4, D6, D8, D9, D10.
 - In-progress tracks: D1, D2, D3, D5, D7, D11, D12.
 - Depth tracks: 5/12 complete, 7/12 in progress.
@@ -150,6 +150,7 @@ Progress board:
   - [x] ~~AgentRun `save_to_path` / `load_from_path` now use the SQLite migration instead of a tab-separated text helper.~~
   - [x] ~~Tauri thread/run bridge state now saves threads, messages, run links, and AgentRun rows to SQLite and reloads them on desktop startup.~~
   - [x] ~~Tauri approval bridge state now saves proposals, scope, status, decisions, and decision notes to SQLite and reloads them on desktop startup.~~
+  - [x] ~~Plan records now save typed `PlanView` JSON by project/thread to SQLite, reload through a Tauri bridge on desktop startup, and prove update/filter behavior with a deterministic SQLite test.~~
   - [x] ~~Recent workspace project snapshots now save project metadata, rules files, approved roots, Git metadata, and indexed file names to SQLite.~~
   - [x] ~~Model role routes now save to SQLite; runtime status reloads a valid saved coding route before falling back to the first ready Ollama model.~~
   - [x] ~~The Rust memory governance store now saves candidates, promoted records, suppression state, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.~~
@@ -168,7 +169,7 @@ Progress board:
   - [x] ~~AgentRun EvidenceRecords now save source IDs, URIs, quotes, hashes, retrieval timestamps, and relevance metadata to SQLite; thread/run snapshots expose those receipts back to the UI instead of returning an empty evidence array.~~
   - [x] ~~AgentOutcome now saves linked evidence record IDs and test artifact IDs to SQLite; thread/run snapshots expose those support links to the UI.~~
   - [x] ~~Final-answer support synthesis now has a narrow Tauri bridge that links existing AgentRun EvidenceRecord IDs and passed persisted test artifact IDs into AgentOutcome, records a visible `final_answer.support_synthesized` event, marks the thread done, and saves the result to SQLite. It does not generate prose, infer unsupported claims, or make the full agent loop autonomous.~~
-  - [x] ~~SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, memory mutation reload, skill reload, skill mutation reload, automation reload, automation contract/scheduled-run mutation reload, release reload, release mutation reload, release smoke reload, support-bundle reload, support-bundle file-export receipt reload, test artifact reload, patch proposal/apply/restore reload, review report reload, external-agent run reload, research evidence reload, AgentOutcome support reload, final-answer support synthesis reload, UI-ready bridge snapshots, legacy migration upgrades, and SQLite file format.~~
+  - [x] ~~SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, plan record reload, workspace snapshot reload, model route reload, memory reload, memory mutation reload, skill reload, skill mutation reload, automation reload, automation contract/scheduled-run mutation reload, release reload, release mutation reload, release smoke reload, support-bundle reload, support-bundle file-export receipt reload, test artifact reload, patch proposal/apply/restore reload, review report reload, external-agent run reload, research evidence reload, AgentOutcome support reload, final-answer support synthesis reload, UI-ready bridge snapshots, legacy migration upgrades, and SQLite file format.~~
   - [ ] Persist remaining action bridges that still live only inside detached runtime state.
   - [ ] Next: add mutation/action bridges for the remaining persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
   - [ ] Add migration/repository tests that prove remaining action bridges survive reload.
@@ -180,6 +181,7 @@ Progress board:
   - [x] ~~Added `resume_waiting_run`: it resumes a run only when exactly one approval for that run is executable; multiple ready approvals, missing approvals, pending approvals, and zero clocks stay blocked or waiting instead of guessing.~~
   - [x] ~~Added Tauri scheduler commands: `agent_schedule_next` exposes the current scheduler decision to the UI, and `agent_resume_waiting_run` persists a non-risky resume transition only after the Rust scheduler finds exactly one executable approval.~~
   - [x] ~~Focus resume actions pass the active plan's supported test-command signal into `agent_resume_waiting_run`, so a test-ready run does not become falsely blocked after approval resume.~~
+  - [x] ~~Persisted plan snapshots now reload beside thread/run snapshots, so scheduler and PatchDraft paths can recover typed plan context after restart instead of relying only on live renderer memory.~~
   - [x] ~~The resume bridge now returns the post-resume scheduler decision when persisted patch/test/review work is ready, falling back to the visible resume decision when no persisted next action exists.~~
   - [x] ~~Approval decisions now auto-resume through the scheduler bridge only when the approved proposal is the last pending approval for that run.~~
   - [x] ~~Approval resume now passes the freshly decided proposal state into the scheduler request, so same-turn PatchDraft/test approval hints are not one render behind.~~
@@ -224,6 +226,7 @@ Progress board:
   - [x] ~~Added behavior coverage proving proposed diffs request a separate apply approval before showing or invoking the write action.~~
   - [x] ~~Added behavior coverage proving applied diffs surface checkpoint rollback state and require a separate restore approval before invoking the restore bridge.~~
   - [x] ~~Added behavior coverage proving rollback receipt UI shows checkpoint files, restore approval IDs, stale-restore failures, and post-restore guidance from real patch/run state.~~
+  - [x] ~~Added behavior coverage proving Ollama PlanAgent saves drafted plans through the plan bridge and renders the persisted bridge result.~~
   - [x] ~~Added behavior coverage proving final support UI names supported, unsupported, insufficient, partial, and untested states from real evidence/test receipt counts.~~
   - [x] ~~Added behavior coverage proving review findings expose an exact `Request repair` action, repair actions call the bridge with real report/finding IDs, and final support shows a review-blocked state while findings are unresolved.~~
   - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.

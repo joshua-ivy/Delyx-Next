@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, AgentOutcome support links, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, review-report, external-agent-run, and research-evidence persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, AgentOutcome support links, thread/run, approval, plan-record, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, review-report, external-agent-run, and research-evidence persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Lucide icons
@@ -37,7 +37,9 @@ complete:
   nodes, events, artifacts, evidence, outcome summary, and outcome support ID
   links. The Tauri
   thread/run bridge also persists task threads, messages, run links, and
-  AgentRun rows to the local SQLite database. The approval bridge persists
+  AgentRun rows to the local SQLite database. A plan bridge persists typed
+  PlanView records by project/thread and reloads them with desktop project
+  snapshots so approved or drafted plan state is not renderer-only. The approval bridge persists
   proposals, UI scope, status, and decisions. Recent workspace project snapshots
   persist project metadata, approved roots, rules files, Git metadata, and
   indexed file names. Model role routes persist to SQLite and are validated
@@ -104,7 +106,8 @@ complete:
   render that decision as a next-action line without inventing runtime state.
   Resume actions forward the active plan's supported test-command signal back
   into the scheduler bridge, so resume decisions use the same real plan context
-  as the visible scheduler line. After the non-risky resume transition, the
+  as the visible scheduler line. Persisted plan records now reload beside
+  thread/run snapshots, so that context can survive restart. After the non-risky resume transition, the
   bridge returns a post-resume scheduler decision when persisted patch, test, or
   review work is ready; otherwise it falls back to the visible resume decision.
   Approval decisions can also trigger that non-risky resume transition when the
@@ -318,8 +321,8 @@ state. Other runtime islands execute real work
 outside the full graph: Ollama chat/plan calls, the generic terminal-worker
 bridge, and Codex CLI read-only launches. The full Explore -> Plan -> Approve
 -> Build -> Diff -> Test -> Review execution loop remains Phase 2 work. AgentRun
-save/load, Tauri
-thread/run bridge session reload, approval bridge reload, recent workspace
+  save/load, Tauri
+  thread/run bridge session reload, approval bridge reload, plan record reload, recent workspace
 project reload, test artifact bridge reload, patch proposal bridge reload,
 review report reload, and external-agent run artifact reload now use SQLite.
 Research EvidenceStore receipts also persist to SQLite, including source kind,
@@ -536,8 +539,9 @@ The implementation keeps a deterministic mock provider for fixtures and backend
 provider tests, but the frontend does not select it as the live user-facing
 route. Local Ollama is the first real route for composer calls and read-only
 PlanAgent drafts when `127.0.0.1:11434` is reachable. Ollama plans must parse
-into typed PlanView JSON before appearing in the UI, and each successful or
-failed model call is recorded in the AgentRun ledger.
+into typed PlanView JSON before appearing in the UI, successful drafts are
+persisted through the plan bridge, and each successful or failed model call is
+recorded in the AgentRun ledger.
 Role routing may only save routes to providers whose health is ready; missing-key,
 unconfigured, or unreachable providers remain visible but unusable.
 Model role routes are stored locally in SQLite. Runtime status reloads valid
