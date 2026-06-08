@@ -69,7 +69,7 @@ function Models({ modelSettings, onRefreshModels, onSelectModel }: { modelSettin
     <Section label="Providers">
       {modelSettings.providers.map((item) => <div className={`provider${item.id === provider?.id ? " on" : ""}`} key={item.id}>
         <span className="pic"><FocusIcon name="cpu" /></span>
-        <span className="pinfo"><b>{item.label}</b><span>{item.detail}</span></span>
+        <span className="pinfo"><b>{item.label}</b><span>{providerDetail(item)}</span></span>
         <span className={`tag ${item.status === "ready" ? "live" : "off"}`}>{item.status.replaceAll("_", " ")}</span>
       </div>)}
       <button className="select" onClick={onRefreshModels} type="button">Refresh Ollama</button>
@@ -90,6 +90,10 @@ function Workspace({ activeRun, project, threads }: { activeRun: AgentRunView | 
     <Row title="Approved root" detail={project.approvedRoots[0] ?? "No approved root loaded."}><span className="tag live">local</span></Row>
     <Row title="Active threads" detail={`${threads.filter((thread) => !thread.archived).length} visible thread(s)`}><span className="tag off">{activeRun?.status ?? "no run"}</span></Row>
   </Section>;
+}
+
+function providerDetail(provider: ModelSettingsView["providers"][number]) {
+  return provider.version ? `${provider.detail} Version ${provider.version}.` : provider.detail;
 }
 
 function Privacy() {

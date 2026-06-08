@@ -28,6 +28,7 @@ export interface RuntimeStatusView {
     message: string;
     models: string[];
     status: string;
+    version?: string;
   }>;
 }
 
@@ -79,6 +80,7 @@ function runtimeProviderView(provider: RuntimeStatusView["providers"][number]): 
     models: provider.models,
     requiresSecret: false,
     status: unsupportedOpenAi ? "not_configured" : providerStatus(provider.status),
+    version: provider.version,
   };
 }
 

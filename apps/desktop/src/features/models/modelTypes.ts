@@ -10,6 +10,7 @@ export interface ModelProviderView {
   detail: string;
   models: string[];
   requiresSecret: boolean;
+  version?: string;
 }
 
 export interface RoleRouteView {

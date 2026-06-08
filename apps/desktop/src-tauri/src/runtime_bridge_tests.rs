@@ -6,7 +6,10 @@ mod tests {
             ProviderStatus, SecretPolicy,
         },
         model_provider_persistence::{load_routes_from_path, save_routes_to_path},
-        runtime_bridge::{runtime_status_from_registry, runtime_status_with_provider},
+        runtime_bridge::{
+            runtime_status_from_registry, runtime_status_from_registry_with_version,
+            runtime_status_with_provider,
+        },
     };
     use std::fs;
     use std::path::PathBuf;
@@ -47,6 +50,21 @@ mod tests {
 
         assert_eq!(ollama.status, "ready");
         assert_eq!(ollama.models, vec!["qwen:latest"]);
+    }
+
+    #[test]
+    fn runtime_status_maps_optional_ollama_version() {
+        let mut registry = ModelRegistry::with_runtime_defaults(10);
+        registry.register_provider(ready_ollama_provider());
+        let status =
+            runtime_status_from_registry_with_version(&registry, Some("0.12.6".to_string()));
+        let ollama = status
+            .providers
+            .iter()
+            .find(|provider| provider.id == "ollama-local")
+            .unwrap();
+
+        assert_eq!(ollama.version.as_deref(), Some("0.12.6"));
     }
 
     #[test]

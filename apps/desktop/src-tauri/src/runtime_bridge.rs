@@ -3,6 +3,7 @@ use crate::{
     model_ollama::{
         detect_local_ollama_provider, send_ollama_chat, OllamaChatMessage, OllamaChatResult,
     },
+    model_ollama_version::detect_local_ollama_version,
     model_provider::{
         ModelInfo, ModelProvider, ModelRegistry, ModelRole, ProviderKind, ProviderStatus,
     },
@@ -44,6 +45,8 @@ pub struct ModelProviderStatusView {
     pub status: String,
     pub message: String,
     pub models: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -67,13 +70,23 @@ pub struct DesktopShellStatusView {
 pub fn runtime_status(
     state: tauri::State<RuntimeBridgeState>,
 ) -> Result<RuntimeStatusView, String> {
-    let ollama = detect_local_ollama_provider(0, Duration::from_millis(750));
-    runtime_status_with_provider(&state.database_path, ollama)
+    let timeout = Duration::from_millis(750);
+    let ollama = detect_local_ollama_provider(0, timeout);
+    let version = detect_local_ollama_version(timeout);
+    runtime_status_with_provider_and_version(&state.database_path, ollama, version)
 }
 
 pub fn runtime_status_with_provider(
     database_path: &Path,
     ollama: ModelProvider,
+) -> Result<RuntimeStatusView, String> {
+    runtime_status_with_provider_and_version(database_path, ollama, None)
+}
+
+pub fn runtime_status_with_provider_and_version(
+    database_path: &Path,
+    ollama: ModelProvider,
+    ollama_version: Option<String>,
 ) -> Result<RuntimeStatusView, String> {
     let mut registry = ModelRegistry::with_runtime_defaults(0);
     registry.register_provider(ollama);
@@ -83,7 +96,10 @@ pub fn runtime_status_with_provider(
     if registry.route_for(ModelRole::Coding).is_none() {
         save_detected_coding_route(&mut registry, database_path)?;
     }
-    Ok(runtime_status_from_registry(&registry))
+    Ok(runtime_status_from_registry_with_version(
+        &registry,
+        ollama_version,
+    ))
 }
 
 fn save_detected_coding_route(
@@ -116,6 +132,13 @@ pub fn ollama_chat(
 }
 
 pub fn runtime_status_from_registry(registry: &ModelRegistry) -> RuntimeStatusView {
+    runtime_status_from_registry_with_version(registry, None)
+}
+
+pub fn runtime_status_from_registry_with_version(
+    registry: &ModelRegistry,
+    ollama_version: Option<String>,
+) -> RuntimeStatusView {
     let shell = desktop_shell_info();
     RuntimeStatusView {
         app_identifier: shell.identifier.to_string(),
@@ -137,12 +160,15 @@ pub fn runtime_status_from_registry(registry: &ModelRegistry) -> RuntimeStatusVi
         providers: registry
             .list_providers()
             .iter()
-            .map(provider_status)
+            .map(|provider| provider_status(provider, ollama_version.as_deref()))
             .collect(),
     }
 }
 
-fn provider_status(provider: &ModelProvider) -> ModelProviderStatusView {
+fn provider_status(
+    provider: &ModelProvider,
+    ollama_version: Option<&str>,
+) -> ModelProviderStatusView {
     ModelProviderStatusView {
         id: provider.id.clone(),
         kind: provider_kind(provider.kind).to_string(),
@@ -154,6 +180,9 @@ fn provider_status(provider: &ModelProvider) -> ModelProviderStatusView {
             .map(|model| model.id.clone())
             .collect(),
         status: provider_status_label(provider.health.status).to_string(),
+        version: (provider.kind == ProviderKind::Ollama)
+            .then(|| ollama_version.map(str::to_string))
+            .flatten(),
     }
 }
 

@@ -75,6 +75,8 @@ pub mod mobile;
 mod mobile_tests;
 mod model_ollama;
 mod model_ollama_tests;
+mod model_ollama_version;
+mod model_ollama_version_tests;
 pub mod model_provider;
 pub mod model_provider_persistence;
 mod model_provider_persistence_tests;

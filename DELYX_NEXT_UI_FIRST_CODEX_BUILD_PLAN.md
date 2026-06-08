@@ -207,6 +207,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - [ ] D7 - Model Integration Depth
   - OpenAI-compatible providers are out of live scope for now. The frontend maps the typed backend stub to an unavailable/not-wired UI state instead of suggesting a missing API key would make it usable.
   - Revisit only with real calls, keyring-backed secret handling, health checks, and tests.
+  - Runtime status now optionally probes real local Ollama `/api/version` and surfaces the version in Settings when available; missing version data does not override the model-readiness probe.
   - Add Ollama version/readiness and optional pull-progress UI only when backed by real local state.
 
 - [ ] D8 - External Agent Integration Depth
