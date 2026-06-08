@@ -50,7 +50,7 @@ export function AppShell() {
   const activePlan = plans.find((plan) => plan.threadId === activeThread?.id);
   const { actionProposals, setActionProposals } = useRunApprovals(activeRun?.id);
   const { patches, reviews, setPatches, setReviews, setTests, tests } = useRunReceipts(activeRun?.id);
-  const schedulerDecision = useSchedulerDecision({ activePlan, activeRun, patches, proposals: actionProposals, reviews, tests });
+  const schedulerDecision = useSchedulerDecision({ activePlan, activeProject, activeRun, patches, proposals: actionProposals, reviews, tests });
   useEffect(() => {
     let cancelled = false;
     void loadRuntimeBridgeState().then(async (state) => {
@@ -260,7 +260,7 @@ export function AppShell() {
         onApplyPatch={applyPatch}
         onRecordFinal={recordFinal}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
-        onResumeRun={() => { void resumeSchedulerRun({ activePlan, activeProject, activeRun, setAgentRuns, setThreads, setThreadState }); }}
+        onResumeRun={() => { void resumeSchedulerRun({ actionProposals, activePlan, activeProject, activeRun, patches, setAgentRuns, setThreads, setThreadState }); }}
         onRunReview={runReview}
         onRunTests={runTests}
         onRunCommand={runPaletteCommand}

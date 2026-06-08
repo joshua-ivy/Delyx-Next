@@ -3,18 +3,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import { scheduleNextRunActionOverBridge, type AgentScheduleDecisionView } from "../features/runs/agentExecutorClient";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
+import { proposeApprovedPlanPatchWithOllama } from "./appShellOllamaPatchActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { runReviewForActiveRun } from "./appShellReviewActions";
 import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
 import { runTestsForActiveRun } from "./appShellTestActions";
 
 vi.mock("./appShellFinalAnswerActions", () => ({ recordFinalSupportForActiveThread: vi.fn() }));
+vi.mock("./appShellOllamaPatchActions", () => ({ proposeApprovedPlanPatchWithOllama: vi.fn() }));
 vi.mock("./appShellPatchActions", () => ({ applyApprovedPatchForActiveRun: vi.fn() }));
 vi.mock("./appShellReviewActions", () => ({ runReviewForActiveRun: vi.fn() }));
 vi.mock("./appShellTestActions", () => ({ runTestsForActiveRun: vi.fn() }));
 vi.mock("../features/runs/agentExecutorClient", () => ({ scheduleNextRunActionOverBridge: vi.fn() }));
 
 const applyPatch = vi.mocked(applyApprovedPatchForActiveRun);
+const draftPatch = vi.mocked(proposeApprovedPlanPatchWithOllama);
 const recordFinal = vi.mocked(recordFinalSupportForActiveThread);
 const runReview = vi.mocked(runReviewForActiveRun);
 const runTests = vi.mocked(runTestsForActiveRun);
@@ -64,6 +67,26 @@ describe("dispatchSchedulerDecision", () => {
     expect(recordFinal).toHaveBeenCalledWith(base);
   });
 
+  it("dispatches patch draft decisions and continues with reloaded patches", async () => {
+    const patch = patchView();
+    draftPatch.mockResolvedValue({
+      created: true,
+      patches: [patch],
+      snapshot: { runs: [{ id: "run-1" }] as never, threads: [] },
+    });
+    scheduleNext.mockResolvedValueOnce({ ...decision("run_patch_apply"), proposalId: patch.id }).mockResolvedValueOnce(undefined);
+
+    await dispatchSchedulerDecision(state({ draftReady: true }), {
+      ...decision("run_patch_draft"),
+      approvalIds: ["approval-1"],
+    });
+
+    expect(draftPatch).toHaveBeenCalledWith(expect.objectContaining({
+      actionProposals: [approval()],
+    }), approval());
+    expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({ patch }));
+  });
+
   it("leaves passive scheduler decisions unhandled", async () => {
     scheduleNext.mockResolvedValue(undefined);
     const handled = await dispatchSchedulerDecision(state(), decision("wait_for_approval"));
@@ -76,16 +99,16 @@ describe("dispatchSchedulerDecision", () => {
   });
 });
 
-function state({ patches = [] }: { patches?: PatchProposalView[] } = {}) {
+function state({ draftReady = false, patches = [] }: { draftReady?: boolean; patches?: PatchProposalView[] } = {}) {
   return {
-    actionProposals: [],
-    activePlan: undefined,
+    actionProposals: draftReady ? [approval()] : [],
+    activePlan: draftReady ? plan() : undefined,
     activeProject: {
       approvalPolicy: "manual",
       approvedRoots: ["C:\\repo"],
       git: { branch: "main", isRepo: true, uncommittedChanges: 0 },
       id: "project-1",
-      indexedFiles: [],
+      indexedFiles: draftReady ? ["src/main.ts"] : [],
       isolation: { detail: "none", label: "none", mode: "none" as const },
       lastOpenedLabel: "now",
       name: "Project",
@@ -95,6 +118,7 @@ function state({ patches = [] }: { patches?: PatchProposalView[] } = {}) {
     },
     activeRun: { id: "run-1" } as never,
     activeThread: undefined,
+    modelSettings: { providers: [], routes: [], selectedProviderId: "ollama-local" },
     patches,
     reviews: [],
     setActionProposals: vi.fn(),
@@ -127,5 +151,44 @@ function patchView(): PatchProposalView {
     id: "patch-1",
     runId: "run-1",
     status: "proposed",
+  };
+}
+
+function approval() {
+  return {
+    actionType: "edit_file" as const,
+    expectedResult: "Draft a patch.",
+    expiresAt: "2999-01-01T00:00:00.000Z",
+    id: "approval-1",
+    nodeId: "node-1",
+    rationale: "Build approved plan.",
+    requiredPermission: "edit_file",
+    riskLabel: "high" as const,
+    runId: "run-1",
+    scope: { kind: "file" as const, paths: ["src/main.ts"], root: "C:\\repo", summary: "Edit src/main.ts" },
+    status: "approved" as const,
+  };
+}
+
+function plan() {
+  return {
+    decision: "approved" as const,
+    explore: {
+      architectureSummary: "",
+      projectCommands: [],
+      relevantFiles: [],
+      relevantSymbols: [],
+      risks: [],
+      suggestedNextSteps: [],
+      unknowns: [],
+    },
+    filesLikelyInvolved: ["src/main.ts"],
+    goalUnderstanding: "Update code.",
+    permissionsNeeded: ["edit_file"],
+    risks: [],
+    rollbackStrategy: "Restore file.",
+    steps: ["Update src/main.ts"],
+    testsToRun: ["npm test"],
+    threadId: "thread-1",
   };
 }

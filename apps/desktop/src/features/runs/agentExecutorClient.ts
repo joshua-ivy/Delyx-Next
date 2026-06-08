@@ -57,6 +57,7 @@ export interface AgentScheduleDecisionView {
     | "complete"
     | "ready_for_final_support"
     | "resume_after_approval"
+    | "run_patch_draft"
     | "run_patch_apply"
     | "run_review"
     | "run_tests"
@@ -75,6 +76,7 @@ export interface AgentScheduleDecisionView {
 export interface AgentScheduleRequestView {
   runId: string;
   hasSupportedTestCommand: boolean;
+  patchDraftApprovalId?: string;
   nowMs: number;
 }
 

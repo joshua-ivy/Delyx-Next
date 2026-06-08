@@ -792,8 +792,12 @@ writes must remain visible through the existing patch apply/checkpoint gates, so
 generated content and disk mutation stay separate trust boundaries. The
 scheduler may still surface a proposed patch as the next step, but the action
 queues or requires the apply-specific approval before any file write occurs.
-The bridge removes renderer-side PatchDraft parsing/orchestration, but it is not
-yet the full autonomous executor/repair loop.
+PatchDraft selection now flows through the Rust scheduler as a typed
+`run_patch_draft` decision after approval resume, and the scheduler verifies the
+hint against an executable same-run `FileWrite` approval before returning it.
+The renderer no longer runs a separate after-approval side path. The bridge
+removes renderer-side PatchDraft parsing/orchestration, but it is not yet the
+full autonomous executor/repair loop.
 
 ### ADR-0010: Adapt Apply-Patch Intent, Not Codex Core
 

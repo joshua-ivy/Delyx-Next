@@ -1,5 +1,5 @@
 use crate::agent_run::{AgentRun, AgentRunError, AgentRunLedger, AgentRunStatus};
-use crate::approval::{ApprovalEngine, ApprovalGateState};
+use crate::approval::{ApprovalEngine, ApprovalGateState, RiskyAction};
 use crate::patch_bridge::{patch_snapshot_from_store, PatchBridgeStore, PatchProposalView};
 use crate::review_bridge::{review_snapshot_from_store, ReviewBridgeStore};
 use crate::test_runner_bridge::{test_snapshot_from_store, TestRunnerBridgeStore};
@@ -16,6 +16,9 @@ pub enum AgentScheduleDecision {
         review_report_id: String,
     },
     ResumeAfterApproval {
+        approval_id: String,
+    },
+    RunPatchDraft {
         approval_id: String,
     },
     RunPatchApply {
@@ -40,6 +43,7 @@ pub struct AgentSchedulerContext<'a> {
     pub approvals: &'a ApprovalEngine,
     pub has_supported_test_command: bool,
     pub now_ms: u64,
+    pub patch_draft_approval_id: Option<&'a str>,
     pub patches: &'a PatchBridgeStore,
     pub reviews: &'a ReviewBridgeStore,
     pub run: &'a AgentRun,
@@ -88,6 +92,19 @@ pub fn schedule_next(context: AgentSchedulerContext<'_>) -> AgentScheduleDecisio
         return AgentScheduleDecision::ReadyForFinalSupport {
             review_report_id: report.id.clone(),
         };
+    }
+    if let Some(approval_id) = context.patch_draft_approval_id {
+        if patch_draft_approval_ready(
+            context.approvals,
+            approval_id,
+            context.now_ms,
+            &context.run.id,
+        ) {
+            return AgentScheduleDecision::RunPatchDraft {
+                approval_id: approval_id.to_string(),
+            };
+        }
+        return blocked("PatchDraft approval hint is not executable for this run.");
     }
 
     AgentScheduleDecision::Complete {
@@ -147,6 +164,18 @@ fn patch_apply_decision(
     AgentScheduleDecision::RunPatchApply {
         proposal_id: proposal.id.clone(),
     }
+}
+
+fn patch_draft_approval_ready(
+    approvals: &ApprovalEngine,
+    approval_id: &str,
+    now_ms: u64,
+    run_id: &str,
+) -> bool {
+    !approval_id.trim().is_empty()
+        && approvals
+            .assert_can_execute_action_for_run(approval_id, now_ms, RiskyAction::FileWrite, run_id)
+            .is_ok()
 }
 
 fn blocked(reason: impl Into<String>) -> AgentScheduleDecision {

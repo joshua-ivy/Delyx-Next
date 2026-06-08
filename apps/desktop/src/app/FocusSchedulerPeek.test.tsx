@@ -27,6 +27,17 @@ describe("FocusSchedulerPeek", () => {
     expect(onApplyPatch).toHaveBeenCalledWith("patch-1");
   });
 
+  it("shows scheduler-selected patch drafting as a visible runtime state", () => {
+    renderScheduler({
+      decision: {
+        ...decision("run_patch_draft", "Approved plan approval-1 is ready for PatchDraftAgent."),
+        approvalIds: ["approval-1"],
+      },
+    });
+
+    expect(screen.getByRole("button", { name: /Next \/ draft patch/ })).not.toBeNull();
+  });
+
   it("runs the scheduler-selected resume action", () => {
     const onResumeRun = vi.fn();
     renderScheduler({

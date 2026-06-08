@@ -1,18 +1,23 @@
 import type { Dispatch, SetStateAction } from "react";
 
+import type { ActionProposalView } from "../features/approvals/approvalTypes";
+import type { PatchProposalView } from "../features/patches/patchTypes";
 import { resumeWaitingRunOverBridge } from "../features/runs/agentExecutorClient";
 import type { PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
+import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
 import { notifyLocalAction } from "./ShellPreferenceController";
 import { firstRunnableTestCommand } from "./testCommand";
 
 interface ResumeRunState {
+  actionProposals: ActionProposalView[];
   activePlan: PlanView | undefined;
   activeProject: WorkspaceProject;
   activeRun: AgentRunView | undefined;
+  patches: PatchProposalView[];
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setThreads: Dispatch<SetStateAction<TaskThread[]>>;
   setThreadState: Dispatch<SetStateAction<ThreadUiState>>;
@@ -26,6 +31,7 @@ export async function resumeSchedulerRun(state: ResumeRunState) {
   const decision = await resumeWaitingRunOverBridge({
     hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
     nowMs: Date.now(),
+    patchDraftApprovalId: patchDraftApprovalId(state),
     runId: state.activeRun.id,
   });
   if (!decision) {
@@ -43,5 +49,5 @@ export async function resumeSchedulerRun(state: ResumeRunState) {
 }
 
 function successfulDecision(kind: string) {
-  return ["ready_for_final_support", "resume_after_approval", "run_patch_apply", "run_review", "run_tests"].includes(kind);
+  return ["ready_for_final_support", "resume_after_approval", "run_patch_apply", "run_patch_draft", "run_review", "run_tests"].includes(kind);
 }

@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import { decideApprovalAndMaybeResume } from "./appShellApprovalDecisionActions";
-import { proposeApprovedPlanPatchWithOllama } from "./appShellOllamaPatchActions";
 import { resumeSchedulerRun } from "./appShellSchedulerActions";
 import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
 import { decideFocusApproval, shouldResumeAfterApprovalDecision } from "./focusApprovalDecision";
@@ -15,10 +14,6 @@ vi.mock("./appShellSchedulerDispatch", () => ({
   dispatchSchedulerDecision: vi.fn(),
 }));
 
-vi.mock("./appShellOllamaPatchActions", () => ({
-  proposeApprovedPlanPatchWithOllama: vi.fn(),
-}));
-
 vi.mock("./focusApprovalDecision", () => ({
   decideFocusApproval: vi.fn(),
   shouldResumeAfterApprovalDecision: vi.fn(),
@@ -26,7 +21,6 @@ vi.mock("./focusApprovalDecision", () => ({
 
 const decideApproval = vi.mocked(decideFocusApproval);
 const dispatchDecision = vi.mocked(dispatchSchedulerDecision);
-const draftPatch = vi.mocked(proposeApprovedPlanPatchWithOllama);
 const shouldResume = vi.mocked(shouldResumeAfterApprovalDecision);
 const resumeRun = vi.mocked(resumeSchedulerRun);
 
@@ -50,9 +44,6 @@ describe("decideApprovalAndMaybeResume", () => {
     expect(dispatchDecision).toHaveBeenCalledWith(expect.objectContaining({
       actionProposals: [decided],
     }), decision());
-    expect(draftPatch).toHaveBeenCalledWith(expect.objectContaining({
-      actionProposals: [decided],
-    }), decided);
   });
 
   it("does not resume when approval policy says more approvals are pending", async () => {
@@ -65,7 +56,6 @@ describe("decideApprovalAndMaybeResume", () => {
 
     expect(resumeRun).not.toHaveBeenCalled();
     expect(dispatchDecision).not.toHaveBeenCalled();
-    expect(draftPatch).not.toHaveBeenCalled();
   });
 });
 

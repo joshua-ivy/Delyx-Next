@@ -61,13 +61,41 @@ describe("resumeSchedulerRun", () => {
 
     expect(notify).toHaveBeenCalledWith("Tests are next.", "success");
   });
+
+  it("passes an approved plan patch-draft approval id to the scheduler bridge", async () => {
+    await resumeSchedulerRun({
+      ...stateWithPlan(["npm test"]),
+      actionProposals: [{
+        actionType: "edit_file",
+        expectedResult: "Draft a patch.",
+        expiresAt: "2999-01-01T00:00:00.000Z",
+        id: "approval-plan-build",
+        nodeId: "node-1",
+        rationale: "Build the approved plan.",
+        requiredPermission: "edit_file",
+        riskLabel: "high",
+        runId: "run-1",
+        scope: { kind: "file", paths: ["src/main.ts"], root: "C:\\repo", summary: "Edit src/main.ts" },
+        status: "approved",
+      }],
+      activeProject: { ...project(), indexedFiles: ["src/main.ts"] },
+      activePlan: { ...plan(["npm test"]), filesLikelyInvolved: ["src/main.ts"] },
+    });
+
+    expect(resumeBridge).toHaveBeenCalledWith(expect.objectContaining({
+      patchDraftApprovalId: "approval-plan-build",
+      runId: "run-1",
+    }));
+  });
 });
 
 function stateWithPlan(testsToRun: string[]) {
   return {
+    actionProposals: [],
     activePlan: plan(testsToRun),
     activeProject: project(),
     activeRun: run(),
+    patches: [],
     setAgentRuns: vi.fn(),
     setThreads: vi.fn(),
     setThreadState: vi.fn(),

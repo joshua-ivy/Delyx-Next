@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 pub struct AgentScheduleRequest {
     pub run_id: String,
     pub has_supported_test_command: bool,
+    #[serde(default)]
+    pub patch_draft_approval_id: Option<String>,
     pub now_ms: u64,
 }
 
@@ -124,6 +126,7 @@ pub fn schedule_next_record(
             approvals,
             has_supported_test_command: request.has_supported_test_command,
             now_ms: request.now_ms,
+            patch_draft_approval_id: request.patch_draft_approval_id.as_deref(),
             patches,
             reviews,
             run,
@@ -178,6 +181,15 @@ fn decision_view(run_id: &str, decision: AgentScheduleDecision) -> AgentSchedule
                 "resume_after_approval",
                 run_id,
                 format!("Approval {approval_id} is ready; run can resume."),
+            );
+            output.approval_ids = vec![approval_id];
+            output
+        }
+        AgentScheduleDecision::RunPatchDraft { approval_id } => {
+            let mut output = view(
+                "run_patch_draft",
+                run_id,
+                format!("Approved plan {approval_id} is ready for PatchDraftAgent."),
             );
             output.approval_ids = vec![approval_id];
             output

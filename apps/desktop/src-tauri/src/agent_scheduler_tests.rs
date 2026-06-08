@@ -16,9 +16,7 @@ mod tests {
         let mut approvals = ApprovalEngine::new();
         let proposal = approvals.propose(proposal_input(&run.id, RiskyAction::FileWrite));
         ledger.wait_for_approval(&run.id, &proposal.id).unwrap();
-
         let decision = resume_waiting_run(&mut ledger, &approvals, &run.id, 2).unwrap();
-
         assert_eq!(
             decision,
             AgentScheduleDecision::WaitForApproval {
@@ -39,10 +37,8 @@ mod tests {
         let proposal = approvals.propose(proposal_input(&run.id, RiskyAction::FileWrite));
         ledger.wait_for_approval(&run.id, &proposal.id).unwrap();
         approvals.approve(&proposal.id, 2, "approved").unwrap();
-
         let decision = resume_waiting_run(&mut ledger, &approvals, &run.id, 3).unwrap();
         let run = ledger.get_run(&run.id).unwrap();
-
         assert_eq!(
             decision,
             AgentScheduleDecision::ResumeAfterApproval {
@@ -80,6 +76,54 @@ mod tests {
                 proposal_id: "patch-1".to_string()
             }
         );
+    }
+
+    #[test]
+    fn scheduler_selects_patch_draft_from_approved_plan_hint() {
+        let mut ledger = AgentRunLedger::new();
+        let run = ledger.create_run("thread-1").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let proposal = approvals.propose(proposal_input(&run.id, RiskyAction::FileWrite));
+        approvals.approve(&proposal.id, 2, "approved").unwrap();
+
+        let decision = schedule_next(AgentSchedulerContext {
+            patch_draft_approval_id: Some(&proposal.id),
+            ..context(
+                &run,
+                &approvals,
+                &PatchBridgeStore::default(),
+                &TestRunnerBridgeStore::default(),
+                &ReviewBridgeStore::default(),
+                false,
+            )
+        });
+
+        assert_eq!(
+            decision,
+            AgentScheduleDecision::RunPatchDraft {
+                approval_id: proposal.id
+            }
+        );
+    }
+
+    #[test]
+    fn scheduler_blocks_unbacked_patch_draft_hint() {
+        let mut ledger = AgentRunLedger::new();
+        let run = ledger.create_run("thread-1").unwrap();
+
+        let decision = schedule_next(AgentSchedulerContext {
+            patch_draft_approval_id: Some("missing-approval"),
+            ..context(
+                &run,
+                &ApprovalEngine::new(),
+                &PatchBridgeStore::default(),
+                &TestRunnerBridgeStore::default(),
+                &ReviewBridgeStore::default(),
+                false,
+            )
+        });
+
+        assert!(matches!(decision, AgentScheduleDecision::Blocked { .. }));
     }
 
     #[test]
@@ -174,6 +218,7 @@ mod tests {
             approvals,
             has_supported_test_command,
             now_ms: 3,
+            patch_draft_approval_id: None,
             patches,
             reviews,
             run,

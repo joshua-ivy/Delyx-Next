@@ -1,7 +1,7 @@
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import { resumeSchedulerRun } from "./appShellSchedulerActions";
 import { dispatchSchedulerDecision, type SchedulerDispatchState } from "./appShellSchedulerDispatch";
-import { proposeApprovedPlanPatchWithOllama, type OllamaPatchProposalState } from "./appShellOllamaPatchActions";
+import type { OllamaPatchProposalState } from "./appShellOllamaPatchActions";
 import { decideFocusApproval, shouldResumeAfterApprovalDecision } from "./focusApprovalDecision";
 
 export async function decideApprovalAndMaybeResume(
@@ -17,7 +17,6 @@ export async function decideApprovalAndMaybeResume(
   if (decision) {
     await dispatchSchedulerDecision(withDecidedProposal(state, decided), decision);
   }
-  await proposeApprovedPlanPatchWithOllama(withDecidedProposal(state, decided), decided);
 }
 
 function withDecidedProposal(

@@ -2,16 +2,16 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
-import { executePatchDraftNodeOverBridge, scheduleNextRunActionOverBridge } from "../features/runs/agentExecutorClient";
+import type { PatchProposalView } from "../features/patches/patchTypes";
+import { executePatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { ThreadRunSnapshotView } from "../features/threads/threadClient";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
 import { recordModelCallFailure } from "./appShellModelRunActions";
+import { approvedPatchDraftPlanFiles, patchDraftApprovalForApprovedPlan } from "./appShellPatchDraftDecision";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
-import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
 import { notifyLocalAction } from "./ShellPreferenceController";
-import { firstRunnableTestCommand } from "./testCommand";
 import type { SchedulerDispatchState } from "./appShellSchedulerDispatch";
 
 export interface OllamaPatchProposalState extends SchedulerDispatchState {
@@ -21,20 +21,23 @@ export interface OllamaPatchProposalState extends SchedulerDispatchState {
 export async function proposeApprovedPlanPatchWithOllama(
   state: OllamaPatchProposalState,
   approval: ActionProposalView,
-) {
-  if (!shouldDraftPatchAfterPlanApproval(state, approval)) {
-    return false;
+): Promise<PatchDraftDispatchResult> {
+  if (patchDraftApprovalForApprovedPlan(state)?.id !== approval.id) {
+    return { created: false };
+  }
+  if (!state.activeThread || !state.activeRun) {
+    return { created: false };
   }
   const thread = state.activeThread!;
   const run = state.activeRun!;
   const model = selectedOllamaModel(state.modelSettings);
   if (!model) {
     recordPatchDraftFailure(state, thread, "ollama-local", "Ollama is not ready to draft a patch.");
-    return false;
+    return { created: false };
   }
 
   try {
-    const paths = approvedPlanFiles(state, approval);
+    const paths = approvedPatchDraftPlanFiles(state, approval);
     startPatchDraft(state, thread, model);
     const result = await executePatchDraftNodeOverBridge({
       approvalId: approval.id,
@@ -55,37 +58,12 @@ export async function proposeApprovedPlanPatchWithOllama(
     }
     const reloaded = await reloadPatchDraftState(state, run.id);
     completePatchDraft(state, thread, result.message);
-    await dispatchNextAfterPatchDraft(state, reloaded);
-    return true;
+    return { created: true, ...reloaded };
   } catch (error) {
-    await reloadPatchDraftState(state, run.id);
+    const reloaded = await reloadPatchDraftState(state, run.id);
     showPatchDraftFailure(state, thread, patchDraftErrorMessage(error));
-    return false;
+    return { created: false, ...reloaded };
   }
-}
-
-function shouldDraftPatchAfterPlanApproval(
-  state: OllamaPatchProposalState,
-  approval: ActionProposalView,
-) {
-  return Boolean(
-    approval.status === "approved"
-      && (approval.actionType === "edit_file" || approval.actionType === "write_file")
-      && state.activePlan?.decision === "approved"
-      && state.activeRun
-      && state.activeThread
-      && state.patches.every((patch) => patch.runId !== state.activeRun?.id)
-      && approvedPlanFiles(state, approval).length > 0,
-  );
-}
-
-function approvedPlanFiles(state: OllamaPatchProposalState, approval: ActionProposalView) {
-  const indexed = new Set(state.activeProject.indexedFiles.map(normalizePath));
-  const scoped = new Set((approval.scope.paths ?? []).map(normalizePath));
-  return (state.activePlan?.filesLikelyInvolved ?? [])
-    .filter((path) => indexed.has(normalizePath(path)))
-    .filter((path) => scoped.size === 0 || scoped.has(normalizePath(path)))
-    .slice(0, 4);
 }
 
 function startPatchDraft(state: OllamaPatchProposalState, thread: TaskThread, model: string) {
@@ -143,28 +121,6 @@ async function reloadPatchDraftState(state: OllamaPatchProposalState, runId: str
   return { patches, snapshot };
 }
 
-async function dispatchNextAfterPatchDraft(
-  state: OllamaPatchProposalState,
-  reloaded: PatchDraftReload,
-) {
-  if (!state.activeRun || !reloaded.patches) {
-    return;
-  }
-  const decision = await scheduleNextRunActionOverBridge({
-    hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
-    nowMs: Date.now(),
-    runId: state.activeRun.id,
-  });
-  if (!decision) {
-    return;
-  }
-  await dispatchSchedulerDecision({
-    ...state,
-    activeRun: reloaded.snapshot?.runs.find((run) => run.id === state.activeRun?.id) ?? state.activeRun,
-    patches: reloaded.patches,
-  }, decision);
-}
-
 function appendMessage(
   state: OllamaPatchProposalState,
   threadId: string,
@@ -185,11 +141,13 @@ function patchDraftErrorMessage(error: unknown) {
   return `Ollama patch draft was not usable: ${detail}`;
 }
 
-function normalizePath(path: string) {
-  return path.replace(/\\/g, "/").replace(/^\.\//, "").toLowerCase();
-}
-
 type PatchProposalSnapshot = Awaited<ReturnType<typeof loadPatchSnapshot>>;
+
+export interface PatchDraftDispatchResult {
+  created: boolean;
+  patches?: PatchProposalView[];
+  snapshot?: ThreadRunSnapshotView;
+}
 
 interface PatchDraftReload {
   patches: PatchProposalSnapshot;

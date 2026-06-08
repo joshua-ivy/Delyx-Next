@@ -135,7 +135,7 @@ now has real persisted or approval-gated functional islands.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 135/171 visible Phase 2 checkboxes are checked. Only 1/12 depth
+Progress read: 137/173 visible Phase 2 checkboxes are checked. Only 1/12 depth
 tracks is fully complete, and 11/12 are in progress. The subchecks below show
 the real completed work; the largest remaining risk is still concentrated in
 D2, D5, D6, and D3.
@@ -208,6 +208,7 @@ D2, D5, D6, and D3.
   - [x] Added scheduler dispatcher coverage for patch apply, tests, review, final support, and passive wait decisions.
   - [x] Added scheduler dispatcher continuation coverage proving an approved patch apply can continue into a scheduler-selected test step.
   - [x] Added deterministic PatchDraftAgent Rust parser/bridge coverage plus frontend handoff coverage for approved generated patches, unapproved paths, unchanged output, truncated reads, and approval-flow orchestration.
+  - [x] Added behavior coverage proving scheduler-owned PatchDraft resume/dispatch and the visible Focus next-action state.
   - [x] Added behavior coverage proving proposed diffs request a separate apply approval before showing or invoking the write action.
   - [x] Added behavior coverage proving applied diffs surface checkpoint rollback state and require a separate restore approval before invoking the restore bridge.
   - [x] Added behavior coverage proving rollback receipt UI shows checkpoint files, restore approval IDs, stale-restore failures, and post-restore guidance from real patch/run state.
@@ -239,10 +240,11 @@ D2, D5, D6, and D3.
   - [x] After the last required approval is recorded, the scheduler dispatcher can automatically execute the scheduler-selected approved patch apply step. It still does not generate patch content from an approved plan.
   - [x] Added a bounded workspace file-read bridge for PatchDraftAgent: relative project paths only, max four files, byte capped, and still enforced by the workspace approved-root manager.
   - [x] Added structured Rust Ollama patch JSON parsing that accepts only files actually read from the approved plan, rejects unapproved paths, rejects unchanged output, rejects truncated file inputs, and feeds exact replacement contents into the patch proposal bridge.
-  - [x] Approval flow now resumes the waiting run, then asks PatchDraftAgent to create a proposed diff when the build approval is final and no patch already exists; it does not auto-apply that generated patch.
+  - [x] Approval flow now resumes the waiting run, lets the Rust scheduler return `run_patch_draft` when the build approval is final and no patch already exists, then dispatches PatchDraftAgent through the bounded scheduler loop; it does not auto-apply that generated patch.
   - [x] Patch apply now requires a separate apply approval ID in the Tauri/Rust apply request. The proposal approval can create a diff, but it no longer authorizes the disk write path by itself.
   - [x] Focus diff actions now request a persisted apply approval card first, then pass the real approved bridge proposal ID into the patch apply executor before any file write.
   - [x] Moved PatchDraft file-read, local Ollama call, JSON parse, model-call receipts, and patch-proposal capture out of renderer glue into the `agent_execute_patch_draft` Tauri bridge.
+  - [x] PatchDraft selection is now scheduler-owned: `agent_resume_waiting_run` and `agent_schedule_next` can return a typed `run_patch_draft` decision only after verifying an executable same-run `FileWrite` approval, and the Focus dispatcher handles it alongside apply, test, review, and final-support decisions.
   - [x] After PatchDraft creates a persisted proposed diff, the renderer reloads real patch/run receipts, asks the Rust scheduler for the next action, and dispatches that decision with the reloaded patch list. This can queue the separate apply approval or continue through already-approved apply/test/review steps without using stale UI state.
   - [x] Focus diff UI now surfaces applied checkpoint state and can queue or execute a separate approval-gated patch restore action through the existing AgentRun restore bridge.
   - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.

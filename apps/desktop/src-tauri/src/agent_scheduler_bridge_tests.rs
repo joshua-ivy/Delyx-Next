@@ -89,6 +89,30 @@ mod tests {
         assert_eq!(run.status, AgentRunStatus::Running);
     }
 
+    #[test]
+    fn scheduler_bridge_maps_patch_draft_decision_for_ui() {
+        let mut thread_store = ThreadRunStore::default();
+        let run = thread_store.ledger.create_run("thread-1").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let proposal = seed_approval(&mut approvals, &run.id, true);
+
+        let view = schedule_next_record(
+            thread_store.ledger.get_run(&run.id).unwrap(),
+            &approvals,
+            &PatchBridgeStore::default(),
+            &TestRunnerBridgeStore::default(),
+            &ReviewBridgeStore::default(),
+            &AgentScheduleRequest {
+                patch_draft_approval_id: Some(proposal.id.clone()),
+                ..request(&run.id)
+            },
+        );
+
+        assert_eq!(view.kind, "run_patch_draft");
+        assert_eq!(view.approval_ids, vec![proposal.id]);
+        assert!(view.message.contains("PatchDraftAgent"));
+    }
+
     fn seed_approval(
         approvals: &mut ApprovalEngine,
         run_id: &str,
@@ -115,6 +139,7 @@ mod tests {
         AgentScheduleRequest {
             has_supported_test_command: true,
             now_ms: 3,
+            patch_draft_approval_id: None,
             run_id: run_id.to_string(),
         }
     }

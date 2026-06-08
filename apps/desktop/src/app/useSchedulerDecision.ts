@@ -10,10 +10,13 @@ import {
 } from "../features/runs/agentExecutorClient";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
+import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
+import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
 import { firstRunnableTestCommand } from "./testCommand";
 
 export function useSchedulerDecision({
   activePlan,
+  activeProject,
   activeRun,
   patches,
   proposals,
@@ -21,6 +24,7 @@ export function useSchedulerDecision({
   tests,
 }: {
   activePlan: PlanView | undefined;
+  activeProject: WorkspaceProject;
   activeRun: AgentRunView | undefined;
   patches: PatchProposalView[];
   proposals: ActionProposalView[];
@@ -38,6 +42,7 @@ export function useSchedulerDecision({
     void scheduleNextRunActionOverBridge({
       hasSupportedTestCommand: Boolean(firstRunnableTestCommand(activePlan?.testsToRun)),
       nowMs: Date.now(),
+      patchDraftApprovalId: patchDraftApprovalId({ actionProposals: proposals, activePlan, activeProject, activeRun, patches }),
       runId: activeRun.id,
     }).then((next) => {
       if (!cancelled) {
@@ -50,6 +55,7 @@ export function useSchedulerDecision({
   }, [
     activePlan?.threadId,
     activePlan?.testsToRun,
+    activeProject.indexedFiles,
     activeRun?.id,
     activeRun?.status,
     activeRun?.updatedAt,
