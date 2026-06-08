@@ -82,6 +82,7 @@ fn schedule_request(request: &AgentPatchDraftDispatchRequest) -> AgentScheduleRe
     AgentScheduleRequest {
         has_supported_test_command: request.has_supported_test_command,
         now_ms: request.now_ms,
+        patch_apply_approval_id: None,
         patch_draft_approval_id: request.patch_draft_approval_id.clone(),
         run_id: request.execute.run_id.clone(),
         test_approval_id: request.test_approval_id.clone(),

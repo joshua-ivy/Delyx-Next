@@ -2,6 +2,7 @@ use crate::agent_run::AgentRunStatus;
 use crate::agent_scheduler::{
     resume_waiting_run, schedule_next, AgentScheduleDecision, AgentSchedulerContext,
 };
+use crate::agent_scheduler_bridge_view::decision_view;
 use crate::approval_bridge::ApprovalBridgeState;
 use crate::patch_bridge::PatchBridgeState;
 use crate::review_bridge::ReviewBridgeState;
@@ -14,6 +15,8 @@ use serde::{Deserialize, Serialize};
 pub struct AgentScheduleRequest {
     pub run_id: String,
     pub has_supported_test_command: bool,
+    #[serde(default)]
+    pub patch_apply_approval_id: Option<String>,
     #[serde(default)]
     pub patch_draft_approval_id: Option<String>,
     #[serde(default)]
@@ -130,6 +133,7 @@ pub fn schedule_next_record(
             approvals,
             has_supported_test_command: request.has_supported_test_command,
             now_ms: request.now_ms,
+            patch_apply_approval_id: request.patch_apply_approval_id.as_deref(),
             patch_draft_approval_id: request.patch_draft_approval_id.as_deref(),
             patches,
             reviews,
@@ -175,114 +179,4 @@ pub fn resume_waiting_run_record(
         return Ok(decision_view(&request.run_id, decision));
     }
     Ok(next)
-}
-
-fn decision_view(run_id: &str, decision: AgentScheduleDecision) -> AgentScheduleDecisionView {
-    match decision {
-        AgentScheduleDecision::Blocked { reason } => view("blocked", run_id, reason),
-        AgentScheduleDecision::Complete { reason } => view("complete", run_id, reason),
-        AgentScheduleDecision::ReadyForFinalSupport { review_report_id } => {
-            let mut output = view(
-                "ready_for_final_support",
-                run_id,
-                format!("Review {review_report_id} is ready for final support synthesis."),
-            );
-            output.review_report_id = Some(review_report_id);
-            output
-        }
-        AgentScheduleDecision::RepairRequested {
-            finding_id,
-            review_report_id,
-        } => {
-            let mut output = view(
-                "repair_requested",
-                run_id,
-                format!("Repair requested from review {review_report_id} finding {finding_id}."),
-            );
-            output.finding_id = Some(finding_id);
-            output.review_report_id = Some(review_report_id);
-            output
-        }
-        AgentScheduleDecision::ResumeAfterApproval { approval_id } => {
-            let mut output = view(
-                "resume_after_approval",
-                run_id,
-                format!("Approval {approval_id} is ready; run can resume."),
-            );
-            output.approval_ids = vec![approval_id];
-            output
-        }
-        AgentScheduleDecision::RunPatchDraft { approval_id } => {
-            let mut output = view(
-                "run_patch_draft",
-                run_id,
-                format!("Approved plan {approval_id} is ready for PatchDraftAgent."),
-            );
-            output.approval_ids = vec![approval_id];
-            output
-        }
-        AgentScheduleDecision::RunPatchApply { proposal_id } => {
-            let mut output = view(
-                "run_patch_apply",
-                run_id,
-                format!("Patch proposal {proposal_id} is approved and ready to apply."),
-            );
-            output.proposal_id = Some(proposal_id);
-            output
-        }
-        AgentScheduleDecision::RunReview {
-            patch_count,
-            test_count,
-        } => {
-            let mut output = view(
-                "run_review",
-                run_id,
-                format!(
-                    "Review is ready from {patch_count} patch and {test_count} test artifact(s)."
-                ),
-            );
-            output.patch_count = patch_count;
-            output.test_count = test_count;
-            output
-        }
-        AgentScheduleDecision::RunTests {
-            approval_id,
-            reason,
-        } => {
-            let mut output = view("run_tests", run_id, reason);
-            if let Some(approval_id) = approval_id {
-                output.approval_ids = vec![approval_id];
-            }
-            output
-        }
-        AgentScheduleDecision::Terminal { status } => {
-            let mut output = view("terminal", run_id, format!("Run is {status:?}."));
-            output.status = Some(format!("{status:?}"));
-            output
-        }
-        AgentScheduleDecision::WaitForApproval { approval_ids } => {
-            let mut output = view(
-                "wait_for_approval",
-                run_id,
-                format!("Waiting for {} approval(s).", approval_ids.len()),
-            );
-            output.approval_ids = approval_ids;
-            output
-        }
-    }
-}
-
-fn view(kind: &str, run_id: &str, message: impl Into<String>) -> AgentScheduleDecisionView {
-    AgentScheduleDecisionView {
-        approval_ids: Vec::new(),
-        finding_id: None,
-        kind: kind.to_string(),
-        message: message.into(),
-        patch_count: 0,
-        proposal_id: None,
-        review_report_id: None,
-        run_id: run_id.to_string(),
-        status: None,
-        test_count: 0,
-    }
 }

@@ -27,6 +27,26 @@ describe("FocusSchedulerPeek", () => {
     expect(onApplyPatch).toHaveBeenCalledWith("patch-1");
   });
 
+  it("queues scheduler-selected patch apply approval requests", () => {
+    const onApplyPatch = vi.fn();
+    renderScheduler({
+      decision: {
+        approvalIds: [],
+        kind: "request_patch_apply_approval",
+        message: "Patch proposal patch-1 needs apply approval before disk write.",
+        patchCount: 0,
+        proposalId: "patch-1",
+        runId: "run-1",
+        testCount: 0,
+      },
+      onApplyPatch,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Next \/ approve patch apply/ }));
+
+    expect(onApplyPatch).toHaveBeenCalledWith("patch-1");
+  });
+
   it("runs scheduler-selected patch drafting through resume dispatch", () => {
     const onResumeRun = vi.fn();
     renderScheduler({

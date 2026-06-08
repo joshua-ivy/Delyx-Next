@@ -50,35 +50,6 @@ mod tests {
     }
 
     #[test]
-    fn scheduler_selects_approved_patch_apply() {
-        let mut ledger = AgentRunLedger::new();
-        let run = ledger.create_run("thread-1").unwrap();
-        let mut approvals = ApprovalEngine::new();
-        let proposal = approvals.propose(proposal_input(&run.id, RiskyAction::FileWrite));
-        approvals.approve(&proposal.id, 2, "approved").unwrap();
-        let mut patches = PatchBridgeStore::default();
-        patches
-            .records
-            .push(patch(&run.id, &proposal.id, "proposed"));
-
-        let decision = schedule_next(context(
-            &run,
-            &approvals,
-            &patches,
-            &TestRunnerBridgeStore::default(),
-            &ReviewBridgeStore::default(),
-            false,
-        ));
-
-        assert_eq!(
-            decision,
-            AgentScheduleDecision::RunPatchApply {
-                proposal_id: "patch-1".to_string()
-            }
-        );
-    }
-
-    #[test]
     fn scheduler_selects_patch_draft_from_approved_plan_hint() {
         let mut ledger = AgentRunLedger::new();
         let run = ledger.create_run("thread-1").unwrap();
@@ -218,6 +189,7 @@ mod tests {
             approvals,
             has_supported_test_command,
             now_ms: 3,
+            patch_apply_approval_id: None,
             patch_draft_approval_id: None,
             patches,
             reviews,

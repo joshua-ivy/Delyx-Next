@@ -17,6 +17,7 @@ import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
 import { runReviewForActiveRun } from "./appShellReviewActions";
 import { activeTestApprovalId } from "./appShellTestApprovalDecision";
 import { runTestsForActiveRun } from "./appShellTestActions";
+import { patchApplyApprovalIdForScheduler } from "./patchApplyApproval";
 import { firstRunnableTestCommand } from "./testCommand";
 
 const maxAutoSteps = 4;
@@ -63,6 +64,22 @@ async function dispatchOneSchedulerDecision(
   decision: AgentScheduleDecisionView,
 ) {
   if (decision.kind === "run_patch_apply") {
+    await applyApprovedPatchForActiveRun({
+      actionProposals: state.actionProposals,
+      activeProject: state.activeProject,
+      activeRun: state.activeRun,
+      activeThread: state.activeThread,
+      patch: state.patches.find((patch) => patch.id === decision.proposalId),
+      schedulerPatchApplyApprovalId: decision.approvalIds[0],
+      setActionProposals: state.setActionProposals,
+      setAgentRuns: state.setAgentRuns,
+      setPatches: state.setPatches,
+      setThreads: state.setThreads,
+      setThreadState: state.setThreadState,
+    });
+    return { handled: true };
+  }
+  if (decision.kind === "request_patch_apply_approval") {
     await applyApprovedPatchForActiveRun({
       actionProposals: state.actionProposals,
       activeProject: state.activeProject,
@@ -120,6 +137,7 @@ async function nextSchedulerDecision(state: SchedulerDispatchState) {
   return scheduleNextRunActionOverBridge({
     hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
     nowMs: Date.now(),
+    patchApplyApprovalId: patchApplyApprovalIdForScheduler(state.actionProposals, state.patches),
     patchDraftApprovalId: patchDraftApprovalId(state),
     runId: state.activeRun.id,
     testApprovalId: activeTestApprovalId(state),

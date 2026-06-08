@@ -86,6 +86,7 @@ mod tests {
                 approvals: &self.approvals,
                 has_supported_test_command: false,
                 now_ms: 3,
+                patch_apply_approval_id: None,
                 patch_draft_approval_id: None,
                 patches: &self.patches,
                 reviews,

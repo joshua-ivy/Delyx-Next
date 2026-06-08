@@ -25,6 +25,9 @@ export function FocusSchedulerPeek({
   if (!decision || decision.kind === "complete" || decision.kind === "terminal") {
     return null;
   }
+  if (decision.kind === "request_patch_apply_approval" && decision.proposalId) {
+    return <FocusActionLine icon="plan" label="Next / approve patch apply" onClick={() => onApplyPatch(decision.proposalId!)} text={decision.message} />;
+  }
   if (decision.kind === "run_patch_apply" && decision.proposalId) {
     return <FocusActionLine icon="plan" label="Next / apply patch" onClick={() => onApplyPatch(decision.proposalId!)} text={decision.message} />;
   }

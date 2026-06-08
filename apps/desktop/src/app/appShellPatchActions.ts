@@ -12,7 +12,11 @@ import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { upsertActionProposal } from "./appShellApprovalActions";
 import { recordApprovalProposalForRun } from "./appShellRunActions";
 import { updateThreadAndRunStatus } from "./cockpitStateTransitions";
-import { activePatchApplyApproval, createPatchApplyApprovalProposal } from "./patchApplyApproval";
+import {
+  activePatchApplyApproval,
+  activePatchApplyApprovalById,
+  createPatchApplyApprovalProposal,
+} from "./patchApplyApproval";
 import { activePatchRestoreApproval, createPatchRestoreApprovalProposal } from "./patchRestoreApproval";
 import { notifyLocalAction } from "./ShellPreferenceController";
 
@@ -22,6 +26,7 @@ export interface PatchApplyState {
   activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
   patch: PatchProposalView | undefined;
+  schedulerPatchApplyApprovalId?: string;
   setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setPatches: Dispatch<SetStateAction<PatchProposalView[]>>;
@@ -46,7 +51,14 @@ export async function applyApprovedPatchForActiveRun(state: PatchApplyState) {
     notifyLocalAction("Patch apply requires an approved workspace root", "warning");
     return;
   }
-  const approval = activePatchApplyApproval(state.actionProposals, state.patch);
+  const schedulerApproval = state.schedulerPatchApplyApprovalId
+    ? activePatchApplyApprovalById(state.actionProposals, state.patch, state.schedulerPatchApplyApprovalId)
+    : undefined;
+  if (state.schedulerPatchApplyApprovalId && !schedulerApproval) {
+    notifyLocalAction("Scheduler-selected apply approval is no longer executable", "warning");
+    return;
+  }
+  const approval = schedulerApproval ?? activePatchApplyApproval(state.actionProposals, state.patch);
   if (!approval || approval.status !== "approved") {
     await queuePatchApplyApproval(state, approval);
     return;

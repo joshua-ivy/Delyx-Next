@@ -28,25 +28,13 @@ beforeEach(() => {
 });
 
 describe("dispatchSchedulerDecision", () => {
-  it("dispatches approved patch apply decisions with the matching patch", async () => {
-    const patch = patchView();
-    scheduleNext.mockResolvedValue(undefined);
-
-    const handled = await dispatchSchedulerDecision(state({ patches: [patch] }), {
-      ...decision("run_patch_apply"),
-      proposalId: patch.id,
-    });
-
-    expect(handled).toBe(true);
-    expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({ patch }));
-  });
-
   it("continues from patch apply into the scheduler-selected test step", async () => {
     const patch = patchView();
     scheduleNext.mockResolvedValueOnce(decision("run_tests")).mockResolvedValueOnce(undefined);
 
     await dispatchSchedulerDecision(state({ patches: [patch] }), {
       ...decision("run_patch_apply"),
+      approvalIds: ["approval-apply"],
       proposalId: patch.id,
     });
 
@@ -81,10 +69,10 @@ describe("dispatchSchedulerDecision", () => {
     }));
   });
 
-  it("dispatches patch draft decisions and continues with reloaded patches", async () => {
+  it("dispatches patch draft decisions and stops at apply approval requests", async () => {
     const patch = patchView();
     draftPatch.mockResolvedValue(draftResult(patch));
-    scheduleNext.mockResolvedValueOnce({ ...decision("run_patch_apply"), proposalId: patch.id }).mockResolvedValueOnce(undefined);
+    scheduleNext.mockResolvedValueOnce({ ...decision("request_patch_apply_approval"), proposalId: patch.id });
 
     await dispatchSchedulerDecision(state({ draftReady: true }), {
       ...decision("run_patch_draft"),
@@ -94,14 +82,18 @@ describe("dispatchSchedulerDecision", () => {
     expect(draftPatch).toHaveBeenCalledWith(expect.objectContaining({
       actionProposals: [approval()],
     }), approval());
-    expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({ patch }));
+    expect(applyPatch).not.toHaveBeenCalled();
   });
 
   it("continues generated patch output through apply, tests, review, and final support", async () => {
     const patch = patchView();
     draftPatch.mockResolvedValue(draftResult(patch));
     scheduleNext
-      .mockResolvedValueOnce({ ...decision("run_patch_apply"), proposalId: patch.id })
+      .mockResolvedValueOnce({
+        ...decision("run_patch_apply"),
+        approvalIds: ["approval-apply"],
+        proposalId: patch.id,
+      })
       .mockResolvedValueOnce(decision("run_tests"))
       .mockResolvedValueOnce(decision("run_review"))
       .mockResolvedValueOnce(decision("ready_for_final_support"))
@@ -113,7 +105,10 @@ describe("dispatchSchedulerDecision", () => {
     });
 
     expect(draftPatch).toHaveBeenCalledTimes(1);
-    expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({ patch }));
+    expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({
+      patch,
+      schedulerPatchApplyApprovalId: "approval-apply",
+    }));
     expect(runTests).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedRunTests: true }));
     expect(runReview).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedArtifacts: true }));
     expect(recordFinal).toHaveBeenCalledTimes(1);

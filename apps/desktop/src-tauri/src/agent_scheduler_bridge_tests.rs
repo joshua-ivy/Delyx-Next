@@ -11,13 +11,35 @@ mod tests {
     use crate::thread_run_bridge::ThreadRunStore;
 
     #[test]
+    fn scheduler_bridge_maps_patch_apply_approval_request_for_ui() {
+        let mut thread_store = ThreadRunStore::default();
+        let run = thread_store.ledger.create_run("thread-1").unwrap();
+        let mut patches = PatchBridgeStore::default();
+        patches.records.push(patch(&run.id, "approval-draft"));
+
+        let view = schedule_next_record(
+            thread_store.ledger.get_run(&run.id).unwrap(),
+            &ApprovalEngine::new(),
+            &patches,
+            &TestRunnerBridgeStore::default(),
+            &ReviewBridgeStore::default(),
+            &request(&run.id),
+        );
+
+        assert_eq!(view.kind, "request_patch_apply_approval");
+        assert_eq!(view.proposal_id.as_deref(), Some("patch-1"));
+        assert!(view.message.contains("needs apply approval"));
+    }
+
+    #[test]
     fn scheduler_bridge_maps_patch_apply_decision_for_ui() {
         let mut thread_store = ThreadRunStore::default();
         let run = thread_store.ledger.create_run("thread-1").unwrap();
         let mut approvals = ApprovalEngine::new();
-        let proposal = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
+        let draft = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
+        let apply = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
         let mut patches = PatchBridgeStore::default();
-        patches.records.push(patch(&run.id, &proposal.id));
+        patches.records.push(patch(&run.id, &draft.id));
 
         let view = schedule_next_record(
             thread_store.ledger.get_run(&run.id).unwrap(),
@@ -25,12 +47,16 @@ mod tests {
             &patches,
             &TestRunnerBridgeStore::default(),
             &ReviewBridgeStore::default(),
-            &request(&run.id),
+            &AgentScheduleRequest {
+                patch_apply_approval_id: Some(apply.id.clone()),
+                ..request(&run.id)
+            },
         );
 
         assert_eq!(view.kind, "run_patch_apply");
+        assert_eq!(view.approval_ids, vec![apply.id]);
         assert_eq!(view.proposal_id.as_deref(), Some("patch-1"));
-        assert!(view.message.contains("ready to apply"));
+        assert!(view.message.contains("has apply approval"));
     }
 
     #[test]
@@ -213,6 +239,7 @@ mod tests {
         AgentScheduleRequest {
             has_supported_test_command: true,
             now_ms: 3,
+            patch_apply_approval_id: None,
             patch_draft_approval_id: None,
             run_id: run_id.to_string(),
             test_approval_id: None,

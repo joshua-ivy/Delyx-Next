@@ -20,6 +20,23 @@ export function activePatchApplyApproval(
   return matches.find((proposal) => proposal.status !== "expired") ?? matches[0];
 }
 
+export function activePatchApplyApprovalById(
+  proposals: ActionProposalView[],
+  patch: PatchProposalView,
+  approvalId: string,
+) {
+  const proposal = proposals.find((item) => item.id === approvalId);
+  return proposal && proposal.nodeId === patchApplyNodeId(patch) ? proposal : undefined;
+}
+
+export function patchApplyApprovalIdForScheduler(
+  proposals: ActionProposalView[],
+  patches: PatchProposalView[],
+) {
+  const patch = patches.find((item) => item.status === "proposed");
+  return patch ? activePatchApplyApproval(proposals, patch)?.id : undefined;
+}
+
 export function createPatchApplyApprovalProposal(
   patch: PatchProposalView,
   run: AgentRunView | undefined,

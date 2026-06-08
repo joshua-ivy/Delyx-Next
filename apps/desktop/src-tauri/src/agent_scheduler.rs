@@ -19,6 +19,9 @@ pub enum AgentScheduleDecision {
         review_report_id: String,
         finding_id: String,
     },
+    RequestPatchApplyApproval {
+        proposal_id: String,
+    },
     ResumeAfterApproval {
         approval_id: String,
     },
@@ -27,6 +30,7 @@ pub enum AgentScheduleDecision {
     },
     RunPatchApply {
         proposal_id: String,
+        approval_id: String,
     },
     RunReview {
         patch_count: usize,
@@ -48,6 +52,7 @@ pub struct AgentSchedulerContext<'a> {
     pub approvals: &'a ApprovalEngine,
     pub has_supported_test_command: bool,
     pub now_ms: u64,
+    pub patch_apply_approval_id: Option<&'a str>,
     pub patch_draft_approval_id: Option<&'a str>,
     pub patches: &'a PatchBridgeStore,
     pub reviews: &'a ReviewBridgeStore,
@@ -76,7 +81,7 @@ pub fn schedule_next(context: AgentSchedulerContext<'_>) -> AgentScheduleDecisio
     let tests = test_snapshot_from_store(context.tests, &context.run.id);
     let reviews = review_snapshot_from_store(context.reviews, &context.run.id);
     if let Some(proposal) = patches.iter().find(|patch| patch.status == "proposed") {
-        return patch_apply_decision(proposal, context.approvals, context.now_ms);
+        return patch_apply_decision(proposal, &context);
     }
     if patches.iter().any(|patch| patch.status == "applied") && tests.is_empty() {
         return if context.has_supported_test_command {
@@ -177,10 +182,23 @@ fn approval_wait_decision(
 
 fn patch_apply_decision(
     proposal: &PatchProposalView,
-    _approvals: &ApprovalEngine,
-    _now_ms: u64,
+    context: &AgentSchedulerContext<'_>,
 ) -> AgentScheduleDecision {
-    AgentScheduleDecision::RunPatchApply {
+    if let Some(approval_id) = context.patch_apply_approval_id {
+        if approval_ready(
+            context.approvals,
+            approval_id,
+            context.now_ms,
+            RiskyAction::FileWrite,
+            &context.run.id,
+        ) {
+            return AgentScheduleDecision::RunPatchApply {
+                approval_id: approval_id.to_string(),
+                proposal_id: proposal.id.clone(),
+            };
+        }
+    }
+    AgentScheduleDecision::RequestPatchApplyApproval {
         proposal_id: proposal.id.clone(),
     }
 }

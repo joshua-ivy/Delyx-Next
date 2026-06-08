@@ -53,9 +53,9 @@ describe("applyApprovedPatchForActiveRun", () => {
     expect(state.setActionProposals).toHaveBeenCalled();
   });
 
-  it("uses the approved apply approval id when applying", async () => {
+  it("uses the scheduler-selected approved apply approval id when applying", async () => {
     const approval = applyApproval("approved");
-    const state = patchState({ actionProposals: [approval] });
+    const state = patchState({ actionProposals: [approval], schedulerPatchApplyApprovalId: approval.id });
 
     await applyApprovedPatchForActiveRun(state);
 

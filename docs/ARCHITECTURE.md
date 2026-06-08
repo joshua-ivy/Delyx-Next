@@ -101,8 +101,9 @@ complete:
   the findings are accepted or repaired. A narrow AgentScheduler bridge now
   reads the persisted
   AgentRun, approval, patch, test, and review stores to choose conservative
-  next-step decisions: wait, single-approval resume, patch apply, tests, review,
-  final-support readiness, terminal, complete, or blocked. The Focus UI can
+  next-step decisions: wait, single-approval resume, patch-apply approval
+  request, verified patch apply, tests, review, final-support readiness,
+  terminal, complete, or blocked. The Focus UI can
   render that decision as a next-action line without inventing runtime state.
   Resume actions forward the active plan's supported test-command signal back
   into the scheduler bridge, so resume decisions use the same real plan context
@@ -113,12 +114,12 @@ complete:
   Approval decisions can also trigger that non-risky resume transition when the
   approved proposal is the last pending approval for the run. A focused
   renderer dispatcher can then run post-resume scheduler-selected actions:
-  approved patch apply, approved or approval-queued tests, read-only review, or
-  final-support recording. After each dispatched action it asks the Rust
+  apply-approval request, approved patch apply, approved or approval-queued
+  tests, read-only review, or final-support recording. After each dispatched action it asks the Rust
   scheduler for a bounded next decision, stopping on passive/repeated states or
   the depth limit. The current bound is large enough for a generated patch
-  path to continue through patch draft, patch apply, tests, review, and final
-  support when each step has real approvals and persisted receipts. Manual
+  path to continue through patch draft, apply approval, patch apply, tests,
+  review, and final support when each step has real approvals and persisted receipts. Manual
   resume from the visible scheduler line uses that same
   resume-then-dispatch helper, including reload-time PatchDraft decisions.
   PatchDraft dispatch uses the scheduler-provided approval ID,
@@ -286,9 +287,10 @@ Core agents:
 The AgentRun graph is the future execution/resume engine, not just an inspector artifact.
 Current state: the graph is still primarily an inspection and bridge artifact,
 with narrow scheduling and execution paths. `AgentScheduler` can identify
-approval waits, resume exactly one ready approval, select approved proposed
-patches for apply, require supported test-command evidence after applied
-patches, select review from stored patch/test artifacts, and report
+approval waits, resume exactly one ready approval, separate proposed patches
+that need apply approval from patches with an exact executable apply approval,
+require supported test-command evidence after applied patches, select review
+from stored patch/test artifacts, and report
 final-support readiness after a stored review. `agent_schedule_next` exposes
 that decision to the UI, and `agent_resume_waiting_run` persists the non-risky
 resume transition when exactly one approval is executable. It does not yet
@@ -307,6 +309,9 @@ node. The
 `agent_execute_patch_apply` bridge can advance an
 approved existing PatchProposal into a patch-apply node, write files through the
 stale-file/checkpoint PatchEngine path, and record patch-apply receipts. The
+scheduler exposes `request_patch_apply_approval` until the separate apply
+approval is executable, and exposes `run_patch_apply` only with that exact
+approval ID. The
 `agent_execute_patch_restore` bridge can advance an approved existing applied
 PatchProposal into a patch-restore node, require a separate executable
 `FileWrite` approval, verify current file contents still match the applied

@@ -131,14 +131,14 @@ now has real persisted or approval-gated functional islands.
 - [x] ~~Stored review findings now block final support until accepted or repaired, and exact findings can create persisted repair-request markers plus scoped repair PatchDraft approvals.~~
 - [x] ~~Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.~~
 - [x] ~~Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.~~
-- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, and one-step approval-safe dispatcher now exist.
+- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, and one-step approval-safe dispatcher now exist.
 - [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft context construction is Rust-owned now, but the remaining gap is making PatchDraft a full autonomous executor repair/build node instead of a renderer-triggered command.
 - [x] ~~Broad frontend behavior coverage now covers project/thread creation, planning, approvals, diff/test/review artifacts, evidence support, error, blocked, expired, and empty states with React Testing Library component/action tests.~~
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
 Progress board:
 
-- Phase 2 checkbox progress: 179/200 checked, 21 open, 89.5%.
+- Phase 2 checkbox progress: 181/202 checked, 21 open, 89.6%.
 - Phase 2 track progress: 6/12 complete, 6/12 in progress.
 - Complete tracks: D3, D4, D6, D8, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D11, D12.
@@ -177,7 +177,7 @@ Progress board:
 - [ ] D2 - AgentRun Execution Engine (in progress; scheduler/resume decisions and narrow executor bridges exist, full autonomous executor/repair/hook loop missing)
   - [ ] Add complete executor, scheduler, node runner, resume, repair, and hook modules.
   - [ ] Make AgentRun the real execution graph for the full loop, not only an inspector artifact plus narrow executor islands.
-  - [x] ~~Added `AgentScheduler`: it reads real AgentRun, approval, patch, test, and review stores and returns conservative next-step decisions for wait, single-approval resume, patch apply, tests, review, final-support readiness, terminal, complete, or blocked states.~~
+  - [x] ~~Added `AgentScheduler`: it reads real AgentRun, approval, patch, test, and review stores and returns conservative next-step decisions for wait, single-approval resume, patch-apply approval request, verified patch apply, tests, review, final-support readiness, terminal, complete, or blocked states.~~
   - [x] ~~Added `resume_waiting_run`: it resumes a run only when exactly one approval for that run is executable; multiple ready approvals, missing approvals, pending approvals, and zero clocks stay blocked or waiting instead of guessing.~~
   - [x] ~~Added Tauri scheduler commands: `agent_schedule_next` exposes the current scheduler decision to the UI, and `agent_resume_waiting_run` persists a non-risky resume transition only after the Rust scheduler finds exactly one executable approval.~~
   - [x] ~~Focus resume actions pass the active plan's supported test-command signal into `agent_resume_waiting_run`, so a test-ready run does not become falsely blocked after approval resume.~~
@@ -198,8 +198,9 @@ Progress board:
   - [x] ~~Added a narrow `agent_request_review_revision` bridge that validates a stored review report/finding for the run, marks the report `revise_requested`, records a completed AgentRun `repair` node, a `repair.requested` event, and a `review_revision` artifact, then moves the thread back to build state without writing files or running tools.~~
   - [x] ~~Approved same-run repair PatchDraft approvals can now be selected by the scheduler for `revise_requested` reviews, and the resume bridge can return that decision even when the run is already in build/running state.~~
   - [x] ~~PatchDraft context construction now has a Rust-owned dispatch command: it loads the persisted thread/run, approved plan, workspace snapshot, approval scope, and matching repair finding context before executing the scheduler-verified PatchDraft bridge.~~
+  - [x] ~~Scheduler patch-apply readiness now has two truthful states: proposed patches return `request_patch_apply_approval` until a separate executable apply approval ID is provided, and only then return `run_patch_apply` with that exact approval ID.~~
   - [x] ~~Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.~~
-  - [x] ~~Scheduler and bridge tests prove pending approvals stay waiting, approved single approvals resume, approved proposed patches schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, clean stored reviews move to final-support readiness, unresolved review findings block final support, repair-requested reviews surface `repair_requested`, and UI-ready decision views map from real stores.~~
+  - [x] ~~Scheduler and bridge tests prove pending approvals stay waiting, approved single approvals resume, proposed patches request apply approval, verified apply approvals schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, clean stored reviews move to final-support readiness, unresolved review findings block final support, repair-requested reviews surface `repair_requested`, and UI-ready decision views map from real stores.~~
   - [ ] Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
   - [ ] Finish adapting Codex thread/start vs turn/start and command/exec protocol shapes where they reduce risk.
   - [x] ~~Keep all risky action executor islands approval-gated.~~
@@ -256,8 +257,9 @@ Progress board:
   - [x] ~~Focus state now loads persisted approval proposals/decisions for the active run instead of relying only on the current renderer session, which is required before safe patch/test action buttons can reason about approval status.~~
   - [x] ~~Focus diff UI can now call the AgentRun patch-apply bridge for a proposed patch only when its matching approval is visibly approved; Rust still enforces approval, approved root, stale-file, and checkpoint gates before any write.~~
   - [x] ~~Patch apply and restore now have persisted approval-gated bridges with stale-file protection and checkpoint receipts; the runtime engine still needs to call them automatically from the build flow.~~
-  - [x] ~~AgentScheduler can now identify an approved proposed patch as ready for patch apply from persisted stores; Focus UI shows that real next action and can call the existing patch-apply bridge.~~
+  - [x] ~~AgentScheduler can now distinguish a proposed patch that needs separate apply approval from a patch that has an exact executable apply approval; Focus UI shows the approval-request state separately from the write-ready apply state.~~
   - [x] ~~After the last required approval is recorded, the scheduler dispatcher can automatically execute the scheduler-selected approved patch apply step. It still does not generate patch content from an approved plan.~~
+  - [x] ~~Scheduler-dispatched patch apply now passes the exact Rust-verified apply approval ID into the patch-apply action, and generated patch auto-continuation stops at `request_patch_apply_approval` instead of silently queueing or implying a write is ready.~~
   - [x] ~~Added a bounded workspace file-read bridge for PatchDraftAgent: relative project paths only, max four files, byte capped, and still enforced by the workspace approved-root manager.~~
   - [x] ~~Added structured Rust Ollama patch JSON parsing that accepts only files actually read from the approved plan, rejects unapproved paths, rejects unchanged output, rejects truncated file inputs, and feeds exact replacement contents into the patch proposal bridge.~~
   - [x] ~~Approval flow now resumes the waiting run, lets the Rust scheduler return `run_patch_draft` when the build approval is final and no patch already exists, then dispatches PatchDraftAgent through the bounded scheduler loop; it does not auto-apply that generated patch.~~
