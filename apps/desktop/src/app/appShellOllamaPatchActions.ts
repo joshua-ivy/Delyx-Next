@@ -1,17 +1,11 @@
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
-import { selectedOllamaModel, sendOllamaChat } from "../features/models/ollamaClient";
-import {
-  createOllamaPatchDraftMessages,
-  createPatchProposalRequestFromOllamaText,
-} from "../features/patches/ollamaPatchDraft";
+import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
-import type { AgentRunView } from "../features/runs/agentRunTypes";
-import { executePatchProposalNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { executePatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
-import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
-import { loadWorkspaceFiles } from "./workspaceBridge";
-import { recordModelCallFailure, recordModelCallResult, recordModelCallStarted } from "./appShellModelRunActions";
+import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
+import { recordModelCallFailure } from "./appShellModelRunActions";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
@@ -38,33 +32,30 @@ export async function proposeApprovedPlanPatchWithOllama(
 
   try {
     const paths = approvedPlanFiles(state, approval);
-    const readFiles = await loadWorkspaceFiles(state.activeProject, paths);
-    if (!readFiles || readFiles.length === 0) {
-      throw new Error("Desktop bridge could not read the approved plan files.");
-    }
     startPatchDraft(state, thread, model);
-    const response = await sendOllamaChat(
-      state.modelSettings,
-      createOllamaPatchDraftMessages(thread, state.activePlan!, state.activeProject, readFiles),
-    );
-    const request = createPatchProposalRequestFromOllamaText({
+    const result = await executePatchDraftNodeOverBridge({
       approvalId: approval.id,
+      approvedRoots: state.activeProject.approvedRoots,
       clientId: `patch-${run.id}-${approval.id}`,
-      plan: state.activePlan!,
-      project: state.activeProject,
-      readFiles,
+      createdAtMs: Date.now(),
+      filesLikelyInvolved: paths,
+      goal: thread.goal,
+      maxBytesPerFile: 20_000,
+      model,
+      planSteps: state.activePlan!.steps,
+      projectPath: state.activeProject.path,
       runId: run.id,
-      text: response.text,
+      scopePaths: approval.scope.paths ?? [],
     });
-    const result = await executePatchProposalNodeOverBridge({ ...request, createdAtMs: Date.now() });
     if (!result || result.status !== "completed") {
       throw new Error(result?.message ?? "Desktop bridge did not capture the patch proposal.");
     }
     await reloadPatchDraftState(state, run.id);
-    completePatchDraft(state, thread, response.providerId, response.model, response.text, result.message);
+    completePatchDraft(state, thread, result.message);
     return true;
   } catch (error) {
-    recordPatchDraftFailure(state, thread, model, patchDraftErrorMessage(error));
+    await reloadPatchDraftState(state, run.id);
+    showPatchDraftFailure(state, thread, patchDraftErrorMessage(error));
     return false;
   }
 }
@@ -97,26 +88,16 @@ function startPatchDraft(state: OllamaPatchProposalState, thread: TaskThread, mo
   const now = new Date().toISOString();
   appendMessage(state, thread.id, { role: "system", body: `Ollama PatchDraftAgent is drafting with ${model}.` }, "building");
   state.setThreadState("ready");
-  state.setAgentRuns((current) => recordModelCallStarted(
-    updateRunsForThreadStatus(current, thread, "building", now),
-    thread,
-    model,
-    now,
-  ));
+  state.setAgentRuns((current) => updateRunsForThreadStatus(current, thread, "building", now));
 }
 
 function completePatchDraft(
   state: OllamaPatchProposalState,
   thread: TaskThread,
-  providerId: string,
-  model: string,
-  responseText: string,
   message: string,
 ) {
-  const now = new Date().toISOString();
   appendMessage(state, thread.id, { role: "assistant", body: message }, "building");
   state.setThreadState("ready");
-  state.setAgentRuns((current) => recordModelCallResult(current, thread, providerId, model, responseText, now, "running"));
   notifyLocalAction(message, "success");
 }
 
@@ -130,6 +111,16 @@ function recordPatchDraftFailure(
   appendMessage(state, thread.id, { role: "system", body: message }, "blocked");
   state.setThreadState("ready");
   state.setAgentRuns((current) => recordModelCallFailure(current, thread, model, message, now, "blocked"));
+  notifyLocalAction(message, "warning");
+}
+
+function showPatchDraftFailure(
+  state: OllamaPatchProposalState,
+  thread: TaskThread,
+  message: string,
+) {
+  appendMessage(state, thread.id, { role: "system", body: message }, "blocked");
+  state.setThreadState("ready");
   notifyLocalAction(message, "warning");
 }
 

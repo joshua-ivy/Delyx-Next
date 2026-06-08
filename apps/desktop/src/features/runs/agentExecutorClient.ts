@@ -10,11 +10,31 @@ export interface AgentPatchProposalExecuteRequest extends PatchProposalRequestVi
   createdAtMs: number;
 }
 
+export interface AgentPatchDraftExecuteRequest {
+  approvalId: string;
+  approvedRoots: string[];
+  clientId: string;
+  createdAtMs: number;
+  filesLikelyInvolved: string[];
+  goal: string;
+  maxBytesPerFile?: number;
+  model: string;
+  planSteps: string[];
+  projectPath: string;
+  runId: string;
+  scopePaths: string[];
+}
+
 export interface AgentExecutionBridgeView {
   status: "completed" | "failed" | "waiting_for_approval";
   runId: string;
   patchId?: string;
   message: string;
+}
+
+export interface AgentPatchDraftBridgeView extends AgentExecutionBridgeView {
+  model: string;
+  providerId: string;
 }
 
 export interface AgentTestExecutionBridgeView {
@@ -66,6 +86,19 @@ export async function executePatchProposalNodeOverBridge(
   }
   try {
     return await invoke<AgentExecutionBridgeView>("agent_execute_patch_proposal", { request });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function executePatchDraftNodeOverBridge(
+  request: AgentPatchDraftExecuteRequest,
+): Promise<AgentPatchDraftBridgeView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<AgentPatchDraftBridgeView>("agent_execute_patch_draft", { request });
   } catch {
     return undefined;
   }

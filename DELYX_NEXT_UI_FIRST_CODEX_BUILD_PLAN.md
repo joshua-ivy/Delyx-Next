@@ -41,7 +41,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - PR 1-18.1 breadth is skeleton-complete.
 - SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state and file-export receipts, approved test artifacts, patch proposal/apply/restore receipts, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automation contracts/scheduled runs, release/support-bundle state, support-bundle file export, patch apply/restore, and final-answer support synthesis have narrow persisted mutation bridges; remaining action bridges are still missing.
-- There is no full execution engine: no multi-node autonomous executor, repair loop, or hook runner. A narrow scheduler/resume bridge can now choose and expose the next safe action from persisted approvals, patches, tests, and reviews, while a one-step dispatcher can run the scheduler-selected approved patch apply, test, review, or final-support action from real artifacts. Narrow AgentRun executor nodes can run approval-gated patch proposal/apply/restore, approved test-command work, and read-only review work while recording run events/artifacts/evidence.
+- There is no full execution engine: no multi-node autonomous executor, repair loop, or hook runner. A narrow scheduler/resume bridge can now choose and expose the next safe action from persisted approvals, patches, tests, and reviews, while a one-step dispatcher can run the scheduler-selected approved patch apply, test, review, or final-support action from real artifacts. Narrow AgentRun executor nodes can run approval-gated patch draft/proposal/apply/restore, approved test-command work, and read-only review work while recording run events/artifacts/evidence.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
 - OpenAI-compatible providers are health/config stubs only.
@@ -135,7 +135,7 @@ now has real persisted or approval-gated functional islands.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 125/164 visible Phase 2 checkboxes are checked. Only 1/12 depth
+Progress read: 126/165 visible Phase 2 checkboxes are checked. Only 1/12 depth
 tracks is fully complete, and 11/12 are in progress. The subchecks below show
 the real completed work; the largest remaining risk is still concentrated in
 D2, D5, D6, and D3.
@@ -179,7 +179,7 @@ D2, D5, D6, and D3.
   - [x] Approval decisions now auto-resume through the scheduler bridge only when the approved proposal is the last pending approval for that run.
   - [x] Added a one-step scheduler dispatcher that can run the post-resume scheduler-selected action for approved patch apply, approved/approval-queued tests, read-only review, or final-support recording from real persisted artifacts.
   - [x] The scheduler dispatcher now asks the Rust scheduler for a bounded next decision after each dispatched action and can continue through ready patch/test/review/final-support steps without inventing artifacts.
-  - [x] Approved plan approvals now trigger a narrow PatchDraftAgent path that reads only approved plan files, asks local Ollama for complete replacement contents, and records the resulting diff through `agent_execute_patch_proposal`.
+  - [x] Approved plan approvals now trigger a narrow `agent_execute_patch_draft` path that reads only approved plan files, asks local Ollama for complete replacement contents, records model-call receipts, parses structured JSON in Rust, and records the resulting diff through `agent_execute_patch_proposal`.
   - [x] Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
   - [x] Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
   - [x] Added a narrow `agent_execute_patch_apply` bridge that waits on pending `FileWrite` approvals, applies an existing PatchProposal through the stale-file/checkpoint PatchEngine path, writes only after approval, and records AgentRun node events, patch-apply artifacts, and diff evidence receipts.
@@ -207,7 +207,7 @@ D2, D5, D6, and D3.
   - [x] Added approval orchestration coverage proving safe resume is called only when the approval policy allows it and receives the freshly decided approval state before scheduler dispatch.
   - [x] Added scheduler dispatcher coverage for patch apply, tests, review, final support, and passive wait decisions.
   - [x] Added scheduler dispatcher continuation coverage proving an approved patch apply can continue into a scheduler-selected test step.
-  - [x] Added deterministic PatchDraftAgent parser/action coverage for approved generated patches, unapproved paths, unchanged output, and approval-flow orchestration.
+  - [x] Added deterministic PatchDraftAgent Rust parser/bridge coverage plus frontend handoff coverage for approved generated patches, unapproved paths, unchanged output, truncated reads, and approval-flow orchestration.
   - [x] Added behavior coverage proving proposed diffs request a separate apply approval before showing or invoking the write action.
   - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - [x] Keep grep/source verifiers only as smoke guards.
@@ -235,11 +235,12 @@ D2, D5, D6, and D3.
   - [x] AgentScheduler can now identify an approved proposed patch as ready for patch apply from persisted stores; Focus UI shows that real next action and can call the existing patch-apply bridge.
   - [x] After the last required approval is recorded, the scheduler dispatcher can automatically execute the scheduler-selected approved patch apply step. It still does not generate patch content from an approved plan.
   - [x] Added a bounded workspace file-read bridge for PatchDraftAgent: relative project paths only, max four files, byte capped, and still enforced by the workspace approved-root manager.
-  - [x] Added structured Ollama patch JSON parsing that accepts only files actually read from the approved plan, rejects unapproved paths, rejects unchanged output, and feeds exact replacement contents into the patch proposal bridge.
+  - [x] Added structured Rust Ollama patch JSON parsing that accepts only files actually read from the approved plan, rejects unapproved paths, rejects unchanged output, rejects truncated file inputs, and feeds exact replacement contents into the patch proposal bridge.
   - [x] Approval flow now resumes the waiting run, then asks PatchDraftAgent to create a proposed diff when the build approval is final and no patch already exists; it does not auto-apply that generated patch.
   - [x] Patch apply now requires a separate apply approval ID in the Tauri/Rust apply request. The proposal approval can create a diff, but it no longer authorizes the disk write path by itself.
   - [x] Focus diff actions now request a persisted apply approval card first, then pass the real approved bridge proposal ID into the patch apply executor before any file write.
-  - [ ] Move the generated-patch step fully into the autonomous runtime executor/repair loop instead of renderer orchestration.
+  - [x] Moved PatchDraft file-read, local Ollama call, JSON parse, model-call receipts, and patch-proposal capture out of renderer glue into the `agent_execute_patch_draft` Tauri bridge.
+  - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.
   - [ ] Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - [ ] Surface full rollback state in the UI beyond existing patch/apply/restore receipts.
   - [ ] Connect generated build outputs to test and review steps as a complete repair-capable loop.

@@ -90,8 +90,11 @@ complete:
   approved patch apply, approved or approval-queued tests, read-only review, or
   final-support recording. After each dispatched action it asks the Rust
   scheduler for a bounded next decision, stopping on passive/repeated states or
-  the depth limit. It does not generate patch content, bypass approvals, or run
-  arbitrary tools.
+  the depth limit. A separate `agent_execute_patch_draft` bridge can perform the
+  approved plan-file read, local Ollama PatchDraftAgent call, Rust JSON parse,
+  model-call receipt recording, and patch-proposal capture path. That bridge is
+  still a narrow renderer-invoked command, not the full executor/repair loop. It
+  does not apply generated patches, bypass approvals, or run arbitrary tools.
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.
@@ -237,7 +240,13 @@ resume transition when exactly one approval is executable. It does not yet
 dispatch the whole loop by itself. The `agent_execute_patch_proposal` bridge can
 advance a run from a pending approval boundary into an approved patch-proposal
 node, persist the patch proposal, and record node events, artifact IDs, and diff
-evidence receipts. The `agent_execute_patch_apply` bridge can advance an
+evidence receipts. The `agent_execute_patch_draft` bridge owns the approved
+generated-patch slice before that proposal node: it reads only scoped approved
+plan files, calls local Ollama, records model-call receipts, rejects truncated,
+unapproved, empty, duplicate, or unchanged generated file contents, and then
+feeds the approved proposal bridge. It remains a narrow command invoked by the
+renderer after approval, not an autonomous repair-loop node. The
+`agent_execute_patch_apply` bridge can advance an
 approved existing PatchProposal into a patch-apply node, write files through the
 stale-file/checkpoint PatchEngine path, and record patch-apply receipts. The
 `agent_execute_patch_restore` bridge can advance an approved existing applied
@@ -748,15 +757,19 @@ isolation start paying for the added workspace shape.
 
 ### ADR-0009: PatchDraftAgent Proposes, It Does Not Apply
 
-Decision: Approved plan/build approval can trigger a narrow PatchDraftAgent path
-that reads only approved plan files, asks local Ollama for structured complete
-replacement contents, and records a proposed diff through the AgentRun patch
-proposal bridge. Applying that generated proposal requires a separate apply
-approval ID in the patch apply request; the proposal approval is not accepted as
-write authorization by the renderer action or the Rust apply bridge.
+Decision: Approved plan/build approval can trigger a narrow
+`agent_execute_patch_draft` PatchDraftAgent bridge. The bridge reads only scoped
+approved plan files, asks local Ollama for structured complete replacement
+contents, records model-call receipts, parses and validates the returned JSON in
+Rust, and records a proposed diff through the AgentRun patch proposal bridge.
+Applying that generated proposal requires a separate apply approval ID in the
+patch apply request; the proposal approval is not accepted as write
+authorization by the renderer action or the Rust apply bridge.
 
 Reason: The current approval copy scopes this action to proposing a patch. File
 writes must remain visible through the existing patch apply/checkpoint gates, so
 generated content and disk mutation stay separate trust boundaries. The
 scheduler may still surface a proposed patch as the next step, but the action
 queues or requires the apply-specific approval before any file write occurs.
+The bridge removes renderer-side PatchDraft parsing/orchestration, but it is not
+yet the full autonomous executor/repair loop.

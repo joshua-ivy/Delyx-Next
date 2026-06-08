@@ -1,24 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { sendOllamaChat, selectedOllamaModel } from "../features/models/ollamaClient";
+import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { executePatchProposalNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { executePatchDraftNodeOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { proposeApprovedPlanPatchWithOllama, type OllamaPatchProposalState } from "./appShellOllamaPatchActions";
-import { loadWorkspaceFiles } from "./workspaceBridge";
 
 vi.mock("../features/models/ollamaClient", () => ({
   selectedOllamaModel: vi.fn(),
-  sendOllamaChat: vi.fn(),
-}));
-
-vi.mock("./workspaceBridge", () => ({
-  loadWorkspaceFiles: vi.fn(),
 }));
 
 vi.mock("../features/runs/agentExecutorClient", () => ({
-  executePatchProposalNodeOverBridge: vi.fn(),
+  executePatchDraftNodeOverBridge: vi.fn(),
 }));
 
 vi.mock("../features/patches/patchClient", () => ({
@@ -34,25 +28,19 @@ vi.mock("./ShellPreferenceController", () => ({
   notifyLocalAction: vi.fn(),
 }));
 
-const executePatch = vi.mocked(executePatchProposalNodeOverBridge);
-const loadFiles = vi.mocked(loadWorkspaceFiles);
+const executePatchDraft = vi.mocked(executePatchDraftNodeOverBridge);
 const loadPatches = vi.mocked(loadPatchSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const model = vi.mocked(selectedOllamaModel);
-const ollama = vi.mocked(sendOllamaChat);
 
 beforeEach(() => {
   vi.clearAllMocks();
   model.mockReturnValue("qwen3-coder:30b");
-  loadFiles.mockResolvedValue([{ contents: "before\n", path: "src/main.ts", truncated: false }]);
-  ollama.mockResolvedValue({
-    model: "qwen3-coder:30b",
-    providerId: "ollama-local",
-    text: "{\"files\":[{\"path\":\"src/main.ts\",\"after\":\"after\\n\"}]}",
-  });
-  executePatch.mockResolvedValue({
+  executePatchDraft.mockResolvedValue({
     message: "Patch proposal patch-1 captured.",
+    model: "qwen3-coder:30b",
     patchId: "patch-1",
+    providerId: "ollama-local",
     runId: "run-1",
     status: "completed",
   });
@@ -67,13 +55,17 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
     const created = await proposeApprovedPlanPatchWithOllama(state, approval);
 
     expect(created).toBe(true);
-    expect(loadFiles).toHaveBeenCalledWith(project, ["src/main.ts"]);
-    expect(ollama).toHaveBeenCalled();
-    expect(executePatch).toHaveBeenCalledWith(expect.objectContaining({
+    expect(executePatchDraft).toHaveBeenCalledWith(expect.objectContaining({
       approvalId: "approval-1",
+      approvedRoots: ["C:/repo"],
       clientId: "patch-run-1-approval-1",
-      files: [{ after: "after\n", path: "C:/repo/src/main.ts" }],
+      filesLikelyInvolved: ["src/main.ts"],
+      goal: "Update value.",
+      model: "qwen3-coder:30b",
+      planSteps: ["Update value"],
+      projectPath: "C:/repo",
       runId: "run-1",
+      scopePaths: ["src/main.ts"],
     }));
     expect(state.setPatches).toHaveBeenCalledWith([patch]);
     expect(appendThreadMessageOverBridge).toHaveBeenCalled();
@@ -85,8 +77,7 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
     const created = await proposeApprovedPlanPatchWithOllama(state, approval);
 
     expect(created).toBe(false);
-    expect(loadFiles).not.toHaveBeenCalled();
-    expect(executePatch).not.toHaveBeenCalled();
+    expect(executePatchDraft).not.toHaveBeenCalled();
   });
 });
 
