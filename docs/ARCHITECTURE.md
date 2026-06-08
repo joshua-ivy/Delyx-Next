@@ -709,3 +709,14 @@ with real runtime receipts. Keeping the old cockpit mounted would preserve the
 confusing dashboard furniture the UI cleanup removed, while deleting every old
 contract at once would erase useful guardrails before equivalent Focus behavior
 tests exist.
+
+### ADR-0008: Single Rust Crate Until Extraction Pressure
+
+Decision: Delyx Next keeps one Rust crate at `apps/desktop/src-tauri` for the
+current Phase 2 work. The target runtime map names domains and future extraction
+points, not crates that must exist before the code has earned them.
+
+Reason: Splitting crates now would mostly create architecture theater. The
+current risk is execution depth, persistence, approvals, receipts, and UI truth;
+crate extraction should happen only when compile boundaries, ownership, or test
+isolation start paying for the added workspace shape.

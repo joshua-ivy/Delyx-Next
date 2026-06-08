@@ -224,8 +224,8 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Build final-answer support records from files read, commands run, tests executed, diffs produced, model calls, approvals, and evidence.
   - Make unsupported, insufficient, partial, and untested final-answer states visible.
 
-- [ ] D10 - Architecture Reconciliation
-  - Record the current single-crate Rust decision in `docs/ARCHITECTURE.md`.
+- [x] D10 - Architecture Reconciliation
+  - Recorded the current single-crate Rust decision in `docs/ARCHITECTURE.md`.
   - Split crates only when real pressure justifies it.
   - Keep target architecture as an extraction map, not a fake repo shape.
 
