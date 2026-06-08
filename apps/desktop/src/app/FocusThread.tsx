@@ -9,7 +9,7 @@ import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusIcon, Pipe, Think } from "./focusAtoms";
 import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatusLabel, type FocusMode } from "./focusFormat";
 import { MarkdownMessage } from "./focusMarkdown";
-import { firstRunnableTestCommand } from "./testCommand";
+import { FocusActionLine, FocusOutcomePeek, FocusTestPeek } from "./FocusThreadArtifacts";
 
 interface FocusThreadProps {
   activePlan: PlanView | undefined;
@@ -20,6 +20,7 @@ interface FocusThreadProps {
   onDecideProposal: (proposalId: string, status: "approved" | "denied") => void;
   onModeChange: (mode: FocusMode) => void;
   onOpenPalette: () => void;
+  onRecordFinal: () => void;
   onRunReview: () => void;
   onRunTests: () => void;
   onSend: (value: string) => void;
@@ -59,8 +60,9 @@ export function FocusThread(props: FocusThreadProps) {
             <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} />
             <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
             <DiffPeek onApplyPatch={props.onApplyPatch} patches={props.patches} proposals={props.proposals} />
-            <TestPeek activePlan={props.activePlan} onRunTests={props.onRunTests} patches={props.patches} tests={props.tests} />
+            <FocusTestPeek activePlan={props.activePlan} onRunTests={props.onRunTests} patches={props.patches} tests={props.tests} />
             <ReviewPeek onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
+            <FocusOutcomePeek canRecord={hasAssistantSummary(props.thread)} onRecordFinal={props.onRecordFinal} run={props.run} />
           </div>
         </div>
         <div className="dock">
@@ -214,28 +216,6 @@ function DiffPeek({ onApplyPatch, patches, proposals }: { onApplyPatch: (patchId
   return <div className="peek"><div className="peek-head"><FocusIcon name="diff" /> {file.item.path}<span className="stat">{file.patch.status}</span></div>{file.item.diff.slice(0, 8).map((line, index) => <div className={`dl ${line.kind === "added" ? "add" : line.kind === "removed" ? "del" : "ctx"}`} key={index}><span className="ln">{line.kind === "added" ? "+" : line.kind === "removed" ? "-" : index + 1}</span><span className="tx">{line.text || " "}</span></div>)}{canApply && <div className="plan-actions"><button className="select" onClick={() => onApplyPatch(file.patch.id)} type="button">Apply patch</button></div>}</div>;
 }
 
-function TestPeek({
-  activePlan,
-  onRunTests,
-  patches,
-  tests,
-}: {
-  activePlan: PlanView | undefined;
-  onRunTests: () => void;
-  patches: PatchProposalView[];
-  tests: TestArtifactView[];
-}) {
-  const test = tests[0];
-  if (!test) {
-    const command = firstRunnableTestCommand(activePlan?.testsToRun);
-    if (!command || !patches.some((patch) => patch.status === "applied")) {
-      return null;
-    }
-    return <ActionLine icon="flask" label="Run tests" onClick={onRunTests} text={command.label} />;
-  }
-  return <ActionLine icon="flask" label={`${test.command} / ${test.status ?? "captured"}`} text={test.failureSummary ?? `Exit ${test.exitCode ?? "unknown"}`} />;
-}
-
 function ReviewPeek({ onRunReview, patches, reports, tests }: { onRunReview: () => void; patches: PatchProposalView[]; reports: ReviewReportView[]; tests: TestArtifactView[] }) {
   const report = reports[0];
   const canRun = patches.length > 0 || tests.length > 0;
@@ -243,7 +223,7 @@ function ReviewPeek({ onRunReview, patches, reports, tests }: { onRunReview: () 
     return null;
   }
   if (!report) {
-    return <ActionLine icon="doc" label="Run review" onClick={onRunReview} text={`${patches.length} diff artifact(s), ${tests.length} test artifact(s)`} />;
+    return <FocusActionLine icon="doc" label="Run review" onClick={onRunReview} text={`${patches.length} diff artifact(s), ${tests.length} test artifact(s)`} />;
   }
   const finding = report.findings[0];
   return <div className="peek">
@@ -251,10 +231,6 @@ function ReviewPeek({ onRunReview, patches, reports, tests }: { onRunReview: () 
     <div className="approval-copy"><b>{finding?.title ?? report.riskSummary}</b><span>{finding?.detail ?? report.testSummary}</span><span>{report.evidenceSummary}</span></div>
     {canRun && <div className="plan-actions"><button className="select" onClick={onRunReview} type="button">Refresh review</button></div>}
   </div>;
-}
-
-function ActionLine({ icon, label, onClick, text }: { icon: "doc" | "flask" | "plan"; label: string; onClick?: () => void; text: string }) {
-  return <button className="focus-action-line" onClick={onClick} type="button"><FocusIcon name={icon} /><span><b>{label}</b><em>{text}</em></span></button>;
 }
 
 function statusTone(status: AgentRunView["status"] | undefined) {
@@ -296,4 +272,8 @@ function runLiveMessages(run: AgentRunView) {
 
 function unique(items: string[]) {
   return items.filter((item, index) => item.trim().length > 0 && items.indexOf(item) === index);
+}
+
+function hasAssistantSummary(thread: TaskThread) {
+  return thread.messages.some((message) => message.role === "assistant" && message.body.trim());
 }

@@ -219,6 +219,8 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - [ ] D9 - Evidence and Final Answer Receipts
   - Added a narrow final-answer support synthesis bridge for existing AgentRun evidence and passed persisted test artifacts.
+  - Focus thread UI now shows final support receipt counts when AgentOutcome exists.
+  - Focus can record final support from an existing assistant message only; it links existing AgentRun evidence and passed persisted tests through the Tauri bridge and does not generate new prose or infer claims.
   - Build final-answer support records from files read, commands run, tests executed, diffs produced, model calls, approvals, and evidence.
   - Make unsupported, insufficient, partial, and untested final-answer states visible.
 

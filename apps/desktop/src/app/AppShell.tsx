@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
+import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { runReviewForActiveRun } from "./appShellReviewActions";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
@@ -185,6 +186,15 @@ export function AppShell() {
       setThreadState,
     });
   };
+  const recordFinal = () => {
+    void recordFinalSupportForActiveThread({
+      activeRun,
+      activeThread,
+      setAgentRuns,
+      setThreads,
+      setThreadState,
+    });
+  };
   const applyPatch = (patchId: string) => {
     void applyApprovedPatchForActiveRun({
       activeProject,
@@ -243,6 +253,7 @@ export function AppShell() {
         onDecideProposal={decideProposal}
         onOpenWorkspace={() => setWorkspaceOpen(true)}
         onApplyPatch={applyPatch}
+        onRecordFinal={recordFinal}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
         onRunReview={runReview}
         onRunTests={runTests}

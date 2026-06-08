@@ -44,6 +44,37 @@ describe("FocusThread test actions", () => {
   });
 });
 
+describe("FocusThread final support", () => {
+  it("records final support from an existing assistant answer", () => {
+    const onRecordFinal = vi.fn();
+    renderThread({
+      approvalStatus: "pending",
+      messages: [
+        { body: "Did it pass?", role: "user" },
+        { body: "The patch is ready for review.", role: "assistant" },
+      ],
+      onApplyPatch: vi.fn(),
+      onRecordFinal,
+      run: runningRun(),
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Record final support/ }));
+
+    expect(onRecordFinal).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows final support receipt counts when an outcome exists", () => {
+    renderThread({
+      approvalStatus: "pending",
+      onApplyPatch: vi.fn(),
+      run: runWithOutcome(),
+    });
+
+    expect(screen.getByText("Final support / succeeded")).not.toBeNull();
+    expect(screen.getByText("1 evidence receipt(s), 1 passed test receipt(s)")).not.toBeNull();
+  });
+});
+
 describe("FocusThread live run placement", () => {
   it("places live run activity between the latest user message and assistant reply", () => {
     const { container } = renderThread({
@@ -88,6 +119,7 @@ function renderThread({
   approvalStatus,
   messages,
   onApplyPatch,
+  onRecordFinal = vi.fn(),
   onRunTests = vi.fn(),
   patches = [patch()],
   proposals,
@@ -97,6 +129,7 @@ function renderThread({
   approvalStatus: ActionProposalView["status"];
   messages?: TaskThread["messages"];
   onApplyPatch: (patchId: string) => void;
+  onRecordFinal?: () => void;
   onRunTests?: () => void;
   patches?: PatchProposalView[];
   proposals?: ActionProposalView[];
@@ -112,6 +145,7 @@ function renderThread({
       onDecideProposal={vi.fn()}
       onModeChange={vi.fn()}
       onOpenPalette={vi.fn()}
+      onRecordFinal={onRecordFinal}
       onRunReview={vi.fn()}
       onRunTests={onRunTests}
       onSend={vi.fn()}
@@ -170,6 +204,19 @@ function runningRun(): AgentRunView {
     status: "running",
     threadId: "thread-1",
     updatedAt: "2026-06-08T00:01:00.000Z",
+  };
+}
+
+function runWithOutcome(): AgentRunView {
+  return {
+    ...runningRun(),
+    outcome: {
+      evidenceRecordIds: ["evidence-1"],
+      status: "succeeded",
+      summary: "The patch is ready for review.",
+      testArtifactIds: ["test-1"],
+    },
+    status: "succeeded",
   };
 }
 

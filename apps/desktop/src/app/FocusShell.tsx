@@ -31,6 +31,7 @@ interface FocusShellProps {
   onApprovePlan: () => void;
   onDecideProposal: (proposalId: string, status: "approved" | "denied") => void;
   onOpenWorkspace: () => void;
+  onRecordFinal: () => void;
   onRefreshModels: () => void;
   onRunReview: () => void;
   onRunTests: () => void;
@@ -97,7 +98,7 @@ export function FocusShell(props: FocusShellProps) {
       </aside>
 
       {view === "home" && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} />}
-      {view === "thread" && props.activeThread && <FocusThread activePlan={props.activePlan} mode={mode} model={selectedModel(props.modelSettings)} onApplyPatch={props.onApplyPatch} onApprovePlan={props.onApprovePlan} onDecideProposal={props.onDecideProposal} onModeChange={setMode} onOpenPalette={() => setOverlay("palette")} onRunReview={props.onRunReview} onRunTests={props.onRunTests} onSend={send} patches={activePatches} proposals={activeProposals} reviews={props.reviews.filter((report) => report.runId === props.activeRun?.id)} run={props.activeRun} tests={activeTests} thread={props.activeThread} />}
+      {view === "thread" && props.activeThread && <FocusThread activePlan={props.activePlan} mode={mode} model={selectedModel(props.modelSettings)} onApplyPatch={props.onApplyPatch} onApprovePlan={props.onApprovePlan} onDecideProposal={props.onDecideProposal} onModeChange={setMode} onOpenPalette={() => setOverlay("palette")} onRecordFinal={props.onRecordFinal} onRunReview={props.onRunReview} onRunTests={props.onRunTests} onSend={send} patches={activePatches} proposals={activeProposals} reviews={props.reviews.filter((report) => report.runId === props.activeRun?.id)} run={props.activeRun} tests={activeTests} thread={props.activeThread} />}
       {view === "thread" && !props.activeThread && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} />}
       {view === "settings" && <FocusSettings activeRun={props.activeRun} desktopShell={props.desktopShell} mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} project={props.activeProject} threads={visibleThreads} />}
 
