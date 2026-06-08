@@ -132,7 +132,7 @@ now has real persisted or approval-gated functional islands.
 - [x] ~~Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.~~
 - [x] ~~Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.~~
 - [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, and one-step approval-safe dispatcher now exist.
-- [ ] Approved plan -> generated patch proposal now re-enters the scheduler and can queue/continue apply -> test -> review steps through approval boundaries; repair PatchDraft handoff exists, but the complete repair-capable loop is still open.
+- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; the remaining gap is making PatchDraft an executor-owned repair/build node instead of a narrow renderer-invoked command.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
@@ -238,7 +238,7 @@ Progress board:
   - [x] ~~Reconciled the plan with Radix/TanStack/Zustand targets: do not add those broad dependencies in Phase 2 unless a real primitive/cache/state problem needs them and tests justify the dependency weight.~~
   - [x] ~~No-thread cockpit hides unbacked progress, diff, terminal, inspector, and metric-card furniture; Focus home centers the real composer and keeps setup nudges tied to real repo/model state.~~
 
-- [ ] D5 - Functional Build Flow (in progress; approved plan -> proposed diff exists, automatic apply/test/review/repair chain missing)
+- [ ] D5 - Functional Build Flow (in progress; approved plan -> proposed diff and scheduler continuation exist, executor-owned PatchDraft loop still missing)
   - [x] ~~Convert approved plan approvals into generated patch proposals through a narrow runtime bridge.~~
   - [x] ~~Runtime can now convert an explicit approved patch-proposal request into a persisted AgentRun patch node. The UI plan/build flow can now generate patch content through local Ollama, but the full autonomous engine/repair loop still does not own that orchestration.~~
   - [x] ~~Runtime can now execute an explicit approved PatchProposal apply node through AgentRun. This is real file I/O through the existing stale-file and checkpoint gates, but it is not yet automatically chained from plan approval.~~
