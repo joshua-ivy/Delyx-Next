@@ -48,7 +48,7 @@ describe("FocusThread final support", () => {
     });
 
     expect(screen.getByText("Final support / succeeded")).not.toBeNull();
-    expect(screen.getByText("1 evidence receipt(s), 1 passed test receipt(s)")).not.toBeNull();
+    expect(screen.getByText("1 evidence receipt(s), 1 passed test receipt(s).")).not.toBeNull();
   });
 });
 

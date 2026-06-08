@@ -67,7 +67,7 @@ export function FocusThread(props: FocusThreadProps) {
             <FocusDiffPeek onPatchAction={props.onApplyPatch} patches={props.patches} proposals={props.proposals} run={props.run} />
             <FocusTestPeek activePlan={props.activePlan} onRunTests={props.onRunTests} patches={props.patches} tests={props.tests} />
             <ReviewPeek onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
-            <FocusOutcomePeek canRecord={hasAssistantSummary(props.thread)} onRecordFinal={props.onRecordFinal} run={props.run} />
+            <FocusOutcomePeek canRecord={hasAssistantSummary(props.thread)} onRecordFinal={props.onRecordFinal} run={props.run} tests={props.tests} />
           </div>
         </div>
         <div className="dock">

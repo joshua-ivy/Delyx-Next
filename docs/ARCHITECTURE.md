@@ -557,7 +557,10 @@ diff, command, approval, model call, or external-agent artifact. The
 AgentRun evidence IDs and passed persisted test artifact IDs, emitting a
 visible support-synthesis event, and persisting those AgentOutcome support
 links. It does not infer claim support from prose or make unsupported/tested
-states complete by itself.
+states complete by itself. Focus final-support receipts classify current
+support visibly from existing receipt counts: supported, unsupported,
+insufficient, partial, and untested states are shown before or after recording
+without inventing evidence.
 
 ## Data Models
 

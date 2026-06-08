@@ -68,20 +68,45 @@ export function FocusOutcomePeek({
   canRecord,
   onRecordFinal,
   run,
+  tests,
 }: {
   canRecord: boolean;
   onRecordFinal: () => void;
   run: AgentRunView | undefined;
+  tests: TestArtifactView[];
 }) {
   if (run?.outcome) {
     const evidence = run.outcome.evidenceRecordIds.length;
-    const tests = run.outcome.testArtifactIds.length;
-    return <FocusActionLine icon="doc" label={`Final support / ${run.outcome.status}`} text={`${evidence} evidence receipt(s), ${tests} passed test receipt(s)`} />;
+    const passedTests = run.outcome.testArtifactIds.length;
+    const support = finalSupportState(evidence, passedTests);
+    return <FocusActionLine icon="doc" label={`Final support / ${support.label(run.outcome.status)}`} text={support.text} />;
   }
-  if (!run || !canRecord) {
+  if (!run) {
     return null;
   }
-  return <FocusActionLine icon="doc" label="Record final support" onClick={onRecordFinal} text="Links existing evidence and passed tests; no new claims." />;
+  const support = finalSupportState(run.evidence.length, passedTestCount(tests));
+  if (!canRecord) {
+    return <FocusActionLine icon="doc" label="Final support / insufficient" text={`Needs an assistant answer before support can be recorded. ${support.text}`} />;
+  }
+  return <FocusActionLine icon="doc" label="Record final support" onClick={onRecordFinal} text={`${support.text} No new claims are generated.`} />;
+}
+
+function passedTestCount(tests: TestArtifactView[]) {
+  return tests.filter((test) => test.status === "passed").length;
+}
+
+function finalSupportState(evidenceCount: number, passedTestCount: number) {
+  const counts = `${evidenceCount} evidence receipt(s), ${passedTestCount} passed test receipt(s).`;
+  if (evidenceCount > 0 && passedTestCount > 0) {
+    return { label: (status: string) => status, text: counts };
+  }
+  if (evidenceCount === 0 && passedTestCount === 0) {
+    return { label: () => "partial", text: `Unsupported and untested: ${counts}` };
+  }
+  if (evidenceCount === 0) {
+    return { label: () => "partial", text: `Insufficient evidence: ${counts}` };
+  }
+  return { label: () => "partial", text: `Untested: ${counts}` };
 }
 
 function schedulerLabel(kind: AgentScheduleDecisionView["kind"]) {

@@ -135,7 +135,7 @@ now has real persisted or approval-gated functional islands.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 131/169 visible Phase 2 checkboxes are checked. Only 1/12 depth
+Progress read: 133/170 visible Phase 2 checkboxes are checked. Only 1/12 depth
 tracks is fully complete, and 11/12 are in progress. The subchecks below show
 the real completed work; the largest remaining risk is still concentrated in
 D2, D5, D6, and D3.
@@ -211,6 +211,7 @@ D2, D5, D6, and D3.
   - [x] Added behavior coverage proving proposed diffs request a separate apply approval before showing or invoking the write action.
   - [x] Added behavior coverage proving applied diffs surface checkpoint rollback state and require a separate restore approval before invoking the restore bridge.
   - [x] Added behavior coverage proving rollback receipt UI shows checkpoint files, restore approval IDs, stale-restore failures, and post-restore guidance from real patch/run state.
+  - [x] Added behavior coverage proving final support UI names supported, unsupported, insufficient, partial, and untested states from real evidence/test receipt counts.
   - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - [x] Keep grep/source verifiers only as smoke guards.
   - [x] Stop using source-substring checks as proof of UI behavior.
@@ -282,7 +283,7 @@ D2, D5, D6, and D3.
   - [x] Focus thread UI now shows final support receipt counts when AgentOutcome exists.
   - [x] Focus can record final support from an existing assistant message only; it links existing AgentRun evidence and passed persisted tests through the Tauri bridge and does not generate new prose or infer claims.
   - [ ] Build final-answer support records from files read, commands run, tests executed, diffs produced, model calls, approvals, and evidence.
-  - [ ] Make unsupported, insufficient, partial, and untested final-answer states visible.
+  - [x] Make unsupported, insufficient, partial, and untested final-answer states visible.
 
 - [x] D10 - Architecture Reconciliation
   - [x] Recorded the current single-crate Rust decision in `docs/ARCHITECTURE.md`.
