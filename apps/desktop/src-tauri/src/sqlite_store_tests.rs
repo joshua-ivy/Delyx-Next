@@ -1,6 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use crate::sqlite_store::open_migrated_memory_database;
+    use crate::sqlite_store::{open_migrated_database, open_migrated_memory_database};
+    use rusqlite::Connection;
+    use std::fs;
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn migration_creates_agent_run_tables() {
@@ -25,5 +29,56 @@ mod tests {
         );
 
         assert!(result.unwrap_err().to_string().contains("FOREIGN KEY"));
+    }
+
+    #[test]
+    fn migration_upgrades_legacy_evidence_records() {
+        let path = temp_path("legacy-evidence");
+        let legacy = Connection::open(&path).unwrap();
+        legacy
+            .execute_batch(
+                "CREATE TABLE agent_runs (
+                   id TEXT PRIMARY KEY NOT NULL,
+                   thread_id TEXT NOT NULL,
+                   status TEXT NOT NULL,
+                   outcome_summary TEXT
+                 );
+                 CREATE TABLE evidence_records (
+                   id TEXT NOT NULL,
+                   run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
+                   source_kind TEXT NOT NULL,
+                   title TEXT NOT NULL,
+                   PRIMARY KEY (run_id, id)
+                 );",
+            )
+            .unwrap();
+        drop(legacy);
+
+        let connection = open_migrated_database(&path).unwrap();
+        let columns = table_columns(&connection, "evidence_records");
+
+        assert!(columns.contains(&"source_id".to_string()));
+        assert!(columns.contains(&"retrieved_at".to_string()));
+        assert!(columns.contains(&"relevance_reason".to_string()));
+        let _ = fs::remove_file(path);
+    }
+
+    fn table_columns(connection: &Connection, table: &str) -> Vec<String> {
+        let mut statement = connection
+            .prepare(&format!("PRAGMA table_info({table})"))
+            .unwrap();
+        statement
+            .query_map([], |row| row.get::<_, String>(1))
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap()
+    }
+
+    fn temp_path(name: &str) -> PathBuf {
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}.sqlite3"))
     }
 }

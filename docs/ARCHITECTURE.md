@@ -22,7 +22,7 @@ Use old Delyx's Tauri/React/TypeScript/Rust/SQLite direction unless a decision r
 
 ## Current Implementation Reality
 
-As of 2026-06-07, the repo is Phase 1 skeleton-complete, not functionally
+As of 2026-06-08, the repo is Phase 1 skeleton-complete, not functionally
 complete:
 
 - Rust is a single crate in `apps/desktop/src-tauri`; the multi-crate target is
@@ -45,7 +45,10 @@ complete:
   and redacted support-bundle state persist to SQLite. Approved test artifacts,
   proposed patch diffs, review reports, external-agent run artifacts, and
   research EvidenceStore receipts persist receipt data to SQLite and reload
-  with ID continuity. Governance mutation bridges are still not live.
+  with ID continuity. AgentRun EvidenceRecords persist source IDs, locators,
+  quotes, hashes, retrieval timestamps, and relevance metadata, and the
+  thread/run snapshot bridge exposes those receipts to the UI. Governance
+  mutation bridges are still not live.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -186,7 +189,8 @@ approval bridge reload, recent workspace project reload, test artifact bridge
 reload, patch proposal bridge reload, review report reload, and external-agent
 run artifact reload now use SQLite. Research EvidenceStore receipts also
 persist to SQLite, including source kind, locator, excerpt, stance, and
-normalized claim keys.
+normalized claim keys. AgentRun EvidenceRecords also persist non-lossy receipt
+metadata and are serialized through desktop thread/run snapshots.
 
 ## Permission Engine
 

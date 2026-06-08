@@ -35,7 +35,15 @@ CREATE TABLE IF NOT EXISTS evidence_records (
   id TEXT NOT NULL,
   run_id TEXT NOT NULL REFERENCES agent_runs(id) ON DELETE CASCADE,
   source_kind TEXT NOT NULL,
+  source_id TEXT NOT NULL DEFAULT '',
   title TEXT NOT NULL,
+  uri TEXT,
+  quote TEXT,
+  hash TEXT,
+  retrieved_at TEXT NOT NULL DEFAULT '',
+  relevance_relationship TEXT,
+  relevance_score INTEGER,
+  relevance_reason TEXT,
   PRIMARY KEY (run_id, id)
 );
 

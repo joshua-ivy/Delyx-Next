@@ -3,7 +3,7 @@ use std::path::Path;
 
 use crate::agent_run::{
     AgentEvent, AgentNode, AgentOutcome, AgentRun, AgentRunError, AgentRunLedger, AgentRunStatus,
-    Artifact, EvidenceRecord, RunMetrics,
+    Artifact, RunMetrics,
 };
 
 pub fn save_to_path(ledger: &AgentRunLedger, path: &Path) -> Result<(), AgentRunError> {
@@ -35,7 +35,7 @@ pub fn save_to_connection(
             insert_artifact(connection, &run.id, artifact)?;
         }
         for evidence in &run.evidence {
-            insert_evidence(connection, &run.id, evidence)?;
+            crate::agent_run_evidence_persistence::insert_evidence(connection, &run.id, evidence)?;
         }
     }
     Ok(())
@@ -47,7 +47,7 @@ pub fn load_from_connection(connection: &Connection) -> Result<AgentRunLedger, A
     load_nodes(connection, &mut ledger)?;
     load_events(connection, &mut ledger)?;
     load_artifacts(connection, &mut ledger)?;
-    load_evidence(connection, &mut ledger)?;
+    crate::agent_run_evidence_persistence::load_evidence(connection, &mut ledger)?;
     ledger.refresh_loaded_counters();
     Ok(ledger)
 }
@@ -118,20 +118,6 @@ fn insert_artifact(
         .execute(
             "INSERT INTO artifacts (id, run_id, kind, label) VALUES (?1, ?2, ?3, ?4)",
             params![artifact.id, run_id, artifact.kind, artifact.label],
-        )
-        .map(|_| ())
-        .map_err(sql_error)
-}
-
-fn insert_evidence(
-    connection: &Connection,
-    run_id: &str,
-    evidence: &EvidenceRecord,
-) -> Result<(), AgentRunError> {
-    connection
-        .execute(
-            "INSERT INTO evidence_records (id, run_id, source_kind, title) VALUES (?1, ?2, ?3, ?4)",
-            params![evidence.id, run_id, evidence.source_kind, evidence.title],
         )
         .map(|_| ())
         .map_err(sql_error)
@@ -233,34 +219,6 @@ fn load_artifacts(
         let run = ledger.run_mut(&run_id)?;
         run.artifacts.push(artifact);
         run.metrics.artifact_count = run.artifacts.len();
-    }
-    Ok(())
-}
-
-fn load_evidence(
-    connection: &Connection,
-    ledger: &mut AgentRunLedger,
-) -> Result<(), AgentRunError> {
-    let mut statement = connection
-        .prepare("SELECT run_id, id, source_kind, title FROM evidence_records ORDER BY rowid")
-        .map_err(sql_error)?;
-    let rows = statement
-        .query_map([], |row| {
-            Ok((
-                row.get::<_, String>(0)?,
-                EvidenceRecord {
-                    id: row.get(1)?,
-                    source_kind: row.get(2)?,
-                    title: row.get(3)?,
-                },
-            ))
-        })
-        .map_err(sql_error)?;
-    for row in rows {
-        let (run_id, evidence) = row.map_err(sql_error)?;
-        let run = ledger.run_mut(&run_id)?;
-        run.evidence.push(evidence);
-        run.metrics.evidence_count = run.evidence.len();
     }
     Ok(())
 }

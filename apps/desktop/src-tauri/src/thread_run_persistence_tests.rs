@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use crate::agent_run::{EvidenceRecordInput, EvidenceRelevance};
     use crate::thread_run_bridge::{
         append_thread_message_record, create_thread_run_record, thread_run_snapshot_from_store,
         update_thread_status_record, ThreadMessageAppendRequest, ThreadRunCreateRequest,
@@ -29,6 +30,10 @@ mod tests {
             ),
         )
         .unwrap();
+        store
+            .ledger
+            .record_evidence_detail(&record.run.id, evidence_input())
+            .unwrap();
 
         save_to_path(&store, &path).unwrap();
         let bytes = fs::read(&path).unwrap();
@@ -41,6 +46,11 @@ mod tests {
             "Reloadable local answer."
         );
         assert_eq!(snapshot.runs[0].events[0].kind, "thread.created");
+        assert_eq!(snapshot.runs[0].evidence[0]["sourceId"], "file://README.md");
+        assert_eq!(
+            snapshot.runs[0].evidence[0]["relevance"]["reason"],
+            "README supports the local-first claim."
+        );
 
         let next =
             create_thread_run_record(&mut loaded, create_request("proj-1", "Next thread")).unwrap();
@@ -86,5 +96,22 @@ mod tests {
             .unwrap()
             .as_nanos();
         std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}.sqlite3"))
+    }
+
+    fn evidence_input() -> EvidenceRecordInput {
+        EvidenceRecordInput {
+            hash: Some("sha256:readme".to_string()),
+            quote: Some("Delyx Next is local-first.".to_string()),
+            relevance: Some(EvidenceRelevance {
+                reason: "README supports the local-first claim.".to_string(),
+                relationship: "doc".to_string(),
+                score: 95,
+            }),
+            retrieved_at: "2026-06-07T00:04:00.000Z".to_string(),
+            source_id: "file://README.md".to_string(),
+            source_kind: "local_file".to_string(),
+            title: "README.md".to_string(),
+            uri: Some("file:///README.md".to_string()),
+        }
     }
 }

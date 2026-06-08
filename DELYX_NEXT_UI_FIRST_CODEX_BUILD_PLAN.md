@@ -1,6 +1,6 @@
 # Delyx Next No-BS Build Checklist
 
-Last updated: 2026-06-07.
+Last updated: 2026-06-08.
 
 ## Independent Verification
 
@@ -133,8 +133,9 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Review report bridge records now save report IDs, decisions, summaries, finding order, hunk labels, priorities, and suggested fixes to SQLite and reload on desktop startup.
   - External-agent run bridge records now save adapter IDs, status, scope summary, terminal output, diff summary, review-required state, ordered transcript events, and linked test artifact IDs to SQLite and reload on desktop startup.
   - Research EvidenceStore records now save run IDs, source kind, title, locator, excerpt, stance, normalized claim keys, and post-reload ID continuity to SQLite.
+  - AgentRun EvidenceRecords now save source IDs, URIs, quotes, hashes, retrieval timestamps, and relevance metadata to SQLite; thread/run snapshots expose those receipts back to the UI instead of returning an empty evidence array.
   - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, skill reload, automation reload, release reload, support-bundle reload, test artifact reload, patch proposal reload, review report reload, external-agent run reload, research evidence reload, UI-ready bridge snapshots, and SQLite file format.
-  - Persist remaining final-answer support records and evidence/action bridges that still live only inside AgentRun rows or detached runtime state.
+  - Persist remaining final-answer support records and action bridges that still live only inside AgentRun rows or detached runtime state.
   - Next: add mutation/action bridges for persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
   - Add migration/repository tests that prove data survives reload.
 

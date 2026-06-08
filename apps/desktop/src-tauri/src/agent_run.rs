@@ -6,7 +6,7 @@ pub use crate::agent_run_commands::{
 use crate::agent_run_ids::numeric_suffix;
 pub use crate::agent_run_types::{
     AgentEvent, AgentNode, AgentOutcome, AgentRun, AgentRunError, AgentRunStatus, Artifact,
-    EvidenceRecord, RunMetrics,
+    EvidenceRecord, EvidenceRecordInput, EvidenceRelevance, RunMetrics,
 };
 
 #[derive(Debug, Default)]
@@ -119,12 +119,38 @@ impl AgentRunLedger {
         source_kind: &str,
         title: &str,
     ) -> Result<EvidenceRecord, AgentRunError> {
+        self.record_evidence_detail(
+            run_id,
+            EvidenceRecordInput {
+                hash: None,
+                quote: None,
+                relevance: None,
+                retrieved_at: String::new(),
+                source_id: title.to_string(),
+                source_kind: source_kind.to_string(),
+                title: title.to_string(),
+                uri: None,
+            },
+        )
+    }
+
+    pub fn record_evidence_detail(
+        &mut self,
+        run_id: &str,
+        input: EvidenceRecordInput,
+    ) -> Result<EvidenceRecord, AgentRunError> {
         let run = self.run_mut(run_id)?;
         ensure_running(run)?;
         let evidence = EvidenceRecord {
             id: format!("evidence-{}", run.evidence.len() + 1),
-            source_kind: source_kind.to_string(),
-            title: title.to_string(),
+            hash: input.hash,
+            quote: input.quote,
+            relevance: input.relevance,
+            retrieved_at: input.retrieved_at,
+            source_id: input.source_id,
+            source_kind: input.source_kind,
+            title: input.title,
+            uri: input.uri,
         };
         run.evidence.push(evidence.clone());
         run.metrics.evidence_count = run.evidence.len();

@@ -6,7 +6,7 @@ mod tests {
 
     use crate::agent_run::{
         append_agent_event, create_agent_run, get_agent_run, list_agent_runs, AgentRunError,
-        AgentRunLedger, AgentRunStatus,
+        AgentRunLedger, AgentRunStatus, EvidenceRecordInput, EvidenceRelevance,
     };
 
     const THREAD_ID: &str = "thread-local-real";
@@ -118,7 +118,7 @@ mod tests {
             .record_artifact(&second.id, "timeline", "second run artifact")
             .unwrap();
         ledger
-            .record_evidence(&run.id, "local_file", "AGENTS.md")
+            .record_evidence_detail(&run.id, detailed_evidence("AGENTS.md"))
             .unwrap();
         ledger.complete_run(&run.id, "complete").unwrap();
 
@@ -133,6 +133,19 @@ mod tests {
         assert_eq!(loaded_run.events[0].message, "real ledger event");
         assert_eq!(loaded_run.artifacts[0].label, "primary artifact");
         assert_eq!(loaded_run.evidence[0].title, "AGENTS.md");
+        assert_eq!(loaded_run.evidence[0].source_id, "file://AGENTS.md");
+        assert_eq!(
+            loaded_run.evidence[0].quote.as_deref(),
+            Some("Project rules")
+        );
+        assert_eq!(
+            loaded_run.evidence[0]
+                .relevance
+                .as_ref()
+                .unwrap()
+                .relationship,
+            "doc"
+        );
         assert_eq!(loaded_run.outcome.as_ref().unwrap().summary, "complete");
         assert_eq!(
             loaded.get_run(&second.id).unwrap().artifacts[0].id,
@@ -186,5 +199,22 @@ mod tests {
             .unwrap()
             .as_nanos();
         std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}.ledger"))
+    }
+
+    fn detailed_evidence(title: &str) -> EvidenceRecordInput {
+        EvidenceRecordInput {
+            hash: Some("sha256:rules".to_string()),
+            quote: Some("Project rules".to_string()),
+            relevance: Some(EvidenceRelevance {
+                reason: "Rules file supports the answer constraints.".to_string(),
+                relationship: "doc".to_string(),
+                score: 92,
+            }),
+            retrieved_at: "2026-06-07T00:04:00.000Z".to_string(),
+            source_id: format!("file://{title}"),
+            source_kind: "local_file".to_string(),
+            title: title.to_string(),
+            uri: Some(format!("file:///{title}")),
+        }
     }
 }

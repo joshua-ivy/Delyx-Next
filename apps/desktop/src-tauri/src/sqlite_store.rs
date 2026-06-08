@@ -36,5 +36,34 @@ pub fn open_migrated_memory_database() -> rusqlite::Result<Connection> {
 fn migrate(connection: &Connection) -> rusqlite::Result<()> {
     connection.pragma_update(None, "foreign_keys", "ON")?;
     connection.execute_batch(AGENT_RUN_MIGRATION)?;
+    ensure_evidence_columns(connection)?;
     Ok(())
+}
+
+fn ensure_evidence_columns(connection: &Connection) -> rusqlite::Result<()> {
+    let columns = table_columns(connection, "evidence_records")?;
+    for (name, definition) in [
+        ("source_id", "TEXT NOT NULL DEFAULT ''"),
+        ("uri", "TEXT"),
+        ("quote", "TEXT"),
+        ("hash", "TEXT"),
+        ("retrieved_at", "TEXT NOT NULL DEFAULT ''"),
+        ("relevance_relationship", "TEXT"),
+        ("relevance_score", "INTEGER"),
+        ("relevance_reason", "TEXT"),
+    ] {
+        if !columns.iter().any(|column| column == name) {
+            connection.execute(
+                &format!("ALTER TABLE evidence_records ADD COLUMN {name} {definition}"),
+                [],
+            )?;
+        }
+    }
+    Ok(())
+}
+
+fn table_columns(connection: &Connection, table: &str) -> rusqlite::Result<Vec<String>> {
+    let mut statement = connection.prepare(&format!("PRAGMA table_info({table})"))?;
+    let rows = statement.query_map([], |row| row.get::<_, String>(1))?;
+    rows.collect()
 }

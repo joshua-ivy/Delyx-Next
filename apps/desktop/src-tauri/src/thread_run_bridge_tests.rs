@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use crate::agent_run::{EvidenceRecordInput, EvidenceRelevance};
     use crate::thread_run_bridge::{
         append_thread_message_record, archive_thread_record, create_thread_run_record,
         thread_run_snapshot_from_store, update_thread_status_record, ThreadArchiveRequest,
@@ -34,6 +35,26 @@ mod tests {
         assert_eq!(snapshot.runs.len(), 1);
         assert_eq!(snapshot.threads[0].goal, "One");
         assert_eq!(snapshot.runs[0].thread_id, snapshot.threads[0].id);
+    }
+
+    #[test]
+    fn snapshot_exposes_run_evidence_records() {
+        let mut store = ThreadRunStore::default();
+        let record =
+            create_thread_run_record(&mut store, request("proj-1", "Use evidence")).unwrap();
+        store
+            .ledger
+            .record_evidence_detail(&record.run.id, evidence_input())
+            .unwrap();
+
+        let snapshot = thread_run_snapshot_from_store(&store, "proj-1");
+        let evidence = &snapshot.runs[0].evidence[0];
+
+        assert_eq!(evidence["runId"], record.run.id);
+        assert_eq!(evidence["sourceKind"], "local_file");
+        assert_eq!(evidence["sourceId"], "file://README.md");
+        assert_eq!(evidence["quote"], "Delyx Next is local-first.");
+        assert_eq!(evidence["relevance"]["relationship"], "doc");
     }
 
     #[test]
@@ -152,6 +173,23 @@ mod tests {
             status: status.map(str::to_string),
             thread_id: thread_id.to_string(),
             updated_at: "2026-06-07T00:03:00.000Z".to_string(),
+        }
+    }
+
+    fn evidence_input() -> EvidenceRecordInput {
+        EvidenceRecordInput {
+            hash: Some("sha256:readme".to_string()),
+            quote: Some("Delyx Next is local-first.".to_string()),
+            relevance: Some(EvidenceRelevance {
+                reason: "README supports the local-first claim.".to_string(),
+                relationship: "doc".to_string(),
+                score: 95,
+            }),
+            retrieved_at: "2026-06-07T00:04:00.000Z".to_string(),
+            source_id: "file://README.md".to_string(),
+            source_kind: "local_file".to_string(),
+            title: "README.md".to_string(),
+            uri: Some("file:///README.md".to_string()),
         }
     }
 }

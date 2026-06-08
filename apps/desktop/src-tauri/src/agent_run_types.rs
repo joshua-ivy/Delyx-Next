@@ -45,7 +45,32 @@ pub struct Artifact {
 pub struct EvidenceRecord {
     pub id: String,
     pub source_kind: String,
+    pub source_id: String,
     pub title: String,
+    pub uri: Option<String>,
+    pub quote: Option<String>,
+    pub hash: Option<String>,
+    pub retrieved_at: String,
+    pub relevance: Option<EvidenceRelevance>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EvidenceRelevance {
+    pub relationship: String,
+    pub score: i32,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EvidenceRecordInput {
+    pub source_kind: String,
+    pub source_id: String,
+    pub title: String,
+    pub uri: Option<String>,
+    pub quote: Option<String>,
+    pub hash: Option<String>,
+    pub retrieved_at: String,
+    pub relevance: Option<EvidenceRelevance>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

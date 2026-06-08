@@ -1,6 +1,7 @@
 use crate::agent_run::AgentRun;
 use crate::threads::{MessageRole, TaskThread, ThreadStatus};
 use serde::Serialize;
+use serde_json::{json, Map, Value};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadRunViewContext {
@@ -61,7 +62,7 @@ pub struct AgentRunView {
     pub nodes: Vec<serde_json::Value>,
     pub events: Vec<AgentEventView>,
     pub artifacts: Vec<serde_json::Value>,
-    pub evidence: Vec<serde_json::Value>,
+    pub evidence: Vec<Value>,
     pub metrics: RunMetricsView,
     pub created_at: String,
     pub updated_at: String,
@@ -136,7 +137,11 @@ pub fn run_view(
                 run_id: run.id.clone(),
             })
             .collect(),
-        evidence: Vec::new(),
+        evidence: run
+            .evidence
+            .iter()
+            .map(|evidence| evidence_view(evidence, &run.id))
+            .collect(),
         goal: thread.goal.clone(),
         id: run.id.clone(),
         metrics: RunMetricsView {
@@ -160,6 +165,37 @@ fn message_view(message: &crate::threads::ThreadMessage) -> ThreadMessageView {
     ThreadMessageView {
         body: message.body.clone(),
         role: role_key(message.role).to_string(),
+    }
+}
+
+fn evidence_view(evidence: &crate::agent_run::EvidenceRecord, run_id: &str) -> Value {
+    let mut value = Map::from_iter([
+        ("id".to_string(), json!(evidence.id)),
+        ("retrievedAt".to_string(), json!(evidence.retrieved_at)),
+        ("runId".to_string(), json!(run_id)),
+        ("sourceId".to_string(), json!(evidence.source_id)),
+        ("sourceKind".to_string(), json!(evidence.source_kind)),
+        ("title".to_string(), json!(evidence.title)),
+    ]);
+    insert_optional(&mut value, "hash", &evidence.hash);
+    insert_optional(&mut value, "quote", &evidence.quote);
+    insert_optional(&mut value, "uri", &evidence.uri);
+    if let Some(relevance) = &evidence.relevance {
+        value.insert(
+            "relevance".to_string(),
+            json!({
+                "reason": relevance.reason,
+                "relationship": relevance.relationship,
+                "score": relevance.score,
+            }),
+        );
+    }
+    Value::Object(value)
+}
+
+fn insert_optional(value: &mut Map<String, Value>, key: &str, item: &Option<String>) {
+    if let Some(item) = item {
+        value.insert(key.to_string(), json!(item));
     }
 }
 
