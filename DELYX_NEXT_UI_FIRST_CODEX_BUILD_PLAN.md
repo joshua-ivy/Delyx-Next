@@ -8,7 +8,7 @@ Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - `cargo fmt --check` and `cargo test --workspace`: 212 passed, 0 failed.
-- `npm run typecheck`, `npm test` (smoke/source-contract plus focused Vitest component tests), `npm run build`, `npm run smoke:ui`, and `npm run smoke:tauri`: pass.
+- `npm run typecheck`, `npm test` (smoke/source-contract plus broad Vitest/React Testing Library behavior tests), `npm run build`, `npm run smoke:ui`, and `npm run smoke:tauri`: pass.
 - Browser visual checks passed for the no-thread cockpit at 1280x720 and 390x844 before the Focus port: no fake progress/diff/terminal/metric blocks, no inspector, no horizontal overflow. Focus UI browser checks must stay current after each visual pass.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
@@ -49,7 +49,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - Codex write-capable launch now creates real checkpoint receipts for planned files before execution; worktree isolation can still come later.
 - Claude external agent support is detection/contract-preview only.
 - Generic terminal worker execution exists behind external-agent and terminal-command approvals.
-- Frontend coverage now includes a narrow Vitest/React Testing Library path plus older smoke/source-contract verifier scripts. Broad behavior coverage is still missing.
+- Frontend coverage now includes broad Vitest/React Testing Library behavior tests for project/thread creation, planning, approvals, artifacts, evidence support, error, blocked, expired, and empty states. Older smoke/source-contract verifier scripts remain guardrails, not proof of behavior.
 - The default workbench is now a React Focus shell ported from the provided Focus prototype. Legacy `buildCockpitMarkup` string-rendered cockpit files remain in source as an older implementation and smoke-contract reference, but they are no longer the mounted primary workbench.
 - The repo intentionally has one Rust crate today: `apps/desktop/src-tauri`.
 - `openai/codex` was audited at commit `e093d81` as a reference/salvage pool, not a repo to blindly copy.
@@ -133,17 +133,17 @@ now has real persisted or approval-gated functional islands.
 - [x] ~~Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.~~
 - [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, and one-step approval-safe dispatcher now exist.
 - [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; the remaining gap is making PatchDraft an executor-owned repair/build node instead of a narrow renderer-invoked command.
-- [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
+- [x] ~~Broad frontend behavior coverage now covers project/thread creation, planning, approvals, diff/test/review artifacts, evidence support, error, blocked, expired, and empty states with React Testing Library component/action tests.~~
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
 Progress board:
 
-- Phase 2 checkbox progress: 171/195 checked, 24 open, 87.7%.
-- Complete tracks: D4, D6, D8, D9, D10.
-- In-progress tracks: D1, D2, D3, D5, D7, D11, D12.
-- Depth tracks: 5/12 complete, 7/12 in progress.
+- Phase 2 checkbox progress: 177/198 checked, 21 open, 89.4%.
+- Complete tracks: D3, D4, D6, D8, D9, D10.
+- In-progress tracks: D1, D2, D5, D7, D11, D12.
+- Depth tracks: 6/12 complete, 6/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
-- Largest remaining risk remains concentrated in D2, D5, and D3.
+- Largest remaining risk remains concentrated in D2 and D5.
 
 - [ ] D1 - Real SQLite Local Store (in progress; broad persistence exists, remaining action bridges still open)
   - [x] ~~Added `rusqlite` with bundled SQLite for local Windows-safe storage.~~
@@ -203,7 +203,7 @@ Progress board:
   - [ ] Finish adapting Codex thread/start vs turn/start and command/exec protocol shapes where they reduce risk.
   - [x] ~~Keep all risky action executor islands approval-gated.~~
 
-- [ ] D3 - Behavioral Frontend Tests (in progress; focused React tests exist, broad workflow coverage missing)
+- [x] ~~D3 - Behavioral Frontend Tests (complete; broad React component/action tests cover the Phase 2 user-visible states without treating source-string verifiers as behavior proof)~~
   - [x] ~~Add Vitest + React Testing Library or Playwright interaction tests.~~
   - [x] ~~Added Vitest + React Testing Library as a real component-test path, separate from the existing smoke/source-contract verifiers.~~
   - [x] ~~First behavior test covers FocusThread patch apply visibility/click behavior: Apply appears only for proposed patches with matching approved approvals.~~
@@ -229,7 +229,10 @@ Progress board:
   - [x] ~~Added behavior coverage proving Ollama PlanAgent saves drafted plans through the plan bridge and renders the persisted bridge result.~~
   - [x] ~~Added behavior coverage proving final support UI names supported, unsupported, insufficient, partial, and untested states from real evidence/test receipt counts.~~
   - [x] ~~Added behavior coverage proving review findings expose an exact `Request repair` action, repair actions call the bridge with real report/finding IDs, and final support shows a review-blocked state while findings are unresolved.~~
-  - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
+  - [x] ~~Added WorkspaceOverlay behavior coverage for add/remove project actions plus ready, empty, loading, denied, and error states.~~
+  - [x] ~~Added ThreadOverlay behavior coverage for thread creation, selection, archive, status changes, empty state, archived filtering, and error state.~~
+  - [x] ~~Added Focus runtime-state behavior coverage for pending plan approval, real diff/test/review artifacts, evidence-based final support, failed/blocked activity, and expired approvals without action buttons.~~
+  - [x] ~~Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.~~
   - [x] ~~Keep grep/source verifiers only as smoke guards.~~
   - [x] ~~Stop using source-substring checks as proof of UI behavior.~~
 
@@ -355,7 +358,7 @@ cargo test --workspace
 git diff --check
 ```
 
-Current warning: `npm test` now includes focused real component behavior tests, but broad frontend behavior coverage is still missing until D3 is expanded.
+Current warning: the full autonomous executor/repair/hook loop is still missing until D2/D5 are finished.
 
 For eval work:
 

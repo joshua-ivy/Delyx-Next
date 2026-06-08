@@ -139,11 +139,12 @@ complete:
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.
-- Frontend checks now include a narrow Vitest/React Testing Library component
-  test path, starting with FocusThread's approval-gated patch apply behavior.
-  MarkdownMessage rendering is also covered so assistant replies do not regress
-  to raw markdown. The older smoke/source-contract verifiers remain as
-  guardrails, not proof of behavior.
+- Frontend checks now include broad Vitest/React Testing Library behavior
+  coverage for project/workspace actions, thread creation and status controls,
+  planning, approvals, diff/test/review artifacts, evidence-based final support,
+  error, blocked, expired, and empty states. MarkdownMessage rendering is also
+  covered so assistant replies do not regress to raw markdown. The older
+  smoke/source-contract verifiers remain as guardrails, not proof of behavior.
 - The default workbench now uses a React Focus shell ported from the provided
   Focus prototype: centered first-run composer, rail navigation, command
   palette, thread switcher, model picker, settings, and artifact-driven active
