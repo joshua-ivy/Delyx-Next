@@ -67,10 +67,12 @@ complete:
   with ID continuity. AgentRun EvidenceRecords persist source IDs, locators,
   quotes, hashes, retrieval timestamps, and relevance metadata. AgentOutcome
   evidence/test support ID links also persist and the thread/run snapshot
-  bridge exposes receipts and outcome support links to the UI. A narrow
-  final-answer support bridge now links existing AgentRun EvidenceRecord IDs and
-  passed persisted test artifact IDs into AgentOutcome and saves the result to
-  SQLite. Narrow patch executor bridges can now wait on pending `FileWrite`
+  bridge exposes receipts and outcome support links to the UI. The final-answer
+  support bridge now links existing AgentRun EvidenceRecord IDs, synthesizes
+  missing receipt records from persisted file reads, model calls, diff/test,
+  review, approval, and terminal-command artifacts, then links passed persisted
+  test artifact IDs into AgentOutcome and saves the result to SQLite. Narrow
+  patch executor bridges can now wait on pending `FileWrite`
   approvals, run approved AgentRun patch-proposal, patch-apply, and
   patch-restore nodes, approved test-execution nodes, and read-only review
   nodes. Patch nodes persist patch state, write files only through the
@@ -604,17 +606,17 @@ Owns:
 Evidence records should make claim support inspectable.
 The Rust `EvidenceStore` now persists source-backed research receipts to
 SQLite, including run IDs, source kind, title, locator, excerpt, stance, and
-normalized claim keys. This preserves research receipts across restart, but it
-does not yet build final-answer support records automatically from every file,
-diff, command, approval, model call, or external-agent artifact. The
-`thread_final_answer_record` bridge can finish a thread by linking current
-AgentRun evidence IDs and passed persisted test artifact IDs, emitting a
-visible support-synthesis event, and persisting those AgentOutcome support
-links. It does not infer claim support from prose or make unsupported/tested
-states complete by itself. Focus final-support receipts classify current
-support visibly from existing receipt counts: supported, unsupported,
-insufficient, partial, and untested states are shown before or after recording
-without inventing evidence.
+normalized claim keys. AgentRun final support now synthesizes missing
+EvidenceRecords from persisted local-file reads, model-call artifacts, diff
+artifacts, review artifacts, approval records, and passed test command
+artifacts before completing a run. The `thread_final_answer_record` bridge can
+finish a thread by linking those AgentRun evidence IDs plus passed persisted
+test artifact IDs, emitting a visible support-synthesis event, and persisting
+those AgentOutcome support links. It does not infer claim support from prose or
+make unsupported/tested states complete by itself. Focus final-support receipts
+classify current support visibly from existing receipt counts: supported,
+unsupported, insufficient, partial, and untested states are shown before or
+after recording without inventing evidence.
 
 ## Data Models
 
@@ -722,6 +724,10 @@ interface EvidenceRecord {
   id: string;
   runId: string;
   sourceKind:
+    | "approval"
+    | "review"
+    | "model"
+    | "model_call"
     | "local_file"
     | "repo_symbol"
     | "terminal"
@@ -729,8 +735,7 @@ interface EvidenceRecord {
     | "diff"
     | "web"
     | "memory"
-    | "external_agent"
-    | "model_call";
+    | "external_agent";
   sourceId: string;
   title?: string;
   uri?: string;

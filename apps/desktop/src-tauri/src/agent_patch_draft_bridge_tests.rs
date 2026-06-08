@@ -56,6 +56,10 @@ mod tests {
             .artifacts
             .iter()
             .any(|artifact| artifact.kind == "patch_proposal"));
+        assert!(run
+            .evidence
+            .iter()
+            .any(|item| item.source_kind == "local_file" && item.source_id == "src/main.ts"));
         let _ = fs::remove_dir_all(root);
     }
 

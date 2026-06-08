@@ -155,6 +155,7 @@ mod thread_run_bridge_tests;
 pub mod thread_run_bridge_views;
 pub mod thread_run_final_answer;
 mod thread_run_final_answer_tests;
+pub(crate) mod thread_run_final_support;
 pub mod thread_run_persistence;
 mod thread_run_persistence_tests;
 pub mod threads;

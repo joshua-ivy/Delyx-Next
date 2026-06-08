@@ -8,8 +8,9 @@ mod tests {
         create_thread_run_record, ThreadRunCreateRequest, ThreadRunStore,
     };
     use crate::thread_run_final_answer::{
-        finalize_thread_record, passed_test_ids, ThreadFinalAnswerRequest,
+        finalize_thread_record, passed_tests, ThreadFinalAnswerRequest,
     };
+    use crate::thread_run_final_support::{ApprovalSupportRecord, FinalSupportInput};
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -31,7 +32,7 @@ mod tests {
         let view = finalize_thread_record(
             &mut thread_store,
             final_request(&record.thread.id),
-            passed_test_ids(&tests, &record.run.id),
+            support(passed_tests(&tests, &record.run.id), Vec::new()),
         )
         .unwrap();
 
@@ -49,6 +50,58 @@ mod tests {
     }
 
     #[test]
+    fn final_answer_support_synthesizes_artifacts_and_approval_receipts() {
+        let mut thread_store = ThreadRunStore::default();
+        let record = create_thread_run_record(&mut thread_store, create_request()).unwrap();
+        thread_store
+            .ledger
+            .record_evidence_detail(&record.run.id, evidence_input())
+            .unwrap();
+        thread_store
+            .ledger
+            .record_artifact(&record.run.id, "patch_proposal", "patch-1")
+            .unwrap();
+        thread_store
+            .ledger
+            .record_artifact(&record.run.id, "model_response", "PatchDraftAgent response")
+            .unwrap();
+        thread_store
+            .ledger
+            .record_artifact(&record.run.id, "review_report", "review-1")
+            .unwrap();
+
+        let view = finalize_thread_record(
+            &mut thread_store,
+            final_request(&record.thread.id),
+            support(
+                vec![
+                    test_artifact(&record.run.id, "test-pass", "passed"),
+                    test_artifact(&record.run.id, "test-pass", "passed"),
+                    test_artifact(&record.run.id, "", "passed"),
+                ],
+                vec![approval_view(&record.run.id)],
+            ),
+        )
+        .unwrap();
+
+        let outcome = view.run.outcome.unwrap();
+        let source_kinds = view
+            .run
+            .evidence
+            .iter()
+            .filter_map(|item| item["sourceKind"].as_str())
+            .collect::<Vec<_>>();
+        assert!(source_kinds.contains(&"approval"));
+        assert!(source_kinds.contains(&"diff"));
+        assert!(source_kinds.contains(&"local_file"));
+        assert!(source_kinds.contains(&"model_call"));
+        assert!(source_kinds.contains(&"review"));
+        assert!(source_kinds.contains(&"terminal"));
+        assert_eq!(outcome["testArtifactIds"].as_array().unwrap().len(), 1);
+        assert!(outcome["evidenceRecordIds"].as_array().unwrap().len() >= 5);
+    }
+
+    #[test]
     fn final_answer_support_survives_thread_run_sqlite_reload() {
         let path = temp_db("final-answer-support");
         let mut store = ThreadRunStore::default();
@@ -60,7 +113,10 @@ mod tests {
         finalize_thread_record(
             &mut store,
             final_request(&record.thread.id),
-            vec!["test-artifact-1".to_string()],
+            support(
+                vec![test_artifact(&record.run.id, "test-artifact-1", "passed")],
+                Vec::new(),
+            ),
         )
         .unwrap();
 
@@ -110,6 +166,26 @@ mod tests {
             source_kind: "local_file".to_string(),
             title: "README.md".to_string(),
             uri: Some("file:///README.md".to_string()),
+        }
+    }
+
+    fn approval_view(run_id: &str) -> ApprovalSupportRecord {
+        let _ = run_id;
+        ApprovalSupportRecord {
+            action_type: "edit_file".to_string(),
+            id: "approval-1".to_string(),
+            scope: "Edit src/main.rs".to_string(),
+            status: "approved".to_string(),
+        }
+    }
+
+    fn support(
+        test_artifacts: Vec<TestArtifactView>,
+        approval_records: Vec<ApprovalSupportRecord>,
+    ) -> FinalSupportInput {
+        FinalSupportInput {
+            approval_records,
+            test_artifacts,
         }
     }
 

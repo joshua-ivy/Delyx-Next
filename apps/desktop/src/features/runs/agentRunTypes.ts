@@ -30,6 +30,10 @@ export type AgentNodeKind =
   | "blocked";
 export type AgentNodeStatus = "pending" | "running" | "waiting" | "succeeded" | "failed" | "skipped";
 export type EvidenceSourceKind =
+  | "approval"
+  | "review"
+  | "model"
+  | "model_call"
   | "local_file"
   | "repo_symbol"
   | "terminal"
@@ -37,8 +41,7 @@ export type EvidenceSourceKind =
   | "diff"
   | "web"
   | "memory"
-  | "external_agent"
-  | "model_call";
+  | "external_agent";
 
 export interface AgentRun {
   id: string;
@@ -106,12 +109,15 @@ export interface EvidenceRecord {
 
 export interface EvidenceRelevance {
   relationship:
+    | "approval"
     | "direct_implementation"
     | "caller"
     | "test"
     | "config"
     | "doc"
+    | "model-generated"
     | "name_only"
+    | "review"
     | "unknown";
   score: number;
   reason: string;

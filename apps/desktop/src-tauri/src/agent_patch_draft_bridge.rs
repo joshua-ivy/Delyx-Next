@@ -3,8 +3,8 @@ use crate::agent_patch_draft_parser::{
     draft_messages, patch_request_from_draft_text, read_draft_files, validate_request,
 };
 use crate::agent_patch_draft_receipts::{
-    draft_view, lock_thread_store, record_model_completed, record_model_failed,
-    record_model_started,
+    draft_view, lock_thread_store, record_draft_file_reads, record_model_completed,
+    record_model_failed, record_model_started,
 };
 use crate::approval_bridge::ApprovalBridgeState;
 use crate::model_ollama::send_ollama_chat;
@@ -14,7 +14,9 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[cfg(test)]
-use crate::agent_patch_draft_receipts::record_model_started_in_store;
+use crate::agent_patch_draft_receipts::{
+    record_draft_file_reads_in_store, record_model_started_in_store,
+};
 #[cfg(test)]
 use crate::thread_run_bridge::ThreadRunStore;
 #[cfg(test)]
@@ -56,6 +58,7 @@ pub(crate) fn execute_patch_draft_record(
 ) -> Result<AgentPatchDraftBridgeView, String> {
     validate_request(&request)?;
     let files = read_draft_files(&request)?;
+    record_draft_file_reads(&threads, &request, &files)?;
     let node_id = record_model_started(&threads, &request)?;
     let messages = draft_messages(&request, &files);
     match send_ollama_chat(request.model.clone(), messages, Duration::from_secs(120)) {
@@ -99,6 +102,7 @@ pub(crate) fn execute_patch_draft_from_model_text(
     files: &[WorkspaceFileReadView],
     model_text: &str,
 ) -> Result<AgentPatchDraftBridgeView, String> {
+    record_draft_file_reads_in_store(thread_store, request, files)?;
     let node = record_model_started_in_store(thread_store, request)?;
     record_model_completed(thread_store, request, &node.id, model_text)?;
     let patch_request = patch_request_from_draft_text(request, files, model_text)?;

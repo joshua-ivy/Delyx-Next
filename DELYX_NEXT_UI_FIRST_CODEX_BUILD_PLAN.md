@@ -124,7 +124,7 @@ autonomous Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop
 is still missing. It is also not "barely started": most core infrastructure
 now has real persisted or approval-gated functional islands.
 
-- [x] ~~D4, D6, D8, and D10 are fully complete.~~
+- [x] ~~D4, D6, D8, D9, and D10 are fully complete.~~
 - [x] ~~SQLite is real for AgentRun, thread/run, approvals, workspace snapshots, model routes, memory, skills, automations, release/support-bundle state, tests, patches, reviews, external-agent runs, research evidence, and final-answer support links.~~
 - [x] ~~Ollama is a real local model path for runtime detection, chat, composer replies, plan drafts, route sync, and optional version display.~~
 - [x] ~~Patch proposal/apply/restore, approved test execution, and read-only review have narrow AgentRun executor bridges with persisted artifacts.~~
@@ -138,10 +138,10 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 166/192 checked, 26 open, 86.5%.
-- Complete tracks: D4, D6, D8, D10.
-- In-progress tracks: D1, D2, D3, D5, D7, D9, D11, D12.
-- Depth tracks: 4/12 complete, 8/12 in progress.
+- Phase 2 checkbox progress: 168/192 checked, 24 open, 87.5%.
+- Complete tracks: D4, D6, D8, D9, D10.
+- In-progress tracks: D1, D2, D3, D5, D7, D11, D12.
+- Depth tracks: 5/12 complete, 7/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
 - Largest remaining risk remains concentrated in D2, D5, and D3.
 
@@ -302,11 +302,11 @@ Progress board:
   - [x] ~~Claude launch is out of Phase 2 scope beyond detection and command-contract preview.~~
   - [x] ~~Claude adapter status now labels detection/contract-preview-only scope instead of implying launch support.~~
 
-- [ ] D9 - Evidence and Final Answer Receipts (in progress; final support bridge exists, broader claim support synthesis missing)
+- [x] ~~D9 - Evidence and Final Answer Receipts (complete; final support links existing evidence, file-read/model/diff/review/approval/command receipts, and passed tests without generating prose)~~
   - [x] ~~Added a narrow final-answer support synthesis bridge for existing AgentRun evidence and passed persisted test artifacts.~~
   - [x] ~~Focus thread UI now shows final support receipt counts when AgentOutcome exists.~~
   - [x] ~~Focus can record final support from an existing assistant message only; it links existing AgentRun evidence and passed persisted tests through the Tauri bridge and does not generate new prose or infer claims.~~
-  - [ ] Build final-answer support records from files read, commands run, tests executed, diffs produced, model calls, approvals, and evidence.
+  - [x] ~~Build final-answer support records from files read, commands run, tests executed, diffs produced, model calls, approvals, and evidence.~~
   - [x] ~~Make unsupported, insufficient, partial, and untested final-answer states visible.~~
   - [x] ~~Block final-support recording while the latest review for the run has unresolved findings; the UI shows `review blocked` instead of inviting an unsupported final receipt.~~
 

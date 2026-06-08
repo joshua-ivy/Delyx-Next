@@ -1,8 +1,12 @@
+use crate::approval_bridge::ApprovalBridgeState;
 use crate::test_runner_bridge::{
-    test_snapshot_from_store, TestRunnerBridgeState, TestRunnerBridgeStore,
+    test_snapshot_from_store, TestArtifactView, TestRunnerBridgeState, TestRunnerBridgeStore,
 };
 use crate::thread_run_bridge::{ThreadRunBridgeState, ThreadRunStore};
 use crate::thread_run_bridge_views::{record_view, ThreadRunRecordView, ThreadRunViewContext};
+use crate::thread_run_final_support::{
+    approval_support_records, synthesize_final_support, FinalSupportInput,
+};
 use crate::threads::ThreadStatus;
 use serde::Deserialize;
 
@@ -18,6 +22,7 @@ pub struct ThreadFinalAnswerRequest {
 pub fn thread_final_answer_record(
     state: tauri::State<ThreadRunBridgeState>,
     tests: tauri::State<TestRunnerBridgeState>,
+    approvals: tauri::State<ApprovalBridgeState>,
     request: ThreadFinalAnswerRequest,
 ) -> Result<ThreadRunRecordView, String> {
     let run_id = {
@@ -27,20 +32,29 @@ pub fn thread_final_answer_record(
             .map_err(|_| "Thread bridge lock failed.".to_string())?;
         run_id_for_thread(&store, &request.thread_id)?
     };
-    let test_ids = tests.with_store(|store| passed_test_ids(store, &run_id))?;
+    let test_artifacts = tests.with_store(|store| passed_tests(store, &run_id))?;
+    let approval_records =
+        approvals.with_engine(|engine| approval_support_records(engine, &run_id))?;
     let mut store = state
         .store
         .lock()
         .map_err(|_| "Thread bridge lock failed.".to_string())?;
-    let view = finalize_thread_record(&mut store, request, test_ids)?;
+    let view = finalize_thread_record(
+        &mut store,
+        request,
+        FinalSupportInput {
+            approval_records,
+            test_artifacts,
+        },
+    )?;
     state.persist(&store)?;
     Ok(view)
 }
 
-pub fn finalize_thread_record(
+pub(crate) fn finalize_thread_record(
     store: &mut ThreadRunStore,
     request: ThreadFinalAnswerRequest,
-    test_artifact_ids: Vec<String>,
+    support: FinalSupportInput,
 ) -> Result<ThreadRunRecordView, String> {
     let summary = request.summary.trim();
     if request.thread_id.trim().is_empty() || summary.is_empty() {
@@ -48,12 +62,12 @@ pub fn finalize_thread_record(
     }
     validate_thread_can_finish(store, &request.thread_id)?;
     let run_id = run_id_for_thread(store, &request.thread_id)?;
-    let evidence_ids = evidence_ids_for_run(store, &run_id)?;
-    let test_ids = unique_non_empty(test_artifact_ids);
+    let support_links = synthesize_final_support(&mut store.ledger, &run_id, support)?;
     let message = format!(
-        "Final answer support linked {} evidence record(s) and {} passed test artifact(s).",
-        evidence_ids.len(),
-        test_ids.len()
+        "Final answer support linked {} evidence record(s), {} approval receipt(s), and {} passed test artifact(s).",
+        support_links.evidence_record_ids.len(),
+        approval_count(&support_links.evidence_record_ids, store, &run_id)?,
+        support_links.test_artifact_ids.len()
     );
     store
         .ledger
@@ -61,7 +75,12 @@ pub fn finalize_thread_record(
         .map_err(|error| format!("{error:?}"))?;
     store
         .ledger
-        .complete_run_with_support(&run_id, summary, evidence_ids, test_ids)
+        .complete_run_with_support(
+            &run_id,
+            summary,
+            support_links.evidence_record_ids,
+            support_links.test_artifact_ids,
+        )
         .map_err(|error| format!("{error:?}"))?;
     store
         .manager
@@ -91,10 +110,16 @@ pub fn finalize_thread_record(
 }
 
 pub fn passed_test_ids(store: &TestRunnerBridgeStore, run_id: &str) -> Vec<String> {
+    passed_tests(store, run_id)
+        .into_iter()
+        .map(|artifact| artifact.id)
+        .collect()
+}
+
+pub fn passed_tests(store: &TestRunnerBridgeStore, run_id: &str) -> Vec<TestArtifactView> {
     test_snapshot_from_store(store, run_id)
         .into_iter()
         .filter(|artifact| artifact.status == "passed")
-        .map(|artifact| artifact.id)
         .collect()
 }
 
@@ -118,21 +143,18 @@ fn run_id_for_thread(store: &ThreadRunStore, thread_id: &str) -> Result<String, 
         .ok_or_else(|| "Thread run record was not found.".to_string())
 }
 
-fn evidence_ids_for_run(store: &ThreadRunStore, run_id: &str) -> Result<Vec<String>, String> {
+fn approval_count(
+    evidence_ids: &[String],
+    store: &ThreadRunStore,
+    run_id: &str,
+) -> Result<usize, String> {
     let run = store
         .ledger
         .get_run(run_id)
         .map_err(|error| format!("{error:?}"))?;
-    Ok(unique_non_empty(
-        run.evidence.iter().map(|item| item.id.clone()),
-    ))
-}
-
-fn unique_non_empty(items: impl IntoIterator<Item = String>) -> Vec<String> {
-    items.into_iter().fold(Vec::new(), |mut acc, item| {
-        if !item.trim().is_empty() && !acc.contains(&item) {
-            acc.push(item);
-        }
-        acc
-    })
+    Ok(run
+        .evidence
+        .iter()
+        .filter(|item| item.source_kind == "approval" && evidence_ids.contains(&item.id))
+        .count())
 }

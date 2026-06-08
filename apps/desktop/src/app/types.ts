@@ -97,7 +97,7 @@ export interface TestRunViewModel {
 export interface EvidenceViewModel {
   id: string;
   title: string;
-  sourceKind: "local_file" | "test" | "diff" | "terminal" | "external_agent";
+  sourceKind: "approval" | "diff" | "external_agent" | "local_file" | "memory" | "model" | "model_call" | "repo_symbol" | "review" | "terminal" | "test" | "web";
   relationship: string;
   detail: string;
 }

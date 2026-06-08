@@ -80,12 +80,15 @@ function coverageRow([label, value]: [string, string]) {
 
 function sourceLabel(sourceKind: EvidenceReceiptView["sourceKind"]) {
   const labels: Record<EvidenceReceiptView["sourceKind"], string> = {
+    approval: "P",
     diff: "D",
     external_agent: "X",
     local_file: "L",
     memory: "M",
+    model: "A",
     model_call: "A",
     repo_symbol: "R",
+    review: "V",
     terminal: "$",
     test: "T",
     web: "W",

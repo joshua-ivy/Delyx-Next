@@ -5,6 +5,7 @@ use crate::agent_run::{
     EvidenceRelevance,
 };
 use crate::thread_run_bridge::{ThreadRunBridgeState, ThreadRunStore};
+use crate::workspace_bridge::WorkspaceFileReadView;
 use std::sync::MutexGuard;
 
 pub(crate) fn record_model_started(
@@ -38,6 +39,43 @@ pub(crate) fn record_model_started_in_store(
         )
         .map_err(agent_error)?;
     Ok(node)
+}
+
+pub(crate) fn record_draft_file_reads(
+    threads: &ThreadRunBridgeState,
+    request: &AgentPatchDraftExecuteRequest,
+    files: &[WorkspaceFileReadView],
+) -> Result<(), String> {
+    let mut store = lock_thread_store(threads)?;
+    record_draft_file_reads_in_store(&mut store, request, files)?;
+    threads.persist(&store)?;
+    Ok(())
+}
+
+pub(crate) fn record_draft_file_reads_in_store(
+    store: &mut ThreadRunStore,
+    request: &AgentPatchDraftExecuteRequest,
+    files: &[WorkspaceFileReadView],
+) -> Result<(), String> {
+    let existing = store
+        .ledger
+        .get_run(&request.run_id)
+        .map_err(agent_error)?
+        .evidence
+        .iter()
+        .filter(|item| item.source_kind == "local_file")
+        .map(|item| item.source_id.clone())
+        .collect::<Vec<_>>();
+    for file in files {
+        if existing.contains(&file.path) {
+            continue;
+        }
+        store
+            .ledger
+            .record_evidence_detail(&request.run_id, file_read_evidence(request, file))
+            .map_err(agent_error)?;
+    }
+    Ok(())
 }
 
 pub(crate) fn record_model_completed(
@@ -152,6 +190,26 @@ fn model_evidence(request: &AgentPatchDraftExecuteRequest, text: &str) -> Eviden
         source_id: format!("ollama:{}", request.model),
         source_kind: "model".to_string(),
         title: format!("PatchDraftAgent response from {}", request.model),
+        uri: None,
+    }
+}
+
+fn file_read_evidence(
+    request: &AgentPatchDraftExecuteRequest,
+    file: &WorkspaceFileReadView,
+) -> EvidenceRecordInput {
+    EvidenceRecordInput {
+        hash: None,
+        quote: Some(file.contents.chars().take(280).collect()),
+        relevance: Some(EvidenceRelevance {
+            reason: "PatchDraftAgent read this approved workspace file as model input.".to_string(),
+            relationship: "direct_implementation".to_string(),
+            score: 25,
+        }),
+        retrieved_at: request.created_at_ms.to_string(),
+        source_id: file.path.clone(),
+        source_kind: "local_file".to_string(),
+        title: file.path.clone(),
         uri: None,
     }
 }
