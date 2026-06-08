@@ -80,8 +80,9 @@ complete:
   runner yet.
 - Frontend checks now include a narrow Vitest/React Testing Library component
   test path, starting with FocusThread's approval-gated patch apply behavior.
-  The older smoke/source-contract verifiers remain as guardrails, not proof of
-  behavior.
+  MarkdownMessage rendering is also covered so assistant replies do not regress
+  to raw markdown. The older smoke/source-contract verifiers remain as
+  guardrails, not proof of behavior.
 - The default workbench now uses a React Focus shell ported from the provided
   Focus prototype: centered first-run composer, rail navigation, command
   palette, thread switcher, model picker, settings, and artifact-driven active
