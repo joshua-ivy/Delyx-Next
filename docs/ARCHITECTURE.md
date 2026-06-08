@@ -79,6 +79,9 @@ complete:
   next-step decisions: wait, single-approval resume, patch apply, tests, review,
   final-support readiness, terminal, complete, or blocked. The Focus UI can
   render that decision as a next-action line without inventing runtime state.
+  Resume actions forward the active plan's supported test-command signal back
+  into the scheduler bridge, so resume decisions use the same real plan context
+  as the visible scheduler line.
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.

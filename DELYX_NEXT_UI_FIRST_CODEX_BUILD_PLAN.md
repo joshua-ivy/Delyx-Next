@@ -135,7 +135,7 @@ now has real persisted or approval-gated functional islands.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 101/140 visible Phase 2 checkboxes are checked. Only 1/12 depth
+Progress read: 103/142 visible Phase 2 checkboxes are checked. Only 1/12 depth
 tracks is fully complete, and 11/12 are in progress. The subchecks below show
 the real completed work; the largest remaining risk is still concentrated in
 D2, D5, D6, and D3.
@@ -174,6 +174,7 @@ D2, D5, D6, and D3.
   - [x] Added `AgentScheduler`: it reads real AgentRun, approval, patch, test, and review stores and returns conservative next-step decisions for wait, single-approval resume, patch apply, tests, review, final-support readiness, terminal, complete, or blocked states.
   - [x] Added `resume_waiting_run`: it resumes a run only when exactly one approval for that run is executable; multiple ready approvals, missing approvals, pending approvals, and zero clocks stay blocked or waiting instead of guessing.
   - [x] Added Tauri scheduler commands: `agent_schedule_next` exposes the current scheduler decision to the UI, and `agent_resume_waiting_run` persists a non-risky resume transition only after the Rust scheduler finds exactly one executable approval.
+  - [x] Focus resume actions pass the active plan's supported test-command signal into `agent_resume_waiting_run`, so a test-ready run does not become falsely blocked after approval resume.
   - [x] Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
   - [x] Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
   - [x] Added a narrow `agent_execute_patch_apply` bridge that waits on pending `FileWrite` approvals, applies an existing PatchProposal through the stale-file/checkpoint PatchEngine path, writes only after approval, and records AgentRun node events, patch-apply artifacts, and diff evidence receipts.
@@ -195,6 +196,7 @@ D2, D5, D6, and D3.
   - [x] Added FocusThread behavior coverage for live run placement: latest user message, single running activity line, then assistant reply.
   - [x] Added FocusThread empty-artifact coverage so plan/diff/test/review placeholder blocks stay hidden until real artifacts exist.
   - [x] Added FocusSchedulerPeek behavior coverage for scheduler-selected patch apply and scheduler-selected resume actions.
+  - [x] Added scheduler resume-action coverage proving runnable plan test commands are forwarded to the bridge while unsafe shell-control text is rejected.
   - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - [x] Keep grep/source verifiers only as smoke guards.
   - [x] Stop using source-substring checks as proof of UI behavior.

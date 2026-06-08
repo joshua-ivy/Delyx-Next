@@ -258,7 +258,7 @@ export function AppShell() {
         onApplyPatch={applyPatch}
         onRecordFinal={recordFinal}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
-        onResumeRun={() => { void resumeSchedulerRun({ activeProject, activeRun, setAgentRuns, setThreads, setThreadState }); }}
+        onResumeRun={() => { void resumeSchedulerRun({ activePlan, activeProject, activeRun, setAgentRuns, setThreads, setThreadState }); }}
         onRunReview={runReview}
         onRunTests={runTests}
         onRunCommand={runPaletteCommand}
