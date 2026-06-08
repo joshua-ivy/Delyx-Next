@@ -1,45 +1,33 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { loadReviewSnapshot } from "../features/review/reviewClient";
 import { type AgentScheduleDecisionView } from "../features/runs/agentExecutorClient";
-import { runReviewSchedulerStepOverBridge } from "../features/runs/agentSchedulerStepClient";
-import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
+import { runSchedulerDriver } from "./appShellSchedulerDriveActions";
 
 vi.mock("./appShellFinalAnswerActions", () => ({ recordFinalSupportForActiveThread: vi.fn() }));
 vi.mock("./appShellOllamaPatchActions", () => ({ proposeApprovedPlanPatchWithOllama: vi.fn() }));
 vi.mock("./appShellPatchActions", () => ({ applyApprovedPatchForActiveRun: vi.fn() }));
 vi.mock("./appShellTestActions", () => ({ runTestsForActiveRun: vi.fn() }));
 vi.mock("./ShellPreferenceController", () => ({ notifyLocalAction: vi.fn() }));
-vi.mock("../features/review/reviewClient", () => ({ loadReviewSnapshot: vi.fn() }));
 vi.mock("../features/runs/agentExecutorClient", () => ({ scheduleNextRunActionOverBridge: vi.fn() }));
-vi.mock("../features/runs/agentSchedulerStepClient", () => ({ runReviewSchedulerStepOverBridge: vi.fn() }));
-vi.mock("../features/threads/threadClient", () => ({ loadThreadRunSnapshot: vi.fn() }));
+vi.mock("./appShellSchedulerDriveActions", async () => {
+  const actual = await vi.importActual<typeof import("./appShellSchedulerDriveActions")>("./appShellSchedulerDriveActions");
+  return { ...actual, runSchedulerDriver: vi.fn(), driverReloadedState: vi.fn((state) => state) };
+});
 
-const loadReviews = vi.mocked(loadReviewSnapshot);
-const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
-const runReviewStep = vi.mocked(runReviewSchedulerStepOverBridge);
+const runDriver = vi.mocked(runSchedulerDriver);
 
 beforeEach(() => {
   vi.clearAllMocks();
-  runReviewStep.mockResolvedValue({
-    message: "Review report review-1 captured with 0 finding(s).",
-    reviewReportId: "review-1",
-    runId: "run-1",
-    status: "completed",
-  });
-  loadReviews.mockResolvedValue([{ decision: "approved", findings: [], id: "review-1", runId: "run-1" } as never]);
-  loadSnapshot.mockResolvedValue({ runs: [{ id: "run-1" }] as never, threads: [] });
+  runDriver.mockResolvedValue(undefined);
 });
 
 describe("dispatchSchedulerDecision review step", () => {
-  it("runs scheduler review through Rust without renderer-owned artifacts", async () => {
+  it("runs scheduler review through the Rust driver", async () => {
     const handled = await dispatchSchedulerDecision(state(), decision("run_review"));
 
     expect(handled).toBe(true);
-    expect(runReviewStep).toHaveBeenCalledWith(expect.objectContaining({ runId: "run-1" }));
-    expect(runReviewStep.mock.calls[0]?.[0]).not.toHaveProperty("patches");
-    expect(runReviewStep.mock.calls[0]?.[0]).not.toHaveProperty("tests");
+    expect(runDriver).toHaveBeenCalledWith(expect.objectContaining({ activeRun: { id: "run-1" } }));
   });
 });
 

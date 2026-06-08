@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { scheduleNextRunActionOverBridge, type AgentScheduleDecisionView } from "../features/runs/agentExecutorClient";
-import { runTestSchedulerStepOverBridge } from "../features/runs/agentSchedulerStepClient";
-import { loadTestSnapshot } from "../features/tests/testClient";
-import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
+import { runSchedulerDriver } from "./appShellSchedulerDriveActions";
 import { runTestsForActiveRun } from "./appShellTestActions";
 
 vi.mock("./appShellFinalAnswerActions", () => ({ recordFinalSupportForActiveThread: vi.fn() }));
@@ -14,58 +12,30 @@ vi.mock("./appShellReviewActions", () => ({ runReviewForActiveRun: vi.fn() }));
 vi.mock("./appShellTestActions", () => ({ runTestsForActiveRun: vi.fn() }));
 vi.mock("./ShellPreferenceController", () => ({ notifyLocalAction: vi.fn() }));
 vi.mock("../features/runs/agentExecutorClient", () => ({ scheduleNextRunActionOverBridge: vi.fn() }));
-vi.mock("../features/runs/agentSchedulerStepClient", () => ({ runTestSchedulerStepOverBridge: vi.fn() }));
-vi.mock("../features/tests/testClient", () => ({ loadTestSnapshot: vi.fn() }));
-vi.mock("../features/threads/threadClient", () => ({ loadThreadRunSnapshot: vi.fn() }));
+vi.mock("./appShellSchedulerDriveActions", async () => {
+  const actual = await vi.importActual<typeof import("./appShellSchedulerDriveActions")>("./appShellSchedulerDriveActions");
+  return { ...actual, runSchedulerDriver: vi.fn(), driverReloadedState: vi.fn((state) => state) };
+});
 
-const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
-const loadTests = vi.mocked(loadTestSnapshot);
-const runTestStep = vi.mocked(runTestSchedulerStepOverBridge);
+const runDriver = vi.mocked(runSchedulerDriver);
 const runTests = vi.mocked(runTestsForActiveRun);
 const scheduleNext = vi.mocked(scheduleNextRunActionOverBridge);
 
 beforeEach(() => {
   vi.clearAllMocks();
-  runTestStep.mockResolvedValue({
-    message: "Test artifact test-artifact-1 passed.",
-    runId: "run-1",
-    status: "completed",
-    testArtifactId: "test-artifact-1",
-  });
-  loadTests.mockResolvedValue([{
-    approvalId: "approval-test",
-    command: "cargo test --help",
-    completedAt: "2026-06-08T01:00:01.000Z",
-    cwd: "C:\\repo",
-    durationMs: 1,
-    execEvents: [],
-    exitCode: 0,
-    failureSummary: undefined,
-    id: "test-artifact-1",
-    outputTruncated: false,
-    parsedFailures: undefined,
-    runId: "run-1",
-    startedAt: "2026-06-08T01:00:00.000Z",
-    status: "passed",
-    stderr: "",
-    stdout: "",
-  }]);
-  loadSnapshot.mockResolvedValue({ runs: [{ id: "run-1" }] as never, threads: [] });
+  runDriver.mockResolvedValue(undefined);
   scheduleNext.mockResolvedValue(undefined);
 });
 
 describe("dispatchSchedulerDecision test step", () => {
-  it("runs approved scheduler test decisions through the Rust scheduler step", async () => {
+  it("runs approved scheduler test decisions through the Rust driver", async () => {
     const handled = await dispatchSchedulerDecision(state(), {
       ...decision("run_tests"),
       approvalIds: ["approval-test"],
     });
 
     expect(handled).toBe(true);
-    expect(runTestStep).toHaveBeenCalledWith(expect.objectContaining({ runId: "run-1" }));
-    expect(runTestStep.mock.calls[0]?.[0]).not.toHaveProperty("approvalId");
-    expect(runTestStep.mock.calls[0]?.[0]).not.toHaveProperty("program");
-    expect(runTestStep.mock.calls[0]?.[0]).not.toHaveProperty("approvedRoots");
+    expect(runDriver).toHaveBeenCalledWith(expect.objectContaining({ activeRun: { id: "run-1" } }));
     expect(runTests).not.toHaveBeenCalled();
   });
 });

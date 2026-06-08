@@ -1,50 +1,35 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import {
-  runPatchApplySchedulerStepOverBridge,
-  scheduleNextRunActionOverBridge,
-  type AgentScheduleDecisionView,
-} from "../features/runs/agentExecutorClient";
-import { loadThreadRunSnapshot } from "../features/threads/threadClient";
+import { scheduleNextRunActionOverBridge, type AgentScheduleDecisionView } from "../features/runs/agentExecutorClient";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
+import { runSchedulerDriver } from "./appShellSchedulerDriveActions";
 
 vi.mock("./appShellFinalAnswerActions", () => ({ recordFinalSupportForActiveThread: vi.fn() }));
 vi.mock("./appShellOllamaPatchActions", () => ({ proposeApprovedPlanPatchWithOllama: vi.fn() }));
 vi.mock("./appShellPatchActions", () => ({ applyApprovedPatchForActiveRun: vi.fn() }));
 vi.mock("./appShellReviewActions", () => ({ runReviewForActiveRun: vi.fn() }));
 vi.mock("./appShellTestActions", () => ({ runTestsForActiveRun: vi.fn() }));
-vi.mock("../features/patches/patchClient", () => ({ loadPatchSnapshot: vi.fn() }));
-vi.mock("../features/threads/threadClient", () => ({ loadThreadRunSnapshot: vi.fn() }));
 vi.mock("./ShellPreferenceController", () => ({ notifyLocalAction: vi.fn() }));
-vi.mock("../features/runs/agentExecutorClient", () => ({
-  runPatchApplySchedulerStepOverBridge: vi.fn(),
-  scheduleNextRunActionOverBridge: vi.fn(),
-}));
+vi.mock("../features/runs/agentExecutorClient", () => ({ scheduleNextRunActionOverBridge: vi.fn() }));
+vi.mock("./appShellSchedulerDriveActions", async () => {
+  const actual = await vi.importActual<typeof import("./appShellSchedulerDriveActions")>("./appShellSchedulerDriveActions");
+  return { ...actual, runSchedulerDriver: vi.fn(), driverReloadedState: vi.fn((state) => state) };
+});
 
 const applyPatch = vi.mocked(applyApprovedPatchForActiveRun);
-const loadPatches = vi.mocked(loadPatchSnapshot);
-const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
-const runApplyStep = vi.mocked(runPatchApplySchedulerStepOverBridge);
+const runDriver = vi.mocked(runSchedulerDriver);
 const scheduleNext = vi.mocked(scheduleNextRunActionOverBridge);
 
 beforeEach(() => {
   vi.clearAllMocks();
-  runApplyStep.mockResolvedValue({
-    message: "Patch proposal patch-1 applied.",
-    patchId: "patch-1",
-    runId: "run-1",
-    status: "completed",
-  });
-  loadPatches.mockResolvedValue([patchView("applied")]);
-  loadSnapshot.mockResolvedValue({ runs: [{ id: "run-1" }] as never, threads: [] });
+  runDriver.mockResolvedValue(undefined);
   scheduleNext.mockResolvedValue(undefined);
 });
 
 describe("dispatchSchedulerDecision patch apply", () => {
-  it("dispatches approved apply decisions through the Rust scheduler step", async () => {
+  it("dispatches approved apply decisions through the Rust driver", async () => {
     const patch = patchView();
 
     const handled = await dispatchSchedulerDecision(state(patch), {
@@ -54,9 +39,7 @@ describe("dispatchSchedulerDecision patch apply", () => {
     });
 
     expect(handled).toBe(true);
-    expect(runApplyStep).toHaveBeenCalledWith(expect.objectContaining({ runId: "run-1" }));
-    expect(runApplyStep.mock.calls[0]?.[0]).not.toHaveProperty("approvalId");
-    expect(runApplyStep.mock.calls[0]?.[0]).not.toHaveProperty("approvedRoots");
+    expect(runDriver).toHaveBeenCalledWith(expect.objectContaining({ activeRun: { id: "run-1" } }));
     expect(applyPatch).not.toHaveBeenCalled();
   });
 

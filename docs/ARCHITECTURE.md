@@ -153,6 +153,13 @@ complete:
   PatchDraft/model generation, missing test approval, apply-approval proposal,
   and repair-request states until those boundaries have driver-owned proposal
   creation and UI handoff.
+  The mounted scheduler dispatcher now calls that driver for the decisions the
+  driver owns: approved patch apply, approved tests, read-only review, and
+  final-support readiness. After the driver returns, the renderer reloads
+  persisted patch, test, review, thread, and run state. PatchDraft/model
+  generation, apply-approval proposal creation, and repair queueing still use
+  the narrower renderer orchestration paths until those boundaries are
+  driver-owned.
   PatchDraft approval readiness is discovered in Rust from persisted plan,
   workspace, review, patch, and approval records: the approval must be an
   executable same-run FileWrite approval with the exact plan or repair node ID
@@ -374,8 +381,7 @@ outside the full graph: Ollama chat/plan calls, the generic terminal-worker
 bridge, and Codex CLI read-only launches. The full Explore -> Plan -> Approve
 -> Build -> Diff -> Test -> Review execution loop remains Phase 2 work until
 the new Rust-owned bounded driver also owns PatchDraft/model generation,
-approval-proposal creation, repair queueing, hooks, and the mounted renderer
-handoff.
+approval-proposal creation, repair queueing, and hooks.
 AgentRun
   save/load, Tauri
   thread/run bridge session reload, approval bridge reload, plan record reload, recent workspace

@@ -86,6 +86,13 @@ pub fn drive_run(
                 )?;
             }
             "ready_for_final_support" => {
+                if final_summary_missing(context) {
+                    return Ok(outcome(
+                        context,
+                        steps,
+                        stop("needs_final_summary", decision.message),
+                    ));
+                }
                 steps.push(record_final_support(
                     context,
                     decision.review_report_id.clone(),
@@ -238,6 +245,15 @@ fn validate_context(context: &AgentDriveContext<'_>) -> Result<(), String> {
         return Err("Drive run requires run, clock, timestamp, and non-zero timeout.".to_string());
     }
     Ok(())
+}
+
+fn final_summary_missing(context: &AgentDriveContext<'_>) -> bool {
+    context
+        .final_summary
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or_default()
+        .is_empty()
 }
 
 fn decision_signature(decision: &AgentScheduleDecisionView) -> String {

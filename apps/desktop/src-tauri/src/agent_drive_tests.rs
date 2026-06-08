@@ -106,6 +106,44 @@ mod tests {
         let _ = fs::remove_file(db);
     }
 
+    #[test]
+    fn drive_stops_for_final_summary_after_review() {
+        let db = temp_db("drive-final-summary");
+        let mut threads = ThreadRunStore::default();
+        let record = create_thread_run_record(&mut threads, thread_request()).unwrap();
+        move_to_building(&mut threads, &record.thread.id);
+        let mut patches = PatchBridgeStore::default();
+        patches
+            .records
+            .push(patch(&record.run.id, "restored", "let value = 1;"));
+        let mut tests = TestRunnerBridgeStore::default();
+        let mut reviews = ReviewBridgeStore::default();
+        let approvals = ApprovalBridgeStore::default();
+        let mut persists = 0;
+
+        let outcome = drive_run(
+            &mut context(
+                &mut threads,
+                &approvals,
+                &mut patches,
+                &mut tests,
+                &mut reviews,
+                &db,
+            ),
+            |_, _, _, _| {
+                persists += 1;
+                Ok(())
+            },
+        )
+        .unwrap();
+
+        assert_eq!(decisions(&outcome), vec!["run_review"]);
+        assert_eq!(outcome.stopped_because.kind, "needs_final_summary");
+        assert_eq!(reviews.reports.len(), 1);
+        assert_eq!(persists, 1);
+        let _ = fs::remove_file(db);
+    }
+
     fn context<'a>(
         threads: &'a mut ThreadRunStore,
         approvals: &'a ApprovalBridgeStore,
