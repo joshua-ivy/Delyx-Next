@@ -3,6 +3,7 @@ import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
+import type { ReviewReportView } from "../features/review/reviewTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
@@ -31,12 +32,14 @@ interface FocusShellProps {
   onDecideProposal: (proposalId: string, status: "approved" | "denied") => void;
   onOpenWorkspace: () => void;
   onRefreshModels: () => void;
+  onRunReview: () => void;
   onRunCommand: (commandId: string) => void;
   onSelectModel: (modelId: string) => void;
   onSelectThread: (threadId: string) => void;
   onSendInstruction: (value: string) => void;
   patches: PatchProposalView[];
   proposals: ActionProposalView[];
+  reviews: ReviewReportView[];
   tests: TestArtifactView[];
   threads: TaskThread[];
 }
@@ -93,7 +96,7 @@ export function FocusShell(props: FocusShellProps) {
       </aside>
 
       {view === "home" && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} />}
-      {view === "thread" && props.activeThread && <FocusThread activePlan={props.activePlan} mode={mode} model={selectedModel(props.modelSettings)} onApprovePlan={props.onApprovePlan} onCreatePlan={props.onCreatePlan} onDecideProposal={props.onDecideProposal} onModeChange={setMode} onOpenPalette={() => setOverlay("palette")} onSend={send} patches={activePatches} proposals={activeProposals} run={props.activeRun} tests={activeTests} thread={props.activeThread} />}
+      {view === "thread" && props.activeThread && <FocusThread activePlan={props.activePlan} mode={mode} model={selectedModel(props.modelSettings)} onApprovePlan={props.onApprovePlan} onCreatePlan={props.onCreatePlan} onDecideProposal={props.onDecideProposal} onModeChange={setMode} onOpenPalette={() => setOverlay("palette")} onRunReview={props.onRunReview} onSend={send} patches={activePatches} proposals={activeProposals} reviews={props.reviews.filter((report) => report.runId === props.activeRun?.id)} run={props.activeRun} tests={activeTests} thread={props.activeThread} />}
       {view === "thread" && !props.activeThread && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} />}
       {view === "settings" && <FocusSettings activeRun={props.activeRun} desktopShell={props.desktopShell} mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} project={props.activeProject} threads={visibleThreads} />}
 

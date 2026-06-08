@@ -190,6 +190,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Attach test artifacts to the active run automatically.
   - Generate review reports from actual patch/test artifacts.
   - Runtime can now execute an explicit read-only review node through AgentRun. The bridge gathers persisted patch and test artifacts by run ID before creating the ReviewReport, so review input is actual stored receipt data rather than caller-supplied mock state.
+  - Focus thread UI can now run that read-only review action when the active run has real patch or test artifacts, reload persisted ReviewReports, and display the resulting review receipt inline.
   - Prevent final "tested" claims unless linked artifacts exist.
 
 - [ ] D7 - Model Integration Depth

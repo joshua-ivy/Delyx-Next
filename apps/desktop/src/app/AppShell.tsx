@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
 import { useApprovalPolicy } from "./appShellApprovalPolicy";
 import { createRunForThread, threadWithRun, updateRunsForThreadStatus } from "./appShellRunActions";
+import { runReviewForActiveRun } from "./appShellReviewActions";
 import { canTransition, createThread, modeForThreadStatus } from "./appShellThreadActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { sendComposerInstruction } from "./cockpitComposerBindings";
@@ -15,11 +16,7 @@ import { currentMobileState } from "../features/mobile/mobileData";
 import { currentModelSettings } from "../features/models/modelData";
 import { refreshOllamaSettings } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
-import { loadPatchSnapshot } from "../features/patches/patchClient";
-import { currentPatchProposals } from "../features/patches/patchData";
-import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
-import { currentReviewReports } from "../features/review/reviewData";
 import { currentAgentRuns } from "../features/runs/agentRunData";
 import { currentTestArtifacts } from "../features/tests/testData";
 import { archiveThreadOverBridge, createThreadRunOverBridge, loadThreadRunSnapshot, updateThreadStatusOverBridge } from "../features/threads/threadClient";
@@ -29,6 +26,7 @@ import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, webRuntimeBridge, type RuntimeBridgeState } from "./runtimeBridge";
 import { usePersistedInspectorState } from "./usePersistedInspectorState";
+import { useRunReceipts } from "./useRunReceipts";
 import { loadWorkspaceProject } from "./workspaceBridge";
 
 export function AppShell() {
@@ -45,7 +43,6 @@ export function AppShell() {
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
   const [modelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
-  const [patches, setPatches] = useState<PatchProposalView[]>(currentPatchProposals);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
   const { automationState, memoryState, releaseState, skillState } = usePersistedInspectorState();
   const riskPolicy = useApprovalPolicy();
@@ -55,6 +52,7 @@ export function AppShell() {
   const activeRun = agentRuns.find((run) => run.id === activeThread?.activeRunId)
     ?? agentRuns.find((run) => run.threadId === activeThread?.id);
   const activePlan = plans.find((plan) => plan.threadId === activeThread?.id);
+  const { patches, reviews, setReviews } = useRunReceipts(activeRun?.id);
   useEffect(() => {
     let cancelled = false;
     void loadRuntimeBridgeState().then(async (state) => {
@@ -124,22 +122,6 @@ export function AppShell() {
     document.documentElement.dataset.mode = activeThread?.mode ?? "build";
   }, [activeThread?.mode]);
   useEffect(() => {
-    if (!activeRun?.id) {
-      setPatches([]);
-      return;
-    }
-    setPatches([]);
-    let cancelled = false;
-    void loadPatchSnapshot(activeRun.id).then((snapshot) => {
-      if (!cancelled) {
-        setPatches(snapshot ?? []);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [activeRun?.id]);
-  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -196,6 +178,19 @@ export function AppShell() {
       selectedProviderId: "ollama-local",
     }));
   };
+  const runReview = () => {
+    void runReviewForActiveRun({
+      activeProject,
+      activeRun,
+      activeThread,
+      patches: activeRun ? patches.filter((patch) => patch.runId === activeRun.id) : [],
+      setAgentRuns,
+      setReviews,
+      setThreads,
+      setThreadState,
+      tests: currentTestArtifacts.filter((test) => test.runId === activeRun?.id),
+    });
+  };
   const decideProposal = (proposalId: string, status: "approved" | "denied") => {
     void decideFocusApproval({
       activeRun,
@@ -244,6 +239,7 @@ export function AppShell() {
         onDecideProposal={decideProposal}
         onOpenWorkspace={() => setWorkspaceOpen(true)}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
+        onRunReview={runReview}
         onRunCommand={runPaletteCommand}
         onSelectModel={selectModel}
         onSelectThread={(threadId) => {
@@ -253,6 +249,7 @@ export function AppShell() {
         onSendInstruction={sendInstruction}
         patches={patches}
         proposals={actionProposals}
+        reviews={reviews}
         tests={currentTestArtifacts}
         threads={threads}
       />

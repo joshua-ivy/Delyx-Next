@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from "react";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
+import type { ReviewReportView } from "../features/review/reviewTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
@@ -18,9 +19,11 @@ interface FocusThreadProps {
   onDecideProposal: (proposalId: string, status: "approved" | "denied") => void;
   onModeChange: (mode: FocusMode) => void;
   onOpenPalette: () => void;
+  onRunReview: () => void;
   onSend: (value: string) => void;
   patches: PatchProposalView[];
   proposals: ActionProposalView[];
+  reviews: ReviewReportView[];
   run: AgentRunView | undefined;
   tests: TestArtifactView[];
   thread: TaskThread;
@@ -55,6 +58,7 @@ export function FocusThread(props: FocusThreadProps) {
             <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
             <DiffPeek patches={props.patches} />
             <TestPeek tests={props.tests} />
+            <ReviewPeek onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
           </div>
         </div>
         <div className="dock">
@@ -214,7 +218,24 @@ function TestPeek({ tests }: { tests: TestArtifactView[] }) {
   return <ActionLine icon="flask" label={`${test.command} / ${test.status ?? "captured"}`} text={test.failureSummary ?? `Exit ${test.exitCode ?? "unknown"}`} />;
 }
 
-function ActionLine({ icon, label, onClick, text }: { icon: "flask" | "plan"; label: string; onClick?: () => void; text: string }) {
+function ReviewPeek({ onRunReview, patches, reports, tests }: { onRunReview: () => void; patches: PatchProposalView[]; reports: ReviewReportView[]; tests: TestArtifactView[] }) {
+  const report = reports[0];
+  const canRun = patches.length > 0 || tests.length > 0;
+  if (!report && !canRun) {
+    return null;
+  }
+  if (!report) {
+    return <ActionLine icon="doc" label="Run review" onClick={onRunReview} text={`${patches.length} diff artifact(s), ${tests.length} test artifact(s)`} />;
+  }
+  const finding = report.findings[0];
+  return <div className="peek">
+    <div className="peek-head"><FocusIcon name="doc" /> Review / {report.decision}<span className="stat">{report.findings.length} finding(s)</span></div>
+    <div className="approval-copy"><b>{finding?.title ?? report.riskSummary}</b><span>{finding?.detail ?? report.testSummary}</span><span>{report.evidenceSummary}</span></div>
+    {canRun && <div className="plan-actions"><button className="select" onClick={onRunReview} type="button">Refresh review</button></div>}
+  </div>;
+}
+
+function ActionLine({ icon, label, onClick, text }: { icon: "doc" | "flask" | "plan"; label: string; onClick?: () => void; text: string }) {
   return <button className="focus-action-line" onClick={onClick} type="button"><FocusIcon name={icon} /><span><b>{label}</b><em>{text}</em></span></button>;
 }
 
