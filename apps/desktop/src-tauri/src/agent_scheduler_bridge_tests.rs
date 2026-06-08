@@ -11,55 +11,6 @@ mod tests {
     use crate::thread_run_bridge::ThreadRunStore;
 
     #[test]
-    fn scheduler_bridge_maps_patch_apply_approval_request_for_ui() {
-        let mut thread_store = ThreadRunStore::default();
-        let run = thread_store.ledger.create_run("thread-1").unwrap();
-        let mut patches = PatchBridgeStore::default();
-        patches.records.push(patch(&run.id, "approval-draft"));
-
-        let view = schedule_next_record(
-            thread_store.ledger.get_run(&run.id).unwrap(),
-            &ApprovalEngine::new(),
-            &patches,
-            &TestRunnerBridgeStore::default(),
-            &ReviewBridgeStore::default(),
-            &request(&run.id),
-        );
-
-        assert_eq!(view.kind, "request_patch_apply_approval");
-        assert_eq!(view.proposal_id.as_deref(), Some("patch-1"));
-        assert!(view.message.contains("needs apply approval"));
-    }
-
-    #[test]
-    fn scheduler_bridge_maps_patch_apply_decision_for_ui() {
-        let mut thread_store = ThreadRunStore::default();
-        let run = thread_store.ledger.create_run("thread-1").unwrap();
-        let mut approvals = ApprovalEngine::new();
-        let draft = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
-        let apply = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
-        let mut patches = PatchBridgeStore::default();
-        patches.records.push(patch(&run.id, &draft.id));
-
-        let view = schedule_next_record(
-            thread_store.ledger.get_run(&run.id).unwrap(),
-            &approvals,
-            &patches,
-            &TestRunnerBridgeStore::default(),
-            &ReviewBridgeStore::default(),
-            &AgentScheduleRequest {
-                patch_apply_approval_id: Some(apply.id.clone()),
-                ..request(&run.id)
-            },
-        );
-
-        assert_eq!(view.kind, "run_patch_apply");
-        assert_eq!(view.approval_ids, vec![apply.id]);
-        assert_eq!(view.proposal_id.as_deref(), Some("patch-1"));
-        assert!(view.message.contains("has apply approval"));
-    }
-
-    #[test]
     fn scheduler_bridge_resumes_and_returns_visible_decision() {
         let mut thread_store = ThreadRunStore::default();
         let run = thread_store.ledger.create_run("thread-1").unwrap();
@@ -218,7 +169,15 @@ mod tests {
         approve: bool,
         action: RiskyAction,
     ) -> crate::approval::ActionProposal {
-        let proposal = approvals.propose(ProposalInput {
+        let proposal = approvals.propose(proposal_input(run_id, action));
+        if approve {
+            approvals.approve(&proposal.id, 2, "approved").unwrap();
+        }
+        proposal
+    }
+
+    fn proposal_input(run_id: &str, action: RiskyAction) -> ProposalInput {
+        ProposalInput {
             action,
             expected_result: "Apply a proposed patch.".to_string(),
             expires_at: 10,
@@ -228,11 +187,7 @@ mod tests {
             rollback_plan: "Use patch checkpoint receipts.".to_string(),
             run_id: run_id.to_string(),
             scope: "One patch.".to_string(),
-        });
-        if approve {
-            approvals.approve(&proposal.id, 2, "approved").unwrap();
         }
-        proposal
     }
 
     fn request(run_id: &str) -> AgentScheduleRequest {

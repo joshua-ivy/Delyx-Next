@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 181/202 checked, 21 open, 89.6%.
+- Phase 2 checkbox progress: 182/203 checked, 21 open, 89.7%.
 - Phase 2 track progress: 6/12 complete, 6/12 in progress.
 - Complete tracks: D3, D4, D6, D8, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D11, D12.
@@ -199,6 +199,7 @@ Progress board:
   - [x] ~~Approved same-run repair PatchDraft approvals can now be selected by the scheduler for `revise_requested` reviews, and the resume bridge can return that decision even when the run is already in build/running state.~~
   - [x] ~~PatchDraft context construction now has a Rust-owned dispatch command: it loads the persisted thread/run, approved plan, workspace snapshot, approval scope, and matching repair finding context before executing the scheduler-verified PatchDraft bridge.~~
   - [x] ~~Scheduler patch-apply readiness now has two truthful states: proposed patches return `request_patch_apply_approval` until a separate executable apply approval ID is provided, and only then return `run_patch_apply` with that exact approval ID.~~
+  - [x] ~~Rust scheduler can now discover the exact executable patch-apply approval from the persisted approval ledger by matching the patch-apply node ID, so the write-ready state no longer depends on React passing the approval hint; generic same-run FileWrite approvals are rejected.~~
   - [x] ~~Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.~~
   - [x] ~~Scheduler and bridge tests prove pending approvals stay waiting, approved single approvals resume, proposed patches request apply approval, verified apply approvals schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, clean stored reviews move to final-support readiness, unresolved review findings block final support, repair-requested reviews surface `repair_requested`, and UI-ready decision views map from real stores.~~
   - [ ] Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.

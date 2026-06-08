@@ -1,4 +1,5 @@
 use crate::agent_run::{AgentRun, AgentRunError, AgentRunLedger, AgentRunStatus};
+use crate::agent_scheduler_approvals::ready_patch_apply_approval;
 use crate::approval::{ApprovalEngine, ApprovalGateState, RiskyAction};
 use crate::patch_bridge::{patch_snapshot_from_store, PatchBridgeStore, PatchProposalView};
 use crate::review_bridge::{review_snapshot_from_store, ReviewBridgeStore};
@@ -184,19 +185,11 @@ fn patch_apply_decision(
     proposal: &PatchProposalView,
     context: &AgentSchedulerContext<'_>,
 ) -> AgentScheduleDecision {
-    if let Some(approval_id) = context.patch_apply_approval_id {
-        if approval_ready(
-            context.approvals,
+    if let Some(approval_id) = ready_patch_apply_approval(context, proposal) {
+        return AgentScheduleDecision::RunPatchApply {
             approval_id,
-            context.now_ms,
-            RiskyAction::FileWrite,
-            &context.run.id,
-        ) {
-            return AgentScheduleDecision::RunPatchApply {
-                approval_id: approval_id.to_string(),
-                proposal_id: proposal.id.clone(),
-            };
-        }
+            proposal_id: proposal.id.clone(),
+        };
     }
     AgentScheduleDecision::RequestPatchApplyApproval {
         proposal_id: proposal.id.clone(),

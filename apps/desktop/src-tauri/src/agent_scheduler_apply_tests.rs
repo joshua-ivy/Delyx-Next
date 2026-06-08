@@ -32,7 +32,7 @@ mod tests {
         let mut ledger = AgentRunLedger::new();
         let run = ledger.create_run("thread-1").unwrap();
         let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(proposal_input(&run.id));
+        let approval = approvals.propose(apply_input(&run.id, "patch-1"));
         approvals.approve(&approval.id, 2, "approved").unwrap();
         let mut patches = PatchBridgeStore::default();
         let reviews = ReviewBridgeStore::default();
@@ -52,6 +52,51 @@ mod tests {
             decision,
             AgentScheduleDecision::RunPatchApply {
                 approval_id: approval.id,
+                proposal_id: "patch-1".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn scheduler_discovers_exact_apply_approval_without_ui_hint() {
+        let mut ledger = AgentRunLedger::new();
+        let run = ledger.create_run("thread-1").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(apply_input(&run.id, "patch-1"));
+        approvals.approve(&approval.id, 2, "approved").unwrap();
+        let mut patches = PatchBridgeStore::default();
+        let reviews = ReviewBridgeStore::default();
+        let tests = TestRunnerBridgeStore::default();
+        patches.records.push(patch(&run.id));
+
+        let decision = schedule_next(context(&run, &approvals, &patches, &reviews, &tests, None));
+
+        assert_eq!(
+            decision,
+            AgentScheduleDecision::RunPatchApply {
+                approval_id: approval.id,
+                proposal_id: "patch-1".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn scheduler_does_not_use_patch_draft_approval_for_apply() {
+        let mut ledger = AgentRunLedger::new();
+        let run = ledger.create_run("thread-1").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let approval = approvals.propose(proposal_input(&run.id));
+        approvals.approve(&approval.id, 2, "approved").unwrap();
+        let mut patches = PatchBridgeStore::default();
+        let reviews = ReviewBridgeStore::default();
+        let tests = TestRunnerBridgeStore::default();
+        patches.records.push(patch(&run.id));
+
+        let decision = schedule_next(context(&run, &approvals, &patches, &reviews, &tests, None));
+
+        assert_eq!(
+            decision,
+            AgentScheduleDecision::RequestPatchApplyApproval {
                 proposal_id: "patch-1".to_string()
             }
         );
@@ -84,12 +129,19 @@ mod tests {
             action: RiskyAction::FileWrite,
             expected_result: "Apply an approved patch proposal.".to_string(),
             expires_at: 10,
-            node_id: "run-1-patch-apply-patch-1".to_string(),
+            node_id: "run-1-patch-draft".to_string(),
             reason: "Apply the proposed patch.".to_string(),
             risk: RiskLevel::High,
             rollback_plan: "Use checkpoint receipts to restore files.".to_string(),
             run_id: run_id.to_string(),
             scope: "Apply patch-1.".to_string(),
+        }
+    }
+
+    fn apply_input(run_id: &str, patch_id: &str) -> ProposalInput {
+        ProposalInput {
+            node_id: format!("{run_id}-patch-apply-{patch_id}"),
+            ..proposal_input(run_id)
         }
     }
 

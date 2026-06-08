@@ -103,7 +103,9 @@ complete:
   AgentRun, approval, patch, test, and review stores to choose conservative
   next-step decisions: wait, single-approval resume, patch-apply approval
   request, verified patch apply, tests, review, final-support readiness,
-  terminal, complete, or blocked. The Focus UI can
+  terminal, complete, or blocked. Patch-apply readiness is derived in Rust from
+  the persisted approval ledger when an exact patch-apply node approval exists;
+  generic same-run FileWrite approvals do not authorize that state. The Focus UI can
   render that decision as a next-action line without inventing runtime state.
   Resume actions forward the active plan's supported test-command signal back
   into the scheduler bridge, so resume decisions use the same real plan context
@@ -311,7 +313,8 @@ approved existing PatchProposal into a patch-apply node, write files through the
 stale-file/checkpoint PatchEngine path, and record patch-apply receipts. The
 scheduler exposes `request_patch_apply_approval` until the separate apply
 approval is executable, and exposes `run_patch_apply` only with that exact
-approval ID. The
+approval ID, discovered from the persisted approval node when the UI does not
+provide a hint. The
 `agent_execute_patch_restore` bridge can advance an approved existing applied
 PatchProposal into a patch-restore node, require a separate executable
 `FileWrite` approval, verify current file contents still match the applied
