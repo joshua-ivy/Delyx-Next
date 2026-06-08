@@ -97,6 +97,7 @@ fn main() {
             delyx_next_desktop::agent_scheduler_bridge::agent_resume_waiting_run,
             delyx_next_desktop::agent_scheduler_bridge::agent_schedule_next,
             delyx_next_desktop::agent_test_executor_bridge::agent_execute_test_run,
+            delyx_next_desktop::agent_test_step::agent_run_test_step,
             delyx_next_desktop::approval_bridge::approval_decide,
             delyx_next_desktop::approval_bridge::approval_propose,
             delyx_next_desktop::approval_bridge::approval_snapshot,

@@ -11,7 +11,9 @@ import {
   scheduleNextRunActionOverBridge,
   type AgentScheduleDecisionView,
 } from "../features/runs/agentExecutorClient";
+import { runTestSchedulerStepOverBridge } from "../features/runs/agentSchedulerStepClient";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
+import { loadTestSnapshot } from "../features/tests/testClient";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
@@ -98,12 +100,15 @@ async function dispatchOneSchedulerDecision(
     };
   }
   if (decision.kind === "run_tests") {
-    await runTestsForActiveRun({
-      ...state,
-      schedulerConfirmedRunTests: true,
-      schedulerTestApprovalId: decision.approvalIds[0],
-    });
-    return { handled: true };
+    if (!decision.approvalIds[0]) {
+      await runTestsForActiveRun({
+        ...state,
+        schedulerConfirmedRunTests: true,
+      });
+      return { handled: true };
+    }
+    const result = await runSchedulerTestStep(state);
+    return { handled: true, nextState: testReloadedState(state, result) };
   }
   if (decision.kind === "run_review") {
     await runReviewForActiveRun({
@@ -159,6 +164,50 @@ function applyReloadedState(
     ...state,
     activeRun: result?.snapshot?.runs.find((run) => run.id === state.activeRun?.id) ?? state.activeRun,
     patches: result?.patches ?? state.patches,
+  };
+}
+
+async function runSchedulerTestStep(state: SchedulerDispatchState) {
+  if (!state.activeRun) {
+    notifyLocalAction("Create a run before running scheduler-selected tests", "warning");
+    return undefined;
+  }
+  const started = new Date();
+  const result = await runTestSchedulerStepOverBridge({
+    nowMs: started.getTime(),
+    runId: state.activeRun.id,
+    startedAt: started.toISOString(),
+    timeoutMs: 5 * 60 * 1000,
+    updatedAt: new Date().toISOString(),
+  });
+  if (!result) {
+    notifyLocalAction("Desktop bridge is required to run scheduler-selected tests", "warning");
+    return undefined;
+  }
+  const [tests, snapshot] = await Promise.all([
+    loadTestSnapshot(state.activeRun.id),
+    loadThreadRunSnapshot(state.activeProject.id),
+  ]);
+  if (tests) {
+    state.setTests(tests);
+  }
+  if (snapshot) {
+    state.setThreads(snapshot.threads);
+    state.setAgentRuns(snapshot.runs);
+  }
+  state.setThreadState("ready");
+  notifyLocalAction(result.message, result.status === "completed" ? "success" : "warning");
+  return { snapshot, tests };
+}
+
+function testReloadedState(
+  state: SchedulerDispatchState,
+  result: Awaited<ReturnType<typeof runSchedulerTestStep>>,
+) {
+  return {
+    ...state,
+    activeRun: result?.snapshot?.runs.find((run) => run.id === state.activeRun?.id) ?? state.activeRun,
+    tests: result?.tests ?? state.tests,
   };
 }
 

@@ -131,14 +131,14 @@ now has real persisted or approval-gated functional islands.
 - [x] ~~Stored review findings now block final support until accepted or repaired, and exact findings can create persisted repair-request markers plus scoped repair PatchDraft approvals.~~
 - [x] ~~Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.~~
 - [x] ~~Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.~~
-- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, Rust-owned PatchDraft/apply steps, and one-step approval-safe dispatcher now exist.
-- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft context and scheduler-step approval selection are Rust-owned now, but the remaining gap is making PatchDraft a full autonomous executor repair/build node instead of a renderer-triggered command.
+- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, Rust-owned PatchDraft/apply/test steps, and one-step approval-safe dispatcher now exist.
+- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft/apply/test scheduler steps are Rust-owned now, but the remaining gap is making the full repair/build loop autonomous instead of renderer-triggered.
 - [x] ~~Broad frontend behavior coverage now covers project/thread creation, planning, approvals, diff/test/review artifacts, evidence support, error, blocked, expired, and empty states with React Testing Library component/action tests.~~
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
 Progress board:
 
-- Phase 2 checkbox progress: 189/210 checked, 21 open, 90.0%.
+- Phase 2 checkbox progress: 191/212 checked, 21 open, 90.1%.
 - Phase 2 track progress: 6/12 complete, 6/12 in progress.
 - Complete tracks: D3, D4, D6, D8, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D11, D12.
@@ -203,6 +203,7 @@ Progress board:
   - [x] ~~Rust scheduler can now discover the exact executable patch-apply approval from the persisted approval ledger by matching the patch-apply node ID, so the write-ready state no longer depends on React passing the approval hint; generic same-run FileWrite approvals are rejected.~~
   - [x] ~~Added `agent_run_patch_apply_step`: Rust now asks the scheduler for the current `run_patch_apply` decision, derives the exact persisted proposal/apply approval, loads approved roots from the persisted workspace project, validates the thread can move to testing before file writes, and then executes the existing checkpointed apply bridge.~~
   - [x] ~~Scheduler test readiness is now hydrated in Rust from persisted plan records and approval bridge records: unsafe shell-control test text is cleared, React test hints are ignored, and only an exact executable same-run terminal approval whose scope includes the persisted command is returned.~~
+  - [x] ~~Added `agent_run_test_step`: Rust now asks the scheduler for the current approved `run_tests` decision, derives the persisted test command, workspace root, working directory, and exact terminal approval, moves the visible thread through testing/reviewing or failed states, and executes the existing test bridge.~~
   - [x] ~~Scheduler PatchDraft readiness is now hydrated in Rust from persisted plan, workspace, review, patch, and approval records: plan and repair draft approvals must be executable same-run FileWrite approvals with exact plan/repair node IDs and matching file scope, stale UI hints are cleared, existing patches block duplicate plan drafts, and generic same-run FileWrite approvals are rejected.~~
   - [x] ~~Added `agent_run_patch_draft_step`: Rust now asks the scheduler for the current `run_patch_draft` decision, derives the exact persisted approval, re-verifies that decision, and only then executes the PatchDraft bridge.~~
   - [x] ~~Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.~~
@@ -300,6 +301,7 @@ Progress board:
   - [x] ~~AgentScheduler can now identify applied patches that need tests, block when no supported test command exists, schedule review from real patch/test artifacts, and report final-support readiness after a stored review; Focus UI shows those real next actions when the desktop bridge is available.~~
   - [x] ~~The scheduler dispatcher can automatically queue/run the scheduler-selected test step after the final approval resumes the run, and can dispatch read-only review/final-support steps from persisted artifacts.~~
   - [x] ~~`agent_resume_waiting_run` and `agent_schedule_next` now hydrate test readiness from persisted plan records, verify an exact executable same-run `TerminalCommand` approval from the approval ledger, and return that ID on the `run_tests` decision; the Focus dispatcher passes that exact ID into `agent_execute_test_run`.~~
+  - [x] ~~Scheduler-dispatched approved tests now call the Rust scheduler-step bridge with only run/clock/timestamps; React no longer passes test approval IDs, command program/args, working directory, approved roots, or timeout authority for approved scheduler-selected test execution. Missing test approvals still queue visible approval cards before execution.~~
   - [x] ~~The scheduler dispatcher can continue from a completed dispatched action to the next scheduler-selected test/review/final-support step within a bounded loop.~~
   - [x] ~~Review reports with unresolved findings now block final support, and an exact finding-level repair request is persisted before the run can move back toward build.~~
   - [x] ~~Approved repair requests now flow back to build through persisted review status, a scoped approval card, scheduler-selected PatchDraft, and tests covering that handoff; generated repair outputs can continue through apply, test, review, and final-support scheduling when approvals and receipts exist.~~

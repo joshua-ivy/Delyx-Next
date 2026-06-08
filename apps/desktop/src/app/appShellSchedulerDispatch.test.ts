@@ -64,20 +64,6 @@ describe("dispatchSchedulerDecision", () => {
     expect(recordFinal).toHaveBeenCalledWith(base);
   });
 
-  it("dispatches scheduler-verified test approvals by id", async () => {
-    scheduleNext.mockResolvedValue(undefined);
-
-    await dispatchSchedulerDecision(state({ testReady: true }), {
-      ...decision("run_tests"),
-      approvalIds: ["approval-test"],
-    });
-
-    expect(runTests).toHaveBeenCalledWith(expect.objectContaining({
-      schedulerConfirmedRunTests: true,
-      schedulerTestApprovalId: "approval-test",
-    }));
-  });
-
   it("dispatches patch draft decisions and stops at apply approval requests", async () => {
     const patch = patchView();
     draftPatch.mockResolvedValue(draftResult(patch));

@@ -118,8 +118,8 @@ complete:
   Approval decisions can also trigger that non-risky resume transition when the
   approved proposal is the last pending approval for the run. A focused
   renderer dispatcher can then run post-resume scheduler-selected actions:
-  apply-approval request, Rust-owned approved patch apply, approved or approval-queued
-  tests, read-only review, or final-support recording. After each dispatched action it asks the Rust
+  apply-approval request, Rust-owned approved patch apply, Rust-owned approved
+  tests, approval-queued tests, read-only review, or final-support recording. After each dispatched action it asks the Rust
   scheduler for a bounded next decision, stopping on passive/repeated states or
   the depth limit. The current bound is large enough for a generated patch
   path to continue through patch draft, apply approval, patch apply, tests,
@@ -133,6 +133,13 @@ complete:
   before any file write, and then executes the existing checkpointed apply
   bridge. The mounted renderer supplies only run/clock/timestamp inputs for
   that scheduler-selected apply path.
+  Scheduler-selected approved tests now use `agent_run_test_step`, which asks
+  the Rust scheduler for the current approved `run_tests` decision, derives the
+  persisted test command, working directory, approved roots, and exact terminal
+  approval, moves the visible thread through testing then reviewing or failed
+  states, and executes the existing test bridge. Missing test approvals still
+  queue visible approval cards before execution; approved test execution no
+  longer receives command or approval authority from the renderer.
   PatchDraft approval readiness is discovered in Rust from persisted plan,
   workspace, review, patch, and approval records: the approval must be an
   executable same-run FileWrite approval with the exact plan or repair node ID
@@ -903,13 +910,14 @@ renderer-side PatchDraft parsing and context selection, but it is not yet the
 full autonomous executor/repair loop.
 
 Scheduler-selected tests follow the same rule for terminal approvals. The
-renderer no longer passes the active plan's supported test-command state or an
-approved test approval ID as scheduler hints. The Rust scheduler derives that
-context from the persisted plan and approval ledger, rejects shell-control test
-text, and only returns a `run_tests` approval ID after verifying an executable
-same-run `TerminalCommand` approval whose scope includes the persisted command.
-The test action then uses that exact approval ID instead of rediscovering a
-replacement approval in renderer state.
+renderer no longer passes the active plan's supported test-command state as a
+scheduler hint. For approved `run_tests` decisions, the mounted renderer also
+no longer passes the test approval ID, command program/args, working directory,
+approved roots, or timeout authority. `agent_run_test_step` re-asks the Rust
+scheduler, derives the persisted command and exact executable same-run
+`TerminalCommand` approval whose scope includes that command, rejects
+shell-control test text through the shared parser, loads the persisted
+workspace root, and then uses the existing TestRunner artifact bridge.
 
 Scheduler-selected patch apply follows the same ownership direction for file
 writes. The mounted renderer no longer passes the apply approval ID, approved

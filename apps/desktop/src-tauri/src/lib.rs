@@ -47,6 +47,8 @@ pub mod agent_test_executor;
 pub mod agent_test_executor_bridge;
 mod agent_test_executor_bridge_tests;
 mod agent_test_executor_tests;
+pub mod agent_test_step;
+mod agent_test_step_tests;
 pub mod approval;
 pub mod approval_bridge;
 mod approval_bridge_keys;

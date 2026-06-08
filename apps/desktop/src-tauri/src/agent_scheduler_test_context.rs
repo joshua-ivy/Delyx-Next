@@ -5,8 +5,11 @@ use crate::plan_bridge::PlanView;
 use crate::thread_run_bridge::ThreadRunStore;
 use std::path::Path;
 
-struct RunnableTestCommand {
-    label: String,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RunnableTestCommand {
+    pub(crate) args: Vec<String>,
+    pub(crate) label: String,
+    pub(crate) program: String,
 }
 
 pub(crate) fn hydrate_schedule_request(
@@ -15,10 +18,7 @@ pub(crate) fn hydrate_schedule_request(
     plan_db: &Path,
     request: AgentScheduleRequest,
 ) -> Result<AgentScheduleRequest, String> {
-    let Some(plan) = plan_for_run(threads, plan_db, &request.run_id)? else {
-        return Ok(request);
-    };
-    let Some(command) = first_runnable_test_command(&plan.tests_to_run) else {
+    let Some(command) = test_command_for_run(threads, plan_db, &request.run_id)? else {
         return Ok(AgentScheduleRequest {
             has_supported_test_command: false,
             test_approval_id: None,
@@ -32,7 +32,18 @@ pub(crate) fn hydrate_schedule_request(
     })
 }
 
-fn plan_for_run(
+pub(crate) fn test_command_for_run(
+    threads: &ThreadRunStore,
+    plan_db: &Path,
+    run_id: &str,
+) -> Result<Option<RunnableTestCommand>, String> {
+    let Some(plan) = plan_for_run(threads, plan_db, run_id)? else {
+        return Ok(None);
+    };
+    Ok(first_runnable_test_command(&plan.tests_to_run))
+}
+
+pub(crate) fn plan_for_run(
     threads: &ThreadRunStore,
     plan_db: &Path,
     run_id: &str,
@@ -91,7 +102,9 @@ fn parse_runnable_test_command(command: &str) -> Option<RunnableTestCommand> {
     }
     let program = parts.remove(0);
     crate::test_runner::is_test_command(&program, &parts).then(|| RunnableTestCommand {
+        args: parts,
         label: label.to_string(),
+        program,
     })
 }
 
