@@ -57,13 +57,15 @@ pub fn execute_patch_apply_node(
         .cloned()
         .ok_or_else(|| "Patch proposal not found.".to_string())?;
     match approvals.assert_can_execute_action_for_run(
-        &proposal.approval_id,
+        &request.approval_id,
         request.created_at_ms,
         RiskyAction::FileWrite,
         &proposal.run_id,
     ) {
         Ok(()) => run_patch_apply(ledger, patches, approvals, request, &proposal.run_id),
-        Err(ApprovalError::NotApproved) => wait_for_apply_approval(ledger, &proposal),
+        Err(ApprovalError::NotApproved) => {
+            wait_for_apply_approval(ledger, &proposal, &request.approval_id)
+        }
         Err(error) => fail_without_node(
             ledger,
             &proposal.run_id,
@@ -172,12 +174,13 @@ fn wait_for_approval(
 fn wait_for_apply_approval(
     ledger: &mut AgentRunLedger,
     proposal: &crate::patch_bridge::PatchProposalView,
+    approval_id: &str,
 ) -> Result<AgentExecutionResult, String> {
     ledger
-        .wait_for_approval(&proposal.run_id, &proposal.approval_id)
+        .wait_for_approval(&proposal.run_id, approval_id)
         .map_err(agent_error)?;
     Ok(AgentExecutionResult {
-        message: format!("Waiting for approval {}.", proposal.approval_id),
+        message: format!("Waiting for approval {approval_id}."),
         patch_id: Some(proposal.id.clone()),
         run_id: proposal.run_id.clone(),
         status: AgentExecutionStatus::WaitingForApproval,

@@ -194,10 +194,9 @@ export function AppShell() {
   };
   const applyPatch = (patchId: string) => {
     void applyApprovedPatchForActiveRun({
-      activeProject,
-      activeThread,
+      actionProposals, activeProject, activeRun, activeThread,
       patch: patches.find((patch) => patch.id === patchId),
-      setAgentRuns,
+      setActionProposals, setAgentRuns,
       setPatches,
       setThreads,
       setThreadState,

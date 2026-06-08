@@ -25,7 +25,7 @@ mod tests {
             &mut ledger,
             &mut patches,
             &approvals,
-            apply_request("executor-patch-1", &root, 2),
+            apply_request("executor-patch-1", &approval_id, &root, 2),
         )
         .unwrap();
 
@@ -53,7 +53,7 @@ mod tests {
             &mut ledger,
             &mut patches,
             &approvals,
-            apply_request("executor-patch-1", &root, 2),
+            apply_request("executor-patch-1", &approval_id, &root, 2),
         )
         .unwrap();
         let run = ledger.get_run(&run.id).unwrap();
@@ -90,7 +90,7 @@ mod tests {
             &mut ledger,
             &mut patches,
             &approvals,
-            apply_request("executor-patch-1", &root, 2),
+            apply_request("executor-patch-1", &approval_id, &root, 2),
         )
         .unwrap();
 
@@ -155,8 +155,14 @@ mod tests {
         }
     }
 
-    fn apply_request(proposal_id: &str, root: &Path, created_at_ms: u64) -> PatchApplyRequest {
+    fn apply_request(
+        proposal_id: &str,
+        approval_id: &str,
+        root: &Path,
+        created_at_ms: u64,
+    ) -> PatchApplyRequest {
         PatchApplyRequest {
+            approval_id: approval_id.to_string(),
             approved_roots: vec![root.display().to_string()],
             created_at_ms,
             proposal_id: proposal_id.to_string(),

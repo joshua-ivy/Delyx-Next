@@ -751,10 +751,12 @@ isolation start paying for the added workspace shape.
 Decision: Approved plan/build approval can trigger a narrow PatchDraftAgent path
 that reads only approved plan files, asks local Ollama for structured complete
 replacement contents, and records a proposed diff through the AgentRun patch
-proposal bridge. The generated proposal is not automatically applied by that
-same drafting step.
+proposal bridge. Applying that generated proposal requires a separate apply
+approval ID in the patch apply request; the proposal approval is not accepted as
+write authorization by the renderer action or the Rust apply bridge.
 
 Reason: The current approval copy scopes this action to proposing a patch. File
 writes must remain visible through the existing patch apply/checkpoint gates, so
-generated content and disk mutation stay separate trust boundaries until the
-full executor can model them explicitly.
+generated content and disk mutation stay separate trust boundaries. The
+scheduler may still surface a proposed patch as the next step, but the action
+queues or requires the apply-specific approval before any file write occurs.

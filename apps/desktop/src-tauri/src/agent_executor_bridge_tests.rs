@@ -51,7 +51,8 @@ mod tests {
         let mut thread_store = ThreadRunStore::default();
         let record = create_thread_run_record(&mut thread_store, create_request()).unwrap();
         let mut patch_store = PatchBridgeStore::default();
-        let (approvals, approval_id) = approved_file_write(&record.run.id);
+        let (mut approvals, approval_id) = approved_file_write(&record.run.id);
+        let apply_id = approve_more_file_write(&mut approvals, &record.run.id);
 
         execute_patch_proposal_record(
             &mut thread_store,
@@ -64,7 +65,7 @@ mod tests {
             &mut thread_store,
             &mut patch_store,
             &approvals,
-            apply_request("executor-bridge-patch-1", &root),
+            apply_request("executor-bridge-patch-1", &apply_id, &root),
         )
         .unwrap();
 
@@ -88,6 +89,7 @@ mod tests {
         let record = create_thread_run_record(&mut thread_store, create_request()).unwrap();
         let mut patch_store = PatchBridgeStore::default();
         let (mut approvals, approval_id) = approved_file_write(&record.run.id);
+        let apply_id = approve_more_file_write(&mut approvals, &record.run.id);
         let restore_id = approve_more_file_write(&mut approvals, &record.run.id);
 
         execute_patch_proposal_record(
@@ -101,7 +103,7 @@ mod tests {
             &mut thread_store,
             &mut patch_store,
             &approvals,
-            apply_request("executor-bridge-patch-1", &root),
+            apply_request("executor-bridge-patch-1", &apply_id, &root),
         )
         .unwrap();
         let view = execute_patch_restore_record(
@@ -183,8 +185,9 @@ mod tests {
         }
     }
 
-    fn apply_request(proposal_id: &str, root: &Path) -> PatchApplyRequest {
+    fn apply_request(proposal_id: &str, approval_id: &str, root: &Path) -> PatchApplyRequest {
         PatchApplyRequest {
+            approval_id: approval_id.to_string(),
             approved_roots: vec![root.display().to_string()],
             created_at_ms: 3,
             proposal_id: proposal_id.to_string(),

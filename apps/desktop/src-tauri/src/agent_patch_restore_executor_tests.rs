@@ -133,6 +133,7 @@ mod tests {
             &mut store,
             approvals,
             PatchApplyRequest {
+                approval_id: approval_id.to_string(),
                 approved_roots: vec![root.display().to_string()],
                 created_at_ms: 2,
                 proposal_id: "executor-patch-1".to_string(),

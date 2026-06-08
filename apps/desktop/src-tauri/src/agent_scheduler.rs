@@ -1,5 +1,5 @@
 use crate::agent_run::{AgentRun, AgentRunError, AgentRunLedger, AgentRunStatus};
-use crate::approval::{ApprovalEngine, ApprovalError, ApprovalGateState, RiskyAction};
+use crate::approval::{ApprovalEngine, ApprovalGateState};
 use crate::patch_bridge::{patch_snapshot_from_store, PatchBridgeStore, PatchProposalView};
 use crate::review_bridge::{review_snapshot_from_store, ReviewBridgeStore};
 use crate::test_runner_bridge::{test_snapshot_from_store, TestRunnerBridgeStore};
@@ -141,24 +141,11 @@ fn approval_wait_decision(
 
 fn patch_apply_decision(
     proposal: &PatchProposalView,
-    approvals: &ApprovalEngine,
-    now_ms: u64,
+    _approvals: &ApprovalEngine,
+    _now_ms: u64,
 ) -> AgentScheduleDecision {
-    match approvals.assert_can_execute_action_for_run(
-        &proposal.approval_id,
-        now_ms,
-        RiskyAction::FileWrite,
-        &proposal.run_id,
-    ) {
-        Ok(()) => AgentScheduleDecision::RunPatchApply {
-            proposal_id: proposal.id.clone(),
-        },
-        Err(ApprovalError::NotApproved) => AgentScheduleDecision::WaitForApproval {
-            approval_ids: vec![proposal.approval_id.clone()],
-        },
-        Err(error) => blocked(format!(
-            "Patch proposal approval is not executable: {error:?}."
-        )),
+    AgentScheduleDecision::RunPatchApply {
+        proposal_id: proposal.id.clone(),
     }
 }
 

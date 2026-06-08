@@ -9,6 +9,7 @@ use std::path::PathBuf;
 #[serde(rename_all = "camelCase")]
 pub struct PatchApplyRequest {
     pub proposal_id: String,
+    pub approval_id: String,
     pub approved_roots: Vec<String>,
     pub created_at_ms: u64,
 }
@@ -30,7 +31,7 @@ pub fn apply_patch_record(
     }
     approvals
         .assert_can_execute_action_for_run(
-            &proposal.approval_id,
+            &request.approval_id,
             request.created_at_ms,
             RiskyAction::FileWrite,
             &proposal.run_id,
@@ -42,7 +43,7 @@ pub fn apply_patch_record(
         PatchEngine::new(root_paths(&request)).map_err(|error| format!("{error:?}"))?;
     let runtime_patch = engine
         .propose_patch(PatchInput {
-            approval_id: proposal.approval_id.clone(),
+            approval_id: request.approval_id.clone(),
             files: proposal.files.iter().map(file_input).collect(),
             run_id: proposal.run_id.clone(),
         })
@@ -60,8 +61,11 @@ pub fn apply_patch_record(
 }
 
 fn validate_request(request: &PatchApplyRequest) -> Result<(), String> {
-    if request.proposal_id.trim().is_empty() || request.created_at_ms == 0 {
-        return Err("Patch apply requires proposal ID and clock.".to_string());
+    if request.proposal_id.trim().is_empty()
+        || request.approval_id.trim().is_empty()
+        || request.created_at_ms == 0
+    {
+        return Err("Patch apply requires proposal ID, approval ID, and clock.".to_string());
     }
     if request.approved_roots.is_empty() {
         return Err("Patch apply requires at least one approved root.".to_string());

@@ -11,6 +11,7 @@ import { FocusIcon, Pipe, Think } from "./focusAtoms";
 import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatusLabel, type FocusMode } from "./focusFormat";
 import { MarkdownMessage } from "./focusMarkdown";
 import { FocusActionLine, FocusOutcomePeek, FocusSchedulerPeek, FocusTestPeek } from "./FocusThreadArtifacts";
+import { activePatchApplyApproval } from "./patchApplyApproval";
 
 interface FocusThreadProps {
   activePlan: PlanView | undefined;
@@ -215,9 +216,10 @@ function DiffPeek({ onApplyPatch, patches, proposals }: { onApplyPatch: (patchId
   if (!file) {
     return null;
   }
-  const approval = proposals.find((proposal) => proposal.id === file.patch.approvalId);
-  const canApply = file.patch.status === "proposed" && approval?.status === "approved";
-  return <div className="peek"><div className="peek-head"><FocusIcon name="diff" /> {file.item.path}<span className="stat">{file.patch.status}</span></div>{file.item.diff.slice(0, 8).map((line, index) => <div className={`dl ${line.kind === "added" ? "add" : line.kind === "removed" ? "del" : "ctx"}`} key={index}><span className="ln">{line.kind === "added" ? "+" : line.kind === "removed" ? "-" : index + 1}</span><span className="tx">{line.text || " "}</span></div>)}{canApply && <div className="plan-actions"><button className="select" onClick={() => onApplyPatch(file.patch.id)} type="button">Apply patch</button></div>}</div>;
+  const approval = activePatchApplyApproval(proposals, file.patch);
+  const canAdvance = file.patch.status === "proposed" && (!approval || approval.status === "approved" || approval.status === "expired");
+  const label = approval?.status === "approved" ? "Apply patch" : "Request apply approval";
+  return <div className="peek"><div className="peek-head"><FocusIcon name="diff" /> {file.item.path}<span className="stat">{file.patch.status}</span></div>{file.item.diff.slice(0, 8).map((line, index) => <div className={`dl ${line.kind === "added" ? "add" : line.kind === "removed" ? "del" : "ctx"}`} key={index}><span className="ln">{line.kind === "added" ? "+" : line.kind === "removed" ? "-" : index + 1}</span><span className="tx">{line.text || " "}</span></div>)}{canAdvance && <div className="plan-actions"><button className="select" onClick={() => onApplyPatch(file.patch.id)} type="button">{label}</button></div>}</div>;
 }
 
 function ReviewPeek({ onRunReview, patches, reports, tests }: { onRunReview: () => void; patches: PatchProposalView[]; reports: ReviewReportView[]; tests: TestArtifactView[] }) {

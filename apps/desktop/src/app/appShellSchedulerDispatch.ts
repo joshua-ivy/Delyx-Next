@@ -58,9 +58,12 @@ async function dispatchOneSchedulerDecision(
 ) {
   if (decision.kind === "run_patch_apply") {
     await applyApprovedPatchForActiveRun({
+      actionProposals: state.actionProposals,
       activeProject: state.activeProject,
+      activeRun: state.activeRun,
       activeThread: state.activeThread,
       patch: state.patches.find((patch) => patch.id === decision.proposalId),
+      setActionProposals: state.setActionProposals,
       setAgentRuns: state.setAgentRuns,
       setPatches: state.setPatches,
       setThreads: state.setThreads,

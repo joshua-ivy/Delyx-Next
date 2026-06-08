@@ -20,7 +20,7 @@ mod tests {
         let applied = apply_patch_record(
             &mut store,
             &approvals,
-            apply_request("patch-client-1", &root),
+            apply_request("patch-client-1", &approval_id, &root),
         )
         .unwrap();
 
@@ -35,17 +35,42 @@ mod tests {
     }
 
     #[test]
+    fn approved_patch_apply_uses_separate_apply_approval() {
+        let root = temp_workspace("apply-separate");
+        let file = root.join("settings.toml");
+        fs::write(&file, "network = true\n").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let proposal_id = approvals.propose(proposal_input("run-1")).id;
+        let apply = approvals.propose(proposal_input("run-1"));
+        approvals.approve(&apply.id, 1, "apply approval").unwrap();
+        let mut store = proposed_store(&root, &file, &proposal_id, "network = false\n");
+
+        let applied = apply_patch_record(
+            &mut store,
+            &approvals,
+            apply_request("patch-client-1", &apply.id, &root),
+        )
+        .unwrap();
+
+        assert_eq!(fs::read_to_string(&file).unwrap(), "network = false\n");
+        assert_eq!(applied.status, "applied");
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
     fn pending_patch_apply_approval_blocks_without_writing() {
         let root = temp_workspace("apply-pending");
         let file = root.join("settings.toml");
         fs::write(&file, "network = true\n").unwrap();
-        let (approvals, approval_id) = pending_file_write("run-1");
-        let mut store = proposed_store(&root, &file, &approval_id, "network = false\n");
+        let mut approvals = ApprovalEngine::new();
+        let proposal_id = approvals.propose(proposal_input("run-1")).id;
+        let apply_id = approvals.propose(proposal_input("run-1")).id;
+        let mut store = proposed_store(&root, &file, &proposal_id, "network = false\n");
 
         let error = apply_patch_record(
             &mut store,
             &approvals,
-            apply_request("patch-client-1", &root),
+            apply_request("patch-client-1", &apply_id, &root),
         )
         .unwrap_err();
 
@@ -67,7 +92,7 @@ mod tests {
         let error = apply_patch_record(
             &mut store,
             &approvals,
-            apply_request("patch-client-1", &root),
+            apply_request("patch-client-1", &approval_id, &root),
         )
         .unwrap_err();
 
@@ -91,7 +116,7 @@ mod tests {
         apply_patch_record(
             &mut store,
             &approvals,
-            apply_request("patch-client-1", &root),
+            apply_request("patch-client-1", &approval_id, &root),
         )
         .unwrap();
         crate::patch_persistence::save_to_path(&store, &db_path).unwrap();
@@ -137,12 +162,6 @@ mod tests {
         (engine, proposal.id)
     }
 
-    fn pending_file_write(run_id: &str) -> (ApprovalEngine, String) {
-        let mut engine = ApprovalEngine::new();
-        let proposal = engine.propose(proposal_input(run_id));
-        (engine, proposal.id)
-    }
-
     fn proposal_input(run_id: &str) -> ProposalInput {
         ProposalInput {
             action: RiskyAction::FileWrite,
@@ -157,8 +176,9 @@ mod tests {
         }
     }
 
-    fn apply_request(proposal_id: &str, root: &Path) -> PatchApplyRequest {
+    fn apply_request(proposal_id: &str, approval_id: &str, root: &Path) -> PatchApplyRequest {
         PatchApplyRequest {
+            approval_id: approval_id.to_string(),
             approved_roots: vec![root.display().to_string()],
             created_at_ms: 2,
             proposal_id: proposal_id.to_string(),

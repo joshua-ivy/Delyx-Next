@@ -7,36 +7,42 @@ import type { PlanView } from "../features/plans/planTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusThread } from "./FocusThread";
+import { patchApplyApprovalId } from "./patchApplyApproval";
 
 afterEach(cleanup);
 
 describe("FocusThread patch actions", () => {
-  it("shows apply for a proposed patch with a matching approved approval", () => {
+  it("shows apply for a proposed patch with a matching approved apply approval", () => {
     const onApplyPatch = vi.fn();
-    renderThread({ approvalStatus: "approved", onApplyPatch });
+    renderThread({ approvalStatus: "approved", onApplyPatch, proposals: [approval("approved"), applyApproval("approved")] });
 
     fireEvent.click(screen.getByRole("button", { name: "Apply patch" }));
 
     expect(onApplyPatch).toHaveBeenCalledWith("patch-1");
   });
 
-  it("hides apply for a proposed patch without approved approval", () => {
-    renderThread({ approvalStatus: "pending", onApplyPatch: vi.fn() });
+  it("requests apply approval before showing the write action", () => {
+    const onApplyPatch = vi.fn();
+    renderThread({ approvalStatus: "approved", onApplyPatch });
+
+    fireEvent.click(screen.getByRole("button", { name: "Request apply approval" }));
+
+    expect(onApplyPatch).toHaveBeenCalledWith("patch-1");
+    expect(screen.queryByRole("button", { name: "Apply patch" })).toBeNull();
+  });
+
+  it("hides apply for a proposed patch with pending apply approval", () => {
+    renderThread({ approvalStatus: "approved", onApplyPatch: vi.fn(), proposals: [approval("approved"), applyApproval("pending")] });
 
     expect(screen.queryByRole("button", { name: "Apply patch" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Request apply approval" })).toBeNull();
   });
 });
 
 describe("FocusThread test actions", () => {
   it("shows run tests only after an applied patch and supported plan command", () => {
     const onRunTests = vi.fn();
-    renderThread({
-      activePlan: plan(),
-      approvalStatus: "pending",
-      onApplyPatch: vi.fn(),
-      onRunTests,
-      patches: [patch("applied")],
-    });
+    renderThread({ activePlan: plan(), approvalStatus: "pending", onApplyPatch: vi.fn(), onRunTests, patches: [patch("applied")] });
 
     fireEvent.click(screen.getByRole("button", { name: /Run tests/ }));
 
@@ -275,5 +281,14 @@ function approval(status: ActionProposalView["status"]): ActionProposalView {
     runId: "run-1",
     scope: { kind: "file", paths: ["src/app.ts"], projectId: "project-1", summary: "Patch file" },
     status,
+  };
+}
+
+function applyApproval(status: ActionProposalView["status"]): ActionProposalView {
+  return {
+    ...approval(status),
+    expectedResult: "Apply patch proposal patch-1 to disk and capture checkpoint receipts.",
+    id: patchApplyApprovalId("patch-1"),
+    nodeId: "run-1-patch-apply-patch-1",
   };
 }

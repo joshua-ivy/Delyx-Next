@@ -14,6 +14,7 @@ export interface PatchProposalRequestView {
 
 export interface PatchApplyRequestView {
   proposalId: string;
+  approvalId: string;
   approvedRoots: string[];
   createdAtMs: number;
 }
