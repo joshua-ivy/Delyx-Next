@@ -52,6 +52,12 @@ export interface AgentPatchDraftStepRequest {
   runId: string;
 }
 
+export interface AgentPatchApplyStepRequest {
+  nowMs: number;
+  runId: string;
+  updatedAt: string;
+}
+
 export interface AgentExecutionBridgeView {
   status: "completed" | "failed" | "waiting_for_approval";
   runId: string;
@@ -168,6 +174,19 @@ export async function runPatchDraftSchedulerStepOverBridge(
   }
   try {
     return await invoke<AgentPatchDraftBridgeView>("agent_run_patch_draft_step", { request });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function runPatchApplySchedulerStepOverBridge(
+  request: AgentPatchApplyStepRequest,
+): Promise<AgentExecutionBridgeView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<AgentExecutionBridgeView>("agent_run_patch_apply_step", { request });
   } catch {
     return undefined;
   }

@@ -118,7 +118,7 @@ complete:
   Approval decisions can also trigger that non-risky resume transition when the
   approved proposal is the last pending approval for the run. A focused
   renderer dispatcher can then run post-resume scheduler-selected actions:
-  apply-approval request, approved patch apply, approved or approval-queued
+  apply-approval request, Rust-owned approved patch apply, approved or approval-queued
   tests, read-only review, or final-support recording. After each dispatched action it asks the Rust
   scheduler for a bounded next decision, stopping on passive/repeated states or
   the depth limit. The current bound is large enough for a generated patch
@@ -126,6 +126,13 @@ complete:
   review, and final support when each step has real approvals and persisted receipts. Manual
   resume from the visible scheduler line uses that same
   resume-then-dispatch helper, including reload-time PatchDraft decisions.
+  Scheduler-selected patch apply now uses `agent_run_patch_apply_step`, which
+  asks the Rust scheduler for the current `run_patch_apply` decision, derives
+  the exact persisted proposal and apply approval, loads approved roots from
+  the persisted workspace project, validates the thread can move to testing
+  before any file write, and then executes the existing checkpointed apply
+  bridge. The mounted renderer supplies only run/clock/timestamp inputs for
+  that scheduler-selected apply path.
   PatchDraft approval readiness is discovered in Rust from persisted plan,
   workspace, review, patch, and approval records: the approval must be an
   executable same-run FileWrite approval with the exact plan or repair node ID
@@ -903,6 +910,14 @@ text, and only returns a `run_tests` approval ID after verifying an executable
 same-run `TerminalCommand` approval whose scope includes the persisted command.
 The test action then uses that exact approval ID instead of rediscovering a
 replacement approval in renderer state.
+
+Scheduler-selected patch apply follows the same ownership direction for file
+writes. The mounted renderer no longer passes the apply approval ID, approved
+roots, patch proposal ID, or file-write authority for a `run_patch_apply`
+decision. `agent_run_patch_apply_step` re-asks the Rust scheduler, derives the
+exact proposal and approval from persisted stores, loads the persisted
+workspace roots, validates the visible thread can move to testing before disk
+mutation, and then uses the existing stale-file and checkpoint gates.
 
 ### ADR-0010: Adapt Apply-Patch Intent, Not Codex Core
 

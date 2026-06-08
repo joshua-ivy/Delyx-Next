@@ -131,14 +131,14 @@ now has real persisted or approval-gated functional islands.
 - [x] ~~Stored review findings now block final support until accepted or repaired, and exact findings can create persisted repair-request markers plus scoped repair PatchDraft approvals.~~
 - [x] ~~Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.~~
 - [x] ~~Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.~~
-- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, and one-step approval-safe dispatcher now exist.
+- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, Rust-owned PatchDraft/apply steps, and one-step approval-safe dispatcher now exist.
 - [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft context and scheduler-step approval selection are Rust-owned now, but the remaining gap is making PatchDraft a full autonomous executor repair/build node instead of a renderer-triggered command.
 - [x] ~~Broad frontend behavior coverage now covers project/thread creation, planning, approvals, diff/test/review artifacts, evidence support, error, blocked, expired, and empty states with React Testing Library component/action tests.~~
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
 Progress board:
 
-- Phase 2 checkbox progress: 187/208 checked, 21 open, 89.9%.
+- Phase 2 checkbox progress: 189/210 checked, 21 open, 90.0%.
 - Phase 2 track progress: 6/12 complete, 6/12 in progress.
 - Complete tracks: D3, D4, D6, D8, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D11, D12.
@@ -201,6 +201,7 @@ Progress board:
   - [x] ~~PatchDraft context construction now has a Rust-owned dispatch command: it loads the persisted thread/run, approved plan, workspace snapshot, approval scope, and matching repair finding context before executing the scheduler-verified PatchDraft bridge.~~
   - [x] ~~Scheduler patch-apply readiness now has two truthful states: proposed patches return `request_patch_apply_approval` until a separate executable apply approval ID is provided, and only then return `run_patch_apply` with that exact approval ID.~~
   - [x] ~~Rust scheduler can now discover the exact executable patch-apply approval from the persisted approval ledger by matching the patch-apply node ID, so the write-ready state no longer depends on React passing the approval hint; generic same-run FileWrite approvals are rejected.~~
+  - [x] ~~Added `agent_run_patch_apply_step`: Rust now asks the scheduler for the current `run_patch_apply` decision, derives the exact persisted proposal/apply approval, loads approved roots from the persisted workspace project, validates the thread can move to testing before file writes, and then executes the existing checkpointed apply bridge.~~
   - [x] ~~Scheduler test readiness is now hydrated in Rust from persisted plan records and approval bridge records: unsafe shell-control test text is cleared, React test hints are ignored, and only an exact executable same-run terminal approval whose scope includes the persisted command is returned.~~
   - [x] ~~Scheduler PatchDraft readiness is now hydrated in Rust from persisted plan, workspace, review, patch, and approval records: plan and repair draft approvals must be executable same-run FileWrite approvals with exact plan/repair node IDs and matching file scope, stale UI hints are cleared, existing patches block duplicate plan drafts, and generic same-run FileWrite approvals are rejected.~~
   - [x] ~~Added `agent_run_patch_draft_step`: Rust now asks the scheduler for the current `run_patch_draft` decision, derives the exact persisted approval, re-verifies that decision, and only then executes the PatchDraft bridge.~~
@@ -265,6 +266,7 @@ Progress board:
   - [x] ~~AgentScheduler can now distinguish a proposed patch that needs separate apply approval from a patch that has an exact executable apply approval; Focus UI shows the approval-request state separately from the write-ready apply state.~~
   - [x] ~~After the last required approval is recorded, the scheduler dispatcher can automatically execute the scheduler-selected approved patch apply step. It still does not generate patch content from an approved plan.~~
   - [x] ~~Scheduler-dispatched patch apply now passes the exact Rust-verified apply approval ID into the patch-apply action, and generated patch auto-continuation stops at `request_patch_apply_approval` instead of silently queueing or implying a write is ready.~~
+  - [x] ~~Scheduler-dispatched patch apply now calls the Rust scheduler-step bridge with only run/clock/timestamp inputs; React no longer passes apply approval IDs, approved roots, patch proposal IDs, or file-write authority for scheduler-selected applies.~~
   - [x] ~~Added a bounded workspace file-read bridge for PatchDraftAgent: relative project paths only, max four files, byte capped, and still enforced by the workspace approved-root manager.~~
   - [x] ~~Added structured Rust Ollama patch JSON parsing that accepts only files actually read from the approved plan, rejects unapproved paths, rejects unchanged output, rejects truncated file inputs, and feeds exact replacement contents into the patch proposal bridge.~~
   - [x] ~~Approval flow now resumes the waiting run, lets the Rust scheduler return `run_patch_draft` when the build approval is final and no patch already exists, then dispatches PatchDraftAgent through the bounded scheduler loop; it does not auto-apply that generated patch.~~

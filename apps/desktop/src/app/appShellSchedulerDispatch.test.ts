@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { scheduleNextRunActionOverBridge, type AgentScheduleDecisionView } from "../features/runs/agentExecutorClient";
+import {
+  runPatchApplySchedulerStepOverBridge,
+  scheduleNextRunActionOverBridge,
+  type AgentScheduleDecisionView,
+} from "../features/runs/agentExecutorClient";
+import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { proposeApprovedPlanPatchWithOllama } from "./appShellOllamaPatchActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
@@ -14,34 +20,37 @@ vi.mock("./appShellOllamaPatchActions", () => ({ proposeApprovedPlanPatchWithOll
 vi.mock("./appShellPatchActions", () => ({ applyApprovedPatchForActiveRun: vi.fn() }));
 vi.mock("./appShellReviewActions", () => ({ runReviewForActiveRun: vi.fn() }));
 vi.mock("./appShellTestActions", () => ({ runTestsForActiveRun: vi.fn() }));
-vi.mock("../features/runs/agentExecutorClient", () => ({ scheduleNextRunActionOverBridge: vi.fn() }));
+vi.mock("../features/patches/patchClient", () => ({ loadPatchSnapshot: vi.fn() }));
+vi.mock("../features/threads/threadClient", () => ({ loadThreadRunSnapshot: vi.fn() }));
+vi.mock("./ShellPreferenceController", () => ({ notifyLocalAction: vi.fn() }));
+vi.mock("../features/runs/agentExecutorClient", () => ({
+  runPatchApplySchedulerStepOverBridge: vi.fn(),
+  scheduleNextRunActionOverBridge: vi.fn(),
+}));
 
 const applyPatch = vi.mocked(applyApprovedPatchForActiveRun);
 const draftPatch = vi.mocked(proposeApprovedPlanPatchWithOllama);
+const loadPatches = vi.mocked(loadPatchSnapshot);
+const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const recordFinal = vi.mocked(recordFinalSupportForActiveThread);
+const runApplyStep = vi.mocked(runPatchApplySchedulerStepOverBridge);
 const runReview = vi.mocked(runReviewForActiveRun);
 const runTests = vi.mocked(runTestsForActiveRun);
 const scheduleNext = vi.mocked(scheduleNextRunActionOverBridge);
 
 beforeEach(() => {
   vi.clearAllMocks();
+  runApplyStep.mockResolvedValue({
+    message: "Patch proposal patch-1 applied.",
+    patchId: "patch-1",
+    runId: "run-1",
+    status: "completed",
+  });
+  loadPatches.mockResolvedValue([patchView("applied")]);
+  loadSnapshot.mockResolvedValue({ runs: [{ id: "run-1" }] as never, threads: [] });
 });
 
 describe("dispatchSchedulerDecision", () => {
-  it("continues from patch apply into the scheduler-selected test step", async () => {
-    const patch = patchView();
-    scheduleNext.mockResolvedValueOnce(decision("run_tests")).mockResolvedValueOnce(undefined);
-
-    await dispatchSchedulerDecision(state({ patches: [patch] }), {
-      ...decision("run_patch_apply"),
-      approvalIds: ["approval-apply"],
-      proposalId: patch.id,
-    });
-
-    expect(applyPatch).toHaveBeenCalledTimes(1);
-    expect(runTests).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedRunTests: true }));
-  });
-
   it("dispatches test, review, and final-support decisions", async () => {
     const base = state({ patches: [patchView()] });
     scheduleNext.mockResolvedValue(undefined);
@@ -105,10 +114,8 @@ describe("dispatchSchedulerDecision", () => {
     });
 
     expect(draftPatch).toHaveBeenCalledTimes(1);
-    expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({
-      patch,
-      schedulerPatchApplyApprovalId: "approval-apply",
-    }));
+    expect(runApplyStep).toHaveBeenCalledWith(expect.objectContaining({ runId: "run-1" }));
+    expect(applyPatch).not.toHaveBeenCalled();
     expect(runTests).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedRunTests: true }));
     expect(runReview).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedArtifacts: true }));
     expect(recordFinal).toHaveBeenCalledTimes(1);
@@ -196,14 +203,14 @@ function decision(kind: AgentScheduleDecisionView["kind"]): AgentScheduleDecisio
   };
 }
 
-function patchView(): PatchProposalView {
+function patchView(status: PatchProposalView["status"] = "proposed"): PatchProposalView {
   return {
     approvalId: "approval-1",
     checkpointFiles: [],
     files: [],
     id: "patch-1",
     runId: "run-1",
-    status: "proposed",
+    status,
   };
 }
 

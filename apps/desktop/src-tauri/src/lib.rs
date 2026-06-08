@@ -3,6 +3,8 @@ mod agent_executor_apply_tests;
 pub mod agent_executor_bridge;
 mod agent_executor_bridge_tests;
 mod agent_executor_tests;
+pub mod agent_patch_apply_step;
+mod agent_patch_apply_step_tests;
 pub mod agent_patch_draft_bridge;
 mod agent_patch_draft_bridge_tests;
 pub mod agent_patch_draft_context;
