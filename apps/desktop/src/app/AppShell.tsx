@@ -7,7 +7,7 @@ import { resumeSchedulerRun } from "./appShellSchedulerActions";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { sendComposerInstruction } from "./cockpitComposerBindings";
-import { decideFocusApproval } from "./focusApprovalDecision";
+import { decideFocusApproval, shouldResumeAfterApprovalDecision } from "./focusApprovalDecision";
 import { FocusShell } from "./FocusShell";
 import { externalAgentBridgeUnavailableState, loadExternalAgentStatus } from "../features/externalAgents/externalAgentClient";
 import { currentExternalAgentState } from "../features/externalAgents/externalAgentData";
@@ -218,7 +218,11 @@ export function AppShell() {
       setAgentRuns,
       setThreads,
       setThreadState,
-    }, proposalId, status);
+    }, proposalId, status).then((decided) => {
+      if (decided && shouldResumeAfterApprovalDecision(decided, actionProposals, proposalId)) {
+        void resumeSchedulerRun({ activePlan, activeProject, activeRun, setAgentRuns, setThreads, setThreadState });
+      }
+    });
   };
   const archiveActiveThread = () => {
     if (!activeThread) {

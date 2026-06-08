@@ -21,7 +21,7 @@ export async function decideFocusApproval(
   state: ApprovalDecisionState,
   proposalId: string,
   status: "approved" | "denied",
-) {
+): Promise<ActionProposalView | undefined> {
   const proposal = state.actionProposals.find((item) => item.id === proposalId);
   if (!proposal) {
     notifyLocalAction("Approval proposal is no longer available", "warning");
@@ -60,6 +60,7 @@ export async function decideFocusApproval(
     decisionMessage(decided, state.actionProposals, proposalId),
     decided.status === "approved" ? "success" : "warning",
   );
+  return decided;
 }
 
 function isExpired(expiresAt: string) {
@@ -89,6 +90,14 @@ function decisionMessage(
   return hasOtherPendingApproval(decided, proposals, decidedId)
     ? "Approval recorded; more approvals are still pending"
     : "Approval granted; waiting for the next executable step";
+}
+
+export function shouldResumeAfterApprovalDecision(
+  decided: ActionProposalView,
+  proposals: ActionProposalView[],
+  decidedId: string,
+) {
+  return decided.status === "approved" && !hasOtherPendingApproval(decided, proposals, decidedId);
 }
 
 function hasOtherPendingApproval(
