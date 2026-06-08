@@ -166,7 +166,7 @@ export const requiredChecks = [
   ["src/features/workspace/workspaceTypes.ts", "approvalPolicy"],
   ["src/features/workspace/workspaceTypes.ts", "pinned"],
   ["src/features/workspace/workspaceData.ts", "Current local session"],
-  ["src/styles/workspace.css", ".workspace-projects"],
+  ["src/styles/workspace-details.css", ".workspace-projects"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Read policy"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Denied state"],
   ["src/features/workspace/WorkspaceOverlay.tsx", "Loading: indexing approved workspace files."],

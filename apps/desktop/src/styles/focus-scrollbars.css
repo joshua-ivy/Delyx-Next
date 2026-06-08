@@ -1,0 +1,39 @@
+html,
+body {
+  scrollbar-color: color-mix(in srgb, var(--fg-3) 62%, transparent) var(--bg);
+  scrollbar-width: thin;
+}
+
+.focus-app *,
+.workspace-backdrop * {
+  scrollbar-color: color-mix(in srgb, var(--fg-3) 64%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.focus-app *::-webkit-scrollbar,
+.workspace-backdrop *::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.focus-app *::-webkit-scrollbar-track,
+.workspace-backdrop *::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+.focus-app *::-webkit-scrollbar-thumb,
+.workspace-backdrop *::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--fg-3) 72%, transparent);
+  border: 3px solid var(--bg);
+  border-radius: var(--r-pill);
+}
+
+.focus-app *::-webkit-scrollbar-thumb:hover,
+.workspace-backdrop *::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--fg-2) 74%, transparent);
+}

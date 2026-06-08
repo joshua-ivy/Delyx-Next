@@ -1,0 +1,58 @@
+.focus-app .mdmsg {
+  display: grid;
+  gap: 10px;
+}
+
+.focus-app .mdmsg p,
+.focus-app .mdmsg h3,
+.focus-app .mdmsg ul,
+.focus-app .mdmsg ol,
+.focus-app .mdmsg pre {
+  margin: 0;
+}
+
+.focus-app .mdmsg h3 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.focus-app .mdmsg ul,
+.focus-app .mdmsg ol {
+  display: grid;
+  gap: 4px;
+  padding-left: 20px;
+}
+
+.focus-app .mdmsg li {
+  padding-left: 2px;
+}
+
+.focus-app .mdmsg strong {
+  color: var(--fg);
+  font-weight: 800;
+}
+
+.focus-app .mdmsg code {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: .92em;
+  padding: 1px 5px;
+}
+
+.focus-app .mdmsg pre {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: auto;
+  padding: 10px 12px;
+}
+
+.focus-app .mdmsg pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}

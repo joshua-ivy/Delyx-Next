@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
@@ -6,7 +6,8 @@ import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusIcon, Pipe, Think } from "./focusAtoms";
-import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatusLabel, shortTime, type FocusMode } from "./focusFormat";
+import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatusLabel, type FocusMode } from "./focusFormat";
+import { MarkdownMessage } from "./focusMarkdown";
 
 interface FocusThreadProps {
   activePlan: PlanView | undefined;
@@ -49,9 +50,8 @@ export function FocusThread(props: FocusThreadProps) {
         <div className="work-scroll">
           <div className="wrap">
             <ThreadHeader mode={props.mode} model={props.model} run={props.run} thread={props.thread} />
-            <RunActivity run={props.run} />
-            {props.thread.messages.map((message, index) => <MessageBlock key={`${index}-${message.role}`} message={message} mode={props.mode} />)}
-            <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} onCreatePlan={props.onCreatePlan} />
+            <ThreadTimeline messages={props.thread.messages} mode={props.mode} run={props.run} />
+            <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} />
             <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
             <DiffPeek patches={props.patches} />
             <TestPeek tests={props.tests} />
@@ -84,6 +84,33 @@ export function FocusThread(props: FocusThreadProps) {
   );
 }
 
+function ThreadTimeline({ messages, mode, run }: { messages: TaskThread["messages"]; mode: FocusMode; run: AgentRunView | undefined }) {
+  const latestUserIndex = latestIndex(messages, (message) => message.role === "user");
+  if (messages.length === 0) {
+    return <RunActivity run={run} />;
+  }
+  return (
+    <>
+      {latestUserIndex === -1 && <RunActivity run={run} />}
+      {messages.map((message, index) => (
+        <Fragment key={`${index}-${message.role}`}>
+          <MessageBlock message={message} mode={mode} />
+          {index === latestUserIndex && <RunActivity run={run} />}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+function latestIndex<T>(items: T[], matches: (item: T) => boolean) {
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    if (matches(items[index])) {
+      return index;
+    }
+  }
+  return -1;
+}
+
 function ThreadHeader({ mode, model, run, thread }: { mode: FocusMode; model: string; run: AgentRunView | undefined; thread: TaskThread }) {
   return (
     <div className="thread-head">
@@ -98,15 +125,35 @@ function RunActivity({ run }: { run: AgentRunView | undefined }) {
   if (!run) {
     return null;
   }
+  const live = isLiveStatus(run.status);
   return (
-    <div className="focus-activity">
+    <div aria-live="polite" className={`focus-activity${live ? " is-live" : ""}`}>
       <span className={`dot ${statusTone(run.status)}`} />
-      <div><b>{run.status.replaceAll("_", " ")}</b><span>{latestRunEvent(run)}</span></div>
-      <div className="focus-events">
-        {run.events.slice(-4).map((event) => <span key={event.id}>{shortTime(event.createdAt)} / {event.kind} / {event.message}</span>)}
-      </div>
+      <b>{statusTitle(run.status)}</b>
+      <LiveRunText run={run} />
+      {live && <Think />}
     </div>
   );
+}
+
+function LiveRunText({ run }: { run: AgentRunView }) {
+  const [tick, setTick] = useState(0);
+  const messages = runLiveMessages(run);
+  const live = isLiveStatus(run.status);
+
+  useEffect(() => {
+    setTick(0);
+  }, [run.id, run.status, run.updatedAt]);
+
+  useEffect(() => {
+    if (!live || messages.length < 2) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => setTick((current) => current + 1), 1400);
+    return () => window.clearInterval(timer);
+  }, [live, messages.length, run.id, run.status]);
+
+  return <span className="focus-live-copy">{messages[tick % messages.length]}</span>;
 }
 
 function MessageBlock({ message }: { message: TaskThread["messages"][number]; mode: FocusMode }) {
@@ -116,15 +163,15 @@ function MessageBlock({ message }: { message: TaskThread["messages"][number]; mo
       <div className="av">{isUser ? "YOU" : message.role === "assistant" ? "D" : "SYS"}</div>
       <div className="body">
         <div className="who">{isUser ? "You" : message.role === "assistant" ? "Delyx" : "System"}</div>
-        <div className="txt">{message.body}</div>
+        <div className="txt">{isUser ? message.body : <MarkdownMessage text={message.body} />}</div>
       </div>
     </div>
   );
 }
 
-function PlanBlock({ activePlan, onApprovePlan, onCreatePlan }: { activePlan: PlanView | undefined; onApprovePlan: () => void; onCreatePlan: () => void }) {
+function PlanBlock({ activePlan, onApprovePlan }: { activePlan: PlanView | undefined; onApprovePlan: () => void }) {
   if (!activePlan) {
-    return <ActionLine icon="plan" label="No plan yet" onClick={onCreatePlan} text="Draft plan" />;
+    return null;
   }
   const approved = activePlan.decision === "approved";
   return (
@@ -179,4 +226,35 @@ function statusTone(status: AgentRunView["status"] | undefined) {
     return "danger";
   }
   return status === "waiting_for_approval" ? "warning" : "accent";
+}
+
+function statusTitle(status: AgentRunView["status"]) {
+  const text = status.replaceAll("_", " ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function isLiveStatus(status: AgentRunView["status"]) {
+  return status === "created" || status === "running" || status === "repairing" || status === "waiting_for_approval";
+}
+
+function runLiveMessages(run: AgentRunView) {
+  if (!isLiveStatus(run.status)) {
+    return [latestRunEvent(run)];
+  }
+  const recent = run.events.slice(-3).map((event) => event.message).filter(Boolean);
+  const defaults: Record<AgentRunView["status"], string[]> = {
+    blocked: [],
+    cancelled: [],
+    created: ["Starting the local run"],
+    failed: [],
+    repairing: ["Repairing from the last failed step"],
+    running: ["Thinking through the latest instruction", "Waiting on the local model response"],
+    succeeded: [],
+    waiting_for_approval: ["Waiting for your approval"],
+  };
+  return unique([...defaults[run.status], ...recent]);
+}
+
+function unique(items: string[]) {
+  return items.filter((item, index) => item.trim().length > 0 && items.indexOf(item) === index);
 }
