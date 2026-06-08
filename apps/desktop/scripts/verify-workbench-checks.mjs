@@ -70,7 +70,7 @@ export const requiredChecks = [
   ["src/app/useRunReceipts.ts", "loadReviewSnapshot(runId)"],
   ["src/app/useRunReceipts.ts", "loadTestSnapshot(runId)"],
   ["src/app/appShellPatchActions.ts", "executePatchApplyNodeOverBridge"],
-  ["src/app/FocusThread.tsx", "Apply patch"],
+  ["src/app/FocusDiffPeek.tsx", "Apply patch"],
   ["src/app/AppShell.tsx", "patches={patches}"],
   ["src/app/cockpitStateTransitions.ts", "updateThreadStatusOverBridge(activeThread.id"],
   ["src/app/AppShell.tsx", "setAgentRuns"],

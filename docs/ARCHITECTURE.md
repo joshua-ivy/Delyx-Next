@@ -98,7 +98,9 @@ complete:
   receipts and re-enters the scheduler dispatcher with the fresh patch list so
   the next apply/test/review decision can be queued or continued through normal
   approval boundaries. It does not apply generated patches, bypass approvals, or
-  run arbitrary tools.
+  run arbitrary tools. Applied patch cards also expose checkpoint rollback state
+  and can queue or execute a separate restore approval through the existing
+  AgentRun restore bridge.
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.
@@ -341,7 +343,11 @@ receipts can surface as real diffs; it does not synthesize placeholder diffs
 when the runtime has not produced a PatchProposal. Focus diff controls may call
 the AgentRun patch-apply bridge only when the matching approval is visibly
 approved in active Focus state. The Rust bridge still owns final approval,
-root, stale-file, and checkpoint enforcement before any file write.
+root, stale-file, and checkpoint enforcement before any file write. Applied
+patch cards show checkpoint state and can request a separate restore approval;
+only an approved restore proposal ID is sent to the AgentRun patch-restore
+bridge, which still owns stale-after and approved-root enforcement before any
+rollback write.
 Focus approval decisions do not mark a thread as building by themselves. They
 return to the next-step state, or keep waiting when more approvals are pending,
 until a concrete executor or tool action starts.

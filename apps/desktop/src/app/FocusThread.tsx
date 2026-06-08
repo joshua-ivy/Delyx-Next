@@ -9,9 +9,9 @@ import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusIcon, Pipe, Think } from "./focusAtoms";
 import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatusLabel, type FocusMode } from "./focusFormat";
+import { FocusDiffPeek } from "./FocusDiffPeek";
 import { MarkdownMessage } from "./focusMarkdown";
 import { FocusActionLine, FocusOutcomePeek, FocusSchedulerPeek, FocusTestPeek } from "./FocusThreadArtifacts";
-import { activePatchApplyApproval } from "./patchApplyApproval";
 
 interface FocusThreadProps {
   activePlan: PlanView | undefined;
@@ -64,7 +64,7 @@ export function FocusThread(props: FocusThreadProps) {
             <FocusSchedulerPeek decision={props.schedulerDecision} onApplyPatch={props.onApplyPatch} onRecordFinal={props.onRecordFinal} onResumeRun={props.onResumeRun} onRunReview={props.onRunReview} onRunTests={props.onRunTests} />
             <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} />
             <ApprovalBlock onDecideProposal={props.onDecideProposal} proposals={pending} />
-            <DiffPeek onApplyPatch={props.onApplyPatch} patches={props.patches} proposals={props.proposals} />
+            <FocusDiffPeek onPatchAction={props.onApplyPatch} patches={props.patches} proposals={props.proposals} />
             <FocusTestPeek activePlan={props.activePlan} onRunTests={props.onRunTests} patches={props.patches} tests={props.tests} />
             <ReviewPeek onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
             <FocusOutcomePeek canRecord={hasAssistantSummary(props.thread)} onRecordFinal={props.onRecordFinal} run={props.run} />
@@ -209,17 +209,6 @@ function ApprovalBlock({ onDecideProposal, proposals }: { onDecideProposal: (pro
     <div className="approval-copy"><b>{proposal.actionType}</b><span>{proposal.rationale}</span><span>{proposal.expectedResult}</span></div>
     <div className="plan-actions"><button className="select" onClick={() => onDecideProposal(proposal.id, "approved")} type="button">Approve once</button><button className="select danger" onClick={() => onDecideProposal(proposal.id, "denied")} type="button">Deny</button></div>
   </div>)}</>;
-}
-
-function DiffPeek({ onApplyPatch, patches, proposals }: { onApplyPatch: (patchId: string) => void; patches: PatchProposalView[]; proposals: ActionProposalView[] }) {
-  const file = patches.flatMap((patch) => patch.files.map((item) => ({ item, patch })))[0];
-  if (!file) {
-    return null;
-  }
-  const approval = activePatchApplyApproval(proposals, file.patch);
-  const canAdvance = file.patch.status === "proposed" && (!approval || approval.status === "approved" || approval.status === "expired");
-  const label = approval?.status === "approved" ? "Apply patch" : "Request apply approval";
-  return <div className="peek"><div className="peek-head"><FocusIcon name="diff" /> {file.item.path}<span className="stat">{file.patch.status}</span></div>{file.item.diff.slice(0, 8).map((line, index) => <div className={`dl ${line.kind === "added" ? "add" : line.kind === "removed" ? "del" : "ctx"}`} key={index}><span className="ln">{line.kind === "added" ? "+" : line.kind === "removed" ? "-" : index + 1}</span><span className="tx">{line.text || " "}</span></div>)}{canAdvance && <div className="plan-actions"><button className="select" onClick={() => onApplyPatch(file.patch.id)} type="button">{label}</button></div>}</div>;
 }
 
 function ReviewPeek({ onRunReview, patches, reports, tests }: { onRunReview: () => void; patches: PatchProposalView[]; reports: ReviewReportView[]; tests: TestArtifactView[] }) {

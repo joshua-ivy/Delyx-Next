@@ -4,14 +4,18 @@ import { proposeApprovalOverBridge } from "../features/approvals/approvalClient"
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import { executePatchApplyNodeOverBridge } from "../features/runs/agentExecutorClient";
+import { executePatchApplyNodeOverBridge, executePatchRestoreNodeOverBridge } from "../features/runs/agentExecutorClient";
 import { loadThreadRunSnapshot, updateThreadStatusOverBridge } from "../features/threads/threadClient";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import type { PatchApplyState } from "./appShellPatchActions";
 import { patchApplyNodeId } from "./patchApplyApproval";
+import { patchRestoreNodeId } from "./patchRestoreApproval";
 
 vi.mock("../features/approvals/approvalClient", () => ({ proposeApprovalOverBridge: vi.fn() }));
-vi.mock("../features/runs/agentExecutorClient", () => ({ executePatchApplyNodeOverBridge: vi.fn() }));
+vi.mock("../features/runs/agentExecutorClient", () => ({
+  executePatchApplyNodeOverBridge: vi.fn(),
+  executePatchRestoreNodeOverBridge: vi.fn(),
+}));
 vi.mock("../features/patches/patchClient", () => ({ loadPatchSnapshot: vi.fn() }));
 vi.mock("../features/threads/threadClient", () => ({
   loadThreadRunSnapshot: vi.fn(),
@@ -20,6 +24,7 @@ vi.mock("../features/threads/threadClient", () => ({
 vi.mock("./ShellPreferenceController", () => ({ notifyLocalAction: vi.fn() }));
 
 const executeApply = vi.mocked(executePatchApplyNodeOverBridge);
+const executeRestore = vi.mocked(executePatchRestoreNodeOverBridge);
 const loadPatches = vi.mocked(loadPatchSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
 const proposeApproval = vi.mocked(proposeApprovalOverBridge);
@@ -28,6 +33,7 @@ const updateThreadStatus = vi.mocked(updateThreadStatusOverBridge);
 beforeEach(() => {
   vi.clearAllMocks();
   executeApply.mockResolvedValue({ message: "Patch applied.", patchId: "patch-1", runId: "run-1", status: "completed" });
+  executeRestore.mockResolvedValue({ message: "Patch restored.", patchId: "patch-1", runId: "run-1", status: "completed" });
   loadPatches.mockResolvedValue([patch]);
   loadSnapshot.mockResolvedValue({ runs: [run], threads: [thread] });
   proposeApproval.mockImplementation(async (proposal) => ({ ...proposal, id: "prop-apply-1" }));
@@ -58,6 +64,31 @@ describe("applyApprovedPatchForActiveRun", () => {
       proposalId: "patch-1",
     }));
     expect(updateThreadStatus).toHaveBeenCalledWith("thread-1", "testing", expect.any(String));
+  });
+
+  it("queues a separate restore approval before rollback", async () => {
+    const state = patchState({ patch: appliedPatch });
+
+    await applyApprovedPatchForActiveRun(state);
+
+    expect(proposeApproval).toHaveBeenCalledWith(expect.objectContaining({
+      id: "approval-patch-1-restore",
+      nodeId: patchRestoreNodeId(appliedPatch),
+    }));
+    expect(executeRestore).not.toHaveBeenCalled();
+    expect(state.setActionProposals).toHaveBeenCalled();
+  });
+
+  it("uses the approved restore approval id when restoring", async () => {
+    const state = patchState({ actionProposals: [restoreApproval("approved")], patch: appliedPatch });
+
+    await applyApprovedPatchForActiveRun(state);
+
+    expect(executeRestore).toHaveBeenCalledWith(expect.objectContaining({
+      approvalId: "prop-restore-1",
+      proposalId: "patch-1",
+    }));
+    expect(updateThreadStatus).toHaveBeenCalledWith("thread-1", "reviewing", expect.any(String));
   });
 });
 
@@ -90,6 +121,23 @@ function applyApproval(status: ActionProposalView["status"]): ActionProposalView
     rollbackPlan: "Restore checkpoint.",
     runId: "run-1",
     scope: { kind: "file", paths: ["C:/repo/src/main.ts"], projectId: "project-1", root: "C:/repo", summary: "Apply patch." },
+    status,
+  };
+}
+
+function restoreApproval(status: ActionProposalView["status"]): ActionProposalView {
+  return {
+    actionType: "edit_file",
+    expectedResult: "Restore patch proposal patch-1 from checkpoint receipts.",
+    expiresAt: "2999-01-01T00:00:00.000Z",
+    id: "prop-restore-1",
+    nodeId: patchRestoreNodeId(appliedPatch),
+    rationale: "Rollback one file change.",
+    requiredPermission: "write_file",
+    riskLabel: "high",
+    rollbackPlan: "Restore command is the rollback.",
+    runId: "run-1",
+    scope: { kind: "file", paths: ["C:/repo/src/main.ts"], projectId: "project-1", root: "C:/repo", summary: "Restore patch." },
     status,
   };
 }
@@ -152,4 +200,11 @@ const patch: PatchProposalView = {
   id: "patch-1",
   runId: "run-1",
   status: "proposed",
+};
+
+const appliedPatch: PatchProposalView = {
+  ...patch,
+  checkpointFiles: [{ contents: "before\n", path: "C:/repo/src/main.ts" }],
+  checkpointId: "checkpoint-1",
+  status: "applied",
 };
