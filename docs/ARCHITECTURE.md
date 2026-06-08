@@ -74,9 +74,12 @@ complete:
   approval, cwd, timeout, output capture, and persistence path before recording
   AgentRun test receipts. Review nodes gather persisted PatchProposal and
   TestArtifact records by run ID, then create ReviewReport receipts without
-  write capability.
+  write capability. A narrow AgentScheduler now reads the persisted AgentRun,
+  approval, patch, test, and review stores to choose conservative next-step
+  decisions: wait, single-approval resume, patch apply, tests, review,
+  final-support readiness, terminal, complete, or blocked.
   Remaining governance/action bridges are still not live.
-- There is no full AgentRun scheduler, multi-node executor, repair loop, or hook
+- There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.
 - Frontend checks now include a narrow Vitest/React Testing Library component
   test path, starting with FocusThread's approval-gated patch apply behavior.
@@ -210,7 +213,12 @@ Core agents:
 
 The AgentRun graph is the future execution/resume engine, not just an inspector artifact.
 Current state: the graph is still primarily an inspection and bridge artifact,
-with narrow patch execution paths. The `agent_execute_patch_proposal` bridge can
+with narrow scheduling and execution paths. `AgentScheduler` can identify
+approval waits, resume exactly one ready approval, select approved proposed
+patches for apply, require supported test-command evidence after applied
+patches, select review from stored patch/test artifacts, and report
+final-support readiness after a stored review. It does not yet dispatch the
+whole loop by itself. The `agent_execute_patch_proposal` bridge can
 advance a run from a pending approval boundary into an approved patch-proposal
 node, persist the patch proposal, and record node events, artifact IDs, and diff
 evidence receipts. The `agent_execute_patch_apply` bridge can advance an

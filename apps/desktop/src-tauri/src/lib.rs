@@ -17,6 +17,8 @@ mod agent_run_outcome;
 pub mod agent_run_persistence;
 mod agent_run_tests;
 mod agent_run_types;
+pub mod agent_scheduler;
+mod agent_scheduler_tests;
 pub mod agent_test_executor;
 pub mod agent_test_executor_bridge;
 mod agent_test_executor_bridge_tests;

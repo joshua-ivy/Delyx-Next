@@ -41,7 +41,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - PR 1-18.1 breadth is skeleton-complete.
 - SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state and file-export receipts, approved test artifacts, patch proposal/apply/restore receipts, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automation contracts/scheduled runs, release/support-bundle state, support-bundle file export, patch apply/restore, and final-answer support synthesis have narrow persisted mutation bridges; remaining action bridges are still missing.
-- There is no full execution engine: no scheduler, multi-node executor, repair loop, or hook runner. Narrow AgentRun executor nodes can now run approval-gated patch proposal/apply/restore, approved test-command work, and read-only review work while recording run events/artifacts/evidence.
+- There is no full execution engine: no multi-node autonomous executor, repair loop, or hook runner. A narrow scheduler/resume layer can now choose the next safe action from persisted approvals, patches, tests, and reviews, while narrow AgentRun executor nodes can run approval-gated patch proposal/apply/restore, approved test-command work, and read-only review work while recording run events/artifacts/evidence.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
 - OpenAI-compatible providers are health/config stubs only.
@@ -130,7 +130,7 @@ now has real persisted or approval-gated functional islands.
 - [x] Patch proposal/apply/restore, approved test execution, and read-only review have narrow AgentRun executor bridges with persisted artifacts.
 - [x] Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.
 - [x] Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.
-- [ ] The autonomous scheduler/executor/resume/repair loop is still the main missing spine.
+- [ ] The full autonomous executor/resume/repair/hook loop is still the main missing spine; a conservative scheduler decision layer now exists.
 - [ ] Approved plan -> generated patch -> apply -> test -> review is not yet automatically chained end-to-end.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
@@ -166,9 +166,11 @@ largest remaining risk concentrated in D2, D5, D6, and D3.
   - Next: add mutation/action bridges for the remaining persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
   - Add migration/repository tests that prove data survives reload.
 
-- [ ] D2 - AgentRun Execution Engine (in progress; narrow executor bridges exist, full scheduler/resume/repair loop missing)
+- [ ] D2 - AgentRun Execution Engine (in progress; scheduler/resume decisions and narrow executor bridges exist, full autonomous executor/repair/hook loop missing)
   - Add executor, scheduler, node runner, resume, repair, and hook modules.
   - Make AgentRun the real execution graph, not only an inspector artifact.
+  - Added `AgentScheduler`: it reads real AgentRun, approval, patch, test, and review stores and returns conservative next-step decisions for wait, single-approval resume, patch apply, tests, review, final-support readiness, terminal, complete, or blocked states.
+  - Added `resume_waiting_run`: it resumes a run only when exactly one approval for that run is executable; multiple ready approvals, missing approvals, pending approvals, and zero clocks stay blocked or waiting instead of guessing.
   - Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
   - Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
   - Added a narrow `agent_execute_patch_apply` bridge that waits on pending `FileWrite` approvals, applies an existing PatchProposal through the stale-file/checkpoint PatchEngine path, writes only after approval, and records AgentRun node events, patch-apply artifacts, and diff evidence receipts.
@@ -176,6 +178,7 @@ largest remaining risk concentrated in D2, D5, D6, and D3.
   - Added a narrow `agent_execute_test_run` bridge that waits on pending `TerminalCommand` approvals, runs only commands accepted by the TestRunner, captures the persisted TestArtifact, and records AgentRun test-execution events, artifacts, and evidence receipts.
   - Added a narrow `agent_execute_review` bridge that reads persisted PatchProposal and TestArtifact records for the run, creates a read-only ReviewReport, and records AgentRun review events and report artifacts.
   - Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.
+  - Scheduler tests prove pending approvals stay waiting, approved single approvals resume, approved proposed patches schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, and stored reviews move to final-support readiness.
   - Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
   - Use Codex thread/start vs turn/start and command/exec protocol shapes as reference.
   - Keep all risky actions approval-gated.
@@ -210,6 +213,7 @@ largest remaining risk concentrated in D2, D5, D6, and D3.
   - Focus state now loads persisted approval proposals/decisions for the active run instead of relying only on the current renderer session, which is required before safe patch/test action buttons can reason about approval status.
   - Focus diff UI can now call the AgentRun patch-apply bridge for a proposed patch only when its matching approval is visibly approved; Rust still enforces approval, approved root, stale-file, and checkpoint gates before any write.
   - Patch apply and restore now have persisted approval-gated bridges with stale-file protection and checkpoint receipts; the runtime engine still needs to call them automatically from the build flow.
+  - AgentScheduler can now identify an approved proposed patch as ready for patch apply from persisted stores, but it does not yet dispatch that apply automatically from plan approval.
   - Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - Surface real diffs and rollback state in the UI.
   - Connect build outputs to test and review steps.
@@ -223,6 +227,7 @@ largest remaining risk concentrated in D2, D5, D6, and D3.
   - Generate review reports from actual patch/test artifacts.
   - Runtime can now execute an explicit read-only review node through AgentRun. The bridge gathers persisted patch and test artifacts by run ID before creating the ReviewReport, so review input is actual stored receipt data rather than caller-supplied mock state.
   - Focus thread UI can now run that read-only review action when the active run has real patch or test artifacts, reload persisted ReviewReports, and display the resulting review receipt inline.
+  - AgentScheduler can now identify applied patches that need tests, block when no supported test command exists, schedule review from real patch/test artifacts, and report final-support readiness after a stored review.
   - Prevent final "tested" claims unless linked artifacts exist.
 
 - [ ] D7 - Model Integration Depth (in progress; Ollama is real, OpenAI-compatible remains out of live scope)
