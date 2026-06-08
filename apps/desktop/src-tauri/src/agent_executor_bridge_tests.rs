@@ -1,9 +1,10 @@
 #[cfg(test)]
 mod tests {
     use crate::agent_executor_bridge::{
-        execute_patch_proposal_record, AgentPatchProposalExecuteRequest,
+        execute_patch_apply_record, execute_patch_proposal_record, AgentPatchProposalExecuteRequest,
     };
     use crate::approval::{ApprovalEngine, ProposalInput, RiskLevel, RiskyAction};
+    use crate::patch_apply_bridge::PatchApplyRequest;
     use crate::patch_bridge::{patch_snapshot_from_store, PatchBridgeStore, PatchFileRequest};
     use crate::thread_run_bridge::{
         create_thread_run_record, ThreadRunCreateRequest, ThreadRunStore,
@@ -37,6 +38,42 @@ mod tests {
         );
         let run = thread_store.ledger.get_run(&record.run.id).unwrap();
         assert_eq!(run.artifacts[0].kind, "patch_proposal");
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn bridge_executes_patch_apply_against_thread_run_store() {
+        let root = temp_workspace("executor-bridge-apply");
+        let file = root.join("settings.toml");
+        fs::write(&file, "network = true\n").unwrap();
+        let mut thread_store = ThreadRunStore::default();
+        let record = create_thread_run_record(&mut thread_store, create_request()).unwrap();
+        let mut patch_store = PatchBridgeStore::default();
+        let (approvals, approval_id) = approved_file_write(&record.run.id);
+
+        execute_patch_proposal_record(
+            &mut thread_store,
+            &mut patch_store,
+            &approvals,
+            request(&record.run.id, &approval_id, &root, &file),
+        )
+        .unwrap();
+        let view = execute_patch_apply_record(
+            &mut thread_store,
+            &mut patch_store,
+            &approvals,
+            apply_request("executor-bridge-patch-1", &root),
+        )
+        .unwrap();
+
+        assert_eq!(view.status, "completed");
+        assert_eq!(fs::read_to_string(&file).unwrap(), "network = false\n");
+        let run = thread_store.ledger.get_run(&record.run.id).unwrap();
+        assert!(run
+            .artifacts
+            .iter()
+            .any(|artifact| artifact.kind == "patch_apply"));
+        assert_eq!(patch_store.records[0].status, "applied");
         let _ = fs::remove_dir_all(root);
     }
 
@@ -81,6 +118,14 @@ mod tests {
                 path: file.display().to_string(),
             }],
             run_id: run_id.to_string(),
+        }
+    }
+
+    fn apply_request(proposal_id: &str, root: &Path) -> PatchApplyRequest {
+        PatchApplyRequest {
+            approved_roots: vec![root.display().to_string()],
+            created_at_ms: 3,
+            proposal_id: proposal_id.to_string(),
         }
     }
 

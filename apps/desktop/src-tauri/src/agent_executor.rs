@@ -2,6 +2,7 @@ use crate::agent_run::{
     AgentRunError, AgentRunLedger, AgentRunStatus, EvidenceRecordInput, EvidenceRelevance,
 };
 use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
+use crate::patch_apply_bridge::{apply_patch_record, PatchApplyRequest};
 use crate::patch_bridge::{propose_patch_record, PatchBridgeStore, PatchProposalRequest};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,6 +40,34 @@ pub fn execute_patch_proposal_node(
             ledger,
             &request.run_id,
             &format!("Patch proposal approval blocked: {error:?}"),
+        ),
+    }
+}
+
+pub fn execute_patch_apply_node(
+    ledger: &mut AgentRunLedger,
+    patches: &mut PatchBridgeStore,
+    approvals: &ApprovalEngine,
+    request: PatchApplyRequest,
+) -> Result<AgentExecutionResult, String> {
+    let proposal = patches
+        .records
+        .iter()
+        .find(|record| record.id == request.proposal_id)
+        .cloned()
+        .ok_or_else(|| "Patch proposal not found.".to_string())?;
+    match approvals.assert_can_execute_action_for_run(
+        &proposal.approval_id,
+        request.created_at_ms,
+        RiskyAction::FileWrite,
+        &proposal.run_id,
+    ) {
+        Ok(()) => run_patch_apply(ledger, patches, approvals, request, &proposal.run_id),
+        Err(ApprovalError::NotApproved) => wait_for_apply_approval(ledger, &proposal),
+        Err(error) => fail_without_node(
+            ledger,
+            &proposal.run_id,
+            &format!("Patch apply approval blocked: {error:?}"),
         ),
     }
 }
@@ -85,6 +114,46 @@ fn run_patch_proposal(
     }
 }
 
+fn run_patch_apply(
+    ledger: &mut AgentRunLedger,
+    patches: &mut PatchBridgeStore,
+    approvals: &ApprovalEngine,
+    request: PatchApplyRequest,
+    run_id: &str,
+) -> Result<AgentExecutionResult, String> {
+    let node = ledger
+        .append_node(run_id, "tool_execution", "Apply patch proposal")
+        .map_err(agent_error)?;
+    ledger
+        .append_event(run_id, "patch_apply.started", "Patch apply node started.")
+        .map_err(agent_error)?;
+    match apply_patch_record(patches, approvals, request) {
+        Ok(applied) => {
+            mark_node(ledger, run_id, &node.id, AgentRunStatus::Completed)?;
+            ledger
+                .record_artifact(run_id, "patch_apply", &applied.id)
+                .map_err(agent_error)?;
+            ledger
+                .record_evidence_detail(run_id, patch_apply_evidence(&applied.id))
+                .map_err(agent_error)?;
+            ledger
+                .append_event(
+                    run_id,
+                    "patch_apply.completed",
+                    &format!("Patch proposal {} applied.", applied.id),
+                )
+                .map_err(agent_error)?;
+            Ok(AgentExecutionResult {
+                message: format!("Patch proposal {} applied.", applied.id),
+                patch_id: Some(applied.id),
+                run_id: run_id.to_string(),
+                status: AgentExecutionStatus::Completed,
+            })
+        }
+        Err(error) => fail_with_node(ledger, run_id, &node.id, &error),
+    }
+}
+
 fn wait_for_approval(
     ledger: &mut AgentRunLedger,
     request: &PatchProposalRequest,
@@ -96,6 +165,21 @@ fn wait_for_approval(
         message: format!("Waiting for approval {}.", request.approval_id),
         patch_id: None,
         run_id: request.run_id.clone(),
+        status: AgentExecutionStatus::WaitingForApproval,
+    })
+}
+
+fn wait_for_apply_approval(
+    ledger: &mut AgentRunLedger,
+    proposal: &crate::patch_bridge::PatchProposalView,
+) -> Result<AgentExecutionResult, String> {
+    ledger
+        .wait_for_approval(&proposal.run_id, &proposal.approval_id)
+        .map_err(agent_error)?;
+    Ok(AgentExecutionResult {
+        message: format!("Waiting for approval {}.", proposal.approval_id),
+        patch_id: Some(proposal.id.clone()),
+        run_id: proposal.run_id.clone(),
         status: AgentExecutionStatus::WaitingForApproval,
     })
 }
@@ -154,6 +238,23 @@ fn patch_evidence(patch_id: &str) -> EvidenceRecordInput {
         source_id: patch_id.to_string(),
         source_kind: "diff".to_string(),
         title: format!("Patch proposal {patch_id}"),
+        uri: None,
+    }
+}
+
+fn patch_apply_evidence(patch_id: &str) -> EvidenceRecordInput {
+    EvidenceRecordInput {
+        hash: None,
+        quote: None,
+        relevance: Some(EvidenceRelevance {
+            reason: "Patch diff was applied by this execution node.".to_string(),
+            relationship: "direct_implementation".to_string(),
+            score: 5,
+        }),
+        retrieved_at: String::new(),
+        source_id: patch_id.to_string(),
+        source_kind: "diff".to_string(),
+        title: format!("Applied patch proposal {patch_id}"),
         uri: None,
     }
 }

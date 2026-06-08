@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { PatchProposalRequestView } from "../patches/patchClient";
+import type { PatchApplyRequestView, PatchProposalRequestView } from "../patches/patchClient";
 
 export interface AgentPatchProposalExecuteRequest extends PatchProposalRequestView {
   createdAtMs: number;
@@ -20,6 +20,19 @@ export async function executePatchProposalNodeOverBridge(
   }
   try {
     return await invoke<AgentExecutionBridgeView>("agent_execute_patch_proposal", { request });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function executePatchApplyNodeOverBridge(
+  request: PatchApplyRequestView,
+): Promise<AgentExecutionBridgeView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<AgentExecutionBridgeView>("agent_execute_patch_apply", { request });
   } catch {
     return undefined;
   }

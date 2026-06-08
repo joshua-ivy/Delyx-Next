@@ -76,6 +76,7 @@ fn main() {
             .expect("external-agent run SQLite state should open"),
         )
         .invoke_handler(tauri::generate_handler![
+            delyx_next_desktop::agent_executor_bridge::agent_execute_patch_apply,
             delyx_next_desktop::agent_executor_bridge::agent_execute_patch_proposal,
             delyx_next_desktop::approval_bridge::approval_decide,
             delyx_next_desktop::approval_bridge::approval_propose,

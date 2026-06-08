@@ -1,5 +1,8 @@
-use crate::agent_executor::{execute_patch_proposal_node, AgentExecutionStatus};
+use crate::agent_executor::{
+    execute_patch_apply_node, execute_patch_proposal_node, AgentExecutionStatus,
+};
 use crate::approval_bridge::ApprovalBridgeState;
+use crate::patch_apply_bridge::PatchApplyRequest;
 use crate::patch_bridge::{PatchBridgeState, PatchFileRequest, PatchProposalRequest};
 use crate::thread_run_bridge::{ThreadRunBridgeState, ThreadRunStore};
 use serde::{Deserialize, Serialize};
@@ -48,6 +51,30 @@ pub fn agent_execute_patch_proposal(
     })?
 }
 
+#[tauri::command]
+pub fn agent_execute_patch_apply(
+    threads: tauri::State<ThreadRunBridgeState>,
+    patches: tauri::State<PatchBridgeState>,
+    approvals: tauri::State<ApprovalBridgeState>,
+    request: PatchApplyRequest,
+) -> Result<AgentExecutionBridgeView, String> {
+    approvals.with_engine(|engine| {
+        let mut thread_store = threads
+            .store
+            .lock()
+            .map_err(|_| "Thread bridge lock failed.".to_string())?;
+        let mut patch_store = patches
+            .store
+            .lock()
+            .map_err(|_| "Patch bridge lock failed.".to_string())?;
+        let view =
+            execute_patch_apply_record(&mut thread_store, &mut patch_store, engine, request)?;
+        threads.persist(&thread_store)?;
+        patches.save_if_persistent(&patch_store)?;
+        Ok(view)
+    })?
+}
+
 pub fn execute_patch_proposal_record(
     thread_store: &mut ThreadRunStore,
     patch_store: &mut crate::patch_bridge::PatchBridgeStore,
@@ -61,6 +88,22 @@ pub fn execute_patch_proposal_record(
         patch_request(&request),
         request.created_at_ms,
     )?;
+    Ok(AgentExecutionBridgeView {
+        message: result.message,
+        patch_id: result.patch_id,
+        run_id: result.run_id,
+        status: status_key(result.status).to_string(),
+    })
+}
+
+pub fn execute_patch_apply_record(
+    thread_store: &mut ThreadRunStore,
+    patch_store: &mut crate::patch_bridge::PatchBridgeStore,
+    approvals: &crate::approval::ApprovalEngine,
+    request: PatchApplyRequest,
+) -> Result<AgentExecutionBridgeView, String> {
+    let result =
+        execute_patch_apply_node(&mut thread_store.ledger, patch_store, approvals, request)?;
     Ok(AgentExecutionBridgeView {
         message: result.message,
         patch_id: result.patch_id,
