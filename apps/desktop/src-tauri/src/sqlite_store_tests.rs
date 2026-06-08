@@ -90,6 +90,7 @@ mod tests {
         drop(legacy);
 
         let connection = open_migrated_database(&path).unwrap();
+        let record_columns = table_columns(&connection, "patch_proposal_records");
         let columns = table_columns(&connection, "patch_proposal_files");
         let checkpoint_table_count: i64 = connection
             .query_row(
@@ -99,6 +100,7 @@ mod tests {
             )
             .unwrap();
 
+        assert!(record_columns.contains(&"restore_approval_id".to_string()));
         assert!(columns.contains(&"before_text".to_string()));
         assert!(columns.contains(&"after_text".to_string()));
         assert_eq!(checkpoint_table_count, 1);

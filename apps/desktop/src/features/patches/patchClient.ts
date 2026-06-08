@@ -18,6 +18,13 @@ export interface PatchApplyRequestView {
   createdAtMs: number;
 }
 
+export interface PatchRestoreRequestView {
+  proposalId: string;
+  approvalId: string;
+  approvedRoots: string[];
+  createdAtMs: number;
+}
+
 export async function proposePatchOverBridge(
   request: PatchProposalRequestView,
 ): Promise<PatchProposalView | undefined> {
@@ -39,6 +46,19 @@ export async function applyPatchOverBridge(
   }
   try {
     return await invoke<PatchProposalView>("patch_apply_approved", { request });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function restorePatchOverBridge(
+  request: PatchRestoreRequestView,
+): Promise<PatchProposalView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<PatchProposalView>("patch_restore_approved", { request });
   } catch {
     return undefined;
   }

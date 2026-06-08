@@ -38,6 +38,7 @@ fn migrate(connection: &Connection) -> rusqlite::Result<()> {
     connection.execute_batch(AGENT_RUN_MIGRATION)?;
     ensure_agent_run_columns(connection)?;
     ensure_evidence_columns(connection)?;
+    ensure_patch_record_columns(connection)?;
     ensure_patch_file_columns(connection)?;
     Ok(())
 }
@@ -76,6 +77,17 @@ fn ensure_evidence_columns(connection: &Connection) -> rusqlite::Result<()> {
                 [],
             )?;
         }
+    }
+    Ok(())
+}
+
+fn ensure_patch_record_columns(connection: &Connection) -> rusqlite::Result<()> {
+    let columns = table_columns(connection, "patch_proposal_records")?;
+    if !columns.iter().any(|column| column == "restore_approval_id") {
+        connection.execute(
+            "ALTER TABLE patch_proposal_records ADD COLUMN restore_approval_id TEXT",
+            [],
+        )?;
     }
     Ok(())
 }

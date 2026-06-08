@@ -260,8 +260,10 @@ text, and diff lines to SQLite so diff receipts survive restart. The
 matching `FileWrite` approval is executable, the file still matches the proposed
 before text, and the target stays inside approved roots. It writes through the
 checkpointing PatchEngine and persists checkpoint file receipts for review and
-future restore work. Patch restore remains a separate approval-gated runtime
-action.
+rollback. The `patch_restore_approved` bridge requires its own executable
+`FileWrite` approval, verifies the file still matches the applied `after` text,
+stays inside approved roots, and then writes or removes files from the persisted
+checkpoint receipts while recording the restore approval ID.
 The Tauri `test_run_approved` bridge exposes approved test-command execution
 through the Rust TestRunner. It reads the same Rust ApprovalEngine owned by the
 approval bridge, rejects pending or mismatched approvals, captures stdout,

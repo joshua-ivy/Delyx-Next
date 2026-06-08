@@ -51,14 +51,15 @@ fn insert_proposal(connection: &Connection, proposal: &PatchProposalView) -> Res
     connection
         .execute(
             "INSERT INTO patch_proposal_records
-             (id, run_id, approval_id, status, checkpoint_id)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
+             (id, run_id, approval_id, status, checkpoint_id, restore_approval_id)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
             params![
                 proposal.id,
                 proposal.run_id,
                 proposal.approval_id,
                 proposal.status,
                 proposal.checkpoint_id,
+                proposal.restore_approval_id,
             ],
         )
         .map(|_| ())
@@ -131,7 +132,7 @@ fn insert_diff_line(
 fn load_proposals(connection: &Connection) -> Result<Vec<PatchProposalView>, String> {
     let mut statement = connection
         .prepare(
-            "SELECT id, run_id, approval_id, status, checkpoint_id
+            "SELECT id, run_id, approval_id, status, checkpoint_id, restore_approval_id
              FROM patch_proposal_records ORDER BY rowid",
         )
         .map_err(sql_string)?;
@@ -143,6 +144,7 @@ fn load_proposals(connection: &Connection) -> Result<Vec<PatchProposalView>, Str
                 approval_id: row.get(2)?,
                 status: row.get(3)?,
                 checkpoint_id: row.get(4)?,
+                restore_approval_id: row.get(5)?,
                 checkpoint_files: Vec::new(),
                 files: Vec::new(),
             })

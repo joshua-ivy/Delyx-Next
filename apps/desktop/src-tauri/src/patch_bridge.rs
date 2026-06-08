@@ -57,6 +57,7 @@ pub struct PatchProposalView {
     pub approval_id: String,
     pub status: String,
     pub checkpoint_id: Option<String>,
+    pub restore_approval_id: Option<String>,
     pub checkpoint_files: Vec<PatchCheckpointFileView>,
     pub files: Vec<PatchFileView>,
 }
@@ -110,6 +111,24 @@ pub fn patch_apply_approved(
             .lock()
             .map_err(|_| "Patch bridge lock failed.".to_string())?;
         let proposal = crate::patch_apply_bridge::apply_patch_record(&mut store, engine, request)?;
+        state.save_if_persistent(&store)?;
+        Ok(proposal)
+    })?
+}
+
+#[tauri::command]
+pub fn patch_restore_approved(
+    state: tauri::State<PatchBridgeState>,
+    approvals: tauri::State<crate::approval_bridge::ApprovalBridgeState>,
+    request: crate::patch_restore_bridge::PatchRestoreRequest,
+) -> Result<PatchProposalView, String> {
+    approvals.with_engine(|engine| {
+        let mut store = state
+            .store
+            .lock()
+            .map_err(|_| "Patch bridge lock failed.".to_string())?;
+        let proposal =
+            crate::patch_restore_bridge::restore_patch_record(&mut store, engine, request)?;
         state.save_if_persistent(&store)?;
         Ok(proposal)
     })?
@@ -199,6 +218,7 @@ fn patch_view(proposal: &PatchProposal, id: String) -> PatchProposalView {
         checkpoint_files: Vec::new(),
         files: proposal.files.iter().map(file_view).collect(),
         id,
+        restore_approval_id: None,
         run_id: proposal.run_id.clone(),
         status: "proposed".to_string(),
     }

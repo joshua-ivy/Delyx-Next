@@ -252,7 +252,8 @@ CREATE TABLE IF NOT EXISTS patch_proposal_records (
   run_id TEXT NOT NULL,
   approval_id TEXT NOT NULL,
   status TEXT NOT NULL,
-  checkpoint_id TEXT
+  checkpoint_id TEXT,
+  restore_approval_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS patch_proposal_files (

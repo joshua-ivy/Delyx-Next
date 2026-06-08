@@ -24,6 +24,7 @@ export interface PatchProposalView {
   approvalId: string;
   status: PatchStatus;
   checkpointId?: string;
+  restoreApprovalId?: string;
   checkpointFiles: PatchCheckpointFileView[];
   files: PatchFileView[];
 }
