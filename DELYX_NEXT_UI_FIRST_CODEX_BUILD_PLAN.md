@@ -135,7 +135,7 @@ now has real persisted or approval-gated functional islands.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 113/152 visible Phase 2 checkboxes are checked. Only 1/12 depth
+Progress read: 116/155 visible Phase 2 checkboxes are checked. Only 1/12 depth
 tracks is fully complete, and 11/12 are in progress. The subchecks below show
 the real completed work; the largest remaining risk is still concentrated in
 D2, D5, D6, and D3.
@@ -178,6 +178,7 @@ D2, D5, D6, and D3.
   - [x] The resume bridge now returns the post-resume scheduler decision when persisted patch/test/review work is ready, falling back to the visible resume decision when no persisted next action exists.
   - [x] Approval decisions now auto-resume through the scheduler bridge only when the approved proposal is the last pending approval for that run.
   - [x] Added a one-step scheduler dispatcher that can run the post-resume scheduler-selected action for approved patch apply, approved/approval-queued tests, read-only review, or final-support recording from real persisted artifacts.
+  - [x] The scheduler dispatcher now asks the Rust scheduler for a bounded next decision after each dispatched action and can continue through ready patch/test/review/final-support steps without inventing artifacts.
   - [x] Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
   - [x] Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
   - [x] Added a narrow `agent_execute_patch_apply` bridge that waits on pending `FileWrite` approvals, applies an existing PatchProposal through the stale-file/checkpoint PatchEngine path, writes only after approval, and records AgentRun node events, patch-apply artifacts, and diff evidence receipts.
@@ -204,6 +205,7 @@ D2, D5, D6, and D3.
   - [x] Added approval-decision resume policy coverage for approved, denied, and still-pending approval sets.
   - [x] Added approval orchestration coverage proving safe resume is called only when the approval policy allows it and receives the freshly decided approval state before scheduler dispatch.
   - [x] Added scheduler dispatcher coverage for patch apply, tests, review, final support, and passive wait decisions.
+  - [x] Added scheduler dispatcher continuation coverage proving an approved patch apply can continue into a scheduler-selected test step.
   - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - [x] Keep grep/source verifiers only as smoke guards.
   - [x] Stop using source-substring checks as proof of UI behavior.
@@ -231,7 +233,7 @@ D2, D5, D6, and D3.
   - [x] After the last required approval is recorded, the scheduler dispatcher can automatically execute the scheduler-selected approved patch apply step. It still does not generate patch content from an approved plan.
   - [ ] Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - [ ] Surface full rollback state in the UI beyond existing patch/apply/restore receipts.
-  - [ ] Connect generated build outputs to test and review steps as a continuous loop.
+  - [ ] Connect generated build outputs to test and review steps as a complete repair-capable loop.
 
 - [ ] D6 - Functional Test/Review Loop (in progress; manual approved tests/review exist, automatic post-build loop missing)
   - [ ] Run approved tests from the full agent loop automatically.
@@ -244,6 +246,7 @@ D2, D5, D6, and D3.
   - [x] Focus thread UI can now run that read-only review action when the active run has real patch or test artifacts, reload persisted ReviewReports, and display the resulting review receipt inline.
   - [x] AgentScheduler can now identify applied patches that need tests, block when no supported test command exists, schedule review from real patch/test artifacts, and report final-support readiness after a stored review; Focus UI shows those real next actions when the desktop bridge is available.
   - [x] The scheduler dispatcher can automatically queue/run the scheduler-selected test step after the final approval resumes the run, and can dispatch read-only review/final-support steps from persisted artifacts.
+  - [x] The scheduler dispatcher can continue from a completed dispatched action to the next scheduler-selected test/review/final-support step within a bounded loop.
   - [x] Prevent final "tested" claims unless linked artifacts exist.
 
 - [ ] D7 - Model Integration Depth (in progress; Ollama is real, OpenAI-compatible remains out of live scope)

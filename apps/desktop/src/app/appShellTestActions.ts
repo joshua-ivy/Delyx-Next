@@ -24,6 +24,7 @@ interface TestRunState {
   activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
   patches: PatchProposalView[];
+  schedulerConfirmedRunTests?: boolean;
   setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setTests: Dispatch<SetStateAction<TestArtifactView[]>>;
@@ -36,7 +37,7 @@ export async function runTestsForActiveRun(state: TestRunState) {
     notifyLocalAction("Create a thread with a run before testing", "warning");
     return;
   }
-  if (!state.patches.some((patch) => patch.status === "applied")) {
+  if (!state.schedulerConfirmedRunTests && !state.patches.some((patch) => patch.status === "applied")) {
     notifyLocalAction("Tests run after a real patch has been applied", "warning");
     return;
   }

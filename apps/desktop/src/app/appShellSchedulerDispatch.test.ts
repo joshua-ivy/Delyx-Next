@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PatchProposalView } from "../features/patches/patchTypes";
-import type { AgentScheduleDecisionView } from "../features/runs/agentExecutorClient";
+import { scheduleNextRunActionOverBridge, type AgentScheduleDecisionView } from "../features/runs/agentExecutorClient";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { runReviewForActiveRun } from "./appShellReviewActions";
@@ -12,11 +12,13 @@ vi.mock("./appShellFinalAnswerActions", () => ({ recordFinalSupportForActiveThre
 vi.mock("./appShellPatchActions", () => ({ applyApprovedPatchForActiveRun: vi.fn() }));
 vi.mock("./appShellReviewActions", () => ({ runReviewForActiveRun: vi.fn() }));
 vi.mock("./appShellTestActions", () => ({ runTestsForActiveRun: vi.fn() }));
+vi.mock("../features/runs/agentExecutorClient", () => ({ scheduleNextRunActionOverBridge: vi.fn() }));
 
 const applyPatch = vi.mocked(applyApprovedPatchForActiveRun);
 const recordFinal = vi.mocked(recordFinalSupportForActiveThread);
 const runReview = vi.mocked(runReviewForActiveRun);
 const runTests = vi.mocked(runTestsForActiveRun);
+const scheduleNext = vi.mocked(scheduleNextRunActionOverBridge);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -25,6 +27,7 @@ beforeEach(() => {
 describe("dispatchSchedulerDecision", () => {
   it("dispatches approved patch apply decisions with the matching patch", async () => {
     const patch = patchView();
+    scheduleNext.mockResolvedValue(undefined);
 
     const handled = await dispatchSchedulerDecision(state({ patches: [patch] }), {
       ...decision("run_patch_apply"),
@@ -35,19 +38,34 @@ describe("dispatchSchedulerDecision", () => {
     expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({ patch }));
   });
 
+  it("continues from patch apply into the scheduler-selected test step", async () => {
+    const patch = patchView();
+    scheduleNext.mockResolvedValueOnce(decision("run_tests")).mockResolvedValueOnce(undefined);
+
+    await dispatchSchedulerDecision(state({ patches: [patch] }), {
+      ...decision("run_patch_apply"),
+      proposalId: patch.id,
+    });
+
+    expect(applyPatch).toHaveBeenCalledTimes(1);
+    expect(runTests).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedRunTests: true }));
+  });
+
   it("dispatches test, review, and final-support decisions", async () => {
     const base = state({ patches: [patchView()] });
+    scheduleNext.mockResolvedValue(undefined);
 
     await dispatchSchedulerDecision(base, decision("run_tests"));
     await dispatchSchedulerDecision(base, decision("run_review"));
     await dispatchSchedulerDecision(base, decision("ready_for_final_support"));
 
-    expect(runTests).toHaveBeenCalledWith(base);
+    expect(runTests).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedRunTests: true }));
     expect(runReview).toHaveBeenCalledWith(expect.objectContaining({ patches: [patchView()] }));
     expect(recordFinal).toHaveBeenCalledWith(base);
   });
 
   it("leaves passive scheduler decisions unhandled", async () => {
+    scheduleNext.mockResolvedValue(undefined);
     const handled = await dispatchSchedulerDecision(state(), decision("wait_for_approval"));
 
     expect(handled).toBe(false);

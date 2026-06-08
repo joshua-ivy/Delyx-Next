@@ -86,10 +86,12 @@ complete:
   review work is ready; otherwise it falls back to the visible resume decision.
   Approval decisions can also trigger that non-risky resume transition when the
   approved proposal is the last pending approval for the run. A focused
-  renderer dispatcher can then run exactly one post-resume scheduler-selected
-  action: approved patch apply, approved or approval-queued tests, read-only
-  review, or final-support recording. It does not generate patch content,
-  bypass approvals, or run arbitrary tools.
+  renderer dispatcher can then run post-resume scheduler-selected actions:
+  approved patch apply, approved or approval-queued tests, read-only review, or
+  final-support recording. After each dispatched action it asks the Rust
+  scheduler for a bounded next decision, stopping on passive/repeated states or
+  the depth limit. It does not generate patch content, bypass approvals, or run
+  arbitrary tools.
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun multi-node autonomous executor, repair loop, or hook
   runner yet.

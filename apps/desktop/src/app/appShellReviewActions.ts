@@ -16,6 +16,7 @@ export interface ReviewRunState {
   activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
   patches: PatchProposalView[];
+  schedulerConfirmedArtifacts?: boolean;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setReviews: Dispatch<SetStateAction<ReviewReportView[]>>;
   setThreads: Dispatch<SetStateAction<TaskThread[]>>;
@@ -28,7 +29,7 @@ export async function runReviewForActiveRun(state: ReviewRunState) {
     notifyLocalAction("Create a thread with a run before review", "warning");
     return;
   }
-  if (state.patches.length === 0 && state.tests.length === 0) {
+  if (!state.schedulerConfirmedArtifacts && state.patches.length === 0 && state.tests.length === 0) {
     notifyLocalAction("Review needs a real patch or test artifact first", "warning");
     return;
   }
