@@ -83,11 +83,7 @@ describe("dispatchSchedulerDecision", () => {
 
   it("dispatches patch draft decisions and continues with reloaded patches", async () => {
     const patch = patchView();
-    draftPatch.mockResolvedValue({
-      created: true,
-      patches: [patch],
-      snapshot: { runs: [{ id: "run-1" }] as never, threads: [] },
-    });
+    draftPatch.mockResolvedValue(draftResult(patch));
     scheduleNext.mockResolvedValueOnce({ ...decision("run_patch_apply"), proposalId: patch.id }).mockResolvedValueOnce(undefined);
 
     await dispatchSchedulerDecision(state({ draftReady: true }), {
@@ -99,6 +95,28 @@ describe("dispatchSchedulerDecision", () => {
       actionProposals: [approval()],
     }), approval());
     expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({ patch }));
+  });
+
+  it("continues generated patch output through apply, tests, review, and final support", async () => {
+    const patch = patchView();
+    draftPatch.mockResolvedValue(draftResult(patch));
+    scheduleNext
+      .mockResolvedValueOnce({ ...decision("run_patch_apply"), proposalId: patch.id })
+      .mockResolvedValueOnce(decision("run_tests"))
+      .mockResolvedValueOnce(decision("run_review"))
+      .mockResolvedValueOnce(decision("ready_for_final_support"))
+      .mockResolvedValueOnce(undefined);
+
+    await dispatchSchedulerDecision(state({ draftReady: true, testReady: true }), {
+      ...decision("run_patch_draft"),
+      approvalIds: ["approval-1"],
+    });
+
+    expect(draftPatch).toHaveBeenCalledTimes(1);
+    expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({ patch }));
+    expect(runTests).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedRunTests: true }));
+    expect(runReview).toHaveBeenCalledWith(expect.objectContaining({ schedulerConfirmedArtifacts: true }));
+    expect(recordFinal).toHaveBeenCalledTimes(1);
   });
 
   it("dispatches repair patch draft decisions by scheduler approval id", async () => {
@@ -139,7 +157,7 @@ function state({
   repairReady?: boolean;
   testReady?: boolean;
 } = {}) {
-  const activePlan = draftReady || testReady ? plan() : undefined;
+  const activePlan = draftReady || repairReady || testReady ? plan() : undefined;
   return {
     actionProposals: repairReady ? [repairApproval()] : draftReady ? [approval()] : testReady ? [testApproval()] : [],
     activePlan,
@@ -192,6 +210,10 @@ function patchView(): PatchProposalView {
     runId: "run-1",
     status: "proposed",
   };
+}
+
+function draftResult(patch: PatchProposalView) {
+  return { created: true, patches: [patch], snapshot: { runs: [{ id: "run-1" }] as never, threads: [] } };
 }
 
 function approval() {

@@ -19,7 +19,7 @@ import { activeTestApprovalId } from "./appShellTestApprovalDecision";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { firstRunnableTestCommand } from "./testCommand";
 
-const maxAutoSteps = 3;
+const maxAutoSteps = 4;
 
 export interface SchedulerDispatchState {
   actionProposals: ActionProposalView[];

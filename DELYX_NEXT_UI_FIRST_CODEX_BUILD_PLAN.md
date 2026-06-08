@@ -138,11 +138,11 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 163/191 checked, 28 open.
+- Visible checkbox progress: 165/191 checked, 26 open.
 - Parent track boxes are status gates; they stay open until the full track is functionally complete.
-- Depth tracks: 3/12 complete, 9/12 in progress.
+- Depth tracks: 4/12 complete, 8/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
-- Largest remaining risk remains concentrated in D2, D5, D6, and D3.
+- Largest remaining risk remains concentrated in D2, D5, and D3.
 
 - [ ] D1 - Real SQLite Local Store (in progress; broad persistence exists, remaining action bridges still open)
   - [x] ~~Added `rusqlite` with bundled SQLite for local Windows-safe storage.~~
@@ -265,9 +265,9 @@ Progress board:
   - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.
   - [x] ~~Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.~~
   - [x] ~~Surface richer rollback detail in the UI: checkpoint file list, restore approval ID, stale-restore failures, and post-restore review guidance.~~
-  - [ ] Connect generated build outputs to test and review steps as a complete repair-capable loop.
+  - [x] ~~Connect generated build outputs to test and review steps as a complete repair-capable loop.~~
 
-- [ ] D6 - Functional Test/Review Loop (in progress; manual approved tests/review exist, automatic post-build loop missing)
+- [x] ~~D6 - Functional Test/Review Loop (complete; scheduler-dispatched generated patches can continue through apply, tests, review, and final support when approvals and receipts exist)~~
   - [x] ~~Run approved tests from the full agent loop automatically.~~
   - [x] ~~Runtime can now execute an explicit approved test command through AgentRun. It reuses the existing TestRunner approval, cwd, command-shape, timeout, output-capture, and artifact persistence gates, but it is not yet automatically chained from patch apply.~~
   - [x] ~~Focus thread UI now loads persisted test artifacts for the active run instead of passing a static empty test array, so real TestRunner receipts can appear when the runtime creates them.~~
@@ -281,7 +281,7 @@ Progress board:
   - [x] ~~`agent_resume_waiting_run` and `agent_schedule_next` now accept a test approval hint, verify it as an executable same-run `TerminalCommand`, and return it on the `run_tests` decision; the Focus dispatcher passes that exact ID into `agent_execute_test_run`.~~
   - [x] ~~The scheduler dispatcher can continue from a completed dispatched action to the next scheduler-selected test/review/final-support step within a bounded loop.~~
   - [x] ~~Review reports with unresolved findings now block final support, and an exact finding-level repair request is persisted before the run can move back toward build.~~
-  - [x] ~~Approved repair requests now flow back to build through persisted review status, a scoped approval card, scheduler-selected PatchDraft, and tests covering that handoff; automatic post-repair apply/test/review chaining still remains open.~~
+  - [x] ~~Approved repair requests now flow back to build through persisted review status, a scoped approval card, scheduler-selected PatchDraft, and tests covering that handoff; generated repair outputs can continue through apply, test, review, and final-support scheduling when approvals and receipts exist.~~
   - [x] ~~Test approval queueing now treats pending, denied, and expired approvals truthfully: pending approvals are not duplicated, denied approvals do not rerun, and expired approvals use a fresh bridge client ID instead of reviving stale approval records.~~
   - [x] ~~Prevent final "tested" claims unless linked artifacts exist.~~
 

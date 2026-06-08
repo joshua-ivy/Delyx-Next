@@ -111,7 +111,10 @@ complete:
   approved patch apply, approved or approval-queued tests, read-only review, or
   final-support recording. After each dispatched action it asks the Rust
   scheduler for a bounded next decision, stopping on passive/repeated states or
-  the depth limit. Manual resume from the visible scheduler line uses that same
+  the depth limit. The current bound is large enough for a generated patch
+  path to continue through patch draft, patch apply, tests, review, and final
+  support when each step has real approvals and persisted receipts. Manual
+  resume from the visible scheduler line uses that same
   resume-then-dispatch helper, including reload-time PatchDraft decisions.
   PatchDraft dispatch uses the scheduler-provided approval ID,
   so plan drafts and repair drafts enter the same approval-checked bridge path.
