@@ -113,6 +113,11 @@ impl AutomationEngine {
         Ok(())
     }
 
+    pub fn pause_contract(&mut self, contract_id: &str) -> Result<(), AutomationError> {
+        self.contract_mut(contract_id)?.status = MissionStatus::Paused;
+        Ok(())
+    }
+
     pub fn schedule_due_run(
         &mut self,
         contract_id: &str,

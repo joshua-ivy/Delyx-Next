@@ -7,6 +7,12 @@ fn main() {
             .expect("approval SQLite state should open"),
         )
         .manage(
+            delyx_next_desktop::automation_bridge::AutomationBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("automation SQLite state should open"),
+        )
+        .manage(
             delyx_next_desktop::local_store_bridge::LocalStoreBridgeState::persistent(
                 delyx_next_desktop::sqlite_store::default_database_path(),
             ),
@@ -68,6 +74,9 @@ fn main() {
             delyx_next_desktop::approval_bridge::approval_propose,
             delyx_next_desktop::approval_bridge::approval_snapshot,
             delyx_next_desktop::approval_bridge_taxonomy::approval_taxonomy,
+            delyx_next_desktop::automation_bridge::automation_contract_approve,
+            delyx_next_desktop::automation_bridge::automation_contract_create,
+            delyx_next_desktop::automation_bridge::automation_contract_pause,
             delyx_next_desktop::automation_bridge::automation_snapshot,
             delyx_next_desktop::external_agent_contract_bridge::external_agent_contract_preview,
             delyx_next_desktop::external_agent_run_bridge::external_agent_run_codex,

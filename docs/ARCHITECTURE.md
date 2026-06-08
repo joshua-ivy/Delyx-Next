@@ -47,7 +47,11 @@ complete:
   snapshot commands; activation changes registry state only and does not execute
   any skill capability by itself.
   The Rust automation engine persists mission contracts and scheduled-run
-  records, and a read-only Tauri snapshot bridge feeds the cockpit. Release profile
+  records. Its Tauri bridge exposes persisted contract create, approved
+  activate, pause, and snapshot commands. Activation still requires a matching
+  approved scheduled-action proposal. Scheduled-run creation is not exposed from
+  the desktop bridge until generated approval cards are persisted and visible.
+  Release profile
   and redacted support-bundle state persist to SQLite. Approved test artifacts,
   proposed patch diffs, review reports, external-agent run artifacts, and
   research EvidenceStore receipts persist receipt data to SQLite and reload
@@ -328,10 +332,13 @@ Owns:
 
 The Rust `AutomationEngine` persists mission contracts and scheduled runs to
 SQLite, including status, schedule shape, allowed tools, approval links,
-workspace fingerprints, and post-reload ID continuity. The Tauri
-`automation_snapshot` command exposes a read-only UI-ready view to the cockpit.
-Contract creation, approval, pause, and scheduled-run mutation workflows still
-need explicit bridges before this becomes an end-to-end user workflow.
+workspace fingerprints, and post-reload ID continuity. The Tauri automation
+bridge exposes UI-ready snapshots plus persisted contract create, approved
+activate, and pause commands. Activation uses the shared approval engine and
+rejects unapproved, mismatched, expired, or wrong-action approvals. Scheduled-run
+creation can create approval proposals in the domain model, so it remains
+internal until those generated approval cards are persisted and visible through
+the approval bridge.
 
 ## Release
 
