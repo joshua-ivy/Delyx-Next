@@ -1,15 +1,23 @@
 #[cfg(test)]
 mod tests {
-    use crate::external_agent::{
-        AdapterStatus, ExternalAgentAvailability, ExternalAgentKind,
-    };
+    use crate::external_agent::{AdapterStatus, ExternalAgentAvailability, ExternalAgentKind};
     use crate::external_agent_status_bridge::external_agent_status_from_adapters;
 
     #[test]
     fn external_agent_status_maps_detected_adapters_for_ui() {
         let status = external_agent_status_from_adapters(vec![
-            adapter("codex-cli", ExternalAgentKind::CodexCli, "Codex CLI", AdapterStatus::Available),
-            adapter("claude-code", ExternalAgentKind::ClaudeCode, "Claude Code", AdapterStatus::Missing),
+            adapter(
+                "codex-cli",
+                ExternalAgentKind::CodexCli,
+                "Codex CLI",
+                AdapterStatus::Available,
+            ),
+            adapter(
+                "claude-code",
+                ExternalAgentKind::ClaudeCode,
+                "Claude Code",
+                AdapterStatus::Missing,
+            ),
             adapter(
                 "generic-terminal",
                 ExternalAgentKind::GenericTerminal,

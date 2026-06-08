@@ -88,21 +88,33 @@ impl WorkspaceManager {
         &self.projects
     }
 
-    pub fn read_file(&self, project_id: &str, path: impl AsRef<Path>) -> Result<String, WorkspaceError> {
+    pub fn read_file(
+        &self,
+        project_id: &str,
+        path: impl AsRef<Path>,
+    ) -> Result<String, WorkspaceError> {
         let project = self.project(project_id)?;
         let path = canonical_file(path.as_ref())?;
         ensure_inside_roots(project, &path)?;
         fs::read_to_string(path).map_err(|error| WorkspaceError::Io(error.to_string()))
     }
 
-    pub fn index_files(&self, project_id: &str, limit: usize) -> Result<Vec<FileIndexEntry>, WorkspaceError> {
+    pub fn index_files(
+        &self,
+        project_id: &str,
+        limit: usize,
+    ) -> Result<Vec<FileIndexEntry>, WorkspaceError> {
         let project = self.project(project_id)?;
         let mut entries = Vec::new();
         collect_files(&project.path, &project.path, limit, &mut entries)?;
         Ok(entries)
     }
 
-    pub fn search_files(&self, project_id: &str, query: &str) -> Result<Vec<FileIndexEntry>, WorkspaceError> {
+    pub fn search_files(
+        &self,
+        project_id: &str,
+        query: &str,
+    ) -> Result<Vec<FileIndexEntry>, WorkspaceError> {
         let query = query.to_lowercase();
         let matches = self
             .index_files(project_id, 500)?
@@ -134,7 +146,11 @@ fn canonical_file(path: &Path) -> Result<PathBuf, WorkspaceError> {
 }
 
 fn ensure_inside_roots(project: &Project, path: &Path) -> Result<(), WorkspaceError> {
-    if project.approved_roots.iter().any(|root| path.starts_with(root)) {
+    if project
+        .approved_roots
+        .iter()
+        .any(|root| path.starts_with(root))
+    {
         Ok(())
     } else {
         Err(WorkspaceError::OutsideApprovedRoot)
@@ -156,7 +172,9 @@ fn collect_files(
         let path = entry.path();
         let name = entry.file_name();
         let name = name.to_string_lossy();
-        let file_type = entry.file_type().map_err(|error| WorkspaceError::Io(error.to_string()))?;
+        let file_type = entry
+            .file_type()
+            .map_err(|error| WorkspaceError::Io(error.to_string()))?;
 
         if should_skip(&name) || file_type.is_symlink() {
             continue;
@@ -170,7 +188,10 @@ fn collect_files(
                 .unwrap_or(&path)
                 .to_string_lossy()
                 .replace('\\', "/");
-            entries.push(FileIndexEntry { path, relative_path });
+            entries.push(FileIndexEntry {
+                path,
+                relative_path,
+            });
         }
 
         if entries.len() >= limit {
@@ -204,7 +225,10 @@ fn detect_rules_files(root: &Path) -> Vec<ProjectRulesFile> {
             let path = entry.path();
             let is_file = entry.file_type().is_ok_and(|file_type| file_type.is_file());
             if is_file && path.extension().and_then(|value| value.to_str()) == Some("md") {
-                files.push(ProjectRulesFile { path, kind: RulesFileKind::DelyxRule });
+                files.push(ProjectRulesFile {
+                    path,
+                    kind: RulesFileKind::DelyxRule,
+                });
             }
         }
     }
@@ -219,6 +243,12 @@ fn is_plain_file(path: &Path) -> bool {
 fn stable_project_id(path: &Path) -> String {
     path.to_string_lossy()
         .chars()
-        .map(|value| if value.is_ascii_alphanumeric() { value.to_ascii_lowercase() } else { '-' })
+        .map(|value| {
+            if value.is_ascii_alphanumeric() {
+                value.to_ascii_lowercase()
+            } else {
+                '-'
+            }
+        })
         .collect()
 }

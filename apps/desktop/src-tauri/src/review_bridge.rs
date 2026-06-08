@@ -1,6 +1,7 @@
-use crate::patch::{DiffLine, DiffLineKind, PatchFile, PatchProposal, PatchStatus};
-use crate::review::{FindingPriority, ReviewAgent, ReviewDecision, ReviewMode, ReviewReport};
-use crate::test_runner::{TestArtifact, TestStatus};
+use crate::patch::{DiffLine, DiffLineKind, PatchFile, PatchProposal};
+use crate::review::{ReviewAgent, ReviewReport};
+use crate::review_bridge_keys::{decision_key, mode_key, patch_status, priority_key, test_status};
+use crate::test_runner::TestArtifact;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -95,7 +96,10 @@ pub fn review_create(
     state: tauri::State<ReviewBridgeState>,
     request: ReviewCreateRequest,
 ) -> Result<ReviewReportView, String> {
-    let mut store = state.store.lock().map_err(|_| "Review bridge lock failed.".to_string())?;
+    let mut store = state
+        .store
+        .lock()
+        .map_err(|_| "Review bridge lock failed.".to_string())?;
     create_review_record(&mut store, request)
 }
 
@@ -104,7 +108,10 @@ pub fn review_snapshot(
     state: tauri::State<ReviewBridgeState>,
     run_id: String,
 ) -> Result<Vec<ReviewReportView>, String> {
-    let store = state.store.lock().map_err(|_| "Review bridge lock failed.".to_string())?;
+    let store = state
+        .store
+        .lock()
+        .map_err(|_| "Review bridge lock failed.".to_string())?;
     Ok(review_snapshot_from_store(&store, &run_id))
 }
 
@@ -115,29 +122,57 @@ pub fn create_review_record(
     if request.run_id.trim().is_empty() {
         return Err("Review requires a run ID.".to_string());
     }
-    if request.patches.iter().any(|patch| patch.run_id != request.run_id) {
+    if request
+        .patches
+        .iter()
+        .any(|patch| patch.run_id != request.run_id)
+    {
         return Err("Review patch artifacts must belong to the requested run.".to_string());
     }
-    if request.tests.iter().any(|test| test.run_id != request.run_id) {
+    if request
+        .tests
+        .iter()
+        .any(|test| test.run_id != request.run_id)
+    {
         return Err("Review test artifacts must belong to the requested run.".to_string());
     }
-    let patches = request.patches.into_iter().map(patch_input).collect::<Result<Vec<_>, _>>()?;
-    let tests = request.tests.into_iter().map(test_input).collect::<Result<Vec<_>, _>>()?;
+    let patches = request
+        .patches
+        .into_iter()
+        .map(patch_input)
+        .collect::<Result<Vec<_>, _>>()?;
+    let tests = request
+        .tests
+        .into_iter()
+        .map(test_input)
+        .collect::<Result<Vec<_>, _>>()?;
     let report = store.agent.review(&request.run_id, &patches, &tests);
     let view = report_view(&report);
     store.reports.push(view.clone());
     Ok(view)
 }
 
-pub fn review_snapshot_from_store(store: &ReviewBridgeStore, run_id: &str) -> Vec<ReviewReportView> {
-    store.reports.iter().filter(|report| report.run_id == run_id).cloned().collect()
+pub fn review_snapshot_from_store(
+    store: &ReviewBridgeStore,
+    run_id: &str,
+) -> Vec<ReviewReportView> {
+    store
+        .reports
+        .iter()
+        .filter(|report| report.run_id == run_id)
+        .cloned()
+        .collect()
 }
 
 fn patch_input(input: PatchReviewInput) -> Result<PatchProposal, String> {
     Ok(PatchProposal {
         approval_id: input.approval_id,
         checkpoint_id: None,
-        files: input.files.into_iter().map(patch_file_input).collect::<Result<Vec<_>, _>>()?,
+        files: input
+            .files
+            .into_iter()
+            .map(patch_file_input)
+            .collect::<Result<Vec<_>, _>>()?,
         id: input.id,
         run_id: input.run_id,
         status: patch_status(&input.status)?,
@@ -155,7 +190,11 @@ fn patch_file_input(input: PatchFileReviewInput) -> Result<PatchFile, String> {
     Ok(PatchFile {
         after,
         before: String::new(),
-        diff: input.diff.into_iter().map(diff_input).collect::<Result<Vec<_>, _>>()?,
+        diff: input
+            .diff
+            .into_iter()
+            .map(diff_input)
+            .collect::<Result<Vec<_>, _>>()?,
         path: PathBuf::from(input.path),
     })
 }
@@ -214,48 +253,5 @@ fn finding_view(finding: &crate::review::ReviewFinding) -> ReviewFindingView {
         risk_label: finding.risk_label.clone(),
         suggested_fix: finding.suggested_fix.clone(),
         title: finding.title.clone(),
-    }
-}
-
-fn patch_status(status: &str) -> Result<PatchStatus, String> {
-    match status {
-        "applied" => Ok(PatchStatus::Applied),
-        "proposed" => Ok(PatchStatus::Proposed),
-        "restored" => Ok(PatchStatus::Restored),
-        _ => Err("Unsupported patch status.".to_string()),
-    }
-}
-
-fn test_status(status: Option<&str>, exit_code: Option<i32>) -> Result<TestStatus, String> {
-    match status {
-        Some("failed") => Ok(TestStatus::Failed),
-        Some("passed") => Ok(TestStatus::Passed),
-        Some("not_run") => Err("Cannot review a test that did not run.".to_string()),
-        Some(_) => Err("Unsupported test status.".to_string()),
-        None => Ok(if exit_code == Some(0) { TestStatus::Passed } else { TestStatus::Failed }),
-    }
-}
-
-fn mode_key(mode: ReviewMode) -> &'static str {
-    match mode {
-        ReviewMode::ReadOnly => "read_only",
-    }
-}
-
-fn decision_key(decision: ReviewDecision) -> &'static str {
-    match decision {
-        ReviewDecision::Accepted => "accepted",
-        ReviewDecision::Pending => "pending",
-        ReviewDecision::RevertRequested => "revert_requested",
-        ReviewDecision::ReviseRequested => "revise_requested",
-    }
-}
-
-fn priority_key(priority: FindingPriority) -> &'static str {
-    match priority {
-        FindingPriority::P0 => "p0",
-        FindingPriority::P1 => "p1",
-        FindingPriority::P2 => "p2",
-        FindingPriority::P3 => "p3",
     }
 }

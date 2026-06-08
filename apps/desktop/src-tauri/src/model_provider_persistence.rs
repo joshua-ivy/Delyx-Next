@@ -30,7 +30,10 @@ pub fn load_routes_from_path(path: &Path) -> Result<Vec<RoleRoute>, String> {
 }
 
 fn clear_routes(connection: &Connection) -> Result<(), String> {
-    connection.execute("DELETE FROM model_role_routes", []).map(|_| ()).map_err(sql_string)
+    connection
+        .execute("DELETE FROM model_role_routes", [])
+        .map(|_| ())
+        .map_err(sql_string)
 }
 
 fn insert_route(connection: &Connection, route: &RoleRoute) -> Result<(), String> {

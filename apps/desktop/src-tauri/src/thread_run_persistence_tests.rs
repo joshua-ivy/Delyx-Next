@@ -14,11 +14,19 @@ mod tests {
     fn thread_run_store_survives_sqlite_reload() {
         let path = temp_path("thread-run");
         let mut store = crate::thread_run_bridge::ThreadRunStore::default();
-        let record = create_thread_run_record(&mut store, create_request("proj-1", "Persist this thread")).unwrap();
-        update_thread_status_record(&mut store, status_request(&record.thread.id, "exploring")).unwrap();
+        let record =
+            create_thread_run_record(&mut store, create_request("proj-1", "Persist this thread"))
+                .unwrap();
+        update_thread_status_record(&mut store, status_request(&record.thread.id, "exploring"))
+            .unwrap();
         append_thread_message_record(
             &mut store,
-            message_request(&record.thread.id, "assistant", "Reloadable local answer.", Some("idle")),
+            message_request(
+                &record.thread.id,
+                "assistant",
+                "Reloadable local answer.",
+                Some("idle"),
+            ),
         )
         .unwrap();
 
@@ -28,10 +36,14 @@ mod tests {
 
         let mut loaded = load_from_path(&path).unwrap();
         let snapshot = thread_run_snapshot_from_store(&loaded, "proj-1");
-        assert_eq!(snapshot.threads[0].messages[1].body, "Reloadable local answer.");
+        assert_eq!(
+            snapshot.threads[0].messages[1].body,
+            "Reloadable local answer."
+        );
         assert_eq!(snapshot.runs[0].events[0].kind, "thread.created");
 
-        let next = create_thread_run_record(&mut loaded, create_request("proj-1", "Next thread")).unwrap();
+        let next =
+            create_thread_run_record(&mut loaded, create_request("proj-1", "Next thread")).unwrap();
         assert_eq!(next.thread.id, "proj-1-thread-2");
         assert_eq!(next.run.id, "run-2");
         let _ = fs::remove_file(path);
@@ -69,7 +81,10 @@ mod tests {
     }
 
     fn temp_path(name: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}.sqlite3"))
     }
 }

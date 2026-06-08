@@ -1,4 +1,5 @@
-use crate::approval::{ActionProposal, ApprovalEngine, ApprovalError, ProposalInput, ProposalStatus, RiskLevel, RiskyAction};
+use crate::approval::{ActionProposal, ApprovalEngine, ApprovalError, ProposalInput};
+use crate::approval_bridge_keys::{parse_action, parse_risk, risk_key, status_key};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -12,11 +13,17 @@ pub struct ApprovalBridgeState {
 impl ApprovalBridgeState {
     pub fn persistent(database_path: PathBuf) -> Result<Self, String> {
         let store = crate::approval_persistence::load_from_path(&database_path)?;
-        Ok(Self { store: Mutex::new(store), database_path: Some(database_path) })
+        Ok(Self {
+            store: Mutex::new(store),
+            database_path: Some(database_path),
+        })
     }
 
     pub fn with_engine<R>(&self, read: impl FnOnce(&ApprovalEngine) -> R) -> Result<R, String> {
-        let store = self.store.lock().map_err(|_| "Approval bridge lock failed.".to_string())?;
+        let store = self
+            .store
+            .lock()
+            .map_err(|_| "Approval bridge lock failed.".to_string())?;
         Ok(read(&store.engine))
     }
 
@@ -105,7 +112,10 @@ pub fn approval_propose(
     state: tauri::State<ApprovalBridgeState>,
     request: ApprovalProposalRequest,
 ) -> Result<ActionProposalBridgeView, String> {
-    let mut store = state.store.lock().map_err(|_| "Approval bridge lock failed.".to_string())?;
+    let mut store = state
+        .store
+        .lock()
+        .map_err(|_| "Approval bridge lock failed.".to_string())?;
     let view = propose_approval_record(&mut store, request)?;
     state.persist(&store)?;
     Ok(view)
@@ -116,7 +126,10 @@ pub fn approval_decide(
     state: tauri::State<ApprovalBridgeState>,
     request: ApprovalDecisionRequest,
 ) -> Result<ActionProposalBridgeView, String> {
-    let mut store = state.store.lock().map_err(|_| "Approval bridge lock failed.".to_string())?;
+    let mut store = state
+        .store
+        .lock()
+        .map_err(|_| "Approval bridge lock failed.".to_string())?;
     let view = decide_approval_record(&mut store, request)?;
     state.persist(&store)?;
     Ok(view)
@@ -127,7 +140,10 @@ pub fn approval_snapshot(
     state: tauri::State<ApprovalBridgeState>,
     run_id: String,
 ) -> Result<Vec<ActionProposalBridgeView>, String> {
-    let store = state.store.lock().map_err(|_| "Approval bridge lock failed.".to_string())?;
+    let store = state
+        .store
+        .lock()
+        .map_err(|_| "Approval bridge lock failed.".to_string())?;
     Ok(approval_snapshot_from_store(&store, &run_id))
 }
 
@@ -136,7 +152,11 @@ pub fn propose_approval_record(
     request: ApprovalProposalRequest,
 ) -> Result<ActionProposalBridgeView, String> {
     validate_request(&request)?;
-    if let Some(existing) = store.records.iter().find(|record| record.client_id == request.client_id) {
+    if let Some(existing) = store
+        .records
+        .iter()
+        .find(|record| record.client_id == request.client_id)
+    {
         return view_for_record(store, existing);
     }
     let action = parse_action(&request.action_type)?;
@@ -169,10 +189,17 @@ pub fn decide_approval_record(
     request: ApprovalDecisionRequest,
 ) -> Result<ActionProposalBridgeView, String> {
     store.engine.expire_due(request.decided_at_ms);
-    let note = request.note.as_deref().unwrap_or("decision recorded from Delyx UI");
+    let note = request
+        .note
+        .as_deref()
+        .unwrap_or("decision recorded from Delyx UI");
     let result = match request.decision.as_str() {
-        "approved" => store.engine.approve(&request.proposal_id, request.decided_at_ms, note),
-        "denied" => store.engine.deny(&request.proposal_id, request.decided_at_ms, note),
+        "approved" => store
+            .engine
+            .approve(&request.proposal_id, request.decided_at_ms, note),
+        "denied" => store
+            .engine
+            .deny(&request.proposal_id, request.decided_at_ms, note),
         _ => return Err("Unsupported approval decision.".to_string()),
     };
     match result {
@@ -183,7 +210,10 @@ pub fn decide_approval_record(
     }
 }
 
-pub fn approval_snapshot_from_store(store: &ApprovalBridgeStore, run_id: &str) -> Vec<ActionProposalBridgeView> {
+pub fn approval_snapshot_from_store(
+    store: &ApprovalBridgeStore,
+    run_id: &str,
+) -> Vec<ActionProposalBridgeView> {
     store
         .records
         .iter()
@@ -196,7 +226,10 @@ fn view_for_proposal_id(
     store: &ApprovalBridgeStore,
     proposal_id: &str,
 ) -> Result<ActionProposalBridgeView, String> {
-    let record = store.records.iter().find(|record| record.proposal_id == proposal_id)
+    let record = store
+        .records
+        .iter()
+        .find(|record| record.proposal_id == proposal_id)
         .ok_or_else(|| "Approval proposal not found.".to_string())?;
     view_for_record(store, record)
 }
@@ -235,7 +268,10 @@ fn proposal_for_record<'a>(
 }
 
 fn validate_request(request: &ApprovalProposalRequest) -> Result<(), String> {
-    if request.client_id.trim().is_empty() || request.run_id.trim().is_empty() || request.node_id.trim().is_empty() {
+    if request.client_id.trim().is_empty()
+        || request.run_id.trim().is_empty()
+        || request.node_id.trim().is_empty()
+    {
         return Err("Approval proposal requires client, run, and node IDs.".to_string());
     }
     if request.expires_at_ms == 0 || request.expires_at.trim().is_empty() {
@@ -245,46 +281,4 @@ fn validate_request(request: &ApprovalProposalRequest) -> Result<(), String> {
         return Err("Approval proposal requires visible scope.".to_string());
     }
     Ok(())
-}
-
-fn parse_action(action: &str) -> Result<RiskyAction, String> {
-    match action {
-        "edit_file" | "write_file" => Ok(RiskyAction::FileWrite),
-        "external_agent" => Ok(RiskyAction::ExternalAgentExecution),
-        "external_send" => Ok(RiskyAction::ExternalSend),
-        "install_dependency" => Ok(RiskyAction::DependencyInstall),
-        "run_terminal" => Ok(RiskyAction::TerminalCommand),
-        "save_memory" => Ok(RiskyAction::DurableMemorySave),
-        "schedule_work" => Ok(RiskyAction::ScheduledRiskyAction),
-        "use_connector" => Ok(RiskyAction::ConnectorWrite),
-        _ => Err("Unsupported risky action for approval bridge.".to_string()),
-    }
-}
-
-fn parse_risk(risk: &str) -> Result<RiskLevel, String> {
-    match risk {
-        "dangerous" => Ok(RiskLevel::Dangerous),
-        "high" => Ok(RiskLevel::High),
-        "low" => Ok(RiskLevel::Low),
-        "medium" => Ok(RiskLevel::Medium),
-        _ => Err("Unsupported risk label.".to_string()),
-    }
-}
-
-fn risk_key(risk: RiskLevel) -> &'static str {
-    match risk {
-        RiskLevel::Dangerous => "dangerous",
-        RiskLevel::High => "high",
-        RiskLevel::Low => "low",
-        RiskLevel::Medium => "medium",
-    }
-}
-
-fn status_key(status: ProposalStatus) -> &'static str {
-    match status {
-        ProposalStatus::Approved => "approved",
-        ProposalStatus::Denied => "denied",
-        ProposalStatus::Expired => "expired",
-        ProposalStatus::Pending => "pending",
-    }
 }

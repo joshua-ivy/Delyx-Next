@@ -9,8 +9,12 @@ mod tests {
     fn mock_provider_works_deterministically() {
         let registry = ModelRegistry::with_default_local(10);
 
-        let first = registry.mock_complete(ModelRole::Coding, "review this patch").unwrap();
-        let second = registry.mock_complete(ModelRole::Coding, "review this patch").unwrap();
+        let first = registry
+            .mock_complete(ModelRole::Coding, "review this patch")
+            .unwrap();
+        let second = registry
+            .mock_complete(ModelRole::Coding, "review this patch")
+            .unwrap();
 
         assert_eq!(first, second);
         assert_eq!(first.provider_id, "mock-local");
@@ -32,7 +36,9 @@ mod tests {
     fn role_routing_can_be_saved() {
         let mut registry = ModelRegistry::with_default_local(10);
 
-        registry.save_role_route(ModelRole::Answer, "mock-local", "delyx-mock-reasoner").unwrap();
+        registry
+            .save_role_route(ModelRole::Answer, "mock-local", "delyx-mock-reasoner")
+            .unwrap();
         let route = registry.route_for(ModelRole::Answer).unwrap();
 
         assert_eq!(route.provider_id, "mock-local");
@@ -69,7 +75,8 @@ mod tests {
             secret_policy: SecretPolicy::ExternalSecretOnly,
         });
 
-        let result = registry.save_role_route(ModelRole::Answer, "remote-missing-key", "remote-model");
+        let result =
+            registry.save_role_route(ModelRole::Answer, "remote-missing-key", "remote-model");
 
         assert_eq!(result.unwrap_err(), ModelProviderError::ProviderUnavailable);
     }

@@ -28,7 +28,8 @@ fn prepare_powershell_args(program: &str, args: &[String]) -> Vec<String> {
         .trim_start()
         .starts_with(POWERSHELL_UTF8_OUTPUT_PREFIX)
     {
-        prepared[script_index] = format!("{POWERSHELL_UTF8_OUTPUT_PREFIX}{}", prepared[script_index]);
+        prepared[script_index] =
+            format!("{POWERSHELL_UTF8_OUTPUT_PREFIX}{}", prepared[script_index]);
     }
     prepared
 }

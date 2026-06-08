@@ -6,14 +6,23 @@ fn main() {
             )
             .expect("approval SQLite state should open"),
         )
-        .manage(delyx_next_desktop::local_store_bridge::LocalStoreBridgeState::persistent(
-            delyx_next_desktop::sqlite_store::default_database_path(),
-        ))
-        .manage(delyx_next_desktop::patch_bridge::PatchBridgeState::default())
+        .manage(
+            delyx_next_desktop::local_store_bridge::LocalStoreBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            ),
+        )
+        .manage(
+            delyx_next_desktop::patch_bridge::PatchBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("patch SQLite state should open"),
+        )
         .manage(delyx_next_desktop::review_bridge::ReviewBridgeState::default())
-        .manage(delyx_next_desktop::runtime_bridge::RuntimeBridgeState::persistent(
-            delyx_next_desktop::sqlite_store::default_database_path(),
-        ))
+        .manage(
+            delyx_next_desktop::runtime_bridge::RuntimeBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            ),
+        )
         .manage(
             delyx_next_desktop::test_runner_bridge::TestRunnerBridgeState::persistent(
                 delyx_next_desktop::sqlite_store::default_database_path(),
@@ -26,10 +35,14 @@ fn main() {
             )
             .expect("thread/run SQLite state should open"),
         )
-        .manage(delyx_next_desktop::workspace_bridge::WorkspaceBridgeState::persistent(
-            delyx_next_desktop::sqlite_store::default_database_path(),
-        ))
-        .manage(delyx_next_desktop::external_agent_run_bridge::ExternalAgentRunBridgeState::default())
+        .manage(
+            delyx_next_desktop::workspace_bridge::WorkspaceBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            ),
+        )
+        .manage(
+            delyx_next_desktop::external_agent_run_bridge::ExternalAgentRunBridgeState::default(),
+        )
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::approval_bridge::approval_decide,
             delyx_next_desktop::approval_bridge::approval_propose,

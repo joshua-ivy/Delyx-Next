@@ -7,7 +7,9 @@ mod tests {
     #[test]
     fn creates_project_linked_thread_with_goal_message() {
         let mut manager = linked_manager();
-        let thread = manager.create_thread(PROJECT_ID, "Plan a safe workspace workflow").unwrap();
+        let thread = manager
+            .create_thread(PROJECT_ID, "Plan a safe workspace workflow")
+            .unwrap();
 
         assert_eq!(thread.project_id, PROJECT_ID);
         assert_eq!(thread.status, ThreadStatus::Idle);
@@ -21,18 +23,25 @@ mod tests {
         let mut manager = ThreadManager::new();
 
         assert_eq!(
-            manager.create_thread(PROJECT_ID, "Add thread manager").unwrap_err(),
+            manager
+                .create_thread(PROJECT_ID, "Add thread manager")
+                .unwrap_err(),
             ThreadError::ProjectNotLinked
         );
 
         manager.link_project(PROJECT_ID);
-        assert_eq!(manager.create_thread(PROJECT_ID, "  ").unwrap_err(), ThreadError::EmptyGoal);
+        assert_eq!(
+            manager.create_thread(PROJECT_ID, "  ").unwrap_err(),
+            ThreadError::EmptyGoal
+        );
     }
 
     #[test]
     fn appends_conversation_messages() {
         let mut manager = linked_manager();
-        let thread = manager.create_thread(PROJECT_ID, "Capture conversation state").unwrap();
+        let thread = manager
+            .create_thread(PROJECT_ID, "Capture conversation state")
+            .unwrap();
 
         manager
             .append_message(&thread.id, MessageRole::Assistant, "Thread state captured.")
@@ -46,19 +55,38 @@ mod tests {
     #[test]
     fn supports_visible_thread_status_transitions() {
         let mut manager = linked_manager();
-        let thread = manager.create_thread(PROJECT_ID, "Render state pills").unwrap();
+        let thread = manager
+            .create_thread(PROJECT_ID, "Render state pills")
+            .unwrap();
 
-        manager.set_status(&thread.id, ThreadStatus::Exploring).unwrap();
-        manager.set_status(&thread.id, ThreadStatus::Planning).unwrap();
-        manager.set_status(&thread.id, ThreadStatus::WaitingForApproval).unwrap();
-        manager.set_status(&thread.id, ThreadStatus::Building).unwrap();
-        manager.set_status(&thread.id, ThreadStatus::Testing).unwrap();
-        manager.set_status(&thread.id, ThreadStatus::Reviewing).unwrap();
+        manager
+            .set_status(&thread.id, ThreadStatus::Exploring)
+            .unwrap();
+        manager
+            .set_status(&thread.id, ThreadStatus::Planning)
+            .unwrap();
+        manager
+            .set_status(&thread.id, ThreadStatus::WaitingForApproval)
+            .unwrap();
+        manager
+            .set_status(&thread.id, ThreadStatus::Building)
+            .unwrap();
+        manager
+            .set_status(&thread.id, ThreadStatus::Testing)
+            .unwrap();
+        manager
+            .set_status(&thread.id, ThreadStatus::Reviewing)
+            .unwrap();
         manager.set_status(&thread.id, ThreadStatus::Done).unwrap();
 
-        assert_eq!(manager.get_thread(&thread.id).unwrap().status, ThreadStatus::Done);
         assert_eq!(
-            manager.set_status(&thread.id, ThreadStatus::Building).unwrap_err(),
+            manager.get_thread(&thread.id).unwrap().status,
+            ThreadStatus::Done
+        );
+        assert_eq!(
+            manager
+                .set_status(&thread.id, ThreadStatus::Building)
+                .unwrap_err(),
             ThreadError::InvalidTransition
         );
     }
@@ -68,18 +96,27 @@ mod tests {
         let mut manager = linked_manager();
         let thread = manager.create_thread(PROJECT_ID, "Ask Ollama").unwrap();
 
-        manager.set_status(&thread.id, ThreadStatus::Exploring).unwrap();
+        manager
+            .set_status(&thread.id, ThreadStatus::Exploring)
+            .unwrap();
         manager.set_status(&thread.id, ThreadStatus::Idle).unwrap();
-        manager.set_status(&thread.id, ThreadStatus::Planning).unwrap();
+        manager
+            .set_status(&thread.id, ThreadStatus::Planning)
+            .unwrap();
         manager.set_status(&thread.id, ThreadStatus::Idle).unwrap();
 
-        assert_eq!(manager.get_thread(&thread.id).unwrap().status, ThreadStatus::Idle);
+        assert_eq!(
+            manager.get_thread(&thread.id).unwrap().status,
+            ThreadStatus::Idle
+        );
     }
 
     #[test]
     fn archives_threads_without_erasing_history() {
         let mut manager = linked_manager();
-        let thread = manager.create_thread(PROJECT_ID, "Archive completed work").unwrap();
+        let thread = manager
+            .create_thread(PROJECT_ID, "Archive completed work")
+            .unwrap();
 
         manager.archive_thread(&thread.id).unwrap();
 

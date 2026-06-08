@@ -20,9 +20,18 @@ mod tests {
         assert_eq!(artifact.run_id, "run-1");
         assert_eq!(artifact.approval_id, "approval-1");
         assert!(artifact.duration_ms <= 60_000);
-        assert!(artifact.events.iter().any(|event| event.kind == CommandExecEventKind::Started));
-        assert!(artifact.events.iter().any(|event| event.kind == CommandExecEventKind::Stdout));
-        assert!(artifact.events.iter().any(|event| event.kind == CommandExecEventKind::Completed));
+        assert!(artifact
+            .events
+            .iter()
+            .any(|event| event.kind == CommandExecEventKind::Started));
+        assert!(artifact
+            .events
+            .iter()
+            .any(|event| event.kind == CommandExecEventKind::Stdout));
+        assert!(artifact
+            .events
+            .iter()
+            .any(|event| event.kind == CommandExecEventKind::Completed));
     }
 
     #[test]
@@ -34,18 +43,27 @@ mod tests {
         assert_eq!(artifact.status, CommandExecStatus::Failed);
         assert_ne!(artifact.exit_code, Some(0));
         assert!(artifact.stderr.contains("command exec failed"));
-        assert!(artifact.events.iter().any(|event| event.kind == CommandExecEventKind::Failed));
+        assert!(artifact
+            .events
+            .iter()
+            .any(|event| event.kind == CommandExecEventKind::Failed));
     }
 
     #[test]
     fn command_exec_rejects_empty_command_and_zero_timeout() {
         let root = temp_workspace("command-exec-invalid");
         let mut empty = request(&root, ("".to_string(), Vec::new()));
-        assert_eq!(run_command_exec(empty).unwrap_err(), CommandExecError::EmptyCommand);
+        assert_eq!(
+            run_command_exec(empty).unwrap_err(),
+            CommandExecError::EmptyCommand
+        );
 
         empty = request(&root, passing_command());
         empty.timeout_ms = 0;
-        assert_eq!(run_command_exec(empty).unwrap_err(), CommandExecError::Timeout);
+        assert_eq!(
+            run_command_exec(empty).unwrap_err(),
+            CommandExecError::Timeout
+        );
     }
 
     #[test]
@@ -72,25 +90,45 @@ mod tests {
 
     fn passing_command() -> (String, Vec<String>) {
         if cfg!(windows) {
-            ("cmd".to_string(), vec!["/C".to_string(), "echo command exec passed".to_string()])
+            (
+                "cmd".to_string(),
+                vec!["/C".to_string(), "echo command exec passed".to_string()],
+            )
         } else {
-            ("sh".to_string(), vec!["-c".to_string(), "echo command exec passed".to_string()])
+            (
+                "sh".to_string(),
+                vec!["-c".to_string(), "echo command exec passed".to_string()],
+            )
         }
     }
 
     fn failing_command() -> (String, Vec<String>) {
         if cfg!(windows) {
-            ("cmd".to_string(), vec!["/C".to_string(), "echo command exec failed 1>&2 & exit /B 9".to_string()])
+            (
+                "cmd".to_string(),
+                vec![
+                    "/C".to_string(),
+                    "echo command exec failed 1>&2 & exit /B 9".to_string(),
+                ],
+            )
         } else {
-            ("sh".to_string(), vec!["-c".to_string(), "echo command exec failed >&2; exit 9".to_string()])
+            (
+                "sh".to_string(),
+                vec![
+                    "-c".to_string(),
+                    "echo command exec failed >&2; exit 9".to_string(),
+                ],
+            )
         }
     }
 
     fn temp_workspace(label: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let path = std::env::temp_dir().join(format!("delyx-next-{label}-{stamp}"));
         fs::create_dir_all(&path).unwrap();
         path
     }
 }
-

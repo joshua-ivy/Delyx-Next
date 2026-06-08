@@ -1,7 +1,11 @@
 use crate::{
     desktop_shell_info,
-    model_ollama::{detect_local_ollama_provider, send_ollama_chat, OllamaChatMessage, OllamaChatResult},
-    model_provider::{ModelInfo, ModelProvider, ModelRegistry, ModelRole, ProviderKind, ProviderStatus},
+    model_ollama::{
+        detect_local_ollama_provider, send_ollama_chat, OllamaChatMessage, OllamaChatResult,
+    },
+    model_provider::{
+        ModelInfo, ModelProvider, ModelRegistry, ModelRole, ProviderKind, ProviderStatus,
+    },
 };
 use serde::Serialize;
 use std::{
@@ -49,12 +53,17 @@ pub struct RoleRouteStatusView {
 }
 
 #[tauri::command]
-pub fn runtime_status(state: tauri::State<RuntimeBridgeState>) -> Result<RuntimeStatusView, String> {
+pub fn runtime_status(
+    state: tauri::State<RuntimeBridgeState>,
+) -> Result<RuntimeStatusView, String> {
     let ollama = detect_local_ollama_provider(0, Duration::from_millis(750));
     runtime_status_with_provider(&state.database_path, ollama)
 }
 
-pub fn runtime_status_with_provider(database_path: &Path, ollama: ModelProvider) -> Result<RuntimeStatusView, String> {
+pub fn runtime_status_with_provider(
+    database_path: &Path,
+    ollama: ModelProvider,
+) -> Result<RuntimeStatusView, String> {
     let mut registry = ModelRegistry::with_runtime_defaults(0);
     registry.register_provider(ollama);
     for route in crate::model_provider_persistence::load_routes_from_path(database_path)? {
@@ -66,7 +75,10 @@ pub fn runtime_status_with_provider(database_path: &Path, ollama: ModelProvider)
     Ok(runtime_status_from_registry(&registry))
 }
 
-fn save_detected_coding_route(registry: &mut ModelRegistry, database_path: &Path) -> Result<(), String> {
+fn save_detected_coding_route(
+    registry: &mut ModelRegistry,
+    database_path: &Path,
+) -> Result<(), String> {
     if let Some(model_id) = first_ready_ollama_model(registry).map(|model| model.id.clone()) {
         let _ = registry.save_role_route(ModelRole::Coding, "ollama-local", &model_id);
         crate::model_provider_persistence::save_routes_to_path(database_path, registry.routes())?;
@@ -78,7 +90,9 @@ fn first_ready_ollama_model(registry: &ModelRegistry) -> Option<&ModelInfo> {
     registry
         .list_providers()
         .iter()
-        .find(|provider| provider.id == "ollama-local" && provider.health.status == ProviderStatus::Ready)
+        .find(|provider| {
+            provider.id == "ollama-local" && provider.health.status == ProviderStatus::Ready
+        })
         .and_then(|provider| provider.models.first())
 }
 
@@ -95,12 +109,18 @@ pub fn runtime_status_from_registry(registry: &ModelRegistry) -> RuntimeStatusVi
     RuntimeStatusView {
         app_identifier: shell.identifier.to_string(),
         app_name: shell.name.to_string(),
-        coding_route: registry.route_for(ModelRole::Coding).map(|route| RoleRouteStatusView {
-            model_id: route.model_id.clone(),
-            provider_id: route.provider_id.clone(),
-        }),
+        coding_route: registry
+            .route_for(ModelRole::Coding)
+            .map(|route| RoleRouteStatusView {
+                model_id: route.model_id.clone(),
+                provider_id: route.provider_id.clone(),
+            }),
         milestone: shell.milestone.to_string(),
-        providers: registry.list_providers().iter().map(provider_status).collect(),
+        providers: registry
+            .list_providers()
+            .iter()
+            .map(provider_status)
+            .collect(),
     }
 }
 
@@ -110,7 +130,11 @@ fn provider_status(provider: &ModelProvider) -> ModelProviderStatusView {
         kind: provider_kind(provider.kind).to_string(),
         label: provider.label.clone(),
         message: provider.health.message.clone(),
-        models: provider.models.iter().map(|model| model.id.clone()).collect(),
+        models: provider
+            .models
+            .iter()
+            .map(|model| model.id.clone())
+            .collect(),
         status: provider_status_label(provider.health.status).to_string(),
     }
 }

@@ -4,7 +4,9 @@ use std::path::Path;
 
 pub fn save_to_path(registry: &SkillRegistry, path: &Path) -> Result<(), String> {
     let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_string)?;
-    connection.execute("DELETE FROM skill_manifests", []).map_err(sql_string)?;
+    connection
+        .execute("DELETE FROM skill_manifests", [])
+        .map_err(sql_string)?;
     for skill in registry.skills() {
         insert_skill(&connection, skill)?;
     }

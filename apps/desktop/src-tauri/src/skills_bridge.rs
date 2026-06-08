@@ -30,7 +30,9 @@ pub struct SkillPermissionsView {
 }
 
 #[tauri::command]
-pub fn skill_snapshot(state: tauri::State<LocalStoreBridgeState>) -> Result<SkillStateView, String> {
+pub fn skill_snapshot(
+    state: tauri::State<LocalStoreBridgeState>,
+) -> Result<SkillStateView, String> {
     skill_snapshot_from_path(state.database_path())
 }
 
@@ -40,7 +42,9 @@ pub fn skill_snapshot_from_path(path: &Path) -> Result<SkillStateView, String> {
 }
 
 pub fn skill_snapshot_from_registry(registry: &SkillRegistry) -> SkillStateView {
-    SkillStateView { skills: registry.skills().iter().map(skill_view).collect() }
+    SkillStateView {
+        skills: registry.skills().iter().map(skill_view).collect(),
+    }
 }
 
 fn skill_view(skill: &SkillManifest) -> SkillManifestView {

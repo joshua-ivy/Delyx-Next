@@ -13,10 +13,17 @@ mod tests {
         let root = temp_workspace("bridge-pass");
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(terminal_approval(100));
-        approvals.approve(&approval.id, 10, "approved test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved test")
+            .unwrap();
         let mut store = TestRunnerBridgeStore::default();
 
-        let artifact = run_test_record(&mut store, &approvals, request(&approval.id, &root, passing_command())).unwrap();
+        let artifact = run_test_record(
+            &mut store,
+            &approvals,
+            request(&approval.id, &root, passing_command()),
+        )
+        .unwrap();
 
         assert_eq!(artifact.status, "passed");
         assert_eq!(artifact.run_id, "run-1");
@@ -32,7 +39,11 @@ mod tests {
         let approval = approvals.propose(terminal_approval(100));
         let mut store = TestRunnerBridgeStore::default();
 
-        let result = run_test_record(&mut store, &approvals, request(&approval.id, &root, passing_command()));
+        let result = run_test_record(
+            &mut store,
+            &approvals,
+            request(&approval.id, &root, passing_command()),
+        );
 
         assert!(result.unwrap_err().contains("NotApproved"));
         assert!(test_snapshot_from_store(&store, "run-1").is_empty());
@@ -43,10 +54,20 @@ mod tests {
         let root = temp_workspace("bridge-non-test");
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(terminal_approval(100));
-        approvals.approve(&approval.id, 10, "approved test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved test")
+            .unwrap();
         let mut store = TestRunnerBridgeStore::default();
 
-        let result = run_test_record(&mut store, &approvals, request(&approval.id, &root, ("cargo".to_string(), vec!["build".to_string()])));
+        let result = run_test_record(
+            &mut store,
+            &approvals,
+            request(
+                &approval.id,
+                &root,
+                ("cargo".to_string(), vec!["build".to_string()]),
+            ),
+        );
 
         assert!(result.unwrap_err().contains("NotTestCommand"));
         assert!(test_snapshot_from_store(&store, "run-1").is_empty());
@@ -57,15 +78,26 @@ mod tests {
         let root = temp_workspace("bridge-snapshot");
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(terminal_approval(100));
-        approvals.approve(&approval.id, 10, "approved test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved test")
+            .unwrap();
         let mut store = TestRunnerBridgeStore::default();
-        run_test_record(&mut store, &approvals, request(&approval.id, &root, passing_command())).unwrap();
+        run_test_record(
+            &mut store,
+            &approvals,
+            request(&approval.id, &root, passing_command()),
+        )
+        .unwrap();
 
         assert_eq!(test_snapshot_from_store(&store, "run-1").len(), 1);
         assert!(test_snapshot_from_store(&store, "run-2").is_empty());
     }
 
-    fn request(approval_id: &str, root: &std::path::Path, command: (String, Vec<String>)) -> TestRunRequest {
+    fn request(
+        approval_id: &str,
+        root: &std::path::Path,
+        command: (String, Vec<String>),
+    ) -> TestRunRequest {
         TestRunRequest {
             approval_id: approval_id.to_string(),
             approved_roots: vec![root.display().to_string()],
@@ -81,7 +113,10 @@ mod tests {
     }
 
     fn passing_command() -> (String, Vec<String>) {
-        ("cargo".to_string(), vec!["test".to_string(), "--help".to_string()])
+        (
+            "cargo".to_string(),
+            vec!["test".to_string(), "--help".to_string()],
+        )
     }
 
     fn terminal_approval(expires_at: u64) -> ProposalInput {
@@ -99,7 +134,10 @@ mod tests {
     }
 
     fn temp_workspace(label: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let path = std::env::temp_dir().join(format!("delyx-next-{label}-{stamp}"));
         fs::create_dir_all(&path).unwrap();
         path

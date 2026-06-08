@@ -9,7 +9,7 @@ import { approvalBlock, diffBlock, emptyApprovalBlock, pendingCount, reviewBlock
 import { runLabel } from "./cockpitRuns";
 import { hasSkills, skillBlock } from "./cockpitSkills";
 import { threadStatsBlock } from "./cockpitStats";
-import { buildProgressBlock, composerMode, terminalLabel, workDiffBlock } from "./cockpitWorkPane";
+import { buildProgressBlock, composerMode, hintbarBlock, quickActionsBlock, terminalBlock, workDiffBlock } from "./cockpitWorkPane";
 import { escapeHtml } from "./html";
 import { conversationBlock, threadGoalBlock } from "./cockpitMessageFormat";
 import type { RuntimeBridgeState } from "./runtimeBridge";
@@ -72,26 +72,28 @@ export function buildCockpitMarkup(
   const activeRelease = hasReleaseReadiness(releaseState)
     ? releaseBlock(releaseState)
     : undefined;
+  const externalAgentStream = externalAgentBlock(externalAgents, activeRun?.id);
 
   return cockpitMarkup
+    .replace("__EMPTY_CLASS__", activeThread ? "" : "deck-empty")
     .replace("__SPINE_PIPE__", spinePipeline(activeThread?.status))
     .replace("__MODE_LABEL__", modeLabel(activeThread?.mode))
     .replace("__STATUS_PILL__", barStatusPill(activeThread, activeRun, activeProposals))
-    .replace("__CONTEXT_CHIPS__", contextChips(project, modelSettings, threads.length, runtimeBridge))
-    .replace("__THREAD_ID__", escapeHtml(activeThread?.id ?? "empty"))
+    .replace("__CONTEXT_CHIPS__", contextChips(project, modelSettings, threads.length, runtimeBridge, Boolean(activeThread)))
+    .replace("__THREAD_ID__", escapeHtml(activeThread?.id ?? "new"))
     .replace("__RUN_LABEL__", runLabel(activeRun))
-    .replace("__THREAD_TITLE__", escapeHtml(activeThread?.title ?? "No active thread"))
+    .replace("__THREAD_TITLE__", escapeHtml(activeThread?.title ?? "Start with an instruction"))
     .replace("__THREAD_DESC__", threadGoalBlock(activeThread))
     .replace("__CONVERSATION__", conversationBlock(activeThread))
     .replace("__THREAD_STATS__", threadStatsBlock(activePatches, activeTests, activeProposals, activeRun))
     .replace("__BUILD_PROGRESS__", buildProgressBlock(activePlan, activeThread))
     .replace("__WORK_DIFF__", workDiffBlock(activePatches))
-    .replace("__TERMINAL_LABEL__", terminalLabel(activeRun))
-    .replace("__EXTERNAL_AGENT_STREAM__", externalAgentBlock(externalAgents, activeRun?.id))
+    .replace("__TERMINAL_BLOCK__", terminalBlock(activeRun, externalAgentStream))
+    .replace("__QUICK_ACTIONS__", quickActionsBlock(activeThread))
     .replace("__COMPOSER_MODE__", composerMode(activeThread?.mode))
     .replace("__INSPECTOR_LABEL__", inspectorLabel(activeProposals, activeRun))
     .replace("__INSPECTOR_STATUS__", inspectorStatus(activeProposals, activeRun))
-    .replace("__INSPECTOR__", inspectorBlock({
+    .replace("__INSPECTOR__", activeThread ? inspectorBlock({
       activeProposals,
       activePatches,
       activeEvidence,
@@ -104,7 +106,8 @@ export function buildCockpitMarkup(
       activeReview,
       activeRun,
       riskPolicy,
-    }));
+    }) : "")
+    .replace("__HINTBAR__", hintbarBlock(activeRun));
 }
 
 function barStatusPill(thread: TaskThread | undefined, run: AgentRunView | undefined, proposals: ActionProposalView[]) {
@@ -112,7 +115,10 @@ function barStatusPill(thread: TaskThread | undefined, run: AgentRunView | undef
   if (pending > 0) {
     return statusPill("warning", "Waiting for approval");
   }
-  if (!thread || !run) {
+  if (!thread) {
+    return "";
+  }
+  if (!run) {
     return statusPill("accent", "Idle");
   }
   const status: Record<AgentRunView["status"], { label: string; tone: string }> = {
@@ -138,16 +144,20 @@ function contextChips(
   modelSettings: ModelSettingsView,
   activeThreads: number,
   runtimeBridge: RuntimeBridgeState,
+  showRuntime: boolean,
 ) {
   const provider = modelSettings.providers.find((item) => item.id === modelSettings.selectedProviderId);
   const route = modelSettings.routes.find((item) => item.providerId === provider?.id && item.role === "coding");
   const model = route?.modelId ?? provider?.models[0] ?? "no model";
   const git = project.git.isRepo ? project.git.branch : "not a Git repo";
-  return [
+  const chips = [
     `<span class="deck-ctx-chip"><strong>${escapeHtml(project.name)}</strong> / ${escapeHtml(git)} / ${escapeHtml(gitChanges(project))}</span>`,
     `<span class="deck-ctx-chip"><strong>${activeThreads}</strong> threads / ${escapeHtml(provider?.label ?? "No provider")} / ${escapeHtml(model)}</span>`,
-    `<span class="deck-ctx-chip"><strong>${escapeHtml(runtimeBridge.mode)}</strong> / ${escapeHtml(runtimeBridge.label)}</span>`,
-  ].join("");
+  ];
+  if (showRuntime) {
+    chips.push(`<span class="deck-ctx-chip"><strong>${escapeHtml(runtimeBridge.mode)}</strong> / ${escapeHtml(runtimeBridge.label)}</span>`);
+  }
+  return chips.join("");
 }
 
 function gitChanges(project: WorkspaceProject) {
@@ -188,7 +198,7 @@ function activeStepIndex(status: ThreadStatus | undefined) {
 }
 
 function modeLabel(mode: TaskThread["mode"] | undefined) {
-  return (mode ?? "build").toUpperCase();
+  return mode ? mode.toUpperCase() : "NEW";
 }
 
 function inspectorStatus(proposals: ActionProposalView[], run: AgentRunView | undefined) {

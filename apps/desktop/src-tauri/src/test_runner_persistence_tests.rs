@@ -15,13 +15,23 @@ mod tests {
         let db_path = root.join("delyx.sqlite3");
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(terminal_approval());
-        approvals.approve(&approval.id, 10, "approved test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved test")
+            .unwrap();
         let mut store = TestRunnerBridgeStore::default();
 
-        let artifact =
-            run_test_record(&mut store, &approvals, request(&approval.id, &root, failing_command())).unwrap();
-        let second =
-            run_test_record(&mut store, &approvals, request(&approval.id, &root, failing_command())).unwrap();
+        let artifact = run_test_record(
+            &mut store,
+            &approvals,
+            request(&approval.id, &root, failing_command()),
+        )
+        .unwrap();
+        let second = run_test_record(
+            &mut store,
+            &approvals,
+            request(&approval.id, &root, failing_command()),
+        )
+        .unwrap();
         save_to_path(&store, &db_path).unwrap();
         let loaded = load_from_path(&db_path).unwrap();
         let loaded_snapshot = test_snapshot_from_store(&loaded, "run-1");
@@ -30,11 +40,21 @@ mod tests {
         assert_eq!(loaded_snapshot, vec![artifact.clone(), second.clone()]);
         assert_ne!(artifact.id, second.id);
         assert_eq!(artifact.status, "failed");
-        assert!(artifact.parsed_failures.as_ref().is_some_and(|failures| failures.len() == 1));
-        assert!(artifact.exec_events.iter().any(|event| event.kind == "failed"));
+        assert!(artifact
+            .parsed_failures
+            .as_ref()
+            .is_some_and(|failures| failures.len() == 1));
+        assert!(artifact
+            .exec_events
+            .iter()
+            .any(|event| event.kind == "failed"));
     }
 
-    fn request(approval_id: &str, root: &std::path::Path, command: (String, Vec<String>)) -> TestRunRequest {
+    fn request(
+        approval_id: &str,
+        root: &std::path::Path,
+        command: (String, Vec<String>),
+    ) -> TestRunRequest {
         TestRunRequest {
             approval_id: approval_id.to_string(),
             approved_roots: vec![root.display().to_string()],
@@ -75,7 +95,10 @@ mod tests {
     }
 
     fn temp_workspace(label: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let path = std::env::temp_dir().join(format!("delyx-next-{label}-{stamp}"));
         fs::create_dir_all(&path).unwrap();
         path

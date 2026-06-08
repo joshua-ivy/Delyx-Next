@@ -1,4 +1,4 @@
-export const cockpitMarkup = String.raw`<div class="delyx deckC" data-screen-label="Command Deck workbench">
+export const cockpitMarkup = String.raw`<div class="delyx deckC __EMPTY_CLASS__" data-screen-label="Command Deck workbench">
   <div class="resize-grip resize-review" title="Resize inspector"></div>
   <div class="resize-grip resize-drawer" title="Resize terminal output"></div>
 
@@ -31,30 +31,14 @@ export const cockpitMarkup = String.raw`<div class="delyx deckC" data-screen-lab
 
       __WORK_DIFF__
 
-      <button class="deck-termbtn" type="button" aria-expanded="false">
-        <span class="deck-pal-key mono">Alt T</span>
-        <span class="dot accent"></span>
-        __TERMINAL_LABEL__
-        <span class="deck-termbtn-x">terminal</span>
-      </button>
-      <div class="deck-term term mono" data-output-collapsed="false" hidden>
-        <div class="deck-term-l muted terminal-history output-block" data-log-line><span class="pr">history &gt;</span> No command history captured.</div>
-        <div class="deck-term-l muted output-block" data-log-line>No terminal command has run. Commands require an approval-backed AgentRun artifact.</div>
-        __EXTERNAL_AGENT_STREAM__
-        <div class="deck-term-l output-block" data-log-line><span class="pr">delyx local &gt;</span> <span class="bk"></span></div>
-      </div>
+      __TERMINAL_BLOCK__
     </div>
 
     <form class="deck-composer deck-comp-form">
-      <div class="deck-quicks">
-        <button class="deck-quick plan-create" type="button">Create plan</button>
-        <button class="deck-quick plan-approve" type="button">Approve it</button>
-        <button class="deck-quick plan-question" type="button">Ask question</button>
-        <button class="deck-quick plan-review-mode" type="button">Show review</button>
-      </div>
+      __QUICK_ACTIONS__
       <div class="deck-comp-row">
         <button type="button" class="deck-comp-attach thread-trigger" title="Open threads">+</button>
-        <textarea class="deck-comp-input" rows="1" placeholder="Message Delyx with a real local instruction"></textarea>
+        <textarea class="deck-comp-input" rows="1" placeholder="Ask Delyx to work locally"></textarea>
         <span class="deck-comp-mode pill accent"><span class="dot accent"></span>__COMPOSER_MODE__</span>
         <button class="btn acc deck-comp-send" type="submit">Send <span class="deck-kbd mono">Enter</span></button>
       </div>
@@ -66,10 +50,5 @@ export const cockpitMarkup = String.raw`<div class="delyx deckC" data-screen-lab
     __INSPECTOR__
   </aside>
 
-  <div class="deck-hintbar mono">
-    <span><b>Ctrl K</b> commands</span>
-    <span><b>Enter</b> send</span>
-    <span><b>Alt T</b> terminal</span>
-    <span><b>Esc</b> close palette</span>
-  </div>
+  __HINTBAR__
 </div>`;

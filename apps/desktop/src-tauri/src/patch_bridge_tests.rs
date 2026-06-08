@@ -15,13 +15,23 @@ mod tests {
         fs::write(&file, "network = true\n").unwrap();
         let mut store = PatchBridgeStore::default();
 
-        let proposal = propose_patch_record(&mut store, request("patch-client-1", &root, &file, "network = false\n")).unwrap();
+        let proposal = propose_patch_record(
+            &mut store,
+            request("patch-client-1", &root, &file, "network = false\n"),
+        )
+        .unwrap();
 
         assert_eq!(proposal.id, "patch-client-1");
         assert_eq!(proposal.status, "proposed");
         assert_eq!(proposal.files.len(), 1);
-        assert!(proposal.files[0].diff.iter().any(|line| line.kind == "removed"));
-        assert!(proposal.files[0].diff.iter().any(|line| line.kind == "added"));
+        assert!(proposal.files[0]
+            .diff
+            .iter()
+            .any(|line| line.kind == "removed"));
+        assert!(proposal.files[0]
+            .diff
+            .iter()
+            .any(|line| line.kind == "added"));
         assert_eq!(fs::read_to_string(&file).unwrap(), "network = true\n");
     }
 
@@ -32,8 +42,16 @@ mod tests {
         fs::write(&file, "before\n").unwrap();
         let mut store = PatchBridgeStore::default();
 
-        let first = propose_patch_record(&mut store, request("patch-client-1", &root, &file, "after\n")).unwrap();
-        let second = propose_patch_record(&mut store, request("patch-client-1", &root, &file, "later\n")).unwrap();
+        let first = propose_patch_record(
+            &mut store,
+            request("patch-client-1", &root, &file, "after\n"),
+        )
+        .unwrap();
+        let second = propose_patch_record(
+            &mut store,
+            request("patch-client-1", &root, &file, "later\n"),
+        )
+        .unwrap();
         let snapshot = patch_snapshot_from_store(&store, "run-1");
 
         assert_eq!(first, second);
@@ -46,7 +64,11 @@ mod tests {
         let file = root.join("copy.txt");
         fs::write(&file, "before\n").unwrap();
         let mut store = PatchBridgeStore::default();
-        propose_patch_record(&mut store, request("patch-client-1", &root, &file, "after\n")).unwrap();
+        propose_patch_record(
+            &mut store,
+            request("patch-client-1", &root, &file, "after\n"),
+        )
+        .unwrap();
 
         assert_eq!(patch_snapshot_from_store(&store, "run-1").len(), 1);
         assert!(patch_snapshot_from_store(&store, "run-2").is_empty());
@@ -58,13 +80,21 @@ mod tests {
         let outside = temp_workspace("bridge-outside").join("escape.txt");
         let mut store = PatchBridgeStore::default();
 
-        let result = propose_patch_record(&mut store, request("patch-client-1", &root, &outside, "nope\n"));
+        let result = propose_patch_record(
+            &mut store,
+            request("patch-client-1", &root, &outside, "nope\n"),
+        );
 
         assert!(result.unwrap_err().contains("OutsideApprovedRoot"));
         assert!(patch_snapshot_from_store(&store, "run-1").is_empty());
     }
 
-    fn request(client_id: &str, root: &std::path::Path, path: &std::path::Path, after: &str) -> PatchProposalRequest {
+    fn request(
+        client_id: &str,
+        root: &std::path::Path,
+        path: &std::path::Path,
+        after: &str,
+    ) -> PatchProposalRequest {
         PatchProposalRequest {
             approval_id: "prop-1".to_string(),
             approved_roots: vec![root.display().to_string()],
@@ -78,7 +108,10 @@ mod tests {
     }
 
     fn temp_workspace(label: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let path = std::env::temp_dir().join(format!("delyx-next-{label}-{stamp}"));
         fs::create_dir_all(&path).unwrap();
         path

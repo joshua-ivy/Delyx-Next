@@ -22,7 +22,10 @@ pub fn load_from_path(path: &Path) -> Result<ApprovalBridgeStore, String> {
     let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_string)?;
     let proposals = load_proposals(&connection)?;
     let records = load_records(&connection)?;
-    Ok(ApprovalBridgeStore { engine: ApprovalEngine::from_loaded(proposals), records })
+    Ok(ApprovalBridgeStore {
+        engine: ApprovalEngine::from_loaded(proposals),
+        records,
+    })
 }
 
 fn clear_tables(connection: &Connection) -> Result<(), String> {
@@ -109,7 +112,11 @@ fn load_proposals(connection: &Connection) -> Result<Vec<ActionProposal>, String
             rollback_plan: row.get(8).map_err(sql_string)?,
             expires_at: row.get::<_, i64>(9).map_err(sql_string)? as u64,
             status: parse_status(&status_value)?,
-            decision: load_decision(row.get(11).map_err(sql_string)?, row.get(12).map_err(sql_string)?, row.get(13).map_err(sql_string)?)?,
+            decision: load_decision(
+                row.get(11).map_err(sql_string)?,
+                row.get(12).map_err(sql_string)?,
+                row.get(13).map_err(sql_string)?,
+            )?,
         });
     }
     Ok(proposals)
@@ -133,13 +140,16 @@ fn load_records(connection: &Connection) -> Result<Vec<ApprovalBridgeRecord>, St
             action_type: row.get(3).map_err(sql_string)?,
             required_permission: row.get(4).map_err(sql_string)?,
             expires_at: row.get(5).map_err(sql_string)?,
-            scope: serde_json::from_str::<PermissionScopeView>(&scope_json).map_err(|error| error.to_string())?,
+            scope: serde_json::from_str::<PermissionScopeView>(&scope_json)
+                .map_err(|error| error.to_string())?,
         });
     }
     Ok(records)
 }
 
-fn decision_parts(decision: Option<&ApprovalDecision>) -> (Option<&'static str>, Option<i64>, Option<&str>) {
+fn decision_parts(
+    decision: Option<&ApprovalDecision>,
+) -> (Option<&'static str>, Option<i64>, Option<&str>) {
     match decision {
         Some(decision) => (
             Some(match decision.kind {
@@ -153,7 +163,11 @@ fn decision_parts(decision: Option<&ApprovalDecision>) -> (Option<&'static str>,
     }
 }
 
-fn load_decision(kind: Option<String>, decided_at: Option<i64>, note: Option<String>) -> Result<Option<ApprovalDecision>, String> {
+fn load_decision(
+    kind: Option<String>,
+    decided_at: Option<i64>,
+    note: Option<String>,
+) -> Result<Option<ApprovalDecision>, String> {
     let Some(kind) = kind else {
         return Ok(None);
     };

@@ -20,11 +20,21 @@ mod tests {
         assert_eq!(contract.command.program, "codex");
         assert_eq!(
             contract.command.args,
-            strings(&["exec", "--json", "--sandbox", "read-only", "Review the auth module."])
+            strings(&[
+                "exec",
+                "--json",
+                "--sandbox",
+                "read-only",
+                "Review the auth module."
+            ])
         );
         assert_eq!(contract.transcript_format, "jsonl");
-        assert!(contract.required_delyx_tools.contains(&"external_agent".to_string()));
-        assert!(contract.required_delyx_tools.contains(&"terminal_command".to_string()));
+        assert!(contract
+            .required_delyx_tools
+            .contains(&"external_agent".to_string()));
+        assert!(contract
+            .required_delyx_tools
+            .contains(&"terminal_command".to_string()));
     }
 
     #[test]
@@ -37,7 +47,10 @@ mod tests {
         )
         .unwrap();
 
-        assert!(contract.command.args.contains(&"workspace-write".to_string()));
+        assert!(contract
+            .command
+            .args
+            .contains(&"workspace-write".to_string()));
         assert!(contract.safety_summary.contains("diff review"));
     }
 
@@ -53,16 +66,19 @@ mod tests {
 
         assert_eq!(contract.adapter_id, "claude-code");
         assert_eq!(contract.command.program, "claude");
-        assert_eq!(contract.command.args, strings(&[
-            "-p",
-            "--output-format",
-            "stream-json",
-            "--permission-mode",
-            "plan",
-            "--tools",
-            "Read",
-            "Inspect failures.",
-        ]));
+        assert_eq!(
+            contract.command.args,
+            strings(&[
+                "-p",
+                "--output-format",
+                "stream-json",
+                "--permission-mode",
+                "plan",
+                "--tools",
+                "Read",
+                "Inspect failures.",
+            ])
+        );
         assert_eq!(contract.transcript_format, "stream-json");
     }
 

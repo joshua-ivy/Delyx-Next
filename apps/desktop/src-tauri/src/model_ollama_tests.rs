@@ -29,7 +29,10 @@ mod tests {
     fn provider_from_tags_result_maps_ready_models() {
         let provider = provider_from_tags_result(
             12,
-            Ok((200, r#"{"models":[{"name":"qwen3-coder:30b"}]}"#.to_string())),
+            Ok((
+                200,
+                r#"{"models":[{"name":"qwen3-coder:30b"}]}"#.to_string(),
+            )),
         );
 
         assert_eq!(provider.id, "ollama-local");
@@ -80,7 +83,10 @@ mod tests {
     fn chat_from_http_result_reads_message_content() {
         let result = chat_from_http_result(
             "qwen3-coder:30b",
-            Ok((200, r#"{"message":{"content":"  Ready to work.  "}}"#.to_string())),
+            Ok((
+                200,
+                r#"{"message":{"content":"  Ready to work.  "}}"#.to_string(),
+            )),
         )
         .unwrap();
 

@@ -5,6 +5,9 @@ import type { TaskThread } from "../features/threads/threadTypes";
 import { escapeHtml } from "./html";
 
 export function buildProgressBlock(plan: PlanView | undefined, thread: TaskThread | undefined) {
+  if (!thread || !plan) {
+    return "";
+  }
   const steps = progressSteps(plan, thread);
   return `<div class="deck-progress">
     <span class="ey">Build progress</span>
@@ -15,15 +18,7 @@ export function buildProgressBlock(plan: PlanView | undefined, thread: TaskThrea
 export function workDiffBlock(patches: PatchProposalView[]) {
   const files = patches.flatMap((patch) => patch.files.map((file) => ({ file, patch })));
   if (files.length === 0) {
-    return `<div class="deck-files">
-      <button class="deck-ftab on" type="button"><span class="ftag M">-</span><span class="mono deck-ftab-name">No patch</span><span class="deck-ftab-stat mono">empty</span></button>
-    </div>
-    <div class="deck-diff card">
-      <div class="deck-diff-head mono"><span>Unified diff artifact</span><span class="deck-diff-stat">empty</span></div>
-      <div class="deck-diff-body">
-        <div class="dl ctx"><span class="ln">-</span><span class="tx">No patch or file change has been proposed.</span></div>
-      </div>
-    </div>`;
+    return "";
   }
   const tabs = files.map(({ file }, index) => diffTab(file.path, file.diff, index)).join("");
   const panels = files.map(({ file, patch }, index) => diffPanel(file, patch, index)).join("");
@@ -36,6 +31,45 @@ export function terminalLabel(run: AgentRunView | undefined) {
   }
   const commands = run.metrics.commandCount === 1 ? "1 command" : `${run.metrics.commandCount} commands`;
   return `${run.status.replaceAll("_", " ")} &middot; ${commands}`;
+}
+
+export function terminalBlock(run: AgentRunView | undefined, stream: string) {
+  if (!run) {
+    return "";
+  }
+  return `<button class="deck-termbtn" type="button" aria-expanded="false">
+      <span class="deck-pal-key mono">Alt T</span>
+      <span class="dot accent"></span>
+      ${terminalLabel(run)}
+      <span class="deck-termbtn-x">terminal</span>
+    </button>
+    <div class="deck-term term mono" data-output-collapsed="false" hidden>
+      <div class="deck-term-l muted terminal-history output-block" data-log-line><span class="pr">history &gt;</span> No command history captured.</div>
+      ${stream}
+      <div class="deck-term-l output-block" data-log-line><span class="pr">delyx local &gt;</span> <span class="bk"></span></div>
+    </div>`;
+}
+
+export function quickActionsBlock(thread: TaskThread | undefined) {
+  if (!thread) {
+    return "";
+  }
+  return `<div class="deck-quicks">
+      <button class="deck-quick plan-create" type="button">Plan</button>
+      <button class="deck-quick plan-approve" type="button">Approve</button>
+      <button class="deck-quick plan-question" type="button">Ask</button>
+      <button class="deck-quick plan-review-mode" type="button">Review</button>
+    </div>`;
+}
+
+export function hintbarBlock(run: AgentRunView | undefined) {
+  const terminalHint = run ? "<span><b>Alt T</b> terminal</span>" : "";
+  return `<div class="deck-hintbar mono">
+    <span><b>Ctrl K</b> commands</span>
+    <span><b>Enter</b> send</span>
+    ${terminalHint}
+    <span><b>Esc</b> close</span>
+  </div>`;
 }
 
 export function composerMode(mode: TaskThread["mode"] | undefined) {

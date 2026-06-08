@@ -56,7 +56,8 @@ pub fn workspace_snapshot(
     path: String,
     file_limit: usize,
 ) -> Result<WorkspaceProjectView, String> {
-    let snapshot = workspace_snapshot_from_path(Path::new(&path), file_limit).map_err(|error| format!("{error:?}"))?;
+    let snapshot = workspace_snapshot_from_path(Path::new(&path), file_limit)
+        .map_err(|error| format!("{error:?}"))?;
     crate::workspace_persistence::save_recent_project(&state.database_path, &snapshot)?;
     Ok(snapshot)
 }
@@ -68,12 +69,20 @@ pub fn workspace_recent_project(
     crate::workspace_persistence::load_recent_project(&state.database_path)
 }
 
-pub fn workspace_snapshot_from_path(path: &Path, file_limit: usize) -> Result<WorkspaceProjectView, WorkspaceError> {
+pub fn workspace_snapshot_from_path(
+    path: &Path,
+    file_limit: usize,
+) -> Result<WorkspaceProjectView, WorkspaceError> {
     let mut manager = WorkspaceManager::new();
     let project = manager.add_project(path)?;
     let indexed_files = manager
         .index_files(&project.id, file_limit)
-        .map(|entries| entries.into_iter().map(|entry| entry.relative_path).collect())?;
+        .map(|entries| {
+            entries
+                .into_iter()
+                .map(|entry| entry.relative_path)
+                .collect()
+        })?;
     Ok(project_view(project, indexed_files))
 }
 

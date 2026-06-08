@@ -21,8 +21,14 @@ mod tests {
         let loaded = load_recent_project(&db_path).unwrap().unwrap();
         assert_eq!(loaded.id, snapshot.id);
         assert_eq!(loaded.approved_roots, snapshot.approved_roots);
-        assert!(loaded.rules_files.iter().any(|file| file.kind == "AGENTS.md"));
-        assert!(loaded.indexed_files.iter().any(|file| file == "src/main.rs"));
+        assert!(loaded
+            .rules_files
+            .iter()
+            .any(|file| file.kind == "AGENTS.md"));
+        assert!(loaded
+            .indexed_files
+            .iter()
+            .any(|file| file == "src/main.rs"));
         let _ = fs::remove_file(db_path);
     }
 
@@ -32,7 +38,10 @@ mod tests {
 
     impl Fixture {
         fn new(name: &str) -> Self {
-            let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+            let stamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
             let root = std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}"));
             fs::create_dir_all(&root).unwrap();
             Self { root }
@@ -56,7 +65,10 @@ mod tests {
     }
 
     fn temp_path(name: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}.sqlite3"))
     }
 }

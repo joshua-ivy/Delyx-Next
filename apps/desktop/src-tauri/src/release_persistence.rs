@@ -78,7 +78,8 @@ pub fn load_profile_from_path(path: &Path) -> Result<Option<ReleaseProfile>, Str
 
 pub fn save_support_bundle_to_path(bundle: &SupportBundle, path: &Path) -> Result<(), String> {
     let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_string)?;
-    let config = serde_json::to_string(&bundle.config_summary).map_err(|error| error.to_string())?;
+    let config =
+        serde_json::to_string(&bundle.config_summary).map_err(|error| error.to_string())?;
     let logs = serde_json::to_string(&bundle.logs).map_err(|error| error.to_string())?;
     connection
         .execute(
@@ -116,21 +117,31 @@ pub fn load_support_bundle_from_path(path: &Path) -> Result<Option<SupportBundle
             |row| {
                 let config: String = row.get(3)?;
                 let logs: String = row.get(4)?;
-                Ok((row.get(0)?, row.get(1)?, row.get::<_, i64>(2)?, config, logs, row.get(5)?))
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get::<_, i64>(2)?,
+                    config,
+                    logs,
+                    row.get(5)?,
+                ))
             },
         )
         .optional()
         .map_err(sql_string)?
-        .map(|(app_name, version, created_at, config, logs, secret_policy)| {
-            Ok(SupportBundle {
-                app_name,
-                version,
-                created_at: created_at as u64,
-                config_summary: serde_json::from_str(&config).map_err(|error| error.to_string())?,
-                logs: serde_json::from_str(&logs).map_err(|error| error.to_string())?,
-                secret_policy,
-            })
-        })
+        .map(
+            |(app_name, version, created_at, config, logs, secret_policy)| {
+                Ok(SupportBundle {
+                    app_name,
+                    version,
+                    created_at: created_at as u64,
+                    config_summary: serde_json::from_str(&config)
+                        .map_err(|error| error.to_string())?,
+                    logs: serde_json::from_str(&logs).map_err(|error| error.to_string())?,
+                    secret_policy,
+                })
+            },
+        )
         .transpose()
 }
 

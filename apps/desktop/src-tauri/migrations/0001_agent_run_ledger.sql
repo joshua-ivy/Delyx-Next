@@ -218,3 +218,30 @@ CREATE TABLE IF NOT EXISTS test_exec_events (
   timestamp_ms INTEGER NOT NULL,
   PRIMARY KEY (artifact_id, event_index)
 );
+
+CREATE TABLE IF NOT EXISTS patch_proposal_records (
+  id TEXT PRIMARY KEY NOT NULL,
+  run_id TEXT NOT NULL,
+  approval_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  checkpoint_id TEXT
+);
+
+CREATE TABLE IF NOT EXISTS patch_proposal_files (
+  proposal_id TEXT NOT NULL REFERENCES patch_proposal_records(id) ON DELETE CASCADE,
+  file_index INTEGER NOT NULL,
+  path TEXT NOT NULL,
+  PRIMARY KEY (proposal_id, file_index)
+);
+
+CREATE TABLE IF NOT EXISTS patch_diff_lines (
+  proposal_id TEXT NOT NULL,
+  file_index INTEGER NOT NULL,
+  diff_index INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  text TEXT NOT NULL,
+  PRIMARY KEY (proposal_id, file_index, diff_index),
+  FOREIGN KEY (proposal_id, file_index)
+    REFERENCES patch_proposal_files(proposal_id, file_index)
+    ON DELETE CASCADE
+);

@@ -1,4 +1,6 @@
-use crate::automation::{AutomationEngine, MissionContract, MissionStatus, ScheduledRun, ScheduledRunStatus};
+use crate::automation::{
+    AutomationEngine, MissionContract, MissionStatus, ScheduledRun, ScheduledRunStatus,
+};
 use crate::local_store_bridge::LocalStoreBridgeState;
 use serde::Serialize;
 use std::path::Path;
@@ -36,7 +38,9 @@ pub struct ScheduledRunView {
 }
 
 #[tauri::command]
-pub fn automation_snapshot(state: tauri::State<LocalStoreBridgeState>) -> Result<AutomationStateView, String> {
+pub fn automation_snapshot(
+    state: tauri::State<LocalStoreBridgeState>,
+) -> Result<AutomationStateView, String> {
     automation_snapshot_from_path(state.database_path())
 }
 
@@ -59,7 +63,10 @@ fn contract_view(contract: &MissionContract) -> MissionContractView {
         status: status_key(contract.status).to_string(),
         scope: contract.scope.clone(),
         allowed_tools: contract.allowed_tools.clone(),
-        active_hours: format!("{:02}:00-{:02}:00", contract.active_hours.start_hour, contract.active_hours.end_hour),
+        active_hours: format!(
+            "{:02}:00-{:02}:00",
+            contract.active_hours.start_hour, contract.active_hours.end_hour
+        ),
         timezone: contract.timezone.clone(),
         delivery_targets: contract.delivery_targets.clone(),
         stop_condition: contract.stop_condition.clone(),

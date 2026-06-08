@@ -1,17 +1,27 @@
 #[cfg(test)]
 mod tests {
-    use crate::approval::{ActionProposal, RiskLevel, RiskyAction, ProposalStatus};
+    use crate::approval::{ActionProposal, ProposalStatus, RiskLevel, RiskyAction};
     use crate::mobile::{
-        decide_mobile_approval, default_mobile_policy, mobile_status_view, MobileDecisionKind, MobileError,
-        MobilePolicy, MobileRunView, MobileThreadView,
+        decide_mobile_approval, default_mobile_policy, mobile_status_view, MobileDecisionKind,
+        MobileError, MobilePolicy, MobileRunView, MobileThreadView,
     };
 
     #[test]
     fn mobile_cannot_grant_broader_permissions_than_desktop_policy() {
         let proposal = proposal(RiskLevel::Medium, RiskyAction::ExternalSend);
-        let policy = MobilePolicy { allow_low_risk_approval: true, max_approval_risk: RiskLevel::Medium, can_access_files: false, can_access_terminal: false };
+        let policy = MobilePolicy {
+            allow_low_risk_approval: true,
+            max_approval_risk: RiskLevel::Medium,
+            can_access_files: false,
+            can_access_terminal: false,
+        };
 
-        let result = decide_mobile_approval(&proposal, MobileDecisionKind::Approve, &policy, RiskLevel::Low);
+        let result = decide_mobile_approval(
+            &proposal,
+            MobileDecisionKind::Approve,
+            &policy,
+            RiskLevel::Low,
+        );
 
         assert_eq!(result.unwrap_err(), MobileError::RiskExceedsDesktopPolicy);
     }
@@ -19,10 +29,21 @@ mod tests {
     #[test]
     fn mobile_approval_scope_is_visible() {
         let proposal = proposal(RiskLevel::Low, RiskyAction::ExternalSend);
-        let view = mobile_status_view(Vec::new(), vec![&proposal], Vec::new(), default_mobile_policy());
+        let view = mobile_status_view(
+            Vec::new(),
+            vec![&proposal],
+            Vec::new(),
+            default_mobile_policy(),
+        );
 
-        assert_eq!(view.pending_approvals[0].scope, "Send one external status message.");
-        assert_eq!(view.pending_approvals[0].reason, "Low-risk mobile approval test.");
+        assert_eq!(
+            view.pending_approvals[0].scope,
+            "Send one external status message."
+        );
+        assert_eq!(
+            view.pending_approvals[0].reason,
+            "Low-risk mobile approval test."
+        );
     }
 
     #[test]
@@ -32,7 +53,12 @@ mod tests {
         approved.id = "prop-approved".to_string();
         approved.status = ProposalStatus::Approved;
 
-        let view = mobile_status_view(Vec::new(), vec![&pending, &approved], Vec::new(), default_mobile_policy());
+        let view = mobile_status_view(
+            Vec::new(),
+            vec![&pending, &approved],
+            Vec::new(),
+            default_mobile_policy(),
+        );
 
         assert_eq!(view.pending_approvals.len(), 1);
         assert_eq!(view.pending_approvals[0].id, "prop-1");
@@ -41,9 +67,16 @@ mod tests {
     #[test]
     fn mobile_can_review_status_without_full_runtime_access() {
         let view = mobile_status_view(
-            vec![MobileThreadView { id: "thread-1".to_string(), title: "Review patch".to_string(), status: "active".to_string() }],
+            vec![MobileThreadView {
+                id: "thread-1".to_string(),
+                title: "Review patch".to_string(),
+                status: "active".to_string(),
+            }],
             Vec::new(),
-            vec![MobileRunView { id: "run-1".to_string(), status: "waiting_for_approval".to_string() }],
+            vec![MobileRunView {
+                id: "run-1".to_string(),
+                status: "waiting_for_approval".to_string(),
+            }],
             default_mobile_policy(),
         );
 
@@ -56,9 +89,20 @@ mod tests {
     #[test]
     fn mobile_can_approve_low_risk_if_configured() {
         let proposal = proposal(RiskLevel::Low, RiskyAction::ExternalSend);
-        let policy = MobilePolicy { allow_low_risk_approval: true, max_approval_risk: RiskLevel::Low, can_access_files: false, can_access_terminal: false };
+        let policy = MobilePolicy {
+            allow_low_risk_approval: true,
+            max_approval_risk: RiskLevel::Low,
+            can_access_files: false,
+            can_access_terminal: false,
+        };
 
-        let decision = decide_mobile_approval(&proposal, MobileDecisionKind::Approve, &policy, RiskLevel::Low).unwrap();
+        let decision = decide_mobile_approval(
+            &proposal,
+            MobileDecisionKind::Approve,
+            &policy,
+            RiskLevel::Low,
+        )
+        .unwrap();
 
         assert_eq!(decision.proposal_id, "prop-1");
         assert_eq!(decision.scope, "Send one external status message.");
@@ -67,9 +111,16 @@ mod tests {
     #[test]
     fn mobile_can_deny_broad_requests_without_granting_access() {
         let proposal = proposal(RiskLevel::High, RiskyAction::FileWrite);
-        let policy = MobilePolicy { allow_low_risk_approval: true, max_approval_risk: RiskLevel::Low, can_access_files: false, can_access_terminal: false };
+        let policy = MobilePolicy {
+            allow_low_risk_approval: true,
+            max_approval_risk: RiskLevel::Low,
+            can_access_files: false,
+            can_access_terminal: false,
+        };
 
-        let decision = decide_mobile_approval(&proposal, MobileDecisionKind::Deny, &policy, RiskLevel::Low).unwrap();
+        let decision =
+            decide_mobile_approval(&proposal, MobileDecisionKind::Deny, &policy, RiskLevel::Low)
+                .unwrap();
 
         assert_eq!(decision.proposal_id, "prop-1");
         assert_eq!(decision.kind, MobileDecisionKind::Deny);
@@ -79,10 +130,32 @@ mod tests {
     fn mobile_has_no_broad_file_or_terminal_access_by_default() {
         let file_proposal = proposal(RiskLevel::Low, RiskyAction::FileWrite);
         let terminal_proposal = proposal(RiskLevel::Low, RiskyAction::TerminalCommand);
-        let policy = MobilePolicy { allow_low_risk_approval: true, max_approval_risk: RiskLevel::Low, ..default_mobile_policy() };
+        let policy = MobilePolicy {
+            allow_low_risk_approval: true,
+            max_approval_risk: RiskLevel::Low,
+            ..default_mobile_policy()
+        };
 
-        assert_eq!(decide_mobile_approval(&file_proposal, MobileDecisionKind::Approve, &policy, RiskLevel::Low).unwrap_err(), MobileError::BroadFileAccessDenied);
-        assert_eq!(decide_mobile_approval(&terminal_proposal, MobileDecisionKind::Approve, &policy, RiskLevel::Low).unwrap_err(), MobileError::BroadTerminalAccessDenied);
+        assert_eq!(
+            decide_mobile_approval(
+                &file_proposal,
+                MobileDecisionKind::Approve,
+                &policy,
+                RiskLevel::Low
+            )
+            .unwrap_err(),
+            MobileError::BroadFileAccessDenied
+        );
+        assert_eq!(
+            decide_mobile_approval(
+                &terminal_proposal,
+                MobileDecisionKind::Approve,
+                &policy,
+                RiskLevel::Low
+            )
+            .unwrap_err(),
+            MobileError::BroadTerminalAccessDenied
+        );
     }
 
     fn proposal(risk: RiskLevel, action: RiskyAction) -> ActionProposal {

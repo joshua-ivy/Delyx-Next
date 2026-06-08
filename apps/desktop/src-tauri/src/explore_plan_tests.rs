@@ -4,14 +4,19 @@ mod tests {
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    use crate::explore_plan::{ExploreAgent, ExplorePlanError, PlanAgent, PlanDecision, ToolCapability};
+    use crate::explore_plan::{
+        ExploreAgent, ExplorePlanError, PlanAgent, PlanDecision, ToolCapability,
+    };
     use crate::workspace::{WorkspaceError, WorkspaceManager};
 
     #[test]
     fn explore_and_plan_modes_are_read_only() {
         assert_eq!(
             ExploreAgent::capabilities(),
-            &[ToolCapability::SearchApprovedFiles, ToolCapability::ReadApprovedFile]
+            &[
+                ToolCapability::SearchApprovedFiles,
+                ToolCapability::ReadApprovedFile
+            ]
         );
         assert!(!PlanAgent::capabilities().contains(&ToolCapability::EditFile));
         assert!(!PlanAgent::capabilities().contains(&ToolCapability::RunTerminal));
@@ -59,7 +64,10 @@ mod tests {
         assert_eq!(plan.goal_understanding, "Add plan model states");
         assert_eq!(plan.files_likely_involved, vec!["src/plan_model.ts"]);
         assert_eq!(plan.tests_to_run, vec!["npm test"]);
-        assert!(plan.permissions_needed.iter().any(|item| item.contains("approval required")));
+        assert!(plan
+            .permissions_needed
+            .iter()
+            .any(|item| item.contains("approval required")));
         assert!(plan.rollback_strategy.contains("checkpoint"));
     }
 
@@ -68,7 +76,8 @@ mod tests {
         let explore = crate::explore_plan::ExploreOutput {
             relevant_files: Vec::new(),
             relevant_symbols: Vec::new(),
-            architecture_summary: "No dominant stack detected from approved project files.".to_string(),
+            architecture_summary: "No dominant stack detected from approved project files."
+                .to_string(),
             project_commands: Vec::new(),
             risks: Vec::new(),
             unknowns: Vec::new(),
@@ -96,7 +105,10 @@ mod tests {
 
     impl Fixture {
         fn new(name: &str) -> Self {
-            let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+            let stamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
             let root = std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}"));
             fs::create_dir_all(&root).unwrap();
             Self { root }
@@ -107,7 +119,10 @@ mod tests {
         }
 
         fn sibling(&self, name: &str) -> PathBuf {
-            self.root.parent().unwrap().join(format!("{}-{name}", self.root.file_name().unwrap().to_string_lossy()))
+            self.root.parent().unwrap().join(format!(
+                "{}-{name}",
+                self.root.file_name().unwrap().to_string_lossy()
+            ))
         }
 
         fn file(&self, relative_path: &str, contents: &str) {

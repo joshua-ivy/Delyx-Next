@@ -1,5 +1,7 @@
-use crate::memory::{MemoryCandidate, MemoryCandidateStatus, MemoryRecord, MemoryScope, MemoryStore};
 use crate::local_store_bridge::LocalStoreBridgeState;
+use crate::memory::{
+    MemoryCandidate, MemoryCandidateStatus, MemoryRecord, MemoryScope, MemoryStore,
+};
 use serde::Serialize;
 use std::path::Path;
 
@@ -36,7 +38,9 @@ pub struct MemoryRecordView {
 }
 
 #[tauri::command]
-pub fn memory_snapshot(state: tauri::State<LocalStoreBridgeState>) -> Result<MemoryStateView, String> {
+pub fn memory_snapshot(
+    state: tauri::State<LocalStoreBridgeState>,
+) -> Result<MemoryStateView, String> {
     memory_snapshot_from_path(state.database_path())
 }
 

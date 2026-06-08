@@ -35,16 +35,16 @@ for (const label of ["Projects", "Threads", "Plan", "Approval", "Diff", "Tests",
 for (const state of ["Loading:", "Error:", "blocked", "failed", "done"]) {
   check(source.includes(state), `UI source must include ${state}`);
 }
-for (const action of ["Create plan", "Approve", "Ask question", "Show review"]) {
+for (const action of ["plan-create", "plan-approve", "plan-question", "plan-review-mode"]) {
   check(source.includes(action), `primary workflow action must include ${action}`);
 }
 for (const marker of [
   "Command Deck workbench",
-  "No active thread",
+  "deck-empty",
+  "Start with an instruction",
+  "Send an instruction below to start a local thread.",
   "No approval requests",
-  "No patch or file change has been proposed",
   "No test command artifact has been captured",
-  "No terminal command has run",
   "No external agent run has been approved or captured",
   "Web preview / Rust bridge unavailable",
   "No indexed files are loaded for this query",

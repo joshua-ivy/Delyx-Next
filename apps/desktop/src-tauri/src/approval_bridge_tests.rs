@@ -38,7 +38,8 @@ mod tests {
         let mut store = ApprovalBridgeStore::default();
         let proposal = propose_approval_record(&mut store, request("approval-plan-build")).unwrap();
 
-        let decided = decide_approval_record(&mut store, decision(&proposal.id, "approved", 50)).unwrap();
+        let decided =
+            decide_approval_record(&mut store, decision(&proposal.id, "approved", 50)).unwrap();
 
         assert_eq!(decided.status, "approved");
         assert_eq!(decided.id, proposal.id);
@@ -49,7 +50,8 @@ mod tests {
         let mut store = ApprovalBridgeStore::default();
         let proposal = propose_approval_record(&mut store, request("approval-plan-build")).unwrap();
 
-        let decided = decide_approval_record(&mut store, decision(&proposal.id, "approved", 100)).unwrap();
+        let decided =
+            decide_approval_record(&mut store, decision(&proposal.id, "approved", 100)).unwrap();
 
         assert_eq!(decided.status, "expired");
     }
@@ -69,7 +71,10 @@ mod tests {
     #[test]
     fn taxonomy_snapshot_maps_rust_risk_floor_for_edit_file() {
         let taxonomy = approval_taxonomy_records();
-        let edit_file = taxonomy.iter().find(|entry| entry.action_type == "edit_file").unwrap();
+        let edit_file = taxonomy
+            .iter()
+            .find(|entry| entry.action_type == "edit_file")
+            .unwrap();
 
         assert_eq!(edit_file.minimum_risk, "high");
         assert!(edit_file.rollback_required);
@@ -80,9 +85,15 @@ mod tests {
     fn taxonomy_snapshot_excludes_non_risky_read_file_action() {
         let taxonomy = approval_taxonomy_records();
 
-        assert!(taxonomy.iter().any(|entry| entry.action_type == "run_terminal"));
-        assert!(taxonomy.iter().any(|entry| entry.action_type == "schedule_work"));
-        assert!(!taxonomy.iter().any(|entry| entry.action_type == "read_file"));
+        assert!(taxonomy
+            .iter()
+            .any(|entry| entry.action_type == "run_terminal"));
+        assert!(taxonomy
+            .iter()
+            .any(|entry| entry.action_type == "schedule_work"));
+        assert!(!taxonomy
+            .iter()
+            .any(|entry| entry.action_type == "read_file"));
     }
 
     fn request(client_id: &str) -> ApprovalProposalRequest {

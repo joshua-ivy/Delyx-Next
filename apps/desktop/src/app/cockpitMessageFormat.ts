@@ -4,7 +4,7 @@ import { escapeHtml } from "./html";
 const longTextLimit = 900;
 
 export function threadGoalBlock(thread: TaskThread | undefined) {
-  const goal = thread?.goal ?? "Create a thread in this project to start real local work.";
+  const goal = thread?.goal ?? "Send an instruction below to start a local thread.";
   if (goal.length <= 420) {
     return formatPlainText(goal);
   }
@@ -17,7 +17,7 @@ export function threadGoalBlock(thread: TaskThread | undefined) {
 
 export function conversationBlock(thread: TaskThread | undefined) {
   if (!thread) {
-    return systemMessage("Create a thread to start a real local conversation. No model response has been generated.");
+    return "";
   }
   const messages = thread.messages.map(messageBlock).join("");
   const hasAssistant = thread.messages.some((message) => message.role === "assistant");

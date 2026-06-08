@@ -19,7 +19,10 @@ mod tests {
         let bundle = export_support_bundle(
             &profile,
             vec![("OPENAI_API_KEY", "sk-test"), ("workspace", "C:/work")],
-            vec![("runtime", "ok"), ("provider", "Authorization: Bearer abc123")],
+            vec![
+                ("runtime", "ok"),
+                ("provider", "Authorization: Bearer abc123"),
+            ],
             42,
         );
 
@@ -30,7 +33,10 @@ mod tests {
 
         let loaded_profile = load_profile_from_path(&path).unwrap().unwrap();
         let loaded_bundle = load_support_bundle_from_path(&path).unwrap().unwrap();
-        assert_eq!(loaded_profile.signing.digest_algorithm.as_deref(), Some("sha256"));
+        assert_eq!(
+            loaded_profile.signing.digest_algorithm.as_deref(),
+            Some("sha256")
+        );
         assert!(loaded_profile.update_metadata.published);
         assert_eq!(loaded_bundle.config_summary[0].value, "[redacted]");
         assert_eq!(loaded_bundle.config_summary[1].value, "C:/work");
@@ -41,7 +47,10 @@ mod tests {
     }
 
     fn temp_path(name: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}.sqlite3"))
     }
 }

@@ -64,7 +64,11 @@ impl ThreadManager {
         }
     }
 
-    pub fn create_thread(&mut self, project_id: &str, goal: &str) -> Result<TaskThread, ThreadError> {
+    pub fn create_thread(
+        &mut self,
+        project_id: &str,
+        goal: &str,
+    ) -> Result<TaskThread, ThreadError> {
         if !self.project_ids.iter().any(|id| id == project_id) {
             return Err(ThreadError::ProjectNotLinked);
         }
@@ -106,12 +110,15 @@ impl ThreadManager {
 
     pub(crate) fn from_loaded_threads(threads: Vec<TaskThread>) -> Self {
         let mut manager = ThreadManager::new();
-        manager.project_ids = threads.iter().map(|thread| thread.project_id.clone()).fold(Vec::new(), |mut ids, id| {
-            if !ids.contains(&id) {
-                ids.push(id);
-            }
-            ids
-        });
+        manager.project_ids = threads.iter().map(|thread| thread.project_id.clone()).fold(
+            Vec::new(),
+            |mut ids, id| {
+                if !ids.contains(&id) {
+                    ids.push(id);
+                }
+                ids
+            },
+        );
         manager.next_id = threads
             .iter()
             .filter_map(|thread| thread.id.rsplit("-thread-").next()?.parse::<usize>().ok())
@@ -139,7 +146,10 @@ impl ThreadManager {
             return Err(ThreadError::ArchivedThread);
         }
 
-        let message = ThreadMessage { role, body: body.to_string() };
+        let message = ThreadMessage {
+            role,
+            body: body.to_string(),
+        };
         thread.messages.push(message.clone());
         Ok(message)
     }

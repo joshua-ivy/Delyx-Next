@@ -10,7 +10,8 @@ mod tests {
     #[test]
     fn create_thread_run_returns_ui_ready_record_without_fake_execution() {
         let mut store = ThreadRunStore::default();
-        let record = create_thread_run_record(&mut store, request("proj-1", "Use Ollama locally")).unwrap();
+        let record =
+            create_thread_run_record(&mut store, request("proj-1", "Use Ollama locally")).unwrap();
 
         assert_eq!(record.thread.project_id, "proj-1");
         assert_eq!(record.thread.status, "idle");
@@ -41,7 +42,9 @@ mod tests {
         let result = create_thread_run_record(&mut store, request("proj-1", "   "));
 
         assert!(result.is_err());
-        assert!(thread_run_snapshot_from_store(&store, "proj-1").threads.is_empty());
+        assert!(thread_run_snapshot_from_store(&store, "proj-1")
+            .threads
+            .is_empty());
     }
 
     #[test]
@@ -49,7 +52,9 @@ mod tests {
         let mut store = ThreadRunStore::default();
         let record = create_thread_run_record(&mut store, request("proj-1", "Plan")).unwrap();
 
-        let updated = update_thread_status_record(&mut store, status_request(&record.thread.id, "planning")).unwrap();
+        let updated =
+            update_thread_status_record(&mut store, status_request(&record.thread.id, "planning"))
+                .unwrap();
         let snapshot = thread_run_snapshot_from_store(&store, "proj-1");
 
         assert_eq!(updated.status, "planning");
@@ -62,7 +67,8 @@ mod tests {
         let mut store = ThreadRunStore::default();
         let record = create_thread_run_record(&mut store, request("proj-1", "Archive me")).unwrap();
 
-        let archived = archive_thread_record(&mut store, archive_request(&record.thread.id)).unwrap();
+        let archived =
+            archive_thread_record(&mut store, archive_request(&record.thread.id)).unwrap();
         let snapshot = thread_run_snapshot_from_store(&store, "proj-1");
 
         assert!(archived.archived);
@@ -75,10 +81,16 @@ mod tests {
         let mut store = ThreadRunStore::default();
         let record = create_thread_run_record(&mut store, request("proj-1", "Ask Ollama")).unwrap();
 
-        update_thread_status_record(&mut store, status_request(&record.thread.id, "exploring")).unwrap();
+        update_thread_status_record(&mut store, status_request(&record.thread.id, "exploring"))
+            .unwrap();
         let updated = append_thread_message_record(
             &mut store,
-            message_request(&record.thread.id, "assistant", "Real local reply.", Some("idle")),
+            message_request(
+                &record.thread.id,
+                "assistant",
+                "Real local reply.",
+                Some("idle"),
+            ),
         )
         .unwrap();
         let snapshot = thread_run_snapshot_from_store(&store, "proj-1");
@@ -92,7 +104,8 @@ mod tests {
     #[test]
     fn message_append_rejects_unknown_roles_without_changing_thread() {
         let mut store = ThreadRunStore::default();
-        let record = create_thread_run_record(&mut store, request("proj-1", "Keep roles typed")).unwrap();
+        let record =
+            create_thread_run_record(&mut store, request("proj-1", "Keep roles typed")).unwrap();
 
         let result = append_thread_message_record(
             &mut store,

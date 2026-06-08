@@ -117,17 +117,25 @@ pub fn thread_view(thread: &TaskThread, context: &ThreadRunViewContext) -> TaskT
     }
 }
 
-pub fn run_view(run: &AgentRun, thread: &TaskThread, context: &ThreadRunViewContext) -> AgentRunView {
+pub fn run_view(
+    run: &AgentRun,
+    thread: &TaskThread,
+    context: &ThreadRunViewContext,
+) -> AgentRunView {
     AgentRunView {
         artifacts: Vec::new(),
         created_at: context.created_at.clone(),
-        events: run.events.iter().map(|event| AgentEventView {
-            created_at: context.created_at.clone(),
-            id: event.id.clone(),
-            kind: event.kind.clone(),
-            message: event.message.clone(),
-            run_id: run.id.clone(),
-        }).collect(),
+        events: run
+            .events
+            .iter()
+            .map(|event| AgentEventView {
+                created_at: context.created_at.clone(),
+                id: event.id.clone(),
+                kind: event.kind.clone(),
+                message: event.message.clone(),
+                run_id: run.id.clone(),
+            })
+            .collect(),
         evidence: Vec::new(),
         goal: thread.goal.clone(),
         id: run.id.clone(),
@@ -180,7 +188,10 @@ fn status_key(status: ThreadStatus) -> &'static str {
 
 fn mode_key(status: ThreadStatus) -> &'static str {
     match status {
-        ThreadStatus::Blocked | ThreadStatus::Done | ThreadStatus::Failed | ThreadStatus::Reviewing => "review",
+        ThreadStatus::Blocked
+        | ThreadStatus::Done
+        | ThreadStatus::Failed
+        | ThreadStatus::Reviewing => "review",
         ThreadStatus::Building => "build",
         ThreadStatus::Idle | ThreadStatus::Exploring => "explore",
         ThreadStatus::Planning | ThreadStatus::WaitingForApproval => "plan",

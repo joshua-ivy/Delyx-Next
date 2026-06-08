@@ -92,7 +92,10 @@ pub fn test_run_approved(
     request: TestRunRequest,
 ) -> Result<TestArtifactView, String> {
     approvals.with_engine(|engine| {
-        let mut store = state.store.lock().map_err(|_| "Test bridge lock failed.".to_string())?;
+        let mut store = state
+            .store
+            .lock()
+            .map_err(|_| "Test bridge lock failed.".to_string())?;
         let artifact = run_test_record(&mut store, engine, request)?;
         state.save_if_persistent(&store)?;
         Ok(artifact)
@@ -104,7 +107,10 @@ pub fn test_snapshot(
     state: tauri::State<TestRunnerBridgeState>,
     run_id: String,
 ) -> Result<Vec<TestArtifactView>, String> {
-    let store = state.store.lock().map_err(|_| "Test bridge lock failed.".to_string())?;
+    let store = state
+        .store
+        .lock()
+        .map_err(|_| "Test bridge lock failed.".to_string())?;
     Ok(test_snapshot_from_store(&store, &run_id))
 }
 
@@ -114,9 +120,16 @@ pub fn run_test_record(
     request: TestRunRequest,
 ) -> Result<TestArtifactView, String> {
     validate_request(&request)?;
-    let roots = request.approved_roots.iter().map(PathBuf::from).collect::<Vec<_>>();
+    let roots = request
+        .approved_roots
+        .iter()
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
     let mut runner = TestRunner::new(roots).map_err(|error| format!("{error:?}"))?;
-    let completed_at = request.completed_at.clone().unwrap_or_else(|| request.started_at.clone());
+    let completed_at = request
+        .completed_at
+        .clone()
+        .unwrap_or_else(|| request.started_at.clone());
     let artifact = runner
         .run_approved_test(
             TestCommandInput {
@@ -131,12 +144,20 @@ pub fn run_test_record(
             approvals,
         )
         .map_err(|error| format!("{error:?}"))?;
-    let view = artifact_view(&artifact, request.started_at, completed_at, next_artifact_id(store));
+    let view = artifact_view(
+        &artifact,
+        request.started_at,
+        completed_at,
+        next_artifact_id(store),
+    );
     store.artifacts.push(view.clone());
     Ok(view)
 }
 
-pub fn test_snapshot_from_store(store: &TestRunnerBridgeStore, run_id: &str) -> Vec<TestArtifactView> {
+pub fn test_snapshot_from_store(
+    store: &TestRunnerBridgeStore,
+    run_id: &str,
+) -> Vec<TestArtifactView> {
     store
         .artifacts
         .iter()
@@ -161,10 +182,12 @@ fn artifact_view(
     completed_at: String,
     id: String,
 ) -> TestArtifactView {
-    let parsed_failures = artifact.failure_summary.as_ref().map(|message| vec![ParsedFailureView {
-        id: format!("{id}-failure-1"),
-        message: message.clone(),
-    }]);
+    let parsed_failures = artifact.failure_summary.as_ref().map(|message| {
+        vec![ParsedFailureView {
+            id: format!("{id}-failure-1"),
+            message: message.clone(),
+        }]
+    });
     TestArtifactView {
         approval_id: Some(artifact.approval_id.clone()),
         command: artifact.command.clone(),

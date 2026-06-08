@@ -7,8 +7,9 @@ Last updated: 2026-06-07.
 Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
-- `cargo test --workspace`: 208 passed, 0 failed.
-- `npm run typecheck`, `npm test` (smoke/source-contract), and `npm run smoke:ui`: pass.
+- `cargo fmt --check` and `cargo test --workspace`: 209 passed, 0 failed.
+- `npm run typecheck`, `npm test` (smoke/source-contract), `npm run build`, `npm run smoke:ui`, and `npm run smoke:tauri`: pass.
+- Browser visual checks passed for the no-thread cockpit at 1280x720 and 390x844: no fake progress/diff/terminal/metric blocks, no inspector, no horizontal overflow.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
   OpenAI-compatible stub, single Rust crate, string-rendered cockpit, and
   grep-style frontend verifiers all match the "Current Reality" claims below.
@@ -39,7 +40,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Current Reality
 
 - PR 1-18.1 breadth is skeleton-complete.
-- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state, and approved test artifacts now use a real SQLite database and migration; deeper artifact/evidence-first stores and mutation bridges are still missing.
+- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state, approved test artifacts, and patch proposal diffs now use a real SQLite database and migration; deeper artifact/evidence-first stores and mutation bridges are still missing.
 - There is no full execution engine: no scheduler, executor, resume engine, repair loop, or hook runner.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
@@ -55,7 +56,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - A small Codex-inspired PowerShell UTF-8 terminal-capture polish is wired for approved external worker commands.
 - A Codex-inspired typed command execution artifact now backs approved test commands and external terminal workers with output caps, stdout/stderr events, status, duration, approval IDs, and deterministic tests.
 - Codex CLI launch is now wired only through Delyx approvals and captured command artifacts; it is not an autonomous build loop.
-- The cockpit replaced the dead metric card grid with a compact live activity strip, readable message formatting, and compact evidence coverage; it is still string-rendered pending D4.
+- The cockpit replaced the dead metric card grid with a compact live activity strip, readable message formatting, and compact evidence coverage; the no-thread dashboard now shows only a minimal start prompt and composer until real thread/run data exists. It is still string-rendered pending D4.
 
 ## Phase 1 Skeleton Checklist
 
@@ -128,7 +129,8 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - The Rust automation engine now saves mission contracts, active/paused status, schedules, allowed tools, scheduled run records, approval links, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
   - Release profile and latest redacted support bundle now save to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
   - Approved test artifact bridge records now save command, cwd, approval/run IDs, exit status, stdout/stderr, parsed failures, output truncation, and command exec events to SQLite and reload on desktop startup.
-  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, skill reload, automation reload, release reload, support-bundle reload, test artifact reload, UI-ready bridge snapshots, and SQLite file format.
+  - Patch proposal bridge records now save proposal IDs, approval/run IDs, status, checkpoint ID, file paths, and diff lines to SQLite and reload on desktop startup.
+  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, skill reload, automation reload, release reload, support-bundle reload, test artifact reload, patch proposal reload, UI-ready bridge snapshots, and SQLite file format.
   - Persist remaining artifact/evidence-first stores that still live only inside AgentRun rows.
   - Next: add mutation/action bridges for persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
   - Add migration/repository tests that prove data survives reload.
@@ -153,6 +155,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - If keeping string rendering, document why and add tests around the binding layer.
   - If migrating, move cockpit surfaces into focused React components without fake data.
   - Reconcile the plan with Radix/TanStack/Zustand targets.
+  - Completed now: no-thread cockpit hides unbacked progress, diff, terminal, inspector, and metric-card furniture; browser checks cover desktop and mobile overflow.
 
 - [ ] D5 - Functional Build Flow
   - Convert approved plans into patch proposals through the runtime engine.

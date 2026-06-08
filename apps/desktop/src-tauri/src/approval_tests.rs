@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
     use crate::approval::{
-        ApprovalDecisionKind, ApprovalEngine, ApprovalError, ApprovalGateState, ProposalInput, ProposalStatus,
-        RiskLevel, RiskyAction,
+        ApprovalDecisionKind, ApprovalEngine, ApprovalError, ApprovalGateState, ProposalInput,
+        ProposalStatus, RiskLevel, RiskyAction,
     };
 
     #[test]
@@ -23,8 +23,14 @@ mod tests {
         let mut engine = ApprovalEngine::new();
         let proposal = engine.propose(input(RiskyAction::TerminalCommand, 100));
 
-        assert_eq!(engine.gate_state(&proposal.id, 50).unwrap(), ApprovalGateState::WaitingForApproval);
-        assert_eq!(engine.assert_can_execute(&proposal.id, 50).unwrap_err(), ApprovalError::NotApproved);
+        assert_eq!(
+            engine.gate_state(&proposal.id, 50).unwrap(),
+            ApprovalGateState::WaitingForApproval
+        );
+        assert_eq!(
+            engine.assert_can_execute(&proposal.id, 50).unwrap_err(),
+            ApprovalError::NotApproved
+        );
     }
 
     #[test]
@@ -36,7 +42,10 @@ mod tests {
 
         let proposal = engine.list_proposals("run-1")[0];
         assert_eq!(proposal.status, ProposalStatus::Approved);
-        assert_eq!(proposal.decision.as_ref().unwrap().kind, ApprovalDecisionKind::Approve);
+        assert_eq!(
+            proposal.decision.as_ref().unwrap().kind,
+            ApprovalDecisionKind::Approve
+        );
         assert_eq!(engine.assert_can_execute(&proposal.id, 60), Ok(()));
     }
 
@@ -46,7 +55,8 @@ mod tests {
         let proposal = engine.propose(input(RiskyAction::FileWrite, 100));
         engine.approve(&proposal.id, 50, "approved once").unwrap();
 
-        let result = engine.assert_can_execute_action(&proposal.id, 60, RiskyAction::TerminalCommand);
+        let result =
+            engine.assert_can_execute_action(&proposal.id, 60, RiskyAction::TerminalCommand);
 
         assert_eq!(
             result.unwrap_err(),
@@ -63,7 +73,12 @@ mod tests {
         let proposal = engine.propose(input(RiskyAction::FileWrite, 100));
         engine.approve(&proposal.id, 50, "approved once").unwrap();
 
-        let result = engine.assert_can_execute_action_for_run(&proposal.id, 60, RiskyAction::FileWrite, "run-2");
+        let result = engine.assert_can_execute_action_for_run(
+            &proposal.id,
+            60,
+            RiskyAction::FileWrite,
+            "run-2",
+        );
 
         assert_eq!(
             result.unwrap_err(),
@@ -104,8 +119,14 @@ mod tests {
 
         engine.deny(&proposal.id, 40, "scope too broad").unwrap();
 
-        assert_eq!(engine.gate_state(&proposal.id, 50).unwrap(), ApprovalGateState::Blocked);
-        assert_eq!(engine.assert_can_execute(&proposal.id, 50).unwrap_err(), ApprovalError::NotApproved);
+        assert_eq!(
+            engine.gate_state(&proposal.id, 50).unwrap(),
+            ApprovalGateState::Blocked
+        );
+        assert_eq!(
+            engine.assert_can_execute(&proposal.id, 50).unwrap_err(),
+            ApprovalError::NotApproved
+        );
     }
 
     #[test]
@@ -115,8 +136,14 @@ mod tests {
 
         engine.expire_due(101);
 
-        assert_eq!(engine.list_proposals("run-1")[0].status, ProposalStatus::Expired);
-        assert_eq!(engine.gate_state(&proposal.id, 101).unwrap(), ApprovalGateState::Blocked);
+        assert_eq!(
+            engine.list_proposals("run-1")[0].status,
+            ProposalStatus::Expired
+        );
+        assert_eq!(
+            engine.gate_state(&proposal.id, 101).unwrap(),
+            ApprovalGateState::Blocked
+        );
     }
 
     #[test]
@@ -124,8 +151,14 @@ mod tests {
         let mut engine = ApprovalEngine::new();
         let proposal = engine.propose(input(RiskyAction::ConnectorWrite, 100));
 
-        assert_eq!(engine.approve(&proposal.id, 101, "late").unwrap_err(), ApprovalError::Expired);
-        assert_eq!(engine.list_proposals("run-1")[0].status, ProposalStatus::Expired);
+        assert_eq!(
+            engine.approve(&proposal.id, 101, "late").unwrap_err(),
+            ApprovalError::Expired
+        );
+        assert_eq!(
+            engine.list_proposals("run-1")[0].status,
+            ProposalStatus::Expired
+        );
     }
 
     #[test]
@@ -133,9 +166,18 @@ mod tests {
         let mut engine = ApprovalEngine::new();
         let proposal = engine.propose(input(RiskyAction::FileWrite, 100));
 
-        assert_eq!(engine.gate_state(&proposal.id, 100).unwrap(), ApprovalGateState::Blocked);
-        assert_eq!(engine.approve(&proposal.id, 100, "deadline").unwrap_err(), ApprovalError::Expired);
-        assert_eq!(engine.list_proposals("run-1")[0].status, ProposalStatus::Expired);
+        assert_eq!(
+            engine.gate_state(&proposal.id, 100).unwrap(),
+            ApprovalGateState::Blocked
+        );
+        assert_eq!(
+            engine.approve(&proposal.id, 100, "deadline").unwrap_err(),
+            ApprovalError::Expired
+        );
+        assert_eq!(
+            engine.list_proposals("run-1")[0].status,
+            ProposalStatus::Expired
+        );
     }
 
     #[test]
@@ -143,19 +185,31 @@ mod tests {
         let mut engine = ApprovalEngine::new();
         let proposal = engine.propose(input(RiskyAction::TerminalCommand, 100));
 
-        engine.approve(&proposal.id, 90, "approved before deadline").unwrap();
+        engine
+            .approve(&proposal.id, 90, "approved before deadline")
+            .unwrap();
         assert_eq!(engine.assert_can_execute(&proposal.id, 99), Ok(()));
 
         engine.expire_due(100);
 
-        assert_eq!(engine.list_proposals("run-1")[0].status, ProposalStatus::Expired);
-        assert_eq!(engine.assert_can_execute(&proposal.id, 100).unwrap_err(), ApprovalError::NotApproved);
+        assert_eq!(
+            engine.list_proposals("run-1")[0].status,
+            ProposalStatus::Expired
+        );
+        assert_eq!(
+            engine.assert_can_execute(&proposal.id, 100).unwrap_err(),
+            ApprovalError::NotApproved
+        );
     }
 
     #[test]
     fn action_taxonomy_clamps_downgraded_risk() {
         let mut engine = ApprovalEngine::new();
-        let proposal = engine.propose(input_with_risk(RiskyAction::DependencyInstall, RiskLevel::Low, 100));
+        let proposal = engine.propose(input_with_risk(
+            RiskyAction::DependencyInstall,
+            RiskLevel::Low,
+            100,
+        ));
 
         assert_eq!(proposal.risk, RiskLevel::High);
     }
@@ -163,7 +217,11 @@ mod tests {
     #[test]
     fn action_taxonomy_allows_escalated_dangerous_risk() {
         let mut engine = ApprovalEngine::new();
-        let proposal = engine.propose(input_with_risk(RiskyAction::TerminalCommand, RiskLevel::Dangerous, 100));
+        let proposal = engine.propose(input_with_risk(
+            RiskyAction::TerminalCommand,
+            RiskLevel::Dangerous,
+            100,
+        ));
 
         assert_eq!(proposal.risk, RiskLevel::Dangerous);
     }
@@ -176,7 +234,11 @@ mod tests {
             (RiskyAction::DependencyInstall, RiskLevel::High, true),
             (RiskyAction::ConnectorWrite, RiskLevel::High, true),
             (RiskyAction::DurableMemorySave, RiskLevel::Medium, true),
-            (RiskyAction::ScheduledRiskyAction, RiskLevel::Dangerous, true),
+            (
+                RiskyAction::ScheduledRiskyAction,
+                RiskLevel::Dangerous,
+                true,
+            ),
             (RiskyAction::ExternalAgentExecution, RiskLevel::High, true),
             (RiskyAction::ExternalSend, RiskLevel::High, false),
         ] {

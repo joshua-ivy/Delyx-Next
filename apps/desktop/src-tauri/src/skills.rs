@@ -57,7 +57,12 @@ impl SkillRegistry {
         Self { next_id, skills }
     }
 
-    pub fn import_skill_file(&mut self, source: &str, contents: &str, trust: SkillTrust) -> SkillManifest {
+    pub fn import_skill_file(
+        &mut self,
+        source: &str,
+        contents: &str,
+        trust: SkillTrust,
+    ) -> SkillManifest {
         self.next_id += 1;
         let skill = SkillManifest {
             id: format!("skill-{}", self.next_id),
@@ -72,7 +77,11 @@ impl SkillRegistry {
         skill
     }
 
-    pub fn activate(&mut self, skill_id: &str, permissions: SkillPermissions) -> Result<(), SkillError> {
+    pub fn activate(
+        &mut self,
+        skill_id: &str,
+        permissions: SkillPermissions,
+    ) -> Result<(), SkillError> {
         let skill = self.skill_mut(skill_id)?;
         skill.permissions = permissions;
         skill.status = SkillStatus::Active;
@@ -94,7 +103,11 @@ impl SkillRegistry {
         if skill.status != SkillStatus::Active {
             return Err(SkillError::SkillNotActive);
         }
-        skill.permissions.can_run_scripts.then_some(()).ok_or(SkillError::ScriptsNotAllowed)
+        skill
+            .permissions
+            .can_run_scripts
+            .then_some(())
+            .ok_or(SkillError::ScriptsNotAllowed)
     }
 
     pub fn skills(&self) -> &[SkillManifest] {
@@ -102,18 +115,27 @@ impl SkillRegistry {
     }
 
     fn skill(&self, skill_id: &str) -> Result<&SkillManifest, SkillError> {
-        self.skills.iter().find(|skill| skill.id == skill_id).ok_or(SkillError::MissingSkill)
+        self.skills
+            .iter()
+            .find(|skill| skill.id == skill_id)
+            .ok_or(SkillError::MissingSkill)
     }
 
     fn skill_mut(&mut self, skill_id: &str) -> Result<&mut SkillManifest, SkillError> {
-        self.skills.iter_mut().find(|skill| skill.id == skill_id).ok_or(SkillError::MissingSkill)
+        self.skills
+            .iter_mut()
+            .find(|skill| skill.id == skill_id)
+            .ok_or(SkillError::MissingSkill)
     }
 }
 
 fn scan_name(contents: &str) -> Option<String> {
     contents
         .lines()
-        .find_map(|line| line.strip_prefix("name:").map(|value| value.trim().to_string()))
+        .find_map(|line| {
+            line.strip_prefix("name:")
+                .map(|value| value.trim().to_string())
+        })
         .filter(|value| !value.is_empty())
 }
 

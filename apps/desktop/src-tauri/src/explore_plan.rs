@@ -58,7 +58,10 @@ pub struct PlanAgent;
 
 impl ExploreAgent {
     pub fn capabilities() -> &'static [ToolCapability] {
-        &[ToolCapability::SearchApprovedFiles, ToolCapability::ReadApprovedFile]
+        &[
+            ToolCapability::SearchApprovedFiles,
+            ToolCapability::ReadApprovedFile,
+        ]
     }
 
     pub fn search(
@@ -90,7 +93,11 @@ impl ExploreAgent {
         let files = relevant_files(manager, project_id, goal)?;
         let commands = discover_commands(manager, project_id)?;
         let symbols = discover_symbols(manager, project_id, &files)?;
-        let unknowns = if files.is_empty() { vec!["No matching approved files found.".to_string()] } else { Vec::new() };
+        let unknowns = if files.is_empty() {
+            vec!["No matching approved files found.".to_string()]
+        } else {
+            Vec::new()
+        };
         let suggested_next_steps = suggested_next_steps(&files);
 
         Ok(ExploreOutput {
@@ -107,10 +114,16 @@ impl ExploreAgent {
 
 impl PlanAgent {
     pub fn capabilities() -> &'static [ToolCapability] {
-        &[ToolCapability::SearchApprovedFiles, ToolCapability::ReadApprovedFile]
+        &[
+            ToolCapability::SearchApprovedFiles,
+            ToolCapability::ReadApprovedFile,
+        ]
     }
 
-    pub fn create_plan(goal: &str, explore: &ExploreOutput) -> Result<PlanOutput, ExplorePlanError> {
+    pub fn create_plan(
+        goal: &str,
+        explore: &ExploreOutput,
+    ) -> Result<PlanOutput, ExplorePlanError> {
         let goal = goal.trim();
         if goal.is_empty() {
             return Err(ExplorePlanError::EmptyGoal);
@@ -145,7 +158,11 @@ impl PlanAgent {
     }
 }
 
-fn relevant_files(manager: &WorkspaceManager, project_id: &str, goal: &str) -> Result<Vec<String>, ExplorePlanError> {
+fn relevant_files(
+    manager: &WorkspaceManager,
+    project_id: &str,
+    goal: &str,
+) -> Result<Vec<String>, ExplorePlanError> {
     let mut files = Vec::new();
     for term in search_terms(goal) {
         for entry in manager.search_files(project_id, &term)? {
@@ -160,13 +177,19 @@ fn relevant_files(manager: &WorkspaceManager, project_id: &str, goal: &str) -> R
     Ok(files)
 }
 
-fn discover_commands(manager: &WorkspaceManager, project_id: &str) -> Result<Vec<String>, ExplorePlanError> {
+fn discover_commands(
+    manager: &WorkspaceManager,
+    project_id: &str,
+) -> Result<Vec<String>, ExplorePlanError> {
     let files = manager.index_files(project_id, 200)?;
     let mut commands = Vec::new();
     if files.iter().any(|file| file.relative_path == "Cargo.toml") {
         commands.push("cargo test --workspace".to_string());
     }
-    if files.iter().any(|file| file.relative_path == "package.json") {
+    if files
+        .iter()
+        .any(|file| file.relative_path == "package.json")
+    {
         commands.push("npm test".to_string());
     }
     Ok(commands)
@@ -235,7 +258,8 @@ fn architecture_summary(commands: &[String]) -> String {
         return "Rust workspace detected from approved project files.".to_string();
     }
     if commands.iter().any(|command| command.contains("npm")) {
-        return "TypeScript or JavaScript workspace detected from approved project files.".to_string();
+        return "TypeScript or JavaScript workspace detected from approved project files."
+            .to_string();
     }
     "No dominant stack detected from approved project files.".to_string()
 }

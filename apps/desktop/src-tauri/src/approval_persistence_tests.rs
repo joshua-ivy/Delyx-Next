@@ -25,8 +25,14 @@ mod tests {
         let snapshot = approval_snapshot_from_store(&loaded, "run-1");
         assert_eq!(snapshot[0].id, proposal.id);
         assert_eq!(snapshot[0].status, "approved");
-        assert_eq!(snapshot[0].scope.paths, Some(vec!["src/main.ts".to_string()]));
-        loaded.engine.assert_can_execute_action_for_run(&proposal.id, 50, RiskyAction::FileWrite, "run-1").unwrap();
+        assert_eq!(
+            snapshot[0].scope.paths,
+            Some(vec!["src/main.ts".to_string()])
+        );
+        loaded
+            .engine
+            .assert_can_execute_action_for_run(&proposal.id, 50, RiskyAction::FileWrite, "run-1")
+            .unwrap();
 
         let next = propose_approval_record(&mut loaded, request("approval-second")).unwrap();
         assert_eq!(next.id, "prop-2");
@@ -68,7 +74,10 @@ mod tests {
     }
 
     fn temp_path(name: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}.sqlite3"))
     }
 }

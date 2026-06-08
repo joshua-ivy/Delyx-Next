@@ -8,14 +8,19 @@ pub fn default_database_path() -> PathBuf {
         return PathBuf::from(path);
     }
     if let Some(local_app_data) = std::env::var_os("LOCALAPPDATA") {
-        return PathBuf::from(local_app_data).join("Delyx Next").join("delyx-next.sqlite3");
+        return PathBuf::from(local_app_data)
+            .join("Delyx Next")
+            .join("delyx-next.sqlite3");
     }
-    std::env::current_dir().unwrap_or_else(|_| std::env::temp_dir()).join("delyx-next.sqlite3")
+    std::env::current_dir()
+        .unwrap_or_else(|_| std::env::temp_dir())
+        .join("delyx-next.sqlite3")
 }
 
 pub fn open_migrated_database(path: &Path) -> rusqlite::Result<Connection> {
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|error| rusqlite::Error::ToSqlConversionFailure(Box::new(error)))?;
+        std::fs::create_dir_all(parent)
+            .map_err(|error| rusqlite::Error::ToSqlConversionFailure(Box::new(error)))?;
     }
     let connection = Connection::open(path)?;
     migrate(&connection)?;

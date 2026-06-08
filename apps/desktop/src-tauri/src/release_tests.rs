@@ -38,7 +38,10 @@ mod tests {
 
     #[test]
     fn incomplete_signing_policy_is_not_silent() {
-        let policy = SigningPolicy { certificate_thumbprint: Some("thumbprint".to_string()), ..SigningPolicy::default() };
+        let policy = SigningPolicy {
+            certificate_thumbprint: Some("thumbprint".to_string()),
+            ..SigningPolicy::default()
+        };
 
         let check = check_signing(&policy);
 
@@ -51,13 +54,22 @@ mod tests {
         let profile = default_release_profile();
         let bundle = export_support_bundle(
             &profile,
-            vec![("OPENAI_API_KEY", "sk-test"), ("workspace", "C:/Users/geaux/Downloads/Delyx Next")],
-            vec![("runtime", "loaded local config"), ("provider", "Authorization: Bearer abc123")],
+            vec![
+                ("OPENAI_API_KEY", "sk-test"),
+                ("workspace", "C:/Users/geaux/Downloads/Delyx Next"),
+            ],
+            vec![
+                ("runtime", "loaded local config"),
+                ("provider", "Authorization: Bearer abc123"),
+            ],
             42,
         );
 
         assert_eq!(bundle.config_summary[0].value, "[redacted]");
-        assert_eq!(bundle.config_summary[1].value, "C:/Users/geaux/Downloads/Delyx Next");
+        assert_eq!(
+            bundle.config_summary[1].value,
+            "C:/Users/geaux/Downloads/Delyx Next"
+        );
         assert_eq!(bundle.logs[0].line, "loaded local config");
         assert_eq!(bundle.logs[1].line, "[redacted log line]");
         assert!(!format!("{:?}", bundle).contains("sk-test"));
@@ -74,12 +86,21 @@ mod tests {
                 ("aws_access_key_id", "AKIAIOSFODNN7EXAMPLE"),
                 ("public_note", "-----BEGIN PRIVATE KEY-----"),
             ],
-            vec![("slack", "xoxb-secret"), ("pem", "-----BEGIN OPENSSH PRIVATE KEY-----")],
+            vec![
+                ("slack", "xoxb-secret"),
+                ("pem", "-----BEGIN OPENSSH PRIVATE KEY-----"),
+            ],
             43,
         );
 
-        assert!(bundle.config_summary.iter().all(|entry| entry.value == "[redacted]"));
-        assert!(bundle.logs.iter().all(|entry| entry.line == "[redacted log line]"));
+        assert!(bundle
+            .config_summary
+            .iter()
+            .all(|entry| entry.value == "[redacted]"));
+        assert!(bundle
+            .logs
+            .iter()
+            .all(|entry| entry.line == "[redacted log line]"));
         assert!(!format!("{:?}", bundle).contains("ghp_example"));
         assert!(!format!("{:?}", bundle).contains("xoxb-secret"));
     }

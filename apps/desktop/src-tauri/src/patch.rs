@@ -106,7 +106,12 @@ impl PatchEngine {
             }
             let before = read_text(&path)?;
             let diff = build_diff(&before, &file.after);
-            files.push(PatchFile { path, before, after: file.after, diff });
+            files.push(PatchFile {
+                path,
+                before,
+                after: file.after,
+                diff,
+            });
         }
 
         self.next_proposal_id += 1;
@@ -123,7 +128,10 @@ impl PatchEngine {
     }
 
     pub fn list_proposals(&self, run_id: &str) -> Vec<&PatchProposal> {
-        self.proposals.iter().filter(|proposal| proposal.run_id == run_id).collect()
+        self.proposals
+            .iter()
+            .filter(|proposal| proposal.run_id == run_id)
+            .collect()
     }
 
     pub fn apply_approved_patch(
@@ -138,7 +146,12 @@ impl PatchEngine {
             return Err(PatchError::AlreadyApplied);
         }
         approvals
-            .assert_can_execute_action_for_run(&proposal.approval_id, now, RiskyAction::FileWrite, &proposal.run_id)
+            .assert_can_execute_action_for_run(
+                &proposal.approval_id,
+                now,
+                RiskyAction::FileWrite,
+                &proposal.run_id,
+            )
             .map_err(PatchError::Approval)?;
 
         let checkpoint = self.create_checkpoint(&proposal)?;
@@ -250,18 +263,34 @@ fn read_text(path: &Path) -> Result<String, PatchError> {
 }
 
 fn checkpoint_file(path: &Path) -> Result<CheckpointFile, PatchError> {
-    let contents = path.exists().then(|| fs::read_to_string(path)).transpose().map_err(io_error)?;
-    Ok(CheckpointFile { path: path.to_path_buf(), contents })
+    let contents = path
+        .exists()
+        .then(|| fs::read_to_string(path))
+        .transpose()
+        .map_err(io_error)?;
+    Ok(CheckpointFile {
+        path: path.to_path_buf(),
+        contents,
+    })
 }
 
 fn build_diff(before: &str, after: &str) -> Vec<DiffLine> {
     if before == after {
-        return vec![DiffLine { kind: DiffLineKind::Context, text: "No text changes.".to_string() }];
+        return vec![DiffLine {
+            kind: DiffLineKind::Context,
+            text: "No text changes.".to_string(),
+        }];
     }
     before
         .lines()
-        .map(|line| DiffLine { kind: DiffLineKind::Removed, text: line.to_string() })
-        .chain(after.lines().map(|line| DiffLine { kind: DiffLineKind::Added, text: line.to_string() }))
+        .map(|line| DiffLine {
+            kind: DiffLineKind::Removed,
+            text: line.to_string(),
+        })
+        .chain(after.lines().map(|line| DiffLine {
+            kind: DiffLineKind::Added,
+            text: line.to_string(),
+        }))
         .collect()
 }
 

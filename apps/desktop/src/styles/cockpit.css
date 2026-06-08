@@ -37,6 +37,10 @@
   grid-template-columns: 56px minmax(0, 1fr) var(--review-w);
 }
 
+.deck-conv:empty {
+  display: none;
+}
+
 .deck-spine-logo {
   border: 0;
   cursor: pointer;

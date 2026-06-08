@@ -1,7 +1,9 @@
 #[cfg(test)]
 mod tests {
     use crate::patch::{DiffLine, DiffLineKind, PatchFile, PatchProposal, PatchStatus};
-    use crate::review::{FindingPriority, ReviewAgent, ReviewCapability, ReviewDecision, ReviewError};
+    use crate::review::{
+        FindingPriority, ReviewAgent, ReviewCapability, ReviewDecision, ReviewError,
+    };
     use crate::test_runner::{TestArtifact, TestStatus};
     use std::path::PathBuf;
 
@@ -10,14 +12,22 @@ mod tests {
         assert!(!ReviewAgent::can_write());
         assert_eq!(
             ReviewAgent::capabilities(),
-            vec![ReviewCapability::ReadDiff, ReviewCapability::ReadTestArtifact, ReviewCapability::ReadEvidence],
+            vec![
+                ReviewCapability::ReadDiff,
+                ReviewCapability::ReadTestArtifact,
+                ReviewCapability::ReadEvidence
+            ],
         );
     }
 
     #[test]
     fn findings_link_to_diff_hunks_and_are_prioritized() {
         let mut agent = ReviewAgent::new();
-        let report = agent.review("run-1", &[patch_with_added("let value = maybe.unwrap();")], &[]);
+        let report = agent.review(
+            "run-1",
+            &[patch_with_added("let value = maybe.unwrap();")],
+            &[],
+        );
 
         assert_eq!(report.mode, crate::review::ReviewMode::ReadOnly);
         assert_eq!(report.findings[0].priority, FindingPriority::P1);
@@ -41,7 +51,11 @@ mod tests {
     #[test]
     fn failed_tests_create_prioritized_findings() {
         let mut agent = ReviewAgent::new();
-        let report = agent.review("run-1", &[patch_with_added("let value = 1;")], &[failed_artifact()]);
+        let report = agent.review(
+            "run-1",
+            &[patch_with_added("let value = 1;")],
+            &[failed_artifact()],
+        );
 
         assert_eq!(report.findings[0].priority, FindingPriority::P1);
         assert_eq!(report.findings[0].title, "Test artifact failed");
@@ -52,14 +66,21 @@ mod tests {
     #[test]
     fn revision_request_creates_plan_build_flow_marker() {
         let mut agent = ReviewAgent::new();
-        let report = agent.review("run-1", &[patch_with_added("let value = maybe.unwrap();")], &[]);
+        let report = agent.review(
+            "run-1",
+            &[patch_with_added("let value = maybe.unwrap();")],
+            &[],
+        );
         let finding_id = report.findings[0].id.clone();
 
         let request = agent.request_revision(&report.id, &finding_id).unwrap();
 
         assert_eq!(request.decision, ReviewDecision::ReviseRequested);
         assert_eq!(request.next_flow, vec!["plan", "build"]);
-        assert_eq!(agent.report_decision(&report.id).unwrap(), ReviewDecision::ReviseRequested);
+        assert_eq!(
+            agent.report_decision(&report.id).unwrap(),
+            ReviewDecision::ReviseRequested
+        );
     }
 
     #[test]
@@ -83,7 +104,13 @@ mod tests {
             files: vec![PatchFile {
                 after: lines.join("\n"),
                 before: String::new(),
-                diff: lines.into_iter().map(|text| DiffLine { kind: DiffLineKind::Added, text: text.to_string() }).collect(),
+                diff: lines
+                    .into_iter()
+                    .map(|text| DiffLine {
+                        kind: DiffLineKind::Added,
+                        text: text.to_string(),
+                    })
+                    .collect(),
                 path: PathBuf::from("src/main.rs"),
             }],
             id: "patch-1".to_string(),

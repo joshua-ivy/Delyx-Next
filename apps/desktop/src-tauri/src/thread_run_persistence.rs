@@ -1,6 +1,8 @@
 use crate::agent_run_persistence::{load_from_connection, save_to_connection};
 use crate::thread_run_bridge::{ThreadRunRecord, ThreadRunStore};
-use crate::threads::{MessageRole, TaskThread, ThreadError, ThreadManager, ThreadMessage, ThreadStatus};
+use crate::threads::{
+    MessageRole, TaskThread, ThreadError, ThreadManager, ThreadMessage, ThreadStatus,
+};
 use rusqlite::{params, Connection};
 use std::path::Path;
 
@@ -26,7 +28,11 @@ pub fn load_from_path(path: &Path) -> Result<ThreadRunStore, String> {
     let ledger = load_from_connection(&connection).map_err(|error| format!("{error:?}"))?;
     let threads = load_threads(&connection)?;
     let records = load_records(&connection)?;
-    Ok(ThreadRunStore { manager: ThreadManager::from_loaded_threads(threads), ledger, records })
+    Ok(ThreadRunStore {
+        manager: ThreadManager::from_loaded_threads(threads),
+        ledger,
+        records,
+    })
 }
 
 fn clear_thread_tables(connection: &Connection) -> Result<(), String> {
@@ -76,7 +82,9 @@ fn insert_record(connection: &Connection, record: &ThreadRunRecord) -> Result<()
 
 fn load_threads(connection: &Connection) -> Result<Vec<TaskThread>, String> {
     let mut statement = connection
-        .prepare("SELECT id, project_id, title, goal, status, archived FROM task_threads ORDER BY rowid")
+        .prepare(
+            "SELECT id, project_id, title, goal, status, archived FROM task_threads ORDER BY rowid",
+        )
         .map_err(sql_string)?;
     let mut rows = statement.query([]).map_err(sql_string)?;
     let mut threads = Vec::new();
@@ -98,7 +106,9 @@ fn load_threads(connection: &Connection) -> Result<Vec<TaskThread>, String> {
 
 fn load_messages(connection: &Connection, thread_id: &str) -> Result<Vec<ThreadMessage>, String> {
     let mut statement = connection
-        .prepare("SELECT role, body FROM thread_messages WHERE thread_id = ?1 ORDER BY message_index")
+        .prepare(
+            "SELECT role, body FROM thread_messages WHERE thread_id = ?1 ORDER BY message_index",
+        )
         .map_err(sql_string)?;
     let mut rows = statement.query(params![thread_id]).map_err(sql_string)?;
     let mut messages = Vec::new();
@@ -117,13 +127,15 @@ fn load_records(connection: &Connection) -> Result<Vec<ThreadRunRecord>, String>
         .prepare("SELECT thread_id, run_id, project_id, created_at, updated_at FROM thread_run_records ORDER BY rowid")
         .map_err(sql_string)?;
     let rows = statement
-        .query_map([], |row| Ok(ThreadRunRecord {
-            thread_id: row.get(0)?,
-            run_id: row.get(1)?,
-            project_id: row.get(2)?,
-            created_at: row.get(3)?,
-            updated_at: row.get(4)?,
-        }))
+        .query_map([], |row| {
+            Ok(ThreadRunRecord {
+                thread_id: row.get(0)?,
+                run_id: row.get(1)?,
+                project_id: row.get(2)?,
+                created_at: row.get(3)?,
+                updated_at: row.get(4)?,
+            })
+        })
         .map_err(sql_string)?;
     rows.collect::<Result<Vec<_>, _>>().map_err(sql_string)
 }

@@ -5,8 +5,8 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use crate::agent_run::{
-        append_agent_event, create_agent_run, get_agent_run, list_agent_runs, AgentRunError, AgentRunLedger,
-        AgentRunStatus,
+        append_agent_event, create_agent_run, get_agent_run, list_agent_runs, AgentRunError,
+        AgentRunLedger, AgentRunStatus,
     };
 
     const THREAD_ID: &str = "thread-local-real";
@@ -26,10 +26,18 @@ mod tests {
         let mut ledger = AgentRunLedger::new();
         let run = ledger.create_run(THREAD_ID).unwrap();
 
-        ledger.append_node(&run.id, "explore", "Read approved files").unwrap();
-        ledger.append_event(&run.id, "explore.started", "Read-only search started").unwrap();
-        ledger.record_artifact(&run.id, "timeline", "run timeline").unwrap();
-        ledger.record_evidence(&run.id, "local_file", "AGENTS.md").unwrap();
+        ledger
+            .append_node(&run.id, "explore", "Read approved files")
+            .unwrap();
+        ledger
+            .append_event(&run.id, "explore.started", "Read-only search started")
+            .unwrap();
+        ledger
+            .record_artifact(&run.id, "timeline", "run timeline")
+            .unwrap();
+        ledger
+            .record_evidence(&run.id, "local_file", "AGENTS.md")
+            .unwrap();
 
         let run = ledger.get_run(&run.id).unwrap();
         assert_eq!(run.nodes[0].kind, "explore");
@@ -44,15 +52,27 @@ mod tests {
         let completed = ledger.create_run(THREAD_ID).unwrap();
         let failed = ledger.create_run(THREAD_ID).unwrap();
 
-        ledger.complete_run(&completed.id, "Finished without executing commands").unwrap();
-        ledger.fail_run(&failed.id, "Planner failed before approval").unwrap();
+        ledger
+            .complete_run(&completed.id, "Finished without executing commands")
+            .unwrap();
+        ledger
+            .fail_run(&failed.id, "Planner failed before approval")
+            .unwrap();
 
-        assert_eq!(ledger.get_run(&completed.id).unwrap().status, AgentRunStatus::Completed);
         assert_eq!(
-            ledger.append_event(&completed.id, "late", "should fail").unwrap_err(),
+            ledger.get_run(&completed.id).unwrap().status,
+            AgentRunStatus::Completed
+        );
+        assert_eq!(
+            ledger
+                .append_event(&completed.id, "late", "should fail")
+                .unwrap_err(),
             AgentRunError::TerminalRun
         );
-        assert_eq!(ledger.get_run(&failed.id).unwrap().status, AgentRunStatus::Failed);
+        assert_eq!(
+            ledger.get_run(&failed.id).unwrap().status,
+            AgentRunStatus::Failed
+        );
     }
 
     #[test]
@@ -62,7 +82,10 @@ mod tests {
 
         let waiting = ledger.wait_for_approval(&run.id, "prop-1").unwrap();
         assert_eq!(waiting.kind, "approval.waiting");
-        assert_eq!(ledger.get_run(&run.id).unwrap().status, AgentRunStatus::WaitingForApproval);
+        assert_eq!(
+            ledger.get_run(&run.id).unwrap().status,
+            AgentRunStatus::WaitingForApproval
+        );
         assert_eq!(
             ledger.complete_run(&run.id, "too soon").unwrap_err(),
             AgentRunError::TerminalRun
@@ -70,7 +93,10 @@ mod tests {
 
         let resumed = ledger.resume_after_approval(&run.id, "prop-1").unwrap();
         assert_eq!(resumed.kind, "approval.resumed");
-        assert_eq!(ledger.get_run(&run.id).unwrap().status, AgentRunStatus::Running);
+        assert_eq!(
+            ledger.get_run(&run.id).unwrap().status,
+            AgentRunStatus::Running
+        );
     }
 
     #[test]
@@ -79,11 +105,21 @@ mod tests {
         let mut ledger = AgentRunLedger::new();
         let run = ledger.create_run(THREAD_ID).unwrap();
         let second = ledger.create_run(THREAD_ID).unwrap();
-        ledger.append_node(&run.id, "explore", "Loaded from SQLite").unwrap();
-        ledger.append_event(&run.id, "created", "real ledger event").unwrap();
-        ledger.record_artifact(&run.id, "timeline", "primary artifact").unwrap();
-        ledger.record_artifact(&second.id, "timeline", "second run artifact").unwrap();
-        ledger.record_evidence(&run.id, "local_file", "AGENTS.md").unwrap();
+        ledger
+            .append_node(&run.id, "explore", "Loaded from SQLite")
+            .unwrap();
+        ledger
+            .append_event(&run.id, "created", "real ledger event")
+            .unwrap();
+        ledger
+            .record_artifact(&run.id, "timeline", "primary artifact")
+            .unwrap();
+        ledger
+            .record_artifact(&second.id, "timeline", "second run artifact")
+            .unwrap();
+        ledger
+            .record_evidence(&run.id, "local_file", "AGENTS.md")
+            .unwrap();
         ledger.complete_run(&run.id, "complete").unwrap();
 
         ledger.save_to_path(&path).unwrap();
@@ -98,8 +134,17 @@ mod tests {
         assert_eq!(loaded_run.artifacts[0].label, "primary artifact");
         assert_eq!(loaded_run.evidence[0].title, "AGENTS.md");
         assert_eq!(loaded_run.outcome.as_ref().unwrap().summary, "complete");
-        assert_eq!(loaded.get_run(&second.id).unwrap().artifacts[0].id, "artifact-1");
-        assert_eq!(loaded.append_event(&second.id, "after.reload", "counter advanced").unwrap().id, "event-2");
+        assert_eq!(
+            loaded.get_run(&second.id).unwrap().artifacts[0].id,
+            "artifact-1"
+        );
+        assert_eq!(
+            loaded
+                .append_event(&second.id, "after.reload", "counter advanced")
+                .unwrap()
+                .id,
+            "event-2"
+        );
         let _ = fs::remove_file(path);
     }
 
@@ -118,7 +163,10 @@ mod tests {
     fn rejects_empty_thread_ids() {
         let mut ledger = AgentRunLedger::new();
 
-        assert_eq!(ledger.create_run(" ").unwrap_err(), AgentRunError::EmptyThread);
+        assert_eq!(
+            ledger.create_run(" ").unwrap_err(),
+            AgentRunError::EmptyThread
+        );
     }
 
     #[test]
@@ -133,7 +181,10 @@ mod tests {
     }
 
     fn temp_path(name: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}.ledger"))
     }
 }

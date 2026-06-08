@@ -62,10 +62,18 @@ impl AutomationEngine {
         Self::default()
     }
 
-    pub(crate) fn from_loaded(contracts: Vec<MissionContract>, scheduled_runs: Vec<ScheduledRun>) -> Self {
+    pub(crate) fn from_loaded(
+        contracts: Vec<MissionContract>,
+        scheduled_runs: Vec<ScheduledRun>,
+    ) -> Self {
         let next_contract_id = next_id(&contracts, |contract| contract.id.as_str(), "mission-");
         let next_run_id = next_id(&scheduled_runs, |run| run.id.as_str(), "scheduled-run-");
-        Self { contracts, next_contract_id, next_run_id, scheduled_runs }
+        Self {
+            contracts,
+            next_contract_id,
+            next_run_id,
+            scheduled_runs,
+        }
     }
 
     pub fn create_contract(&mut self, input: MissionContractInput) -> MissionContract {
@@ -86,9 +94,20 @@ impl AutomationEngine {
         contract
     }
 
-    pub fn approve_contract(&mut self, contract_id: &str, approval_id: &str, now: u64, approvals: &ApprovalEngine) -> Result<(), AutomationError> {
+    pub fn approve_contract(
+        &mut self,
+        contract_id: &str,
+        approval_id: &str,
+        now: u64,
+        approvals: &ApprovalEngine,
+    ) -> Result<(), AutomationError> {
         approvals
-            .assert_can_execute_action_for_run(approval_id, now, RiskyAction::ScheduledRiskyAction, contract_id)
+            .assert_can_execute_action_for_run(
+                approval_id,
+                now,
+                RiskyAction::ScheduledRiskyAction,
+                contract_id,
+            )
             .map_err(AutomationError::Approval)?;
         self.contract_mut(contract_id)?.status = MissionStatus::Active;
         Ok(())
@@ -103,10 +122,20 @@ impl AutomationEngine {
     ) -> Result<ScheduledRun, AutomationError> {
         let contract = self.contract(contract_id)?.clone();
         if contract.status != MissionStatus::Active {
-            return Ok(self.run(contract_id, ScheduledRunStatus::Blocked, "Contract is paused or blocked.", None));
+            return Ok(self.run(
+                contract_id,
+                ScheduledRunStatus::Blocked,
+                "Contract is paused or blocked.",
+                None,
+            ));
         }
         if contract.workspace_fingerprint != workspace_fingerprint {
-            return Ok(self.run(contract_id, ScheduledRunStatus::Blocked, "Workspace drift blocks scheduled work.", None));
+            return Ok(self.run(
+                contract_id,
+                ScheduledRunStatus::Blocked,
+                "Workspace drift blocks scheduled work.",
+                None,
+            ));
         }
         if contract.allowed_tools.iter().any(|tool| risky_tool(tool)) {
             let approval = approvals.propose(ProposalInput {
@@ -114,15 +143,30 @@ impl AutomationEngine {
                 expires_at: now + 900,
                 expected_result: "Scheduled risky action may run after approval.".to_string(),
                 node_id: format!("automation-node-{}", contract.id),
-                reason: format!("Mission contract {} requested a risky scheduled action.", contract.id),
+                reason: format!(
+                    "Mission contract {} requested a risky scheduled action.",
+                    contract.id
+                ),
                 risk: RiskLevel::High,
-                rollback_plan: "Do not run the scheduled action; leave contract paused or revise scope.".to_string(),
+                rollback_plan:
+                    "Do not run the scheduled action; leave contract paused or revise scope."
+                        .to_string(),
                 run_id: contract.id.clone(),
                 scope: contract.scope.clone(),
             });
-            return Ok(self.run(contract_id, ScheduledRunStatus::WaitingForApproval, "Approval required before scheduled execution.", Some(approval.id)));
+            return Ok(self.run(
+                contract_id,
+                ScheduledRunStatus::WaitingForApproval,
+                "Approval required before scheduled execution.",
+                Some(approval.id),
+            ));
         }
-        Ok(self.run(contract_id, ScheduledRunStatus::Created, "Scheduled run created.", None))
+        Ok(self.run(
+            contract_id,
+            ScheduledRunStatus::Created,
+            "Scheduled run created.",
+            None,
+        ))
     }
 
     pub fn contracts(&self) -> &[MissionContract] {
@@ -134,14 +178,26 @@ impl AutomationEngine {
     }
 
     fn contract(&self, contract_id: &str) -> Result<&MissionContract, AutomationError> {
-        self.contracts.iter().find(|contract| contract.id == contract_id).ok_or(AutomationError::ContractNotFound)
+        self.contracts
+            .iter()
+            .find(|contract| contract.id == contract_id)
+            .ok_or(AutomationError::ContractNotFound)
     }
 
     fn contract_mut(&mut self, contract_id: &str) -> Result<&mut MissionContract, AutomationError> {
-        self.contracts.iter_mut().find(|contract| contract.id == contract_id).ok_or(AutomationError::ContractNotFound)
+        self.contracts
+            .iter_mut()
+            .find(|contract| contract.id == contract_id)
+            .ok_or(AutomationError::ContractNotFound)
     }
 
-    fn run(&mut self, contract_id: &str, status: ScheduledRunStatus, reason: &str, approval_id: Option<String>) -> ScheduledRun {
+    fn run(
+        &mut self,
+        contract_id: &str,
+        status: ScheduledRunStatus,
+        reason: &str,
+        approval_id: Option<String>,
+    ) -> ScheduledRun {
         self.next_run_id += 1;
         let run = ScheduledRun {
             id: format!("scheduled-run-{}", self.next_run_id),
@@ -172,5 +228,9 @@ fn risky_tool(tool: &str) -> bool {
 }
 
 fn next_id<T>(items: &[T], id: impl Fn(&T) -> &str, prefix: &str) -> usize {
-    items.iter().filter_map(|item| id(item).strip_prefix(prefix)?.parse::<usize>().ok()).max().unwrap_or(items.len())
+    items
+        .iter()
+        .filter_map(|item| id(item).strip_prefix(prefix)?.parse::<usize>().ok())
+        .max()
+        .unwrap_or(items.len())
 }

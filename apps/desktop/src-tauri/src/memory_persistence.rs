@@ -1,4 +1,6 @@
-use crate::memory::{MemoryCandidate, MemoryCandidateStatus, MemoryRecord, MemoryScope, MemoryStore};
+use crate::memory::{
+    MemoryCandidate, MemoryCandidateStatus, MemoryRecord, MemoryScope, MemoryStore,
+};
 use rusqlite::{params, Connection};
 use std::path::Path;
 

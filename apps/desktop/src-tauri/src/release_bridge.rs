@@ -1,5 +1,7 @@
 use crate::local_store_bridge::LocalStoreBridgeState;
-use crate::release::{check_signing, default_release_profile, ReleaseProfile, SigningStatus, SupportBundle};
+use crate::release::{
+    check_signing, default_release_profile, ReleaseProfile, SigningStatus, SupportBundle,
+};
 use serde::Serialize;
 use std::path::Path;
 
@@ -37,27 +39,44 @@ pub struct UpdateMetadataStateView {
 }
 
 #[tauri::command]
-pub fn release_snapshot(state: tauri::State<LocalStoreBridgeState>) -> Result<ReleaseStateView, String> {
+pub fn release_snapshot(
+    state: tauri::State<LocalStoreBridgeState>,
+) -> Result<ReleaseStateView, String> {
     release_snapshot_from_path(state.database_path())
 }
 
 pub fn release_snapshot_from_path(path: &Path) -> Result<ReleaseStateView, String> {
-    let profile = crate::release_persistence::load_profile_from_path(path)?.unwrap_or_else(default_release_profile);
+    let profile = crate::release_persistence::load_profile_from_path(path)?
+        .unwrap_or_else(default_release_profile);
     let support_bundle = crate::release_persistence::load_support_bundle_from_path(path)?;
-    Ok(release_snapshot_from_parts(&profile, support_bundle.as_ref()))
+    Ok(release_snapshot_from_parts(
+        &profile,
+        support_bundle.as_ref(),
+    ))
 }
 
-pub fn release_snapshot_from_parts(profile: &ReleaseProfile, support_bundle: Option<&SupportBundle>) -> ReleaseStateView {
+pub fn release_snapshot_from_parts(
+    profile: &ReleaseProfile,
+    support_bundle: Option<&SupportBundle>,
+) -> ReleaseStateView {
     let signing = check_signing(&profile.signing);
     ReleaseStateView {
         platform: profile.target_platform.clone(),
         bundle_target: profile.bundle_target.clone(),
         installer: installer_label(signing.status).to_string(),
         smoke_status: "not_loaded".to_string(),
-        signing: SigningStateView { status: signing_status_key(signing.status).to_string(), message: signing.message },
+        signing: SigningStateView {
+            status: signing_status_key(signing.status).to_string(),
+            message: signing.message,
+        },
         support_bundle: support_bundle_view(support_bundle),
         update_metadata: UpdateMetadataStateView {
-            status: if profile.update_metadata.published { "published" } else { "placeholder" }.to_string(),
+            status: if profile.update_metadata.published {
+                "published"
+            } else {
+                "placeholder"
+            }
+            .to_string(),
             channel: profile.update_metadata.channel.clone(),
         },
     }

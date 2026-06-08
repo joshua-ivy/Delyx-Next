@@ -65,10 +65,22 @@ impl MemoryStore {
         Self::default()
     }
 
-    pub(crate) fn from_loaded(candidates: Vec<MemoryCandidate>, records: Vec<MemoryRecord>) -> Self {
-        let next_candidate_id = next_id(&candidates, |candidate| candidate.id.as_str(), "memory-candidate-");
+    pub(crate) fn from_loaded(
+        candidates: Vec<MemoryCandidate>,
+        records: Vec<MemoryRecord>,
+    ) -> Self {
+        let next_candidate_id = next_id(
+            &candidates,
+            |candidate| candidate.id.as_str(),
+            "memory-candidate-",
+        );
         let next_record_id = next_id(&records, |record| record.id.as_str(), "memory-");
-        Self { candidates, next_candidate_id, next_record_id, records }
+        Self {
+            candidates,
+            next_candidate_id,
+            next_record_id,
+            records,
+        }
     }
 
     pub fn propose_candidate(&mut self, input: MemoryCandidateInput) -> MemoryCandidate {
@@ -139,7 +151,11 @@ impl MemoryStore {
     }
 
     pub fn suppress_memory(&mut self, record_id: &str) -> Result<(), MemoryError> {
-        let record = self.records.iter_mut().find(|item| item.id == record_id).ok_or(MemoryError::RecordNotFound)?;
+        let record = self
+            .records
+            .iter_mut()
+            .find(|item| item.id == record_id)
+            .ok_or(MemoryError::RecordNotFound)?;
         record.suppressed = true;
         Ok(())
     }
@@ -153,18 +169,28 @@ impl MemoryStore {
     }
 
     fn candidate_index(&self, candidate_id: &str) -> Result<usize, MemoryError> {
-        self.candidates.iter().position(|candidate| candidate.id == candidate_id).ok_or(MemoryError::CandidateNotFound)
+        self.candidates
+            .iter()
+            .position(|candidate| candidate.id == candidate_id)
+            .ok_or(MemoryError::CandidateNotFound)
     }
 
     fn suppress_matching_record(&mut self, scope: MemoryScope, key: &str) -> Option<String> {
-        let record = self.records.iter_mut().find(|item| item.scope == scope && item.key == key && !item.suppressed)?;
+        let record = self
+            .records
+            .iter_mut()
+            .find(|item| item.scope == scope && item.key == key && !item.suppressed)?;
         record.suppressed = true;
         Some(record.id.clone())
     }
 }
 
 fn next_id<T>(items: &[T], id: impl Fn(&T) -> &str, prefix: &str) -> usize {
-    items.iter().filter_map(|item| id(item).strip_prefix(prefix)?.parse::<usize>().ok()).max().unwrap_or(items.len())
+    items
+        .iter()
+        .filter_map(|item| id(item).strip_prefix(prefix)?.parse::<usize>().ok())
+        .max()
+        .unwrap_or(items.len())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

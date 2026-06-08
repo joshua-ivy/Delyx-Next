@@ -75,7 +75,9 @@ pub enum CommandExecError {
     Timeout,
 }
 
-pub fn run_command_exec(request: CommandExecRequest) -> Result<CommandExecArtifact, CommandExecError> {
+pub fn run_command_exec(
+    request: CommandExecRequest,
+) -> Result<CommandExecArtifact, CommandExecError> {
     if request.program.trim().is_empty() {
         return Err(CommandExecError::EmptyCommand);
     }
@@ -120,17 +122,40 @@ fn build_artifact(
     output: std::process::Output,
 ) -> CommandExecArtifact {
     let duration_ms = elapsed.as_millis() as u64;
-    let (stdout, stdout_truncated) = cap_output(String::from_utf8_lossy(&output.stdout).to_string());
-    let (stderr, stderr_truncated) = cap_output(String::from_utf8_lossy(&output.stderr).to_string());
-    let status = if output.status.success() { CommandExecStatus::Succeeded } else { CommandExecStatus::Failed };
+    let (stdout, stdout_truncated) =
+        cap_output(String::from_utf8_lossy(&output.stdout).to_string());
+    let (stderr, stderr_truncated) =
+        cap_output(String::from_utf8_lossy(&output.stderr).to_string());
+    let status = if output.status.success() {
+        CommandExecStatus::Succeeded
+    } else {
+        CommandExecStatus::Failed
+    };
     let mut events = vec![event(
         CommandExecEventKind::Started,
-        &format!("command started: {}", command_label(&request.program, &request.args)),
+        &format!(
+            "command started: {}",
+            command_label(&request.program, &request.args)
+        ),
         request.started_at_ms,
     )];
-    push_stream(&mut events, CommandExecEventKind::Stdout, &stdout, request.started_at_ms);
-    push_stream(&mut events, CommandExecEventKind::Stderr, &stderr, request.started_at_ms);
-    events.push(event(final_event_kind(status), final_event_message(status), request.started_at_ms + duration_ms));
+    push_stream(
+        &mut events,
+        CommandExecEventKind::Stdout,
+        &stdout,
+        request.started_at_ms,
+    );
+    push_stream(
+        &mut events,
+        CommandExecEventKind::Stderr,
+        &stderr,
+        request.started_at_ms,
+    );
+    events.push(event(
+        final_event_kind(status),
+        final_event_message(status),
+        request.started_at_ms + duration_ms,
+    ));
 
     CommandExecArtifact {
         approval_id: request.approval_id,
@@ -162,14 +187,22 @@ pub(crate) fn cap_output(text: String) -> (String, bool) {
     (format!("{}...[truncated]", &text[..end]), true)
 }
 
-fn push_stream(events: &mut Vec<CommandExecEvent>, kind: CommandExecEventKind, text: &str, timestamp_ms: u64) {
+fn push_stream(
+    events: &mut Vec<CommandExecEvent>,
+    kind: CommandExecEventKind,
+    text: &str,
+    timestamp_ms: u64,
+) {
     if !text.trim().is_empty() {
         events.push(event(kind, text.trim(), timestamp_ms));
     }
 }
 
 fn command_label(program: &str, args: &[String]) -> String {
-    std::iter::once(program.to_string()).chain(args.iter().cloned()).collect::<Vec<_>>().join(" ")
+    std::iter::once(program.to_string())
+        .chain(args.iter().cloned())
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 fn final_event_kind(status: CommandExecStatus) -> CommandExecEventKind {
@@ -187,7 +220,11 @@ fn final_event_message(status: CommandExecStatus) -> &'static str {
 }
 
 fn event(kind: CommandExecEventKind, message: &str, timestamp_ms: u64) -> CommandExecEvent {
-    CommandExecEvent { kind, message: message.to_string(), timestamp_ms }
+    CommandExecEvent {
+        kind,
+        message: message.to_string(),
+        timestamp_ms,
+    }
 }
 
 fn io_error(error: std::io::Error) -> CommandExecError {

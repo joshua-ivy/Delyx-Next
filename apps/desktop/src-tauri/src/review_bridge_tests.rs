@@ -1,18 +1,25 @@
 #[cfg(test)]
 mod tests {
     use crate::review_bridge::{
-        create_review_record, review_snapshot_from_store, DiffLineReviewInput, PatchFileReviewInput,
-        PatchReviewInput, ReviewBridgeStore, ReviewCreateRequest, TestReviewInput,
+        create_review_record, review_snapshot_from_store, DiffLineReviewInput,
+        PatchFileReviewInput, PatchReviewInput, ReviewBridgeStore, ReviewCreateRequest,
+        TestReviewInput,
     };
 
     #[test]
     fn review_bridge_returns_ui_ready_patch_findings() {
         let mut store = ReviewBridgeStore::default();
 
-        let report = create_review_record(&mut store, request(vec![
-            added_line("let value = maybe.unwrap();"),
-            added_line("// TODO: finish"),
-        ], Vec::new()))
+        let report = create_review_record(
+            &mut store,
+            request(
+                vec![
+                    added_line("let value = maybe.unwrap();"),
+                    added_line("// TODO: finish"),
+                ],
+                Vec::new(),
+            ),
+        )
         .unwrap();
 
         assert_eq!(report.mode, "read_only");
@@ -28,20 +35,27 @@ mod tests {
     fn failed_test_artifact_creates_review_finding() {
         let mut store = ReviewBridgeStore::default();
 
-        let report = create_review_record(&mut store, request(
-            vec![added_line("let value = 1;")],
-            vec![failed_test()],
-        ))
+        let report = create_review_record(
+            &mut store,
+            request(vec![added_line("let value = 1;")], vec![failed_test()]),
+        )
         .unwrap();
 
         assert!(report.test_summary.contains("failed"));
-        assert!(report.findings.iter().any(|finding| finding.title == "Test artifact failed"));
+        assert!(report
+            .findings
+            .iter()
+            .any(|finding| finding.title == "Test artifact failed"));
     }
 
     #[test]
     fn review_snapshot_filters_by_run() {
         let mut store = ReviewBridgeStore::default();
-        create_review_record(&mut store, request(vec![added_line("let value = 1;")], Vec::new())).unwrap();
+        create_review_record(
+            &mut store,
+            request(vec![added_line("let value = 1;")], Vec::new()),
+        )
+        .unwrap();
 
         assert_eq!(review_snapshot_from_store(&store, "run-1").len(), 1);
         assert!(review_snapshot_from_store(&store, "run-2").is_empty());
@@ -53,7 +67,10 @@ mod tests {
         let mut test = failed_test();
         test.status = Some("not_run".to_string());
 
-        let result = create_review_record(&mut store, request(vec![added_line("let value = 1;")], vec![test]));
+        let result = create_review_record(
+            &mut store,
+            request(vec![added_line("let value = 1;")], vec![test]),
+        );
 
         assert!(result.unwrap_err().contains("did not run"));
         assert!(review_snapshot_from_store(&store, "run-1").is_empty());
@@ -78,7 +95,10 @@ mod tests {
         assert!(review_snapshot_from_store(&store, "run-1").is_empty());
     }
 
-    fn request(lines: Vec<DiffLineReviewInput>, tests: Vec<TestReviewInput>) -> ReviewCreateRequest {
+    fn request(
+        lines: Vec<DiffLineReviewInput>,
+        tests: Vec<TestReviewInput>,
+    ) -> ReviewCreateRequest {
         ReviewCreateRequest {
             patches: vec![PatchReviewInput {
                 approval_id: "prop-1".to_string(),

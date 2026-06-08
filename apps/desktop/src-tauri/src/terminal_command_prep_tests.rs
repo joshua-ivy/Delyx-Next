@@ -6,7 +6,11 @@ mod tests {
     fn powershell_command_is_prefixed_for_utf8_capture() {
         let prepared = prepare_terminal_command(
             "powershell.exe",
-            &["-NoProfile".to_string(), "-Command".to_string(), "Write-Output cafe".to_string()],
+            &[
+                "-NoProfile".to_string(),
+                "-Command".to_string(),
+                "Write-Output cafe".to_string(),
+            ],
         );
 
         assert_eq!(prepared.program, "powershell.exe");

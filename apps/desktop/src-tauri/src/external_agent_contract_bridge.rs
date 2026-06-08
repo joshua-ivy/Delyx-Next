@@ -98,8 +98,12 @@ fn permission_mode_key(permission_mode: ExternalAgentPermissionMode) -> &'static
 
 fn external_agent_error(error: ExternalAgentError) -> String {
     match error {
-        ExternalAgentError::AdapterUnavailable => "External agent adapter is unavailable.".to_string(),
-        ExternalAgentError::EmptyTask => "External agent contract requires a task, run, and working directory.".to_string(),
+        ExternalAgentError::AdapterUnavailable => {
+            "External agent adapter is unavailable.".to_string()
+        }
+        ExternalAgentError::EmptyTask => {
+            "External agent contract requires a task, run, and working directory.".to_string()
+        }
         _ => format!("{error:?}"),
     }
 }

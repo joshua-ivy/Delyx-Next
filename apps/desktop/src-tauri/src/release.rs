@@ -67,7 +67,10 @@ pub fn default_release_profile() -> ReleaseProfile {
         target_platform: "windows".to_string(),
         bundle_target: "nsis".to_string(),
         signing: SigningPolicy::default(),
-        update_metadata: UpdateMetadata { channel: "dev-local".to_string(), published: false },
+        update_metadata: UpdateMetadata {
+            channel: "dev-local".to_string(),
+            published: false,
+        },
     }
 }
 
@@ -76,10 +79,17 @@ pub fn check_signing(policy: &SigningPolicy) -> SigningCheck {
     let has_digest = policy.digest_algorithm.is_some();
     let has_sign_command = policy.sign_command.is_some();
 
-    if !has_certificate && !has_digest && !has_sign_command && policy.timestamp_url.is_none() && !policy.tsp {
+    if !has_certificate
+        && !has_digest
+        && !has_sign_command
+        && policy.timestamp_url.is_none()
+        && !policy.tsp
+    {
         return SigningCheck {
             status: SigningStatus::UnsignedDev,
-            message: "Unsigned dev build: no certificate, digest, timestamp, or sign command configured.".to_string(),
+            message:
+                "Unsigned dev build: no certificate, digest, timestamp, or sign command configured."
+                    .to_string(),
         };
     }
     if has_certificate && has_digest {
@@ -90,7 +100,9 @@ pub fn check_signing(policy: &SigningPolicy) -> SigningCheck {
     }
     SigningCheck {
         status: SigningStatus::Incomplete,
-        message: "Signing configuration is incomplete; certificate and digest are required together.".to_string(),
+        message:
+            "Signing configuration is incomplete; certificate and digest are required together."
+                .to_string(),
     }
 }
 
@@ -113,12 +125,19 @@ pub fn export_support_bundle(
 fn config_entry((key, value): (&str, &str)) -> SupportConfigEntry {
     SupportConfigEntry {
         key: key.to_string(),
-        value: if secret_key(key) || secret_value(value) { "[redacted]".to_string() } else { value.to_string() },
+        value: if secret_key(key) || secret_value(value) {
+            "[redacted]".to_string()
+        } else {
+            value.to_string()
+        },
     }
 }
 
 fn log_entry((source, line): (&str, &str)) -> SupportLogEntry {
-    SupportLogEntry { source: source.to_string(), line: redact_line(line) }
+    SupportLogEntry {
+        source: source.to_string(),
+        line: redact_line(line),
+    }
 }
 
 fn secret_key(key: &str) -> bool {
@@ -135,8 +154,8 @@ fn secret_key(key: &str) -> bool {
         "secret",
         "token",
     ]
-        .iter()
-        .any(|needle| lower.contains(needle))
+    .iter()
+    .any(|needle| lower.contains(needle))
 }
 
 fn secret_value(value: &str) -> bool {

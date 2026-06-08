@@ -32,7 +32,12 @@ impl ExternalAgentBridge {
             .iter()
             .map(|root| fs::canonicalize(root).map_err(io_error))
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(Self { adapters, approved_roots: roots, artifacts: Vec::new(), next_artifact_id: 0 })
+        Ok(Self {
+            adapters,
+            approved_roots: roots,
+            artifacts: Vec::new(),
+            next_artifact_id: 0,
+        })
     }
 
     pub fn detect_adapters(&self) -> &[ExternalAgentAvailability] {
@@ -74,7 +79,10 @@ impl ExternalAgentBridge {
         self.ensure_available(&request.adapter_id)?;
         self.ensure_task_authority(&request)?;
         let scope = self.checked_scope(request.scope.clone())?;
-        if request.requires_isolation && scope.checkpoint_id.is_none() && scope.worktree_id.is_none() {
+        if request.requires_isolation
+            && scope.checkpoint_id.is_none()
+            && scope.worktree_id.is_none()
+        {
             return Err(ExternalAgentError::MissingIsolation);
         }
         let changed_files = request
@@ -85,18 +93,34 @@ impl ExternalAgentBridge {
             .collect::<Result<Vec<_>, _>>()?;
         let worker = run_worker_command(&request, &scope, now)?;
         let mut transcript = vec![
-            event(ExternalAgentEventKind::Started, "External worker started inside approved scope.", now),
-            event(ExternalAgentEventKind::Stdout, &format!("Task: {}", request.task), now),
+            event(
+                ExternalAgentEventKind::Started,
+                "External worker started inside approved scope.",
+                now,
+            ),
+            event(
+                ExternalAgentEventKind::Stdout,
+                &format!("Task: {}", request.task),
+                now,
+            ),
         ];
         if request.worker_command.is_none() {
-            transcript.push(event(ExternalAgentEventKind::Command, "prototype worker command captured", now));
+            transcript.push(event(
+                ExternalAgentEventKind::Command,
+                "prototype worker command captured",
+                now,
+            ));
         }
         transcript.extend(worker.transcript);
         for command in &request.capture_plan.commands {
             transcript.push(event(ExternalAgentEventKind::Command, command, now));
         }
         for path in &changed_files {
-            transcript.push(event(ExternalAgentEventKind::FileChanged, &path.display().to_string(), now));
+            transcript.push(event(
+                ExternalAgentEventKind::FileChanged,
+                &path.display().to_string(),
+                now,
+            ));
         }
         let diff_summary = request.capture_plan.capture_diff.then(|| {
             if changed_files.is_empty() {
@@ -106,15 +130,27 @@ impl ExternalAgentBridge {
             }
         });
         if diff_summary.is_some() {
-            transcript.push(event(ExternalAgentEventKind::DiffCaptured, "Diff artifact must be reviewed by Delyx UI.", now));
+            transcript.push(event(
+                ExternalAgentEventKind::DiffCaptured,
+                "Diff artifact must be reviewed by Delyx UI.",
+                now,
+            ));
         }
         for artifact_id in &request.capture_plan.test_artifact_ids {
             transcript.push(event(ExternalAgentEventKind::TestResult, artifact_id, now));
         }
         let final_event = if worker.status == ExternalAgentRunStatus::Failed {
-            event(ExternalAgentEventKind::Failed, "External worker command failed.", now)
+            event(
+                ExternalAgentEventKind::Failed,
+                "External worker command failed.",
+                now,
+            )
         } else {
-            event(ExternalAgentEventKind::Completed, "External worker completed.", now)
+            event(
+                ExternalAgentEventKind::Completed,
+                "External worker completed.",
+                now,
+            )
         };
         transcript.push(final_event);
 
@@ -126,9 +162,9 @@ impl ExternalAgentBridge {
             status: worker.status,
             scope,
             transcript,
-            terminal_output: worker
-                .terminal_output
-                .unwrap_or_else(|| "prototype external agent bridge completed without spawning a worker".to_string()),
+            terminal_output: worker.terminal_output.unwrap_or_else(|| {
+                "prototype external agent bridge completed without spawning a worker".to_string()
+            }),
             review_required: diff_summary.is_some(),
             diff_summary,
             test_artifact_ids: request.capture_plan.test_artifact_ids,
@@ -138,7 +174,10 @@ impl ExternalAgentBridge {
     }
 
     pub fn list_artifacts(&self, run_id: &str) -> Vec<&ExternalAgentRunArtifact> {
-        self.artifacts.iter().filter(|artifact| artifact.run_id == run_id).collect()
+        self.artifacts
+            .iter()
+            .filter(|artifact| artifact.run_id == run_id)
+            .collect()
     }
 
     pub fn record_review_decision(
@@ -147,25 +186,44 @@ impl ExternalAgentBridge {
         decision: ExternalAgentReviewDecision,
         timestamp: u64,
     ) -> Result<ExternalAgentRunArtifact, ExternalAgentError> {
-        let artifact = self.artifacts.iter_mut().find(|artifact| artifact.id == artifact_id).ok_or(ExternalAgentError::ArtifactNotFound)?;
+        let artifact = self
+            .artifacts
+            .iter_mut()
+            .find(|artifact| artifact.id == artifact_id)
+            .ok_or(ExternalAgentError::ArtifactNotFound)?;
         let (status, message) = match decision {
-            ExternalAgentReviewDecision::Accept => (ExternalAgentRunStatus::Accepted, "External worker diff accepted."),
-            ExternalAgentReviewDecision::Revert => (ExternalAgentRunStatus::Reverted, "External worker diff reverted."),
+            ExternalAgentReviewDecision::Accept => (
+                ExternalAgentRunStatus::Accepted,
+                "External worker diff accepted.",
+            ),
+            ExternalAgentReviewDecision::Revert => (
+                ExternalAgentRunStatus::Reverted,
+                "External worker diff reverted.",
+            ),
         };
         artifact.status = status;
-        artifact.transcript.push(event(ExternalAgentEventKind::ReviewDecision, message, timestamp));
+        artifact.transcript.push(event(
+            ExternalAgentEventKind::ReviewDecision,
+            message,
+            timestamp,
+        ));
         Ok(artifact.clone())
     }
 
     fn ensure_available(&self, adapter_id: &str) -> Result<(), ExternalAgentError> {
         self.adapters
             .iter()
-            .find(|adapter| adapter.adapter_id == adapter_id && adapter.status == AdapterStatus::Available)
+            .find(|adapter| {
+                adapter.adapter_id == adapter_id && adapter.status == AdapterStatus::Available
+            })
             .map(|_| ())
             .ok_or(ExternalAgentError::AdapterUnavailable)
     }
 
-    fn ensure_task_authority(&self, request: &ExternalAgentRunRequest) -> Result<(), ExternalAgentError> {
+    fn ensure_task_authority(
+        &self,
+        request: &ExternalAgentRunRequest,
+    ) -> Result<(), ExternalAgentError> {
         for tool in &request.allowed_tools {
             if !request.task_policy.allowed_tools.contains(tool) {
                 return Err(ExternalAgentError::ToolNotAllowed(tool.clone()));
@@ -174,14 +232,22 @@ impl ExternalAgentBridge {
         Ok(())
     }
 
-    fn checked_scope(&self, scope: ExternalAgentScope) -> Result<ExternalAgentScope, ExternalAgentError> {
+    fn checked_scope(
+        &self,
+        scope: ExternalAgentScope,
+    ) -> Result<ExternalAgentScope, ExternalAgentError> {
         let root = checked_approved_path(&scope.project_root, &self.approved_roots)?;
         let allowed_paths = scope
             .allowed_paths
             .iter()
             .map(|path| checked_approved_path(path, &self.approved_roots))
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(ExternalAgentScope { project_root: root, checkpoint_id: scope.checkpoint_id, worktree_id: scope.worktree_id, allowed_paths })
+        Ok(ExternalAgentScope {
+            project_root: root,
+            checkpoint_id: scope.checkpoint_id,
+            worktree_id: scope.worktree_id,
+            allowed_paths,
+        })
     }
 }
 
@@ -190,7 +256,11 @@ pub fn tests_are_trusted(artifact: &ExternalAgentRunArtifact) -> bool {
 }
 
 fn event(kind: ExternalAgentEventKind, message: &str, timestamp: u64) -> ExternalAgentEvent {
-    ExternalAgentEvent { kind, message: message.to_string(), timestamp }
+    ExternalAgentEvent {
+        kind,
+        message: message.to_string(),
+        timestamp,
+    }
 }
 
 fn io_error(error: std::io::Error) -> ExternalAgentError {

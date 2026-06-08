@@ -31,10 +31,20 @@ pub fn run_worker_command(
     now: u64,
 ) -> Result<ExternalWorkerExecution, ExternalAgentError> {
     let Some(command) = &request.worker_command else {
-        return Ok(ExternalWorkerExecution { status: ExternalAgentRunStatus::Completed, terminal_output: None, transcript: Vec::new() });
+        return Ok(ExternalWorkerExecution {
+            status: ExternalAgentRunStatus::Completed,
+            terminal_output: None,
+            transcript: Vec::new(),
+        });
     };
-    if !request.allowed_tools.iter().any(|tool| tool == TERMINAL_TOOL) {
-        return Err(ExternalAgentError::ToolNotAllowed(TERMINAL_TOOL.to_string()));
+    if !request
+        .allowed_tools
+        .iter()
+        .any(|tool| tool == TERMINAL_TOOL)
+    {
+        return Err(ExternalAgentError::ToolNotAllowed(
+            TERMINAL_TOOL.to_string(),
+        ));
     }
     let working_directory = checked_working_directory(&command.working_directory, scope)?;
     let output = run_command(command, &working_directory, request, now)?;
@@ -46,7 +56,10 @@ pub fn run_worker_command(
     })
 }
 
-fn checked_working_directory(path: &Path, scope: &ExternalAgentScope) -> Result<PathBuf, ExternalAgentError> {
+fn checked_working_directory(
+    path: &Path,
+    scope: &ExternalAgentScope,
+) -> Result<PathBuf, ExternalAgentError> {
     checked_scoped_path(path, scope)
 }
 

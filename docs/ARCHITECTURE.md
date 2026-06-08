@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, and release-state persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, and patch-proposal persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -43,8 +43,8 @@ complete:
   The Rust automation engine persists mission contracts and scheduled-run
   records, and a read-only Tauri snapshot bridge feeds the cockpit. Release profile
   and redacted support-bundle state persist to SQLite. Approved test artifacts
-  persist command execution receipt data to SQLite and reload into the desktop
-  bridge on startup. Governance mutation bridges are still not live.
+  and proposed patch diffs persist receipt data to SQLite and reload into the
+  desktop bridge on startup. Governance mutation bridges are still not live.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -53,8 +53,9 @@ complete:
   plus manual DOM bindings. That is a Phase 1 implementation choice awaiting an
   explicit architecture decision or migration. Current cockpit rendering avoids
   shipped fake data, formats long messages/readable lists, shows a compact live
-  activity strip for real run events, and keeps evidence coverage compact instead
-  of rendering empty zero-count dashboards.
+  activity strip for real run events, keeps evidence coverage compact, and shows
+  a minimal no-thread prompt/composer instead of unbacked progress, diff,
+  terminal, inspector, or zero-count dashboard furniture.
 
 ## Codex Reference Integration
 
@@ -98,6 +99,9 @@ When a source file approaches the threshold, split by responsibility:
 - view-model builders
 - Rust services
 - repository methods
+
+Rust source is formatted with `rustfmt`, and `npm test` enforces the 300-line
+source budget for `.rs`, `.ts`, `.tsx`, and `.css` files.
 - policy evaluators
 - type definitions
 
@@ -176,8 +180,8 @@ approval-gated test commands, patch/checkpoint primitives, the generic
 terminal-worker bridge, and Codex CLI read-only launches. The full Explore ->
 Plan -> Approve -> Build -> Diff -> Test -> Review execution loop remains
 Phase 2 work. AgentRun save/load, Tauri thread/run bridge session reload,
-approval bridge reload, recent workspace project reload, and test artifact
-bridge reload now use SQLite.
+approval bridge reload, recent workspace project reload, test artifact bridge
+reload, and patch proposal bridge reload now use SQLite.
 
 ## Permission Engine
 
@@ -224,7 +228,8 @@ The Tauri `patch_propose` bridge exposes proposal-only diffs from explicit
 approved-root file content requests. It uses the Rust PatchEngine to read
 before contents and build UI-ready diff records, but it does not apply writes
 or create checkpoints. Patch apply and restore remain separate approval-gated
-runtime actions.
+runtime actions. Proposed patch records, file paths, and diff lines persist to
+SQLite so diff receipts survive restart.
 The Tauri `test_run_approved` bridge exposes approved test-command execution
 through the Rust TestRunner. It reads the same Rust ApprovalEngine owned by the
 approval bridge, rejects pending or mismatched approvals, captures stdout,

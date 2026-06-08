@@ -1,77 +1,13 @@
 use std::path::Path;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AgentRun {
-    pub id: String,
-    pub thread_id: String,
-    pub status: AgentRunStatus,
-    pub nodes: Vec<AgentNode>,
-    pub events: Vec<AgentEvent>,
-    pub artifacts: Vec<Artifact>,
-    pub evidence: Vec<EvidenceRecord>,
-    pub metrics: RunMetrics,
-    pub outcome: Option<AgentOutcome>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AgentRunStatus {
-    Running,
-    WaitingForApproval,
-    Completed,
-    Failed,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AgentNode {
-    pub id: String,
-    pub kind: String,
-    pub label: String,
-    pub status: AgentRunStatus,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AgentEvent {
-    pub id: String,
-    pub kind: String,
-    pub message: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Artifact {
-    pub id: String,
-    pub kind: String,
-    pub label: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EvidenceRecord {
-    pub id: String,
-    pub source_kind: String,
-    pub title: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct RunMetrics {
-    pub event_count: usize,
-    pub artifact_count: usize,
-    pub evidence_count: usize,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AgentOutcome {
-    pub status: AgentRunStatus,
-    pub summary: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AgentRunError {
-    EmptyThread,
-    InvalidTransition,
-    RunNotFound,
-    TerminalRun,
-    Io(String),
-    InvalidLedger(String),
-}
+pub use crate::agent_run_commands::{
+    append_agent_event, create_agent_run, get_agent_run, list_agent_runs,
+};
+use crate::agent_run_ids::numeric_suffix;
+pub use crate::agent_run_types::{
+    AgentEvent, AgentNode, AgentOutcome, AgentRun, AgentRunError, AgentRunStatus, Artifact,
+    EvidenceRecord, RunMetrics,
+};
 
 #[derive(Debug, Default)]
 pub struct AgentRunLedger {
@@ -108,24 +44,44 @@ impl AgentRunLedger {
     }
 
     pub fn list_runs(&self, thread_id: &str) -> Vec<&AgentRun> {
-        self.runs.iter().filter(|run| run.thread_id == thread_id).collect()
+        self.runs
+            .iter()
+            .filter(|run| run.thread_id == thread_id)
+            .collect()
     }
 
     pub fn get_run(&self, run_id: &str) -> Result<&AgentRun, AgentRunError> {
-        self.runs.iter().find(|run| run.id == run_id).ok_or(AgentRunError::RunNotFound)
+        self.runs
+            .iter()
+            .find(|run| run.id == run_id)
+            .ok_or(AgentRunError::RunNotFound)
     }
 
-    pub fn append_event(&mut self, run_id: &str, kind: &str, message: &str) -> Result<AgentEvent, AgentRunError> {
+    pub fn append_event(
+        &mut self,
+        run_id: &str,
+        kind: &str,
+        message: &str,
+    ) -> Result<AgentEvent, AgentRunError> {
         let event_id = self.allocate_event_id();
         let run = self.run_mut(run_id)?;
         ensure_running(run)?;
-        let event = AgentEvent { id: event_id, kind: kind.to_string(), message: message.to_string() };
+        let event = AgentEvent {
+            id: event_id,
+            kind: kind.to_string(),
+            message: message.to_string(),
+        };
         run.events.push(event.clone());
         run.metrics.event_count = run.events.len();
         Ok(event)
     }
 
-    pub fn append_node(&mut self, run_id: &str, kind: &str, label: &str) -> Result<AgentNode, AgentRunError> {
+    pub fn append_node(
+        &mut self,
+        run_id: &str,
+        kind: &str,
+        label: &str,
+    ) -> Result<AgentNode, AgentRunError> {
         let node_id = self.allocate_node_id();
         let run = self.run_mut(run_id)?;
         ensure_running(run)?;
@@ -139,7 +95,12 @@ impl AgentRunLedger {
         Ok(node)
     }
 
-    pub fn record_artifact(&mut self, run_id: &str, kind: &str, label: &str) -> Result<Artifact, AgentRunError> {
+    pub fn record_artifact(
+        &mut self,
+        run_id: &str,
+        kind: &str,
+        label: &str,
+    ) -> Result<Artifact, AgentRunError> {
         let run = self.run_mut(run_id)?;
         ensure_running(run)?;
         let artifact = Artifact {
@@ -152,7 +113,12 @@ impl AgentRunLedger {
         Ok(artifact)
     }
 
-    pub fn record_evidence(&mut self, run_id: &str, source_kind: &str, title: &str) -> Result<EvidenceRecord, AgentRunError> {
+    pub fn record_evidence(
+        &mut self,
+        run_id: &str,
+        source_kind: &str,
+        title: &str,
+    ) -> Result<EvidenceRecord, AgentRunError> {
         let run = self.run_mut(run_id)?;
         ensure_running(run)?;
         let evidence = EvidenceRecord {
@@ -165,7 +131,11 @@ impl AgentRunLedger {
         Ok(evidence)
     }
 
-    pub fn wait_for_approval(&mut self, run_id: &str, approval_id: &str) -> Result<AgentEvent, AgentRunError> {
+    pub fn wait_for_approval(
+        &mut self,
+        run_id: &str,
+        approval_id: &str,
+    ) -> Result<AgentEvent, AgentRunError> {
         let event_id = self.allocate_event_id();
         let run = self.run_mut(run_id)?;
         ensure_running(run)?;
@@ -180,7 +150,11 @@ impl AgentRunLedger {
         Ok(event)
     }
 
-    pub fn resume_after_approval(&mut self, run_id: &str, approval_id: &str) -> Result<AgentEvent, AgentRunError> {
+    pub fn resume_after_approval(
+        &mut self,
+        run_id: &str,
+        approval_id: &str,
+    ) -> Result<AgentEvent, AgentRunError> {
         let event_id = self.allocate_event_id();
         let run = self.run_mut(run_id)?;
         if run.status != AgentRunStatus::WaitingForApproval {
@@ -213,20 +187,36 @@ impl AgentRunLedger {
         crate::agent_run_persistence::load_from_path(path)
     }
 
-    fn finish_run(&mut self, run_id: &str, status: AgentRunStatus, summary: &str) -> Result<(), AgentRunError> {
+    fn finish_run(
+        &mut self,
+        run_id: &str,
+        status: AgentRunStatus,
+        summary: &str,
+    ) -> Result<(), AgentRunError> {
         let run = self.run_mut(run_id)?;
         ensure_running(run)?;
         run.status = status;
-        run.outcome = Some(AgentOutcome { status, summary: summary.to_string() });
+        run.outcome = Some(AgentOutcome {
+            status,
+            summary: summary.to_string(),
+        });
         Ok(())
     }
 
     pub(crate) fn run_mut(&mut self, run_id: &str) -> Result<&mut AgentRun, AgentRunError> {
-        self.runs.iter_mut().find(|run| run.id == run_id).ok_or(AgentRunError::RunNotFound)
+        self.runs
+            .iter_mut()
+            .find(|run| run.id == run_id)
+            .ok_or(AgentRunError::RunNotFound)
     }
 
     pub(crate) fn refresh_loaded_counters(&mut self) {
-        self.next_run = self.runs.iter().filter_map(|run| numeric_suffix(&run.id, "run-")).max().unwrap_or(self.runs.len());
+        self.next_run = self
+            .runs
+            .iter()
+            .filter_map(|run| numeric_suffix(&run.id, "run-"))
+            .max()
+            .unwrap_or(self.runs.len());
         self.next_event = self
             .runs
             .iter()
@@ -252,21 +242,10 @@ impl AgentRunLedger {
         self.next_node += 1;
         format!("node-{}", self.next_node)
     }
-
 }
-
-pub fn create_agent_run(ledger: &mut AgentRunLedger, thread_id: &str) -> Result<AgentRun, AgentRunError> { ledger.create_run(thread_id) }
-
-pub fn list_agent_runs<'a>(ledger: &'a AgentRunLedger, thread_id: &str) -> Vec<&'a AgentRun> { ledger.list_runs(thread_id) }
-
-pub fn get_agent_run<'a>(ledger: &'a AgentRunLedger, run_id: &str) -> Result<&'a AgentRun, AgentRunError> { ledger.get_run(run_id) }
-
-pub fn append_agent_event(ledger: &mut AgentRunLedger, run_id: &str, kind: &str, message: &str) -> Result<AgentEvent, AgentRunError> { ledger.append_event(run_id, kind, message) }
 
 fn ensure_running(run: &AgentRun) -> Result<(), AgentRunError> {
-    (run.status == AgentRunStatus::Running).then_some(()).ok_or(AgentRunError::TerminalRun)
-}
-
-fn numeric_suffix(value: &str, prefix: &str) -> Option<usize> {
-    value.strip_prefix(prefix)?.parse().ok()
+    (run.status == AgentRunStatus::Running)
+        .then_some(())
+        .ok_or(AgentRunError::TerminalRun)
 }

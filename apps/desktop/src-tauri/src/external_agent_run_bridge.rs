@@ -1,12 +1,15 @@
 use crate::approval::ApprovalEngine;
 use crate::approval_bridge::ApprovalBridgeState;
 use crate::external_agent::{
-    ExternalAgentBridge, ExternalAgentCapturePlan, ExternalAgentError, ExternalAgentEvent,
-    ExternalAgentEventKind, ExternalAgentKind, ExternalAgentRunArtifact, ExternalAgentRunRequest,
-    ExternalAgentRunStatus, ExternalAgentScope, ExternalAgentTaskPolicy,
+    ExternalAgentBridge, ExternalAgentCapturePlan, ExternalAgentEvent, ExternalAgentKind,
+    ExternalAgentRunArtifact, ExternalAgentRunRequest, ExternalAgentScope, ExternalAgentTaskPolicy,
 };
 use crate::external_agent_command_contracts::{
-    build_external_agent_command_contract, ExternalAgentCommandContract, ExternalAgentPermissionMode,
+    build_external_agent_command_contract, ExternalAgentCommandContract,
+    ExternalAgentPermissionMode,
+};
+use crate::external_agent_run_bridge_keys::{
+    event_kind_key, external_agent_error, permission_mode, status_key,
 };
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -73,7 +76,10 @@ pub fn external_agent_run_codex(
     request: ExternalAgentCodexRunRequest,
 ) -> Result<ExternalAgentRunArtifactView, String> {
     approvals.with_engine(|engine| {
-        let mut store = state.store.lock().map_err(|_| "External agent run bridge lock failed.".to_string())?;
+        let mut store = state
+            .store
+            .lock()
+            .map_err(|_| "External agent run bridge lock failed.".to_string())?;
         run_codex_agent_record(&mut store, engine, request)
     })?
 }
@@ -83,7 +89,10 @@ pub fn external_agent_run_snapshot(
     state: tauri::State<ExternalAgentRunBridgeState>,
     run_id: String,
 ) -> Result<Vec<ExternalAgentRunArtifactView>, String> {
-    let store = state.store.lock().map_err(|_| "External agent run bridge lock failed.".to_string())?;
+    let store = state
+        .store
+        .lock()
+        .map_err(|_| "External agent run bridge lock failed.".to_string())?;
     Ok(external_agent_run_snapshot_from_store(&store, &run_id))
 }
 
@@ -100,7 +109,11 @@ pub fn run_codex_agent_record(
         permission_mode(&request.permission_mode)?,
     )
     .map_err(external_agent_error)?;
-    let roots = request.approved_roots.iter().map(PathBuf::from).collect::<Vec<_>>();
+    let roots = request
+        .approved_roots
+        .iter()
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
     let mut bridge = ExternalAgentBridge::new(roots).map_err(external_agent_error)?;
     run_contract_agent_record(store, approvals, request, contract, &mut bridge)
 }
@@ -127,7 +140,12 @@ pub fn external_agent_run_snapshot_from_store(
     store: &ExternalAgentRunBridgeStore,
     run_id: &str,
 ) -> Vec<ExternalAgentRunArtifactView> {
-    store.artifacts.iter().filter(|artifact| artifact.run_id == run_id).cloned().collect()
+    store
+        .artifacts
+        .iter()
+        .filter(|artifact| artifact.run_id == run_id)
+        .cloned()
+        .collect()
 }
 
 fn run_request(
@@ -140,7 +158,9 @@ fn run_request(
         request.allowed_paths.iter().map(PathBuf::from).collect()
     };
     let command_label = command_label(&contract.command.program, &contract.command.args);
-    let requires_isolation = contract.permission_mode == ExternalAgentPermissionMode::WorkspaceWrite || request.capture_diff;
+    let requires_isolation = contract.permission_mode
+        == ExternalAgentPermissionMode::WorkspaceWrite
+        || request.capture_diff;
     ExternalAgentRunRequest {
         adapter_id: contract.adapter_id,
         allowed_tools: contract.required_delyx_tools.clone(),
@@ -174,8 +194,12 @@ fn validate_request(request: &ExternalAgentCodexRunRequest) -> Result<(), String
     if request.run_id.trim().is_empty() || request.task.trim().is_empty() {
         return Err("Codex launch requires a run ID and task.".to_string());
     }
-    if request.external_approval_id.trim().is_empty() || request.terminal_approval_id.trim().is_empty() {
-        return Err("Codex launch requires external-agent and terminal-command approval IDs.".to_string());
+    if request.external_approval_id.trim().is_empty()
+        || request.terminal_approval_id.trim().is_empty()
+    {
+        return Err(
+            "Codex launch requires external-agent and terminal-command approval IDs.".to_string(),
+        );
     }
     if request.working_directory.trim().is_empty() || request.approved_roots.is_empty() {
         return Err("Codex launch requires a working directory and approved root.".to_string());
@@ -211,59 +235,23 @@ fn scope_summary(scope: &ExternalAgentScope) -> String {
         .checkpoint_id
         .as_ref()
         .map(|id| format!("checkpoint {id}"))
-        .or_else(|| scope.worktree_id.as_ref().map(|id| format!("worktree {id}")))
+        .or_else(|| {
+            scope
+                .worktree_id
+                .as_ref()
+                .map(|id| format!("worktree {id}"))
+        })
         .unwrap_or_else(|| "no isolation".to_string());
-    format!("root: {}; isolation: {}", scope.project_root.display(), isolation)
-}
-
-fn permission_mode(value: &str) -> Result<ExternalAgentPermissionMode, String> {
-    match value {
-        "read_only" => Ok(ExternalAgentPermissionMode::ReadOnly),
-        "workspace_write" => Ok(ExternalAgentPermissionMode::WorkspaceWrite),
-        _ => Err("Unsupported Codex permission mode.".to_string()),
-    }
+    format!(
+        "root: {}; isolation: {}",
+        scope.project_root.display(),
+        isolation
+    )
 }
 
 fn command_label(program: &str, args: &[String]) -> String {
-    std::iter::once(program.to_string()).chain(args.iter().cloned()).collect::<Vec<_>>().join(" ")
-}
-
-fn status_key(status: ExternalAgentRunStatus) -> &'static str {
-    match status {
-        ExternalAgentRunStatus::Accepted => "accepted",
-        ExternalAgentRunStatus::Blocked => "blocked",
-        ExternalAgentRunStatus::Completed => "completed",
-        ExternalAgentRunStatus::Failed => "failed",
-        ExternalAgentRunStatus::Reverted => "reverted",
-    }
-}
-
-fn event_kind_key(kind: ExternalAgentEventKind) -> &'static str {
-    match kind {
-        ExternalAgentEventKind::Command => "command",
-        ExternalAgentEventKind::Completed => "completed",
-        ExternalAgentEventKind::DiffCaptured => "diff_captured",
-        ExternalAgentEventKind::Failed => "failed",
-        ExternalAgentEventKind::FileChanged => "file_changed",
-        ExternalAgentEventKind::ReviewDecision => "review_decision",
-        ExternalAgentEventKind::Started => "started",
-        ExternalAgentEventKind::Stderr => "stderr",
-        ExternalAgentEventKind::Stdout => "stdout",
-        ExternalAgentEventKind::TestResult => "test_result",
-    }
-}
-
-fn external_agent_error(error: ExternalAgentError) -> String {
-    match error {
-        ExternalAgentError::AdapterUnavailable => "Codex CLI adapter is unavailable.".to_string(),
-        ExternalAgentError::EmptyTask => "Codex launch requires a non-empty task.".to_string(),
-        ExternalAgentError::Io(message) => format!("Codex worker command failed to start: {message}"),
-        ExternalAgentError::MissingIsolation => {
-            "Codex launch requires a checkpoint or isolated worktree before execution.".to_string()
-        }
-        ExternalAgentError::MissingTerminalApproval => {
-            "Codex launch requires a terminal-command approval before execution.".to_string()
-        }
-        error => format!("{error:?}"),
-    }
+    std::iter::once(program.to_string())
+        .chain(args.iter().cloned())
+        .collect::<Vec<_>>()
+        .join(" ")
 }

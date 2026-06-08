@@ -19,8 +19,14 @@ mod tests {
         assert_eq!(status.app_name, "Delyx Next");
         assert_eq!(status.app_identifier, "com.geaux.delyxnext");
         assert!(status.coding_route.is_none());
-        assert!(!status.providers.iter().any(|provider| provider.id == "mock-local"));
-        assert!(status.providers.iter().any(|provider| provider.id == "ollama-local"));
+        assert!(!status
+            .providers
+            .iter()
+            .any(|provider| provider.id == "mock-local"));
+        assert!(status
+            .providers
+            .iter()
+            .any(|provider| provider.id == "ollama-local"));
     }
 
     #[test]
@@ -28,7 +34,11 @@ mod tests {
         let mut registry = ModelRegistry::with_runtime_defaults(10);
         registry.register_provider(ready_ollama_provider());
         let status = runtime_status_from_registry(&registry);
-        let ollama = status.providers.iter().find(|provider| provider.id == "ollama-local").unwrap();
+        let ollama = status
+            .providers
+            .iter()
+            .find(|provider| provider.id == "ollama-local")
+            .unwrap();
 
         assert_eq!(ollama.status, "ready");
         assert_eq!(ollama.models, vec!["qwen:latest"]);
@@ -52,11 +62,20 @@ mod tests {
     fn runtime_status_prefers_persisted_ready_coding_route() {
         let path = temp_path("runtime-route");
         let mut registry = ModelRegistry::with_runtime_defaults(10);
-        registry.register_provider(ready_ollama_provider_with(vec!["qwen:latest", "llama3:latest"]));
-        registry.save_role_route(ModelRole::Coding, "ollama-local", "llama3:latest").unwrap();
+        registry.register_provider(ready_ollama_provider_with(vec![
+            "qwen:latest",
+            "llama3:latest",
+        ]));
+        registry
+            .save_role_route(ModelRole::Coding, "ollama-local", "llama3:latest")
+            .unwrap();
         save_routes_to_path(&path, registry.routes()).unwrap();
 
-        let status = runtime_status_with_provider(&path, ready_ollama_provider_with(vec!["qwen:latest", "llama3:latest"])).unwrap();
+        let status = runtime_status_with_provider(
+            &path,
+            ready_ollama_provider_with(vec!["qwen:latest", "llama3:latest"]),
+        )
+        .unwrap();
         let route = status.coding_route.unwrap();
 
         assert_eq!(route.provider_id, "ollama-local");
@@ -73,7 +92,9 @@ mod tests {
         let loaded = load_routes_from_path(&path).unwrap();
 
         assert_eq!(route.model_id, "qwen:latest");
-        assert!(loaded.iter().any(|item| item.role == ModelRole::Coding && item.model_id == "qwen:latest"));
+        assert!(loaded
+            .iter()
+            .any(|item| item.role == ModelRole::Coding && item.model_id == "qwen:latest"));
         let _ = fs::remove_file(path);
     }
 
@@ -83,7 +104,11 @@ mod tests {
 
     fn ready_ollama_provider_with(model_ids: Vec<&str>) -> ModelProvider {
         ModelProvider {
-            health: ProviderHealth { checked_at: 11, message: "Ollama ready.".to_string(), status: ProviderStatus::Ready },
+            health: ProviderHealth {
+                checked_at: 11,
+                message: "Ollama ready.".to_string(),
+                status: ProviderStatus::Ready,
+            },
             id: "ollama-local".to_string(),
             kind: ProviderKind::Ollama,
             label: "Ollama".to_string(),
@@ -102,7 +127,10 @@ mod tests {
     }
 
     fn temp_path(name: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}.sqlite3"))
     }
 }

@@ -1,7 +1,9 @@
 #[cfg(test)]
 mod tests {
     use crate::approval::{ApprovalEngine, ApprovalError, ProposalInput, RiskLevel, RiskyAction};
-    use crate::test_runner::{is_test_command, TestCommandInput, TestRunner, TestRunnerError, TestStatus};
+    use crate::test_runner::{
+        is_test_command, TestCommandInput, TestRunner, TestRunnerError, TestStatus,
+    };
     use std::fs;
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -9,11 +11,20 @@ mod tests {
     #[test]
     fn detects_common_test_commands() {
         assert!(is_test_command("cargo", &["test".to_string()]));
-        assert!(is_test_command("npm", &["run".to_string(), "test".to_string()]));
+        assert!(is_test_command(
+            "npm",
+            &["run".to_string(), "test".to_string()]
+        ));
         assert!(is_test_command("pytest", &[]));
         assert!(!is_test_command("npm", &["install".to_string()]));
-        assert!(!is_test_command("cmd", &["/C".to_string(), "npm test".to_string()]));
-        assert!(!is_test_command("sh", &["-c".to_string(), "npm install && npm test".to_string()]));
+        assert!(!is_test_command(
+            "cmd",
+            &["/C".to_string(), "npm test".to_string()]
+        ));
+        assert!(!is_test_command(
+            "sh",
+            &["-c".to_string(), "npm install && npm test".to_string()]
+        ));
     }
 
     #[test]
@@ -23,9 +34,16 @@ mod tests {
         let approval = approvals.propose(command_input());
         let mut runner = TestRunner::new(vec![root.clone()]).unwrap();
 
-        let result = runner.run_approved_test(test_input(&approval.id, &root, passing_command()), 10, &approvals);
+        let result = runner.run_approved_test(
+            test_input(&approval.id, &root, passing_command()),
+            10,
+            &approvals,
+        );
 
-        assert_eq!(result.unwrap_err(), TestRunnerError::Approval(ApprovalError::NotApproved));
+        assert_eq!(
+            result.unwrap_err(),
+            TestRunnerError::Approval(ApprovalError::NotApproved)
+        );
         assert!(!runner.has_execution_artifact("run-1"));
     }
 
@@ -34,10 +52,18 @@ mod tests {
         let root = temp_workspace("passing-command");
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(command_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut runner = TestRunner::new(vec![root.clone()]).unwrap();
 
-        let artifact = runner.run_approved_test(test_input(&approval.id, &root, passing_command()), 10, &approvals).unwrap();
+        let artifact = runner
+            .run_approved_test(
+                test_input(&approval.id, &root, passing_command()),
+                10,
+                &approvals,
+            )
+            .unwrap();
 
         assert_eq!(artifact.status, TestStatus::Passed);
         assert_eq!(artifact.exit_code, Some(0));
@@ -51,11 +77,20 @@ mod tests {
     fn test_command_requires_terminal_command_approval_action() {
         let root = temp_workspace("wrong-command-approval");
         let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(ProposalInput { action: RiskyAction::FileWrite, ..command_input() });
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let approval = approvals.propose(ProposalInput {
+            action: RiskyAction::FileWrite,
+            ..command_input()
+        });
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut runner = TestRunner::new(vec![root.clone()]).unwrap();
 
-        let result = runner.run_approved_test(test_input(&approval.id, &root, passing_command()), 10, &approvals);
+        let result = runner.run_approved_test(
+            test_input(&approval.id, &root, passing_command()),
+            10,
+            &approvals,
+        );
 
         assert_eq!(
             result.unwrap_err(),
@@ -71,11 +106,20 @@ mod tests {
     fn test_command_requires_same_run_approval() {
         let root = temp_workspace("wrong-command-run");
         let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(ProposalInput { run_id: "run-2".to_string(), ..command_input() });
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let approval = approvals.propose(ProposalInput {
+            run_id: "run-2".to_string(),
+            ..command_input()
+        });
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut runner = TestRunner::new(vec![root.clone()]).unwrap();
 
-        let result = runner.run_approved_test(test_input(&approval.id, &root, passing_command()), 10, &approvals);
+        let result = runner.run_approved_test(
+            test_input(&approval.id, &root, passing_command()),
+            10,
+            &approvals,
+        );
 
         assert_eq!(
             result.unwrap_err(),
@@ -92,7 +136,9 @@ mod tests {
         let root = temp_workspace("zero-timeout-command");
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(command_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut runner = TestRunner::new(vec![root.clone()]).unwrap();
         let mut input = test_input(&approval.id, &root, passing_command());
         input.timeout_ms = 0;
@@ -108,15 +154,26 @@ mod tests {
         let root = temp_workspace("failing-command");
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(command_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut runner = TestRunner::new(vec![root.clone()]).unwrap();
 
-        let artifact = runner.run_approved_test(test_input(&approval.id, &root, failing_command()), 10, &approvals).unwrap();
+        let artifact = runner
+            .run_approved_test(
+                test_input(&approval.id, &root, failing_command()),
+                10,
+                &approvals,
+            )
+            .unwrap();
 
         assert_eq!(artifact.status, TestStatus::Failed);
         assert_ne!(artifact.exit_code, Some(0));
         assert!(artifact.stderr.to_lowercase().contains("error"));
-        assert!(artifact.failure_summary.as_deref().is_some_and(|summary| summary.to_lowercase().contains("error")));
+        assert!(artifact
+            .failure_summary
+            .as_deref()
+            .is_some_and(|summary| summary.to_lowercase().contains("error")));
     }
 
     #[test]
@@ -125,10 +182,16 @@ mod tests {
         let outside = temp_workspace("outside-test-root");
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(command_input());
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut runner = TestRunner::new(vec![root]).unwrap();
 
-        let result = runner.run_approved_test(test_input(&approval.id, &outside, passing_command()), 10, &approvals);
+        let result = runner.run_approved_test(
+            test_input(&approval.id, &outside, passing_command()),
+            10,
+            &approvals,
+        );
 
         assert_eq!(result.unwrap_err(), TestRunnerError::OutsideApprovedRoot);
     }
@@ -147,7 +210,11 @@ mod tests {
         }
     }
 
-    fn test_input(approval_id: &str, cwd: &std::path::Path, command: (String, Vec<String>)) -> TestCommandInput {
+    fn test_input(
+        approval_id: &str,
+        cwd: &std::path::Path,
+        command: (String, Vec<String>),
+    ) -> TestCommandInput {
         TestCommandInput {
             run_id: "run-1".to_string(),
             approval_id: approval_id.to_string(),
@@ -159,15 +226,28 @@ mod tests {
     }
 
     fn passing_command() -> (String, Vec<String>) {
-        ("cargo".to_string(), vec!["test".to_string(), "--help".to_string()])
+        (
+            "cargo".to_string(),
+            vec!["test".to_string(), "--help".to_string()],
+        )
     }
 
     fn failing_command() -> (String, Vec<String>) {
-        ("cargo".to_string(), vec!["test".to_string(), "--manifest-path".to_string(), "missing-Cargo.toml".to_string()])
+        (
+            "cargo".to_string(),
+            vec![
+                "test".to_string(),
+                "--manifest-path".to_string(),
+                "missing-Cargo.toml".to_string(),
+            ],
+        )
     }
 
     fn temp_workspace(label: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let path = std::env::temp_dir().join(format!("delyx-next-{label}-{stamp}"));
         fs::create_dir_all(&path).unwrap();
         path

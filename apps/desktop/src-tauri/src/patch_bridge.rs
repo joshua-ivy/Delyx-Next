@@ -6,12 +6,30 @@ use std::sync::Mutex;
 #[derive(Default)]
 pub struct PatchBridgeState {
     store: Mutex<PatchBridgeStore>,
+    database_path: Option<PathBuf>,
 }
 
 #[derive(Default)]
 pub struct PatchBridgeStore {
-    next_patch_id: usize,
-    records: Vec<PatchProposalView>,
+    pub(crate) next_patch_id: usize,
+    pub(crate) records: Vec<PatchProposalView>,
+}
+
+impl PatchBridgeState {
+    pub fn persistent(database_path: PathBuf) -> Result<Self, String> {
+        let store = crate::patch_persistence::load_from_path(&database_path)?;
+        Ok(Self {
+            store: Mutex::new(store),
+            database_path: Some(database_path),
+        })
+    }
+
+    fn save_if_persistent(&self, store: &PatchBridgeStore) -> Result<(), String> {
+        match &self.database_path {
+            Some(path) => crate::patch_persistence::save_to_path(store, path),
+            None => Ok(()),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -61,8 +79,13 @@ pub fn patch_propose(
     state: tauri::State<PatchBridgeState>,
     request: PatchProposalRequest,
 ) -> Result<PatchProposalView, String> {
-    let mut store = state.store.lock().map_err(|_| "Patch bridge lock failed.".to_string())?;
-    propose_patch_record(&mut store, request)
+    let mut store = state
+        .store
+        .lock()
+        .map_err(|_| "Patch bridge lock failed.".to_string())?;
+    let proposal = propose_patch_record(&mut store, request)?;
+    state.save_if_persistent(&store)?;
+    Ok(proposal)
 }
 
 #[tauri::command]
@@ -70,7 +93,10 @@ pub fn patch_snapshot(
     state: tauri::State<PatchBridgeState>,
     run_id: String,
 ) -> Result<Vec<PatchProposalView>, String> {
-    let store = state.store.lock().map_err(|_| "Patch bridge lock failed.".to_string())?;
+    let store = state
+        .store
+        .lock()
+        .map_err(|_| "Patch bridge lock failed.".to_string())?;
     Ok(patch_snapshot_from_store(&store, &run_id))
 }
 
@@ -80,12 +106,20 @@ pub fn propose_patch_record(
 ) -> Result<PatchProposalView, String> {
     validate_request(&request)?;
     if !request.client_id.trim().is_empty() {
-        if let Some(existing) = store.records.iter().find(|record| record.id == request.client_id) {
+        if let Some(existing) = store
+            .records
+            .iter()
+            .find(|record| record.id == request.client_id)
+        {
             return Ok(existing.clone());
         }
     }
     let client_id = request.client_id.clone();
-    let roots = request.approved_roots.iter().map(PathBuf::from).collect::<Vec<_>>();
+    let roots = request
+        .approved_roots
+        .iter()
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
     let mut engine = PatchEngine::new(roots).map_err(|error| format!("{error:?}"))?;
     let proposal = engine
         .propose_patch(crate::patch::PatchInput {
@@ -106,7 +140,12 @@ pub fn propose_patch_record(
 }
 
 pub fn patch_snapshot_from_store(store: &PatchBridgeStore, run_id: &str) -> Vec<PatchProposalView> {
-    store.records.iter().filter(|record| record.run_id == run_id).cloned().collect()
+    store
+        .records
+        .iter()
+        .filter(|record| record.run_id == run_id)
+        .cloned()
+        .collect()
 }
 
 fn validate_request(request: &PatchProposalRequest) -> Result<(), String> {

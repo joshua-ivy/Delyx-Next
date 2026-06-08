@@ -91,7 +91,12 @@ impl EvidenceStore {
     }
 
     pub fn for_run(&self, run_id: &str) -> Vec<EvidenceRecord> {
-        let mut records: Vec<_> = self.records.iter().filter(|record| record.run_id == run_id).cloned().collect();
+        let mut records: Vec<_> = self
+            .records
+            .iter()
+            .filter(|record| record.run_id == run_id)
+            .cloned()
+            .collect();
         records.sort_by_key(|record| record.source_kind);
         records
     }
@@ -132,20 +137,39 @@ impl ResearchAgent {
             contradictions.extend(contradictions_for(&audit, &receipts));
             audits.push(audit);
         }
-        let summary = if audits.iter().all(|audit| audit.status == ClaimStatus::Supported) {
+        let summary = if audits
+            .iter()
+            .all(|audit| audit.status == ClaimStatus::Supported)
+        {
             "Evidence supports the audited claims.".to_string()
         } else {
             "insufficient evidence.".to_string()
         };
-        ResearchAnswer { run_id: run_id.to_string(), question: question.to_string(), summary, receipts, audits, contradictions }
+        ResearchAnswer {
+            run_id: run_id.to_string(),
+            question: question.to_string(),
+            summary,
+            receipts,
+            audits,
+            contradictions,
+        }
     }
 
     fn audit_claim(&mut self, claim: &str, receipts: &[EvidenceRecord]) -> ClaimAudit {
         self.next_claim_id += 1;
         let key = normalize_claim(claim);
-        let matching: Vec<_> = receipts.iter().filter(|record| record.claim_key == key).collect();
-        let supports = matching.iter().filter(|record| record.stance == EvidenceStance::Supports).count();
-        let contradicts = matching.iter().filter(|record| record.stance == EvidenceStance::Contradicts).count();
+        let matching: Vec<_> = receipts
+            .iter()
+            .filter(|record| record.claim_key == key)
+            .collect();
+        let supports = matching
+            .iter()
+            .filter(|record| record.stance == EvidenceStance::Supports)
+            .count();
+        let contradicts = matching
+            .iter()
+            .filter(|record| record.stance == EvidenceStance::Contradicts)
+            .count();
         let status = match (supports, contradicts) {
             (0, _) => ClaimStatus::InsufficientEvidence,
             (_, 0) => ClaimStatus::Supported,
@@ -162,8 +186,14 @@ impl ResearchAgent {
 }
 
 fn contradictions_for(audit: &ClaimAudit, receipts: &[EvidenceRecord]) -> Vec<Contradiction> {
-    let supporting = audit.evidence_ids.iter().find(|id| evidence_stance(id, receipts) == Some(EvidenceStance::Supports));
-    let contradicting = audit.evidence_ids.iter().find(|id| evidence_stance(id, receipts) == Some(EvidenceStance::Contradicts));
+    let supporting = audit
+        .evidence_ids
+        .iter()
+        .find(|id| evidence_stance(id, receipts) == Some(EvidenceStance::Supports));
+    let contradicting = audit
+        .evidence_ids
+        .iter()
+        .find(|id| evidence_stance(id, receipts) == Some(EvidenceStance::Contradicts));
     match (supporting, contradicting) {
         (Some(left), Some(right)) => vec![Contradiction {
             claim_id: audit.id.clone(),
@@ -176,7 +206,10 @@ fn contradictions_for(audit: &ClaimAudit, receipts: &[EvidenceRecord]) -> Vec<Co
 }
 
 fn evidence_stance(id: &str, receipts: &[EvidenceRecord]) -> Option<EvidenceStance> {
-    receipts.iter().find(|record| record.id == id).map(|record| record.stance)
+    receipts
+        .iter()
+        .find(|record| record.id == id)
+        .map(|record| record.stance)
 }
 
 fn normalize_claim(value: &str) -> String {
@@ -189,7 +222,20 @@ fn requires_support(claim: &str) -> bool {
 
 fn contains_date_word(claim: &str) -> bool {
     let lower = claim.to_lowercase();
-    ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
-        .iter()
-        .any(|month| lower.contains(month))
+    [
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+    ]
+    .iter()
+    .any(|month| lower.contains(month))
 }

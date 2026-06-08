@@ -22,7 +22,9 @@ mod tests {
         assert!(view.args.contains(&"exec".to_string()));
         assert_eq!(view.working_directory, "C:/repo");
         assert_eq!(view.transcript_format, "jsonl");
-        assert!(view.required_delyx_tools.contains(&"external_agent".to_string()));
+        assert!(view
+            .required_delyx_tools
+            .contains(&"external_agent".to_string()));
         assert!(view.safety_summary.contains("approvals"));
     }
 

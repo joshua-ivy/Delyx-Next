@@ -1,7 +1,9 @@
 #[cfg(test)]
 mod tests {
     use crate::approval::{ApprovalEngine, ApprovalError, ProposalInput, RiskLevel, RiskyAction};
-    use crate::patch::{DiffLineKind, PatchEngine, PatchError, PatchFileInput, PatchInput, PatchStatus};
+    use crate::patch::{
+        DiffLineKind, PatchEngine, PatchError, PatchFileInput, PatchInput, PatchStatus,
+    };
     use std::fs;
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -13,12 +15,20 @@ mod tests {
         fs::write(&file, "network = true\n").unwrap();
         let mut engine = PatchEngine::new(vec![root]).unwrap();
 
-        let proposal = engine.propose_patch(patch_input("prop-1", &file, "network = false\n")).unwrap();
+        let proposal = engine
+            .propose_patch(patch_input("prop-1", &file, "network = false\n"))
+            .unwrap();
 
         assert_eq!(proposal.status, PatchStatus::Proposed);
         assert_eq!(fs::read_to_string(&file).unwrap(), "network = true\n");
-        assert!(proposal.files[0].diff.iter().any(|line| line.kind == DiffLineKind::Removed));
-        assert!(proposal.files[0].diff.iter().any(|line| line.kind == DiffLineKind::Added));
+        assert!(proposal.files[0]
+            .diff
+            .iter()
+            .any(|line| line.kind == DiffLineKind::Removed));
+        assert!(proposal.files[0]
+            .diff
+            .iter()
+            .any(|line| line.kind == DiffLineKind::Added));
     }
 
     #[test]
@@ -29,11 +39,20 @@ mod tests {
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(file_write_input(30));
         let mut engine = PatchEngine::new(vec![root]).unwrap();
-        let patch = engine.propose_patch(patch_input(&approval.id, &file, "fn main() { println!(\"ok\"); }\n")).unwrap();
+        let patch = engine
+            .propose_patch(patch_input(
+                &approval.id,
+                &file,
+                "fn main() { println!(\"ok\"); }\n",
+            ))
+            .unwrap();
 
         let result = engine.apply_approved_patch(&patch.id, 10, &approvals);
 
-        assert_eq!(result.unwrap_err(), PatchError::Approval(crate::approval::ApprovalError::NotApproved));
+        assert_eq!(
+            result.unwrap_err(),
+            PatchError::Approval(crate::approval::ApprovalError::NotApproved)
+        );
         assert_eq!(fs::read_to_string(&file).unwrap(), "fn main() {}\n");
     }
 
@@ -44,15 +63,24 @@ mod tests {
         fs::write(&file, "before\n").unwrap();
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(file_write_input(30));
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut engine = PatchEngine::new(vec![root]).unwrap();
-        let patch = engine.propose_patch(patch_input(&approval.id, &file, "after\n")).unwrap();
+        let patch = engine
+            .propose_patch(patch_input(&approval.id, &file, "after\n"))
+            .unwrap();
 
-        let checkpoint = engine.apply_approved_patch(&patch.id, 10, &approvals).unwrap();
+        let checkpoint = engine
+            .apply_approved_patch(&patch.id, 10, &approvals)
+            .unwrap();
 
         assert_eq!(checkpoint.files[0].contents.as_deref(), Some("before\n"));
         assert_eq!(fs::read_to_string(&file).unwrap(), "after\n");
-        assert_eq!(engine.list_proposals("run-1")[0].status, PatchStatus::Applied);
+        assert_eq!(
+            engine.list_proposals("run-1")[0].status,
+            PatchStatus::Applied
+        );
     }
 
     #[test]
@@ -61,10 +89,17 @@ mod tests {
         let file = root.join("plan.md");
         fs::write(&file, "before\n").unwrap();
         let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(ProposalInput { action: RiskyAction::TerminalCommand, ..file_write_input(30) });
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let approval = approvals.propose(ProposalInput {
+            action: RiskyAction::TerminalCommand,
+            ..file_write_input(30)
+        });
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut engine = PatchEngine::new(vec![root]).unwrap();
-        let patch = engine.propose_patch(patch_input(&approval.id, &file, "after\n")).unwrap();
+        let patch = engine
+            .propose_patch(patch_input(&approval.id, &file, "after\n"))
+            .unwrap();
 
         let result = engine.apply_approved_patch(&patch.id, 10, &approvals);
 
@@ -84,10 +119,17 @@ mod tests {
         let file = root.join("plan.md");
         fs::write(&file, "before\n").unwrap();
         let mut approvals = ApprovalEngine::new();
-        let approval = approvals.propose(ProposalInput { run_id: "run-2".to_string(), ..file_write_input(30) });
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        let approval = approvals.propose(ProposalInput {
+            run_id: "run-2".to_string(),
+            ..file_write_input(30)
+        });
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut engine = PatchEngine::new(vec![root]).unwrap();
-        let patch = engine.propose_patch(patch_input(&approval.id, &file, "after\n")).unwrap();
+        let patch = engine
+            .propose_patch(patch_input(&approval.id, &file, "after\n"))
+            .unwrap();
 
         let result = engine.apply_approved_patch(&patch.id, 10, &approvals);
 
@@ -111,8 +153,14 @@ mod tests {
             run_id: "run-1".to_string(),
             approval_id: "prop-1".to_string(),
             files: vec![
-                PatchFileInput { path: file.clone(), after: "after one\n".to_string() },
-                PatchFileInput { path: file, after: "after two\n".to_string() },
+                PatchFileInput {
+                    path: file.clone(),
+                    after: "after one\n".to_string(),
+                },
+                PatchFileInput {
+                    path: file,
+                    after: "after two\n".to_string(),
+                },
             ],
         };
 
@@ -129,15 +177,26 @@ mod tests {
         fs::write(&file, "original\n").unwrap();
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(file_write_input(30));
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut engine = PatchEngine::new(vec![root]).unwrap();
-        let patch = engine.propose_patch(patch_input(&approval.id, &file, "changed\n")).unwrap();
-        let checkpoint = engine.apply_approved_patch(&patch.id, 10, &approvals).unwrap();
+        let patch = engine
+            .propose_patch(patch_input(&approval.id, &file, "changed\n"))
+            .unwrap();
+        let checkpoint = engine
+            .apply_approved_patch(&patch.id, 10, &approvals)
+            .unwrap();
 
-        engine.restore_checkpoint(&checkpoint.id, 10, &approvals).unwrap();
+        engine
+            .restore_checkpoint(&checkpoint.id, 10, &approvals)
+            .unwrap();
 
         assert_eq!(fs::read_to_string(&file).unwrap(), "original\n");
-        assert_eq!(engine.list_proposals("run-1")[0].status, PatchStatus::Restored);
+        assert_eq!(
+            engine.list_proposals("run-1")[0].status,
+            PatchStatus::Restored
+        );
     }
 
     #[test]
@@ -147,11 +206,19 @@ mod tests {
         fs::write(&file, "original\n").unwrap();
         let mut approvals = ApprovalEngine::new();
         let approval = approvals.propose(file_write_input(30));
-        approvals.approve(&approval.id, 10, "approved in test").unwrap();
+        approvals
+            .approve(&approval.id, 10, "approved in test")
+            .unwrap();
         let mut engine = PatchEngine::new(vec![root]).unwrap();
-        let patch = engine.propose_patch(patch_input(&approval.id, &file, "changed\n")).unwrap();
-        let checkpoint = engine.apply_approved_patch(&patch.id, 10, &approvals).unwrap();
-        engine.restore_checkpoint(&checkpoint.id, 10, &approvals).unwrap();
+        let patch = engine
+            .propose_patch(patch_input(&approval.id, &file, "changed\n"))
+            .unwrap();
+        let checkpoint = engine
+            .apply_approved_patch(&patch.id, 10, &approvals)
+            .unwrap();
+        engine
+            .restore_checkpoint(&checkpoint.id, 10, &approvals)
+            .unwrap();
         fs::write(&file, "user edit\n").unwrap();
 
         let result = engine.restore_checkpoint(&checkpoint.id, 10, &approvals);
@@ -175,7 +242,10 @@ mod tests {
         PatchInput {
             run_id: "run-1".to_string(),
             approval_id: approval_id.to_string(),
-            files: vec![PatchFileInput { path: path.to_path_buf(), after: after.to_string() }],
+            files: vec![PatchFileInput {
+                path: path.to_path_buf(),
+                after: after.to_string(),
+            }],
         }
     }
 
@@ -194,7 +264,10 @@ mod tests {
     }
 
     fn temp_workspace(label: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let path = std::env::temp_dir().join(format!("delyx-next-{label}-{stamp}"));
         fs::create_dir_all(&path).unwrap();
         path

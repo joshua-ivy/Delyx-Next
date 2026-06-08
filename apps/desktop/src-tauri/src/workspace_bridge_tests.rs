@@ -17,9 +17,18 @@ mod tests {
 
         assert!(!snapshot.path.starts_with("//?/"));
         assert_eq!(snapshot.git.branch, "main");
-        assert!(snapshot.rules_files.iter().any(|file| file.kind == "AGENTS.md"));
-        assert!(snapshot.indexed_files.iter().any(|file| file == "src/main.rs"));
-        assert!(!snapshot.indexed_files.iter().any(|file| file.contains("node_modules")));
+        assert!(snapshot
+            .rules_files
+            .iter()
+            .any(|file| file.kind == "AGENTS.md"));
+        assert!(snapshot
+            .indexed_files
+            .iter()
+            .any(|file| file == "src/main.rs"));
+        assert!(!snapshot
+            .indexed_files
+            .iter()
+            .any(|file| file.contains("node_modules")));
     }
 
     #[test]
@@ -37,7 +46,10 @@ mod tests {
 
     impl Fixture {
         fn new(name: &str) -> Self {
-            let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+            let stamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
             let root = std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}"));
             fs::create_dir_all(&root).unwrap();
             Self { root }

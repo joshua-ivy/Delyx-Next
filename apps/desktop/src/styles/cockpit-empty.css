@@ -1,0 +1,87 @@
+/* Minimal no-thread workbench state. */
+.deckC.deck-empty {
+  grid-template-columns: 56px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.deck-empty .deck-inspect,
+.deck-empty .resize-review,
+.deck-empty .resize-drawer {
+  display: none;
+}
+
+.deck-empty .deck-bar,
+.deck-empty .deck-hintbar {
+  grid-column: 2;
+}
+
+.deck-empty .deck-bar,
+.deck-empty .deck-work {
+  min-width: 0;
+}
+
+.deck-empty .deck-work-scroll {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 112px;
+}
+
+.deck-empty .deck-title {
+  max-width: 34ch;
+}
+
+.deck-empty .deck-desc {
+  max-width: 46ch;
+}
+
+@media (max-width: 640px) {
+  .deckC.deck-empty {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .deck-empty .deck-bar {
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .deck-empty .deck-bar-ctx,
+  .deck-empty .deck-bar-status,
+  .deck-empty .deck-comp-mode,
+  .deck-empty .deck-kbd {
+    display: none;
+  }
+
+  .deck-empty .deck-cmd {
+    max-width: none;
+    min-width: 0;
+  }
+
+  .deck-empty .deck-cmd-ph,
+  .deck-empty .deck-comp-input {
+    min-width: 0;
+  }
+
+  .deck-empty .deck-work-scroll {
+    justify-content: flex-start;
+    padding: 24px 18px 96px;
+  }
+
+  .deck-empty .deck-title,
+  .deck-empty .deck-desc {
+    max-width: 100%;
+  }
+
+  .deck-empty .deck-composer {
+    padding: 10px 12px 12px;
+  }
+
+  .deck-empty .deck-comp-row {
+    gap: 6px;
+    padding-right: 6px;
+  }
+
+  .deck-empty .deck-comp-send {
+    padding-inline: 14px;
+  }
+}

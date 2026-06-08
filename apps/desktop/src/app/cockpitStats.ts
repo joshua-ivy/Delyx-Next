@@ -6,12 +6,7 @@ import { pendingCount } from "./cockpitReview";
 import { escapeHtml } from "./html";
 
 export function emptyThreadStatsBlock() {
-  return `<section class="run-activity">
-    <div class="run-activity-main">
-      <span class="activity-dot idle"></span>
-      <div><strong>Idle</strong><span>Create a thread to start a real run.</span></div>
-    </div>
-  </section>`;
+  return "";
 }
 
 export function threadStatsBlock(

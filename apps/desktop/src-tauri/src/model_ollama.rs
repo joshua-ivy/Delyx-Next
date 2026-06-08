@@ -85,7 +85,9 @@ pub(crate) fn provider_from_tags_result(
             format!("Ollama returned HTTP {status}{}.", response_detail(&body)),
             Vec::new(),
         ),
-        Err(message) => ollama_provider(checked_at, ProviderStatus::Unreachable, message, Vec::new()),
+        Err(message) => {
+            ollama_provider(checked_at, ProviderStatus::Unreachable, message, Vec::new())
+        }
     }
 }
 
@@ -118,9 +120,10 @@ pub(crate) fn chat_from_http_result(
                 text,
             })
         }
-        Ok((status, body)) => {
-            Err(format!("Ollama chat failed with HTTP {status}{}.", response_detail(&body)))
-        }
+        Ok((status, body)) => Err(format!(
+            "Ollama chat failed with HTTP {status}{}.",
+            response_detail(&body)
+        )),
         Err(message) => Err(message),
     }
 }
@@ -142,7 +145,9 @@ fn parse_ollama_chat_text(body: &str) -> Result<String, String> {
 }
 
 fn fetch_tags(timeout: Duration) -> Result<(u16, String), String> {
-    let addr: SocketAddr = OLLAMA_ADDR.parse().map_err(|_| "Invalid Ollama address.".to_string())?;
+    let addr: SocketAddr = OLLAMA_ADDR
+        .parse()
+        .map_err(|_| "Invalid Ollama address.".to_string())?;
     let mut stream = TcpStream::connect_timeout(&addr, timeout)
         .map_err(|_| format!("Ollama is not reachable at {OLLAMA_ADDR}."))?;
     stream.set_read_timeout(Some(timeout)).ok();
@@ -162,14 +167,20 @@ fn fetch_chat(
     messages: &[OllamaChatMessage],
     timeout: Duration,
 ) -> Result<(u16, String), String> {
-    let body = serde_json::to_string(&OllamaChatRequestBody { model, messages, stream: false })
-        .map_err(|error| format!("Ollama chat request was not serializable: {error}."))?;
+    let body = serde_json::to_string(&OllamaChatRequestBody {
+        model,
+        messages,
+        stream: false,
+    })
+    .map_err(|error| format!("Ollama chat request was not serializable: {error}."))?;
     let request = format!(
         "POST /api/chat HTTP/1.1\r\nHost: 127.0.0.1:11434\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
         body.as_bytes().len(),
         body
     );
-    let addr: SocketAddr = OLLAMA_ADDR.parse().map_err(|_| "Invalid Ollama address.".to_string())?;
+    let addr: SocketAddr = OLLAMA_ADDR
+        .parse()
+        .map_err(|_| "Invalid Ollama address.".to_string())?;
     let mut stream = TcpStream::connect_timeout(&addr, timeout)
         .map_err(|_| format!("Ollama is not reachable at {OLLAMA_ADDR}."))?;
     stream.set_read_timeout(Some(timeout)).ok();
@@ -191,7 +202,11 @@ fn split_http_response(response: &str) -> (u16, String) {
         .and_then(|line| line.split_whitespace().nth(1))
         .and_then(|value| value.parse::<u16>().ok())
         .unwrap_or(0);
-    let body = response.split_once("\r\n\r\n").map(|(_, body)| body).unwrap_or("").to_string();
+    let body = response
+        .split_once("\r\n\r\n")
+        .map(|(_, body)| body)
+        .unwrap_or("")
+        .to_string();
     (status, body)
 }
 
@@ -220,7 +235,11 @@ fn ollama_provider(
     models: Vec<ModelInfo>,
 ) -> ModelProvider {
     ModelProvider {
-        health: ProviderHealth { checked_at, message, status },
+        health: ProviderHealth {
+            checked_at,
+            message,
+            status,
+        },
         id: OLLAMA_ID.to_string(),
         kind: ProviderKind::Ollama,
         label: "Ollama".to_string(),
@@ -265,7 +284,9 @@ fn validate_messages(messages: Vec<OllamaChatMessage>) -> Result<Vec<OllamaChatM
 fn validate_message(message: OllamaChatMessage) -> Result<OllamaChatMessage, String> {
     let role = message.role.trim().to_string();
     if !matches!(role.as_str(), "assistant" | "system" | "user") {
-        return Err(format!("Ollama chat message role `{role}` is not supported."));
+        return Err(format!(
+            "Ollama chat message role `{role}` is not supported."
+        ));
     }
     let content = message.content.trim().to_string();
     if content.is_empty() {

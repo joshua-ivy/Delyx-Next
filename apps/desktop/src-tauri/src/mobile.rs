@@ -88,7 +88,11 @@ pub fn decide_mobile_approval(
         return Err(MobileError::Disabled);
     }
     if kind == MobileDecisionKind::Deny {
-        return Ok(MobileDecision { proposal_id: proposal.id.clone(), kind, scope: proposal.scope.clone() });
+        return Ok(MobileDecision {
+            proposal_id: proposal.id.clone(),
+            kind,
+            scope: proposal.scope.clone(),
+        });
     }
     if risk_rank(policy.max_approval_risk) > risk_rank(desktop_max_risk) {
         return Err(MobileError::RiskExceedsDesktopPolicy);
@@ -97,9 +101,17 @@ pub fn decide_mobile_approval(
         return Err(MobileError::RiskTooHigh);
     }
     match proposal.action {
-        RiskyAction::FileWrite if !policy.can_access_files => Err(MobileError::BroadFileAccessDenied),
-        RiskyAction::TerminalCommand if !policy.can_access_terminal => Err(MobileError::BroadTerminalAccessDenied),
-        _ => Ok(MobileDecision { proposal_id: proposal.id.clone(), kind, scope: proposal.scope.clone() }),
+        RiskyAction::FileWrite if !policy.can_access_files => {
+            Err(MobileError::BroadFileAccessDenied)
+        }
+        RiskyAction::TerminalCommand if !policy.can_access_terminal => {
+            Err(MobileError::BroadTerminalAccessDenied)
+        }
+        _ => Ok(MobileDecision {
+            proposal_id: proposal.id.clone(),
+            kind,
+            scope: proposal.scope.clone(),
+        }),
     }
 }
 

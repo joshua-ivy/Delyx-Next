@@ -75,17 +75,31 @@ fn insert_run(connection: &Connection, run: &AgentRun) -> Result<(), AgentRunErr
         .map_err(sql_error)
 }
 
-fn insert_node(connection: &Connection, run_id: &str, node: &AgentNode) -> Result<(), AgentRunError> {
+fn insert_node(
+    connection: &Connection,
+    run_id: &str,
+    node: &AgentNode,
+) -> Result<(), AgentRunError> {
     connection
         .execute(
             "INSERT INTO agent_nodes (id, run_id, kind, label, status) VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![node.id, run_id, node.kind, node.label, status_key(node.status)],
+            params![
+                node.id,
+                run_id,
+                node.kind,
+                node.label,
+                status_key(node.status)
+            ],
         )
         .map(|_| ())
         .map_err(sql_error)
 }
 
-fn insert_event(connection: &Connection, run_id: &str, event: &AgentEvent) -> Result<(), AgentRunError> {
+fn insert_event(
+    connection: &Connection,
+    run_id: &str,
+    event: &AgentEvent,
+) -> Result<(), AgentRunError> {
     connection
         .execute(
             "INSERT INTO agent_events (id, run_id, kind, message) VALUES (?1, ?2, ?3, ?4)",
@@ -95,7 +109,11 @@ fn insert_event(connection: &Connection, run_id: &str, event: &AgentEvent) -> Re
         .map_err(sql_error)
 }
 
-fn insert_artifact(connection: &Connection, run_id: &str, artifact: &Artifact) -> Result<(), AgentRunError> {
+fn insert_artifact(
+    connection: &Connection,
+    run_id: &str,
+    artifact: &Artifact,
+) -> Result<(), AgentRunError> {
     connection
         .execute(
             "INSERT INTO artifacts (id, run_id, kind, label) VALUES (?1, ?2, ?3, ?4)",
@@ -105,7 +123,11 @@ fn insert_artifact(connection: &Connection, run_id: &str, artifact: &Artifact) -
         .map_err(sql_error)
 }
 
-fn insert_evidence(connection: &Connection, run_id: &str, evidence: &EvidenceRecord) -> Result<(), AgentRunError> {
+fn insert_evidence(
+    connection: &Connection,
+    run_id: &str,
+    evidence: &EvidenceRecord,
+) -> Result<(), AgentRunError> {
     connection
         .execute(
             "INSERT INTO evidence_records (id, run_id, source_kind, title) VALUES (?1, ?2, ?3, ?4)",
@@ -133,7 +155,10 @@ fn load_runs(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(),
             artifacts: Vec::new(),
             evidence: Vec::new(),
             metrics: RunMetrics::default(),
-            outcome: summary.map(|value| AgentOutcome { status, summary: value }),
+            outcome: summary.map(|value| AgentOutcome {
+                status,
+                summary: value,
+            }),
         });
     }
     Ok(())
@@ -164,7 +189,16 @@ fn load_events(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(
         .prepare("SELECT run_id, id, kind, message FROM agent_events ORDER BY rowid")
         .map_err(sql_error)?;
     let rows = statement
-        .query_map([], |row| Ok((row.get::<_, String>(0)?, AgentEvent { id: row.get(1)?, kind: row.get(2)?, message: row.get(3)? })))
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                AgentEvent {
+                    id: row.get(1)?,
+                    kind: row.get(2)?,
+                    message: row.get(3)?,
+                },
+            ))
+        })
         .map_err(sql_error)?;
     for row in rows {
         let (run_id, event) = row.map_err(sql_error)?;
@@ -175,12 +209,24 @@ fn load_events(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(
     Ok(())
 }
 
-fn load_artifacts(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(), AgentRunError> {
+fn load_artifacts(
+    connection: &Connection,
+    ledger: &mut AgentRunLedger,
+) -> Result<(), AgentRunError> {
     let mut statement = connection
         .prepare("SELECT run_id, id, kind, label FROM artifacts ORDER BY rowid")
         .map_err(sql_error)?;
     let rows = statement
-        .query_map([], |row| Ok((row.get::<_, String>(0)?, Artifact { id: row.get(1)?, kind: row.get(2)?, label: row.get(3)? })))
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                Artifact {
+                    id: row.get(1)?,
+                    kind: row.get(2)?,
+                    label: row.get(3)?,
+                },
+            ))
+        })
         .map_err(sql_error)?;
     for row in rows {
         let (run_id, artifact) = row.map_err(sql_error)?;
@@ -191,17 +237,23 @@ fn load_artifacts(connection: &Connection, ledger: &mut AgentRunLedger) -> Resul
     Ok(())
 }
 
-fn load_evidence(connection: &Connection, ledger: &mut AgentRunLedger) -> Result<(), AgentRunError> {
+fn load_evidence(
+    connection: &Connection,
+    ledger: &mut AgentRunLedger,
+) -> Result<(), AgentRunError> {
     let mut statement = connection
         .prepare("SELECT run_id, id, source_kind, title FROM evidence_records ORDER BY rowid")
         .map_err(sql_error)?;
     let rows = statement
         .query_map([], |row| {
-            Ok((row.get::<_, String>(0)?, EvidenceRecord {
-                id: row.get(1)?,
-                source_kind: row.get(2)?,
-                title: row.get(3)?,
-            }))
+            Ok((
+                row.get::<_, String>(0)?,
+                EvidenceRecord {
+                    id: row.get(1)?,
+                    source_kind: row.get(2)?,
+                    title: row.get(3)?,
+                },
+            ))
         })
         .map_err(sql_error)?;
     for row in rows {

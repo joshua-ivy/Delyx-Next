@@ -26,7 +26,9 @@ pub fn load_recent_project(path: &Path) -> Result<Option<WorkspaceProjectView>, 
         )
         .optional()
         .map_err(sql_string)?;
-    project_json.map(|value| serde_json::from_str(&value).map_err(|error| error.to_string())).transpose()
+    project_json
+        .map(|value| serde_json::from_str(&value).map_err(|error| error.to_string()))
+        .transpose()
 }
 
 fn sql_string(error: rusqlite::Error) -> String {

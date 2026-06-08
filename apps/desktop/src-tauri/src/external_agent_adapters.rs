@@ -11,7 +11,10 @@ pub(crate) fn default_adapters() -> Vec<ExternalAgentAvailability> {
     adapters_from_path(&path_var, &path_ext)
 }
 
-pub(crate) fn adapters_from_path(path_var: &OsStr, path_ext: &str) -> Vec<ExternalAgentAvailability> {
+pub(crate) fn adapters_from_path(
+    path_var: &OsStr,
+    path_ext: &str,
+) -> Vec<ExternalAgentAvailability> {
     let codex = detect_executable("codex", path_var, path_ext);
     let claude = detect_executable("claude", path_var, path_ext);
     vec![
@@ -41,18 +44,30 @@ pub(crate) fn adapters_from_path(path_var: &OsStr, path_ext: &str) -> Vec<Extern
 
 fn detect_executable(command: &str, path_var: &OsStr, path_ext: &str) -> (AdapterStatus, String) {
     if path_var.to_string_lossy().trim().is_empty() {
-        return (AdapterStatus::NotChecked, "PATH is empty; executable was not checked.".to_string());
+        return (
+            AdapterStatus::NotChecked,
+            "PATH is empty; executable was not checked.".to_string(),
+        );
     }
     match find_executable(command, path_var, path_ext) {
-        Some(path) => (AdapterStatus::Available, format!("Executable found at {}.", path.display())),
-        None => (AdapterStatus::Missing, format!("{command} executable was not found on PATH.")),
+        Some(path) => (
+            AdapterStatus::Available,
+            format!("Executable found at {}.", path.display()),
+        ),
+        None => (
+            AdapterStatus::Missing,
+            format!("{command} executable was not found on PATH."),
+        ),
     }
 }
 
 fn find_executable(command: &str, path_var: &OsStr, path_ext: &str) -> Option<PathBuf> {
     let names = executable_names(command, path_ext);
     env::split_paths(path_var).find_map(|directory| {
-        names.iter().map(|name| directory.join(name)).find(|candidate| candidate.is_file())
+        names
+            .iter()
+            .map(|name| directory.join(name))
+            .find(|candidate| candidate.is_file())
     })
 }
 

@@ -53,7 +53,10 @@ mod tests {
 
     impl Fixture {
         fn new(name: &str) -> Self {
-            let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+            let stamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
             let root = std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}"));
             fs::create_dir_all(&root).unwrap();
             Self { root }
@@ -91,7 +94,11 @@ mod tests {
     fn write_index_entry(data: &mut Vec<u8>, root: &Path, relative: &str) {
         let start = data.len();
         let metadata = fs::metadata(root.join(relative)).unwrap();
-        let modified = metadata.modified().unwrap().duration_since(UNIX_EPOCH).unwrap();
+        let modified = metadata
+            .modified()
+            .unwrap()
+            .duration_since(UNIX_EPOCH)
+            .unwrap();
         data.extend_from_slice(&0_u32.to_be_bytes());
         data.extend_from_slice(&0_u32.to_be_bytes());
         data.extend_from_slice(&(modified.as_secs() as u32).to_be_bytes());

@@ -1,4 +1,5 @@
 use crate::patch::{DiffLineKind, PatchProposal};
+use crate::review_helpers::{first_hunk, risk_summary, test_summary};
 use crate::test_runner::{TestArtifact, TestStatus};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -86,14 +87,23 @@ impl ReviewAgent {
     }
 
     pub fn capabilities() -> Vec<ReviewCapability> {
-        vec![ReviewCapability::ReadDiff, ReviewCapability::ReadTestArtifact, ReviewCapability::ReadEvidence]
+        vec![
+            ReviewCapability::ReadDiff,
+            ReviewCapability::ReadTestArtifact,
+            ReviewCapability::ReadEvidence,
+        ]
     }
 
     pub fn can_write() -> bool {
         false
     }
 
-    pub fn review(&mut self, run_id: &str, patches: &[PatchProposal], tests: &[TestArtifact]) -> ReviewReport {
+    pub fn review(
+        &mut self,
+        run_id: &str,
+        patches: &[PatchProposal],
+        tests: &[TestArtifact],
+    ) -> ReviewReport {
         let mut findings = Vec::new();
         for patch in patches {
             findings.extend(self.find_patch_risks(patch));
@@ -116,9 +126,17 @@ impl ReviewAgent {
         report
     }
 
-    pub fn request_revision(&mut self, report_id: &str, finding_id: &str) -> Result<RevisionRequest, ReviewError> {
+    pub fn request_revision(
+        &mut self,
+        report_id: &str,
+        finding_id: &str,
+    ) -> Result<RevisionRequest, ReviewError> {
         let report = self.report_mut(report_id)?;
-        if !report.findings.iter().any(|finding| finding.id == finding_id) {
+        if !report
+            .findings
+            .iter()
+            .any(|finding| finding.id == finding_id)
+        {
             return Err(ReviewError::FindingNotFound);
         }
         report.decision = ReviewDecision::ReviseRequested;
@@ -143,29 +161,92 @@ impl ReviewAgent {
                 }
                 let lower = line.text.to_lowercase();
                 if lower.contains("unwrap()") {
-                    findings.push(self.finding(FindingPriority::P1, "Added unwrap can panic", "Runtime panic risk in new code.", "panic", "Handle the None/Err case explicitly.", patch, &file.path.display().to_string(), index));
+                    findings.push(self.finding(
+                        FindingPriority::P1,
+                        "Added unwrap can panic",
+                        "Runtime panic risk in new code.",
+                        "panic",
+                        "Handle the None/Err case explicitly.",
+                        patch,
+                        &file.path.display().to_string(),
+                        index,
+                    ));
                 } else if lower.contains("todo!") || lower.contains("todo") {
-                    findings.push(self.finding(FindingPriority::P2, "Added unfinished TODO", "New code still contains unfinished work.", "incomplete", "Finish or remove the TODO before accepting.", patch, &file.path.display().to_string(), index));
+                    findings.push(self.finding(
+                        FindingPriority::P2,
+                        "Added unfinished TODO",
+                        "New code still contains unfinished work.",
+                        "incomplete",
+                        "Finish or remove the TODO before accepting.",
+                        patch,
+                        &file.path.display().to_string(),
+                        index,
+                    ));
                 }
             }
         }
         findings
     }
 
-    fn find_failed_tests(&mut self, patches: &[PatchProposal], tests: &[TestArtifact]) -> Vec<ReviewFinding> {
+    fn find_failed_tests(
+        &mut self,
+        patches: &[PatchProposal],
+        tests: &[TestArtifact],
+    ) -> Vec<ReviewFinding> {
         tests
             .iter()
             .filter(|artifact| artifact.status == TestStatus::Failed)
             .filter_map(|artifact| first_hunk(patches).map(|hunk| (artifact, hunk)))
-            .map(|(artifact, hunk)| self.finding_from_hunk(FindingPriority::P1, "Test artifact failed", artifact.failure_summary.as_deref().unwrap_or("A test command failed."), "test failure", "Repair the failing test before accepting.", hunk))
+            .map(|(artifact, hunk)| {
+                self.finding_from_hunk(
+                    FindingPriority::P1,
+                    "Test artifact failed",
+                    artifact
+                        .failure_summary
+                        .as_deref()
+                        .unwrap_or("A test command failed."),
+                    "test failure",
+                    "Repair the failing test before accepting.",
+                    hunk,
+                )
+            })
             .collect()
     }
 
-    fn finding(&mut self, priority: FindingPriority, title: &str, detail: &str, risk: &str, fix: &str, patch: &PatchProposal, file_path: &str, line_index: usize) -> ReviewFinding {
-        self.finding_from_hunk(priority, title, detail, risk, fix, DiffHunkRef { patch_id: patch.id.clone(), file_path: file_path.to_string(), line_index })
+    fn finding(
+        &mut self,
+        priority: FindingPriority,
+        title: &str,
+        detail: &str,
+        risk: &str,
+        fix: &str,
+        patch: &PatchProposal,
+        file_path: &str,
+        line_index: usize,
+    ) -> ReviewFinding {
+        self.finding_from_hunk(
+            priority,
+            title,
+            detail,
+            risk,
+            fix,
+            DiffHunkRef {
+                patch_id: patch.id.clone(),
+                file_path: file_path.to_string(),
+                line_index,
+            },
+        )
     }
 
-    fn finding_from_hunk(&mut self, priority: FindingPriority, title: &str, detail: &str, risk: &str, fix: &str, hunk: DiffHunkRef) -> ReviewFinding {
+    fn finding_from_hunk(
+        &mut self,
+        priority: FindingPriority,
+        title: &str,
+        detail: &str,
+        risk: &str,
+        fix: &str,
+        hunk: DiffHunkRef,
+    ) -> ReviewFinding {
         self.next_finding_id += 1;
         ReviewFinding {
             id: format!("finding-{}", self.next_finding_id),
@@ -179,34 +260,16 @@ impl ReviewAgent {
     }
 
     fn report(&self, report_id: &str) -> Result<&ReviewReport, ReviewError> {
-        self.reports.iter().find(|report| report.id == report_id).ok_or(ReviewError::ReportNotFound)
+        self.reports
+            .iter()
+            .find(|report| report.id == report_id)
+            .ok_or(ReviewError::ReportNotFound)
     }
 
     fn report_mut(&mut self, report_id: &str) -> Result<&mut ReviewReport, ReviewError> {
-        self.reports.iter_mut().find(|report| report.id == report_id).ok_or(ReviewError::ReportNotFound)
-    }
-}
-
-fn first_hunk(patches: &[PatchProposal]) -> Option<DiffHunkRef> {
-    let patch = patches.first()?;
-    let file = patch.files.first()?;
-    Some(DiffHunkRef { patch_id: patch.id.clone(), file_path: file.path.display().to_string(), line_index: 0 })
-}
-
-fn risk_summary(findings: &[ReviewFinding]) -> String {
-    if findings.is_empty() {
-        "No deterministic review findings.".to_string()
-    } else {
-        format!("{} prioritized finding(s).", findings.len())
-    }
-}
-
-fn test_summary(tests: &[TestArtifact]) -> String {
-    if tests.is_empty() {
-        "No test artifacts captured.".to_string()
-    } else if tests.iter().any(|artifact| artifact.status == TestStatus::Failed) {
-        "At least one test artifact failed.".to_string()
-    } else {
-        "All captured test artifacts passed.".to_string()
+        self.reports
+            .iter_mut()
+            .find(|report| report.id == report_id)
+            .ok_or(ReviewError::ReportNotFound)
     }
 }

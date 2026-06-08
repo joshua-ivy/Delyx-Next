@@ -36,8 +36,15 @@ mod tests {
         assert_eq!(artifact.status, "completed");
         assert!(artifact.terminal_output.contains("codex jsonl"));
         assert!(artifact.review_required);
-        assert!(artifact.diff_summary.as_ref().unwrap().contains("Delyx review"));
-        assert_eq!(external_agent_run_snapshot_from_store(&store, "run-1"), vec![artifact]);
+        assert!(artifact
+            .diff_summary
+            .as_ref()
+            .unwrap()
+            .contains("Delyx review"));
+        assert_eq!(
+            external_agent_run_snapshot_from_store(&store, "run-1"),
+            vec![artifact]
+        );
     }
 
     #[test]
@@ -45,7 +52,9 @@ mod tests {
         let root = temp_workspace("codex-terminal-pending");
         let mut approvals = ApprovalEngine::new();
         let external = approvals.propose(external_agent_input(100));
-        approvals.approve(&external.id, 10, "approved external").unwrap();
+        approvals
+            .approve(&external.id, 10, "approved external")
+            .unwrap();
         let terminal = approvals.propose(terminal_command_input(100));
         let mut store = ExternalAgentRunBridgeStore::default();
         let mut bridge = codex_bridge(&root);
@@ -151,7 +160,10 @@ mod tests {
             },
             kind: ExternalAgentKind::CodexCli,
             permission_mode: ExternalAgentPermissionMode::ReadOnly,
-            required_delyx_tools: vec!["external_agent".to_string(), "terminal_command".to_string()],
+            required_delyx_tools: vec![
+                "external_agent".to_string(),
+                "terminal_command".to_string(),
+            ],
             safety_summary: "test contract requires approvals".to_string(),
             transcript_format: "jsonl".to_string(),
         }
@@ -185,8 +197,12 @@ mod tests {
         let mut approvals = ApprovalEngine::new();
         let external = approvals.propose(external_agent_input(expires_at));
         let terminal = approvals.propose(terminal_command_input(expires_at));
-        approvals.approve(&external.id, 10, "approved external").unwrap();
-        approvals.approve(&terminal.id, 10, "approved terminal").unwrap();
+        approvals
+            .approve(&external.id, 10, "approved external")
+            .unwrap();
+        approvals
+            .approve(&terminal.id, 10, "approved terminal")
+            .unwrap();
         (approvals, external.id, terminal.id)
     }
 
@@ -198,7 +214,9 @@ mod tests {
             node_id: "node-codex".to_string(),
             reason: "Launch approved Codex CLI adapter.".to_string(),
             risk: RiskLevel::High,
-            rollback_plan: "Restore checkpoint or discard isolated worktree if changes are rejected.".to_string(),
+            rollback_plan:
+                "Restore checkpoint or discard isolated worktree if changes are rejected."
+                    .to_string(),
             run_id: "run-1".to_string(),
             scope: "Run Codex in one approved project root.".to_string(),
         }
@@ -218,14 +236,23 @@ mod tests {
 
     fn passing_command() -> (String, Vec<String>) {
         if cfg!(windows) {
-            ("cmd".to_string(), vec!["/C".to_string(), "echo codex jsonl".to_string()])
+            (
+                "cmd".to_string(),
+                vec!["/C".to_string(), "echo codex jsonl".to_string()],
+            )
         } else {
-            ("sh".to_string(), vec!["-c".to_string(), "echo codex jsonl".to_string()])
+            (
+                "sh".to_string(),
+                vec!["-c".to_string(), "echo codex jsonl".to_string()],
+            )
         }
     }
 
     fn temp_workspace(label: &str) -> PathBuf {
-        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let path = std::env::temp_dir().join(format!("delyx-next-{label}-{stamp}"));
         fs::create_dir_all(path.join("src")).unwrap();
         fs::write(path.join("src").join("main.rs"), "fn main() {}\n").unwrap();

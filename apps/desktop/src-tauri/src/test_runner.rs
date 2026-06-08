@@ -53,7 +53,11 @@ impl TestRunner {
             .iter()
             .map(|root| fs::canonicalize(root).map_err(io_error))
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(Self { approved_roots: roots, artifacts: Vec::new(), next_artifact_id: 0 })
+        Ok(Self {
+            approved_roots: roots,
+            artifacts: Vec::new(),
+            next_artifact_id: 0,
+        })
     }
 
     pub fn run_approved_test(
@@ -69,7 +73,12 @@ impl TestRunner {
             return Err(TestRunnerError::NotTestCommand);
         }
         approvals
-            .assert_can_execute_action_for_run(&input.approval_id, now, RiskyAction::TerminalCommand, &input.run_id)
+            .assert_can_execute_action_for_run(
+                &input.approval_id,
+                now,
+                RiskyAction::TerminalCommand,
+                &input.run_id,
+            )
             .map_err(TestRunnerError::Approval)?;
         let working_directory = self.checked_directory(&input.working_directory)?;
         if input.timeout_ms == 0 {
@@ -111,11 +120,16 @@ impl TestRunner {
     }
 
     pub fn list_artifacts(&self, run_id: &str) -> Vec<&TestArtifact> {
-        self.artifacts.iter().filter(|artifact| artifact.run_id == run_id).collect()
+        self.artifacts
+            .iter()
+            .filter(|artifact| artifact.run_id == run_id)
+            .collect()
     }
 
     pub fn has_execution_artifact(&self, run_id: &str) -> bool {
-        self.artifacts.iter().any(|artifact| artifact.run_id == run_id)
+        self.artifacts
+            .iter()
+            .any(|artifact| artifact.run_id == run_id)
     }
 
     fn checked_directory(&self, directory: &Path) -> Result<PathBuf, TestRunnerError> {
@@ -181,11 +195,15 @@ fn normalized_program_name(program: &str) -> String {
 }
 
 fn is_shell_program(program: &str) -> bool {
-    matches!(program, "cmd" | "powershell" | "pwsh" | "sh" | "bash" | "zsh")
+    matches!(
+        program,
+        "cmd" | "powershell" | "pwsh" | "sh" | "bash" | "zsh"
+    )
 }
 
 fn is_package_test_command(args: &[String]) -> bool {
-    matches!(arg(args, 0), Some("test")) || matches!((arg(args, 0), arg(args, 1)), (Some("run"), Some("test")))
+    matches!(arg(args, 0), Some("test"))
+        || matches!((arg(args, 0), arg(args, 1)), (Some("run"), Some("test")))
 }
 
 fn arg(args: &[String], index: usize) -> Option<&str> {

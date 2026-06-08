@@ -15,7 +15,10 @@ mod tests {
         let mut manager = WorkspaceManager::new();
         let project = manager.add_project(fixture.root()).unwrap();
 
-        assert_eq!(project.name, fixture.root().file_name().unwrap().to_string_lossy());
+        assert_eq!(
+            project.name,
+            fixture.root().file_name().unwrap().to_string_lossy()
+        );
         assert!(project.git.is_repo);
         assert_eq!(project.git.branch.as_deref(), Some("main"));
         assert_eq!(project.git.uncommitted_changes, None);
@@ -34,8 +37,12 @@ mod tests {
         let files = manager.index_files(&project.id, 20).unwrap();
         let search = manager.search_files(&project.id, "policy").unwrap();
 
-        assert!(files.iter().any(|entry| entry.relative_path == "src/tool_policy.rs"));
-        assert!(!files.iter().any(|entry| entry.relative_path.contains("node_modules")));
+        assert!(files
+            .iter()
+            .any(|entry| entry.relative_path == "src/tool_policy.rs"));
+        assert!(!files
+            .iter()
+            .any(|entry| entry.relative_path.contains("node_modules")));
         assert_eq!(search[0].relative_path, "src/tool_policy.rs");
     }
 
@@ -53,7 +60,9 @@ mod tests {
         let project = manager.add_project(fixture.root()).unwrap();
         let files = manager.index_files(&project.id, 20).unwrap();
 
-        assert!(!files.iter().any(|entry| entry.relative_path.contains("linked-outside")));
+        assert!(!files
+            .iter()
+            .any(|entry| entry.relative_path.contains("linked-outside")));
     }
 
     #[test]
@@ -61,7 +70,12 @@ mod tests {
         let fixture = Fixture::new("symlink-rules");
         let outside = Fixture::new("symlink-rules-outside");
         outside.file("AGENTS.md", "# Outside rules\n");
-        if symlink_file(&outside.root().join("AGENTS.md"), &fixture.root().join("AGENTS.md")).is_err() {
+        if symlink_file(
+            &outside.root().join("AGENTS.md"),
+            &fixture.root().join("AGENTS.md"),
+        )
+        .is_err()
+        {
             return;
         }
 
@@ -81,7 +95,12 @@ mod tests {
         let mut manager = WorkspaceManager::new();
         let project = manager.add_project(fixture.root()).unwrap();
 
-        assert_eq!(manager.read_file(&project.id, fixture.root().join("allowed.txt")).unwrap(), "yes");
+        assert_eq!(
+            manager
+                .read_file(&project.id, fixture.root().join("allowed.txt"))
+                .unwrap(),
+            "yes"
+        );
         assert_eq!(
             manager.read_file(&project.id, outside).unwrap_err(),
             WorkspaceError::OutsideApprovedRoot
@@ -104,7 +123,10 @@ mod tests {
 
     impl Fixture {
         fn new(name: &str) -> Self {
-            let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+            let stamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
             let root = std::env::temp_dir().join(format!("delyx-next-{name}-{stamp}"));
             fs::create_dir_all(&root).unwrap();
             Self { root }
@@ -115,7 +137,10 @@ mod tests {
         }
 
         fn sibling(&self, name: &str) -> PathBuf {
-            self.root.parent().unwrap().join(format!("{}-{name}", self.root.file_name().unwrap().to_string_lossy()))
+            self.root.parent().unwrap().join(format!(
+                "{}-{name}",
+                self.root.file_name().unwrap().to_string_lossy()
+            ))
         }
 
         fn file(&self, relative_path: &str, contents: &str) {

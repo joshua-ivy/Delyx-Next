@@ -33,8 +33,10 @@ fn clear_tables(connection: &Connection) -> Result<(), String> {
 }
 
 fn insert_contract(connection: &Connection, contract: &MissionContract) -> Result<(), String> {
-    let allowed_tools = serde_json::to_string(&contract.allowed_tools).map_err(|error| error.to_string())?;
-    let delivery_targets = serde_json::to_string(&contract.delivery_targets).map_err(|error| error.to_string())?;
+    let allowed_tools =
+        serde_json::to_string(&contract.allowed_tools).map_err(|error| error.to_string())?;
+    let delivery_targets =
+        serde_json::to_string(&contract.delivery_targets).map_err(|error| error.to_string())?;
     connection
         .execute(
             "INSERT INTO automation_contracts
@@ -63,7 +65,13 @@ fn insert_run(connection: &Connection, run: &ScheduledRun) -> Result<(), String>
         .execute(
             "INSERT INTO scheduled_runs (id, contract_id, status, reason, approval_id)
              VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![run.id, run.contract_id, run_status_key(run.status), run.reason, run.approval_id],
+            params![
+                run.id,
+                run.contract_id,
+                run_status_key(run.status),
+                run.reason,
+                run.approval_id
+            ],
         )
         .map(|_| ())
         .map_err(sql_string)
@@ -88,13 +96,15 @@ fn load_contracts(connection: &Connection) -> Result<Vec<MissionContract>, Strin
             title: row.get(1).map_err(sql_string)?,
             status: parse_status(&status)?,
             scope: row.get(3).map_err(sql_string)?,
-            allowed_tools: serde_json::from_str(&allowed_tools).map_err(|error| error.to_string())?,
+            allowed_tools: serde_json::from_str(&allowed_tools)
+                .map_err(|error| error.to_string())?,
             active_hours: ActiveHours {
                 start_hour: row.get::<_, i64>(5).map_err(sql_string)? as u8,
                 end_hour: row.get::<_, i64>(6).map_err(sql_string)? as u8,
             },
             timezone: row.get(7).map_err(sql_string)?,
-            delivery_targets: serde_json::from_str(&delivery_targets).map_err(|error| error.to_string())?,
+            delivery_targets: serde_json::from_str(&delivery_targets)
+                .map_err(|error| error.to_string())?,
             stop_condition: row.get(9).map_err(sql_string)?,
             workspace_fingerprint: row.get(10).map_err(sql_string)?,
         });
