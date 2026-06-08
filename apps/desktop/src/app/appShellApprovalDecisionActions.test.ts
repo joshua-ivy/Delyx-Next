@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
-import { decideApprovalAndMaybeResume } from "./appShellApprovalDecisionActions";
+import { decideApprovalAndMaybeResume, resumeAndDispatchSchedulerRun } from "./appShellApprovalDecisionActions";
 import { resumeSchedulerRun } from "./appShellSchedulerActions";
 import { dispatchSchedulerDecision } from "./appShellSchedulerDispatch";
 import { decideFocusApproval, shouldResumeAfterApprovalDecision } from "./focusApprovalDecision";
@@ -58,6 +58,16 @@ describe("decideApprovalAndMaybeResume", () => {
 
     expect(resumeRun).not.toHaveBeenCalled();
     expect(dispatchDecision).not.toHaveBeenCalled();
+  });
+
+  it("manual resume dispatches the returned scheduler decision", async () => {
+    const state = actionState([approval("approved")]);
+    resumeRun.mockResolvedValue(decision());
+
+    await resumeAndDispatchSchedulerRun(state);
+
+    expect(resumeRun).toHaveBeenCalledWith(state);
+    expect(dispatchDecision).toHaveBeenCalledWith(state, decision());
   });
 });
 

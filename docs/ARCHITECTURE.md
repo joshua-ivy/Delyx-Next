@@ -111,7 +111,9 @@ complete:
   approved patch apply, approved or approval-queued tests, read-only review, or
   final-support recording. After each dispatched action it asks the Rust
   scheduler for a bounded next decision, stopping on passive/repeated states or
-  the depth limit. PatchDraft dispatch uses the scheduler-provided approval ID,
+  the depth limit. Manual resume from the visible scheduler line uses that same
+  resume-then-dispatch helper, including reload-time PatchDraft decisions.
+  PatchDraft dispatch uses the scheduler-provided approval ID,
   so plan drafts and repair drafts enter the same approval-checked bridge path.
   A separate `agent_execute_patch_draft` bridge can perform the
   approved plan-or-repair file read, local Ollama PatchDraftAgent call, Rust

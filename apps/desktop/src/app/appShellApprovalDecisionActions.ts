@@ -14,9 +14,15 @@ export async function decideApprovalAndMaybeResume(
     return;
   }
   const decidedState = withDecidedProposal(state, decided);
-  const decision = await resumeSchedulerRun(decidedState);
+  await resumeAndDispatchSchedulerRun(decidedState);
+}
+
+export async function resumeAndDispatchSchedulerRun(
+  state: Parameters<typeof resumeSchedulerRun>[0] & SchedulerDispatchState,
+) {
+  const decision = await resumeSchedulerRun(state);
   if (decision) {
-    await dispatchSchedulerDecision(decidedState, decision);
+    await dispatchSchedulerDecision(state, decision);
   }
 }
 

@@ -29,7 +29,7 @@ export function FocusSchedulerPeek({
     return <FocusActionLine icon="plan" label="Next / apply patch" onClick={() => onApplyPatch(decision.proposalId!)} text={decision.message} />;
   }
   if (decision.kind === "run_patch_draft") {
-    return <FocusActionLine icon="plan" label="Next / draft patch" text={decision.message} />;
+    return <FocusActionLine icon="plan" label="Next / draft patch" onClick={onResumeRun} text={decision.message} />;
   }
   if (decision.kind === "run_tests") {
     return <FocusActionLine icon="flask" label="Next / run tests" onClick={onRunTests} text={decision.message} />;

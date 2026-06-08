@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
-import { decideApprovalAndMaybeResume } from "./appShellApprovalDecisionActions";
+import { decideApprovalAndMaybeResume, resumeAndDispatchSchedulerRun } from "./appShellApprovalDecisionActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { requestRepairForReviewFinding, runReviewForActiveRun } from "./appShellReviewActions";
-import { resumeSchedulerRun } from "./appShellSchedulerActions";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { sendComposerInstruction } from "./cockpitComposerBindings";
@@ -262,7 +261,7 @@ export function AppShell() {
         onRecordFinal={recordFinal}
         onRequestRepair={requestRepair}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
-        onResumeRun={() => { void resumeSchedulerRun({ actionProposals, activePlan, activeProject, activeRun, patches, reviews, setAgentRuns, setThreads, setThreadState }); }}
+        onResumeRun={() => { void resumeAndDispatchSchedulerRun({ actionProposals, activePlan, activeProject, activeRun, activeThread, modelSettings, patches, reviews, setActionProposals, setAgentRuns, setPatches, setReviews, setTests, setThreads, setThreadState, tests }); }}
         onRunReview={runReview}
         onRunTests={runTests}
         onRunCommand={runPaletteCommand}

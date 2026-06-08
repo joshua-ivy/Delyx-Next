@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 159/190 checked, 31 open.
+- Visible checkbox progress: 160/191 checked, 31 open.
 - Parent track boxes are status gates; they stay open until the full track is functionally complete.
 - Depth tracks: 2/12 complete, 10/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
@@ -184,6 +184,7 @@ Progress board:
   - [x] Approval resume now passes the freshly decided proposal state into the scheduler request, so same-turn PatchDraft/test approval hints are not one render behind.
   - [x] Added a one-step scheduler dispatcher that can run the post-resume scheduler-selected action for approved patch apply, approved/approval-queued tests, read-only review, or final-support recording from real persisted artifacts.
   - [x] The scheduler dispatcher now asks the Rust scheduler for a bounded next decision after each dispatched action and can continue through ready patch/test/review/final-support steps without inventing artifacts.
+  - [x] Manual scheduler resume now dispatches the returned scheduler decision, and the visible PatchDraft next-action line can trigger that same resume/dispatch path after reload.
   - [x] Approved plan approvals now trigger a narrow `agent_execute_patch_draft` path that reads only approved plan files, asks local Ollama for complete replacement contents, records model-call receipts, parses structured JSON in Rust, and records the resulting diff through `agent_execute_patch_proposal`.
   - [x] Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
   - [x] Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
