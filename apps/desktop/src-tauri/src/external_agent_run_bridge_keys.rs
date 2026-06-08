@@ -1,11 +1,18 @@
 use crate::external_agent::{ExternalAgentError, ExternalAgentEventKind, ExternalAgentRunStatus};
 use crate::external_agent_command_contracts::ExternalAgentPermissionMode;
 
+pub(crate) fn command_label(program: &str, args: &[String]) -> String {
+    std::iter::once(program.to_string())
+        .chain(args.iter().cloned())
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 pub(crate) fn permission_mode(value: &str) -> Result<ExternalAgentPermissionMode, String> {
     match value {
         "read_only" => Ok(ExternalAgentPermissionMode::ReadOnly),
         "workspace_write" => Ok(ExternalAgentPermissionMode::WorkspaceWrite),
-        _ => Err("Unsupported Codex permission mode.".to_string()),
+        _ => Err("Unsupported external agent permission mode.".to_string()),
     }
 }
 
@@ -37,16 +44,22 @@ pub(crate) fn event_kind_key(kind: ExternalAgentEventKind) -> &'static str {
 
 pub(crate) fn external_agent_error(error: ExternalAgentError) -> String {
     match error {
-        ExternalAgentError::AdapterUnavailable => "Codex CLI adapter is unavailable.".to_string(),
-        ExternalAgentError::EmptyTask => "Codex launch requires a non-empty task.".to_string(),
+        ExternalAgentError::AdapterUnavailable => {
+            "External agent adapter is unavailable.".to_string()
+        }
+        ExternalAgentError::EmptyTask => {
+            "External agent launch requires a non-empty task.".to_string()
+        }
         ExternalAgentError::Io(message) => {
-            format!("Codex worker command failed to start: {message}")
+            format!("External agent worker command failed to start: {message}")
         }
         ExternalAgentError::MissingIsolation => {
-            "Codex launch requires a checkpoint or isolated worktree before execution.".to_string()
+            "External agent launch requires a checkpoint or isolated worktree before execution."
+                .to_string()
         }
         ExternalAgentError::MissingTerminalApproval => {
-            "Codex launch requires a terminal-command approval before execution.".to_string()
+            "External agent launch requires a terminal-command approval before execution."
+                .to_string()
         }
         error => format!("{error:?}"),
     }

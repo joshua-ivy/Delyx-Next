@@ -9,7 +9,7 @@ use crate::external_agent_command_contracts::{
     ExternalAgentPermissionMode,
 };
 use crate::external_agent_run_bridge_keys::{
-    event_kind_key, external_agent_error, permission_mode, status_key,
+    command_label, event_kind_key, external_agent_error, permission_mode, status_key,
 };
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -98,7 +98,25 @@ pub fn external_agent_run_codex(
             .store
             .lock()
             .map_err(|_| "External agent run bridge lock failed.".to_string())?;
-        let view = run_codex_agent_record(&mut store, engine, request)?;
+        let view = run_kind_agent_record(ExternalAgentKind::CodexCli, &mut store, engine, request)?;
+        state.save_if_persistent(&store)?;
+        Ok(view)
+    })?
+}
+
+#[tauri::command]
+pub fn external_agent_run_claude(
+    state: tauri::State<ExternalAgentRunBridgeState>,
+    approvals: tauri::State<ApprovalBridgeState>,
+    request: ExternalAgentCodexRunRequest,
+) -> Result<ExternalAgentRunArtifactView, String> {
+    approvals.with_engine(|engine| {
+        let mut store = state
+            .store
+            .lock()
+            .map_err(|_| "External agent run bridge lock failed.".to_string())?;
+        let view =
+            run_kind_agent_record(ExternalAgentKind::ClaudeCode, &mut store, engine, request)?;
         state.save_if_persistent(&store)?;
         Ok(view)
     })?
@@ -116,14 +134,15 @@ pub fn external_agent_run_snapshot(
     Ok(external_agent_run_snapshot_from_store(&store, &run_id))
 }
 
-pub fn run_codex_agent_record(
+pub fn run_kind_agent_record(
+    kind: ExternalAgentKind,
     store: &mut ExternalAgentRunBridgeStore,
     approvals: &ApprovalEngine,
     request: ExternalAgentCodexRunRequest,
 ) -> Result<ExternalAgentRunArtifactView, String> {
     validate_request(&request)?;
     let contract = build_external_agent_command_contract(
-        ExternalAgentKind::CodexCli,
+        kind,
         &request.task,
         PathBuf::from(&request.working_directory),
         permission_mode(&request.permission_mode)?,
@@ -202,27 +221,31 @@ fn run_request(
         task: request.task,
         task_policy: ExternalAgentTaskPolicy {
             allowed_tools: contract.required_delyx_tools,
-            approval_scope: "Launch Codex CLI inside the approved project root.".to_string(),
+            approval_scope: "Launch external agent inside the approved project root.".to_string(),
         },
         terminal_approval_id: Some(request.terminal_approval_id),
         timeout_ms: request.timeout_ms,
+        parse_stream_json: contract.transcript_format == "stream-json",
         worker_command: Some(contract.command),
     }
 }
 
 fn validate_request(request: &ExternalAgentCodexRunRequest) -> Result<(), String> {
     if request.run_id.trim().is_empty() || request.task.trim().is_empty() {
-        return Err("Codex launch requires a run ID and task.".to_string());
+        return Err("External agent launch requires a run ID and task.".to_string());
     }
     if request.external_approval_id.trim().is_empty()
         || request.terminal_approval_id.trim().is_empty()
     {
         return Err(
-            "Codex launch requires external-agent and terminal-command approval IDs.".to_string(),
+            "External agent launch requires external-agent and terminal-command approval IDs."
+                .to_string(),
         );
     }
     if request.working_directory.trim().is_empty() || request.approved_roots.is_empty() {
-        return Err("Codex launch requires a working directory and approved root.".to_string());
+        return Err(
+            "External agent launch requires a working directory and approved root.".to_string(),
+        );
     }
     Ok(())
 }
@@ -267,11 +290,4 @@ fn scope_summary(scope: &ExternalAgentScope) -> String {
         scope.project_root.display(),
         isolation
     )
-}
-
-fn command_label(program: &str, args: &[String]) -> String {
-    std::iter::once(program.to_string())
-        .chain(args.iter().cloned())
-        .collect::<Vec<_>>()
-        .join(" ")
 }

@@ -2,6 +2,9 @@ use crate::external_agent::{ExternalAgentError, ExternalAgentKind};
 use crate::external_agent_terminal::ExternalAgentCommand;
 use std::path::PathBuf;
 
+/// Bounded agentic turn budget for headless Claude Code launches.
+const CLAUDE_MAX_TURNS: u32 = 12;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExternalAgentPermissionMode {
     ReadOnly,
@@ -89,9 +92,15 @@ fn claude_args(task: &str, permission_mode: ExternalAgentPermissionMode) -> Vec<
         "-p".to_string(),
         "--output-format".to_string(),
         "stream-json".to_string(),
+        // `stream-json` output requires `--verbose` in headless (`-p`) mode.
+        "--verbose".to_string(),
         "--permission-mode".to_string(),
         claude_permission_mode(permission_mode).to_string(),
-        "--tools".to_string(),
+        // Bound agentic depth from Delyx instead of relying on wall-clock timeout alone.
+        "--max-turns".to_string(),
+        CLAUDE_MAX_TURNS.to_string(),
+        // Claude Code uses `--allowedTools`, not `--tools`.
+        "--allowedTools".to_string(),
         claude_tools(permission_mode).to_string(),
         task.to_string(),
     ]

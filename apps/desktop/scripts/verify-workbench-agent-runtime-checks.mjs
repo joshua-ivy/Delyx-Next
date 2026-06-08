@@ -40,7 +40,7 @@ export const agentRuntimeChecks = [
   ["src-tauri/src/external_agent_command_contracts.rs", "codex_args"],
   ["src-tauri/src/external_agent_command_contracts.rs", "claude_args"],
   ["src-tauri/src/external_agent_command_contracts_tests.rs", "codex_command_contract_uses_exec_json_and_read_only_sandbox"],
-  ["src-tauri/src/external_agent_command_contracts_tests.rs", "claude_command_contract_uses_headless_stream_json"],
+  ["src-tauri/src/external_agent_command_contracts_tests.rs", "claude_contract_uses_allowed_tools_and_verbose"],
   ["src-tauri/src/external_agent_command_contracts_tests.rs", "command_contract_rejects_empty_tasks_and_generic_terminal"],
   ["src-tauri/src/external_agent_terminal.rs", "ExternalAgentCommand"],
   ["src-tauri/src/external_agent_terminal.rs", "terminal_command"],

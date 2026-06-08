@@ -3,6 +3,7 @@ use crate::external_agent_adapters::default_adapters;
 use crate::external_agent_diff::{capture_external_agent_diff, snapshot_external_agent_diff};
 use crate::external_agent_isolation::{checkpoint_events, ensure_external_agent_isolation};
 use crate::external_agent_scope::{checked_approved_path, checked_scoped_path};
+use crate::external_agent_stream_json::apply_stream_summary;
 use crate::external_agent_terminal::run_worker_command;
 pub use crate::external_agent_types::{
     AdapterStatus, ExternalAgentAvailability, ExternalAgentCapturePlan, ExternalAgentError,
@@ -129,6 +130,11 @@ impl ExternalAgentBridge {
             transcript.extend(checkpoint_events(checkpoint, now));
         }
         transcript.extend(worker.transcript);
+        let run_status = if request.parse_stream_json {
+            apply_stream_summary(&mut transcript, &worker.stdout, worker.status, now)
+        } else {
+            worker.status
+        };
         for command in &request.capture_plan.commands {
             transcript.push(event(ExternalAgentEventKind::Command, command, now));
         }
@@ -162,10 +168,10 @@ impl ExternalAgentBridge {
         for artifact_id in &request.capture_plan.test_artifact_ids {
             transcript.push(event(ExternalAgentEventKind::TestResult, artifact_id, now));
         }
-        let final_event = if worker.status == ExternalAgentRunStatus::Failed {
+        let final_event = if run_status == ExternalAgentRunStatus::Failed {
             event(
                 ExternalAgentEventKind::Failed,
-                "External worker command failed.",
+                "External worker did not complete successfully.",
                 now,
             )
         } else {
@@ -182,7 +188,7 @@ impl ExternalAgentBridge {
             id: format!("external-agent-{}", self.next_artifact_id),
             run_id: request.run_id,
             adapter_id: request.adapter_id,
-            status: worker.status,
+            status: run_status,
             scope,
             transcript,
             terminal_output: worker.terminal_output.unwrap_or_else(|| {

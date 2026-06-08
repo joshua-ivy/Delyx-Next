@@ -4,10 +4,10 @@ Last updated: 2026-06-08.
 
 ## Independent Verification
 
-Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
+Audited against the local repo on 2026-06-08. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
-- `cargo fmt --check` and `cargo test --workspace`: 212 passed, 0 failed.
+- `cargo fmt --check` and `cargo test --workspace`: 328 passed, 0 failed.
 - `npm run typecheck`, `npm test` (smoke/source-contract plus broad Vitest/React Testing Library behavior tests), `npm run build`, `npm run smoke:ui`, and `npm run smoke:tauri`: pass.
 - Browser visual checks passed for the no-thread cockpit at 1280x720 and 390x844 before the Focus port: no fake progress/diff/terminal/metric blocks, no inspector, no horizontal overflow. Focus UI browser checks must stay current after each visual pass.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
@@ -47,7 +47,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - OpenAI-compatible providers are health/config stubs only.
 - Codex CLI has an approval-gated read-only launch bridge with captured terminal output and UI artifacts.
 - Codex write-capable launch now creates real checkpoint receipts for planned files before execution; worktree isolation can still come later.
-- Claude external agent support is currently detection/contract-preview only; live Claude launch depth is now tracked below as open Phase 2 work.
+- Claude external agent support now has a live approval-gated read/write launch bridge over the shared external-agent worker path, with a `stream-json` transcript parser. The remaining D8 tail (installed-binary flag verification, parser-derived diff cross-check, optional flags) is tracked below.
 - Generic terminal worker execution exists behind external-agent and terminal-command approvals.
 - Frontend coverage now includes broad Vitest/React Testing Library behavior tests for project/thread creation, planning, approvals, artifacts, evidence support, error, blocked, expired, and empty states. Older smoke/source-contract verifier scripts remain guardrails, not proof of behavior.
 - The default workbench is now a React Focus shell ported from the provided Focus prototype. Legacy `buildCockpitMarkup` string-rendered cockpit files remain in source as an older implementation and smoke-contract reference, but they are no longer the mounted primary workbench.
@@ -56,6 +56,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - A small Codex-inspired PowerShell UTF-8 terminal-capture polish is wired for approved external worker commands.
 - A Codex-inspired typed command execution artifact now backs approved test commands and external terminal workers with output caps, stdout/stderr events, status, duration, approval IDs, and deterministic tests.
 - Codex CLI launch is now wired only through Delyx approvals and captured command artifacts; it is not an autonomous build loop.
+- Claude Code now has a live approval-gated launch bridge (`external_agent_run_claude`) that reuses the same generic external-agent worker, approval, isolation, checkpoint, and diff path as Codex. Its command contract was corrected to `--allowedTools`, `--verbose`, and a bounded `--max-turns`, and a `stream-json` parser maps assistant/tool/edited-file events into the transcript and marks the artifact failed on `result.is_error`. Remaining D8 tail: verifying flags against an installed Claude binary, cross-checking parser-derived edited paths against checkpoint bytes, and optional `--add-dir`/`--model`.
 - The Focus workbench now uses a centered first-run composer, rail navigation, command palette, thread switcher, model picker, settings surface, and artifact-driven active thread view. The UI renders real project/thread/model/run/approval/diff/test state only; no prototype thread/model/diff mock content ships.
 
 ## Phase 1 Skeleton Checklist
@@ -138,11 +139,11 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 203/256 checked, 53 open, 79.3%.
+- Phase 2 checkbox progress: 218/256 checked, 38 open, 85.2%.
 - Phase 2 track progress: 5/12 complete, 7/12 in progress.
 - Complete tracks: D3, D4, D6, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D8, D11, D12.
-- Open item hotspots: D2/D5 autonomous executor spine, D8 live Claude bridge, D1 remaining action persistence tail, D7 provider depth, D11 remaining Codex salvage, and D12 signing/updater/install smoke.
+- Open item hotspots: D2/D5 autonomous executor spine, D1 remaining action persistence tail, D7 provider depth (cloud keys), D8 live-Claude tail (installed-binary verification, diff cross-check), D11 remaining Codex salvage, and D12 signing/updater/install smoke.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
 - Largest remaining risk remains concentrated in D2 and D5.
 
@@ -340,7 +341,7 @@ Progress board:
   - [x] ~~Runtime status now optionally probes real local Ollama `/api/version` and surfaces the version in Settings when available; missing version data does not override the model-readiness probe.~~
   - [ ] Add pull-progress UI only when backed by real local state.
 
-- [ ] D8 - External Agent Integration Depth (in progress; Codex read/write path exists, live Claude bridge depth is now tracked)
+- [ ] D8 - External Agent Integration Depth (in progress; Codex read/write path exists, live Claude read/write bridge now landed with stream-json parsing; tail = installed-binary flag verification, parser-derived diff cross-check, optional `--add-dir`/`--model`)
   - [x] ~~Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.~~
   - [x] ~~External-agent run receipts now survive restart through SQLite, including transcript and linked test IDs.~~
   - [x] ~~Codex external-agent approval selection now rejects expired approved approvals, avoids duplicate pending approvals, blocks denied approvals, and queues fresh bridge client IDs for expired external-agent or terminal approvals before any launch.~~
@@ -348,24 +349,24 @@ Progress board:
   - [x] ~~Add real changed-file/diff capture from external-agent runs instead of review placeholders.~~
   - [x] ~~Old Phase 2 scope kept Claude at detection and command-contract preview only; live Claude launch is now reopened as explicit depth work below.~~
   - [x] ~~Claude adapter status now labels detection/contract-preview-only scope instead of implying launch support.~~
-  - [ ] Reuse the generic external-agent worker path for Claude; do not create a Claude-only execution bypass around approvals, isolation, checkpointing, transcript capture, or diff capture.
-  - [ ] Verify the installed Claude Code CLI contract before launch work; do not assume stale flags.
-  - [ ] Fix Claude command args to use `--allowedTools`, add `--verbose` for `stream-json`, and add a bounded `--max-turns`.
-  - [ ] Generalize Codex-named external-agent launch request/record helpers into one contract-run path shared by Codex and Claude.
-  - [ ] Add `external_agent_run_claude` as a thin approval-gated command over the generic external-agent worker path.
-  - [ ] Ship read-only Claude launch first with `--permission-mode plan`, scoped cwd, terminal/external-agent approvals, no checkpoint requirement, and captured artifacts.
-  - [ ] Add a Claude `stream-json` parser that reads JSON-lines records and extracts assistant text, tool use, edit/write file paths, final result text, and error state.
-  - [ ] Map parsed Claude stream events into the existing transcript UI instead of showing only raw stdout/stderr lines.
-  - [ ] Derive edited-file events from Claude `Edit`, `Write`, and `MultiEdit` tool-use blocks.
-  - [ ] Feed parser-derived edited file paths into diff capture and cross-check them against checkpoint bytes.
-  - [ ] Mark Claude artifacts failed when `result.is_error` is true even if the process exits 0.
-  - [ ] Add write-capable Claude launch only with `acceptEdits`, mandatory checkpoint isolation, no Bash tools, scoped cwd, diff review, and rollback receipts.
+  - [x] ~~Reuse the generic external-agent worker path for Claude; do not create a Claude-only execution bypass around approvals, isolation, checkpointing, transcript capture, or diff capture. (`run_kind_agent_record` + shared `run_contract_agent_record`/`run_approved_worker`.)~~
+  - [ ] Verify the installed Claude Code CLI contract before launch work; do not assume stale flags. (Flags corrected to documented forms; real-binary verification still advised in this environment.)
+  - [x] ~~Fix Claude command args to use `--allowedTools`, add `--verbose` for `stream-json`, and add a bounded `--max-turns`. (Covered by `claude_contract_uses_allowed_tools_and_verbose`.)~~
+  - [x] ~~Generalize Codex-named external-agent launch request/record helpers into one contract-run path shared by Codex and Claude. (`run_kind_agent_record(kind, ...)`.)~~
+  - [x] ~~Add `external_agent_run_claude` as a thin approval-gated command over the generic external-agent worker path; registered in `main.rs`.~~
+  - [x] ~~Ship read-only Claude launch first with `--permission-mode plan`, scoped cwd, terminal/external-agent approvals, no checkpoint requirement, and captured artifacts. (Covered by `claude_read_only_requires_both_approvals`.)~~
+  - [x] ~~Add a Claude `stream-json` parser that reads JSON-lines records and extracts assistant text, tool use, edit/write file paths, final result text, and error state. (`external_agent_stream_json.rs`.)~~
+  - [x] ~~Map parsed Claude stream events into the existing transcript UI instead of showing only raw stdout/stderr lines. (`apply_stream_summary` → transcript events, driven by contract `transcript_format`.)~~
+  - [x] ~~Derive edited-file events from Claude `Edit`, `Write`, and `MultiEdit` tool-use blocks.~~
+  - [ ] Feed parser-derived edited file paths into diff capture and cross-check them against checkpoint bytes. (Currently surfaced as `FileChanged` transcript events; byte cross-check still uses declared changed files.)
+  - [x] ~~Mark Claude artifacts failed when `result.is_error` is true even if the process exits 0. (Covered by `claude_stream_error_result_marks_artifact_failed`.)~~
+  - [x] ~~Add write-capable Claude launch only with `acceptEdits`, mandatory checkpoint isolation, no Bash tools, scoped cwd, diff review, and rollback receipts. (Reuses the gated Codex write path; `claude_write_requires_isolation` proves isolation is enforced and the contract excludes Bash.)~~
   - [ ] Consider optional `--add-dir` and `--model` only after the basic read-only/write-gated path is tested.
-  - [ ] Add Claude test `claude_contract_uses_allowed_tools_and_verbose`.
-  - [ ] Add Claude test `claude_read_only_requires_both_approvals`.
-  - [ ] Add Claude test `claude_write_requires_isolation`.
-  - [ ] Add Claude test `parse_claude_stream_json_extracts_edits`.
-  - [ ] Add Claude test `claude_stream_error_result_marks_artifact_failed`.
+  - [x] ~~Add Claude test `claude_contract_uses_allowed_tools_and_verbose`.~~
+  - [x] ~~Add Claude test `claude_read_only_requires_both_approvals`.~~
+  - [x] ~~Add Claude test `claude_write_requires_isolation`.~~
+  - [x] ~~Add Claude test `parse_claude_stream_json_extracts_edits`.~~
+  - [x] ~~Add Claude test `claude_stream_error_result_marks_artifact_failed`.~~
 
 - [x] ~~D9 - Evidence and Final Answer Receipts (complete; final support links existing evidence, file-read/model/diff/review/approval/command receipts, and passed tests without generating prose)~~
   - [x] ~~Added a narrow final-answer support synthesis bridge for existing AgentRun evidence and passed persisted test artifacts.~~

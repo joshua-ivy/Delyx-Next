@@ -23,6 +23,7 @@ pub struct ExternalWorkerExecution {
     pub status: ExternalAgentRunStatus,
     pub terminal_output: Option<String>,
     pub transcript: Vec<ExternalAgentEvent>,
+    pub stdout: String,
 }
 
 pub fn run_worker_command(
@@ -35,6 +36,7 @@ pub fn run_worker_command(
             status: ExternalAgentRunStatus::Completed,
             terminal_output: None,
             transcript: Vec::new(),
+            stdout: String::new(),
         });
     };
     if !request
@@ -53,6 +55,7 @@ pub fn run_worker_command(
         status,
         terminal_output: Some(output.terminal_output()),
         transcript: output.events.iter().map(external_event).collect(),
+        stdout: output.stdout.clone(),
     })
 }
 

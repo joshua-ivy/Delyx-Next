@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn claude_command_contract_uses_headless_stream_json() {
+    fn claude_contract_uses_allowed_tools_and_verbose() {
         let contract = build_external_agent_command_contract(
             ExternalAgentKind::ClaudeCode,
             "Inspect failures.",
@@ -72,14 +72,19 @@ mod tests {
                 "-p",
                 "--output-format",
                 "stream-json",
+                "--verbose",
                 "--permission-mode",
                 "plan",
-                "--tools",
+                "--max-turns",
+                "12",
+                "--allowedTools",
                 "Read",
                 "Inspect failures.",
             ])
         );
         assert_eq!(contract.transcript_format, "stream-json");
+        // The legacy `--tools` flag must not reappear.
+        assert!(!contract.command.args.iter().any(|arg| arg == "--tools"));
     }
 
     #[test]

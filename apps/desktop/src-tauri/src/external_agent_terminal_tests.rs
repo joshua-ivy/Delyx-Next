@@ -171,6 +171,7 @@ mod tests {
             },
             timeout_ms: 60_000,
             worker_command: None,
+            parse_stream_json: false,
         }
     }
 

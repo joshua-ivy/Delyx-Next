@@ -53,6 +53,9 @@ pub struct ExternalAgentRunRequest {
     pub task_policy: ExternalAgentTaskPolicy,
     pub capture_plan: ExternalAgentCapturePlan,
     pub worker_command: Option<ExternalAgentCommand>,
+    /// Parse worker stdout as Claude Code `stream-json` into structured transcript
+    /// events and an error/edit summary. Driven by the contract transcript format.
+    pub parse_stream_json: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
