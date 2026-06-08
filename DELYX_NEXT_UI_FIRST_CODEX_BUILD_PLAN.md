@@ -195,7 +195,7 @@ D2, D5, D6, and D3.
   - [x] Added FocusShell behavior coverage for the home composer send path and keyboard-opened Settings desktop-shell state.
   - [x] Added FocusThread behavior coverage for live run placement: latest user message, single running activity line, then assistant reply.
   - [x] Added FocusThread empty-artifact coverage so plan/diff/test/review placeholder blocks stay hidden until real artifacts exist.
-  - [x] Added FocusSchedulerPeek behavior coverage for scheduler-selected patch apply and scheduler-selected resume actions.
+  - [x] Added FocusSchedulerPeek behavior coverage for scheduler-selected patch apply, tests, review, final support, resume, and passive wait states.
   - [x] Added scheduler resume-action coverage proving runnable plan test commands are forwarded to the bridge while unsafe shell-control text is rejected.
   - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - [x] Keep grep/source verifiers only as smoke guards.

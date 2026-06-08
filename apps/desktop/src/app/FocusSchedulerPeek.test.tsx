@@ -45,24 +45,108 @@ describe("FocusSchedulerPeek", () => {
 
     expect(onResumeRun).toHaveBeenCalledTimes(1);
   });
+
+  it("runs the scheduler-selected test action", () => {
+    const onRunTests = vi.fn();
+    renderScheduler({
+      decision: decision("run_tests", "Tests are ready."),
+      onRunTests,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Next \/ run tests/ }));
+
+    expect(onRunTests).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs the scheduler-selected review action", () => {
+    const onRunReview = vi.fn();
+    renderScheduler({
+      decision: { ...decision("run_review", "Review is ready."), patchCount: 1, testCount: 1 },
+      onRunReview,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Next \/ run review/ }));
+
+    expect(onRunReview).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs the scheduler-selected final support action", () => {
+    const onRecordFinal = vi.fn();
+    renderScheduler({
+      decision: {
+        ...decision("ready_for_final_support", "Final support can be recorded."),
+        reviewReportId: "review-1",
+      },
+      onRecordFinal,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Next \/ final support/ }));
+
+    expect(onRecordFinal).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders wait states without triggering scheduler work", () => {
+    const actions = {
+      onApplyPatch: vi.fn(),
+      onRecordFinal: vi.fn(),
+      onResumeRun: vi.fn(),
+      onRunReview: vi.fn(),
+      onRunTests: vi.fn(),
+    };
+    renderScheduler({
+      decision: {
+        ...decision("wait_for_approval", "Waiting for one approval."),
+        approvalIds: ["approval-1"],
+      },
+      ...actions,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Next \/ wait for approval/ }));
+
+    expect(actions.onApplyPatch).not.toHaveBeenCalled();
+    expect(actions.onRecordFinal).not.toHaveBeenCalled();
+    expect(actions.onResumeRun).not.toHaveBeenCalled();
+    expect(actions.onRunReview).not.toHaveBeenCalled();
+    expect(actions.onRunTests).not.toHaveBeenCalled();
+  });
 });
 
 function renderScheduler({
   decision,
   onApplyPatch = vi.fn(),
+  onRecordFinal = vi.fn(),
   onResumeRun = vi.fn(),
+  onRunReview = vi.fn(),
+  onRunTests = vi.fn(),
 }: Pick<ComponentProps<typeof FocusSchedulerPeek>, "decision"> & {
   onApplyPatch?: (patchId: string) => void;
+  onRecordFinal?: () => void;
   onResumeRun?: () => void;
+  onRunReview?: () => void;
+  onRunTests?: () => void;
 }) {
   return render(
     <FocusSchedulerPeek
       decision={decision}
       onApplyPatch={onApplyPatch}
-      onRecordFinal={vi.fn()}
+      onRecordFinal={onRecordFinal}
       onResumeRun={onResumeRun}
-      onRunReview={vi.fn()}
-      onRunTests={vi.fn()}
+      onRunReview={onRunReview}
+      onRunTests={onRunTests}
     />,
   );
+}
+
+function decision(
+  kind: NonNullable<ComponentProps<typeof FocusSchedulerPeek>["decision"]>["kind"],
+  message: string,
+) {
+  return {
+    approvalIds: [],
+    kind,
+    message,
+    patchCount: 0,
+    runId: "run-1",
+    testCount: 0,
+  };
 }
