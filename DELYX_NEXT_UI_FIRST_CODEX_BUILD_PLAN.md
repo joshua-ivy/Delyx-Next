@@ -241,12 +241,14 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - [ ] D12 - Refined Windows Desktop App
   - Current truth: Delyx Next has a usable Tauri Windows desktop shell and NSIS package path, but it is still an unsigned dev product without updater/signing polish.
   - Added explicit `dev:desktop` scripts for the Tauri Windows shell; `dev` remains the browser/Vite preview.
-  - Tauri config now declares the stable main window label, centered native decorated window behavior, bundle publisher/descriptions, and app/installer icon paths.
-  - Release smoke now checks desktop launch script wiring, primary window basics, bundle metadata, and NSIS icon configuration.
+  - Tauri config now declares the stable main window label, centered native decorated window behavior, native dark theme, bundle publisher/descriptions, and app/installer icon paths.
+  - Desktop metadata now uses the shared `0.1.0` dev baseline across root package, desktop package, Cargo package, and Tauri config instead of shipping a `0.0.0` installer identity.
+  - Added an editable `app-icon.svg` source and generated Windows/desktop icon assets for app, installer, and bundle use.
+  - Release smoke now checks desktop launch script wiring, primary window basics, aligned version metadata, bundle metadata, dark-theme config, source icon presence, desktop icon assets, and NSIS icon configuration.
   - Added the official Tauri single-instance plugin so launching Delyx Next again focuses the existing main window instead of creating a second desktop session.
   - Runtime status now exposes desktop shell policy to the UI: main window label, renderer-command menu policy, startup focus behavior, single-instance reopen behavior, and unsigned dev signing status.
   - Settings now shows the real Windows shell state when the Rust bridge is available.
-  - Packaged Windows verification passed on current head: `.\.tools\npm.cmd run package:windows` produced `target\release\bundle\nsis\Delyx Next_0.0.0_x64-setup.exe`.
+  - Packaged Windows verification passed: `.\.tools\npm.cmd run package:windows` produced `target\release\bundle\nsis\Delyx Next_0.1.0_x64-setup.exe`, and `.\.tools\npm.cmd run smoke:tauri` verified that exact configured installer.
   - Next desktop depth: signing, updater policy, install/upgrade smoke, native file associations/deep links only if the product needs them.
   - Keep the desktop shell tied to real local runtime state; do not use packaging polish to hide missing agent behavior.
 

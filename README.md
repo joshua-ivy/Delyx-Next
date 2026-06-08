@@ -20,24 +20,28 @@ workbench. The largest remaining depth gaps are real SQLite persistence, an
 AgentRun execution/resume engine, behavioral frontend tests, and the final UI
 architecture decision. Deterministic fixtures live under `apps/desktop/evals`.
 
-## Run Locally
+## Run The Windows Desktop App
 
 From PowerShell:
+
+```powershell
+.\.tools\npm.cmd run dev:desktop
+```
+
+This launches the native Tauri Windows shell for local desktop QA.
+
+## Run The Browser Preview
+
+Use this for fast UI iteration when you do not need native shell behavior:
 
 ```powershell
 .\.tools\npm.cmd run dev
 ```
 
-Then open the web preview:
+Then open:
 
 ```text
 http://127.0.0.1:1420
-```
-
-To run the actual Windows desktop shell:
-
-```powershell
-.\.tools\npm.cmd run dev:desktop
 ```
 
 ## Validate
@@ -78,3 +82,12 @@ The unsigned NSIS installer is produced under:
 ```text
 target/release/bundle/nsis/
 ```
+
+Current dev installer name:
+
+```text
+Delyx Next_0.1.0_x64-setup.exe
+```
+
+This is a Windows-first dev package. Signing, updater publishing, and installer
+upgrade smoke are still explicit Phase 2 depth work.
