@@ -28,6 +28,15 @@ export interface SigningStateView {
 export interface SupportBundleStateView {
   exportStatus: "available" | "not_exported";
   secretPolicy: string;
+  fileExport: SupportBundleFileExportView;
+}
+
+export interface SupportBundleFileExportView {
+  status: "exported" | "not_exported";
+  path?: string;
+  exportedAt?: string;
+  approvalId?: string;
+  bytesWritten?: number;
 }
 
 export interface UpdateMetadataStateView {

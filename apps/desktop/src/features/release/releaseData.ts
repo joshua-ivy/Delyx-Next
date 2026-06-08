@@ -16,6 +16,9 @@ export const currentReleaseState: ReleaseStateView = {
   supportBundle: {
     exportStatus: "not_exported",
     secretPolicy: "No support bundle export is loaded in this UI session.",
+    fileExport: {
+      status: "not_exported",
+    },
   },
   updateMetadata: {
     status: "placeholder",

@@ -38,7 +38,7 @@ pub struct SigningCheck {
     pub message: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct SupportBundle {
     pub app_name: String,
     pub version: String,
@@ -46,6 +46,15 @@ pub struct SupportBundle {
     pub config_summary: Vec<SupportConfigEntry>,
     pub logs: Vec<SupportLogEntry>,
     pub secret_policy: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SupportBundleFileExport {
+    pub run_id: String,
+    pub approval_id: String,
+    pub path: String,
+    pub exported_at: String,
+    pub bytes_written: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

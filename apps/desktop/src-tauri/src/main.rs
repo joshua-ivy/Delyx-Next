@@ -99,6 +99,7 @@ fn main() {
             delyx_next_desktop::release_bridge::release_profile_save,
             delyx_next_desktop::release_bridge::release_snapshot,
             delyx_next_desktop::release_bridge::release_smoke_capture,
+            delyx_next_desktop::release_bridge::release_support_bundle_file_export,
             delyx_next_desktop::release_bridge::release_support_bundle_export,
             delyx_next_desktop::review_bridge::review_create,
             delyx_next_desktop::review_bridge::review_snapshot,

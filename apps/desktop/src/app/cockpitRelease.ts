@@ -43,5 +43,10 @@ function supportBundleLabel(state: ReleaseStateView) {
   if (state.supportBundle.exportStatus === "not_exported") {
     return state.supportBundle.secretPolicy;
   }
-  return `${state.supportBundle.exportStatus} - ${state.supportBundle.secretPolicy}`;
+  if (state.supportBundle.fileExport.status === "exported") {
+    const path = state.supportBundle.fileExport.path ?? "unknown path";
+    const bytes = state.supportBundle.fileExport.bytesWritten ?? 0;
+    return `available - file saved to ${path} (${bytes} bytes)`;
+  }
+  return `available - ${state.supportBundle.secretPolicy}; no file export receipt yet`;
 }

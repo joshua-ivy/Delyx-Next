@@ -1,11 +1,18 @@
 use crate::release::{
     default_release_profile, export_support_bundle, ReleaseProfile, ReleaseSmokeRecord,
-    ReleaseSmokeStatus, SigningPolicy, SupportBundle, UpdateMetadata,
+    SigningPolicy, SupportBundle, SupportBundleFileExport, UpdateMetadata,
+};
+use crate::release_bridge_requests::{
+    parse_smoke_status, validate_profile_request, validate_smoke_request,
 };
 use crate::release_bridge_views::{release_snapshot_from_parts, ReleaseStateView};
-use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+
+pub use crate::release_bridge_requests::{
+    ReleaseProfileSaveRequest, ReleaseSmokeCaptureRequest, SupportBundleExportRequest,
+    SupportEntryRequest, SupportLogRequest,
+};
 
 #[derive(Debug)]
 pub struct ReleaseBridgeState {
@@ -18,6 +25,7 @@ pub struct ReleaseBridgeStore {
     pub profile: ReleaseProfile,
     pub smoke: Option<ReleaseSmokeRecord>,
     pub support_bundle: Option<SupportBundle>,
+    pub support_bundle_file_export: Option<SupportBundleFileExport>,
 }
 
 impl ReleaseBridgeState {
@@ -48,54 +56,18 @@ impl ReleaseBridgeState {
             None => Ok(()),
         }
     }
-}
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ReleaseProfileSaveRequest {
-    pub product_name: String,
-    pub version: String,
-    pub target_platform: String,
-    pub bundle_target: String,
-    pub certificate_thumbprint: Option<String>,
-    pub digest_algorithm: Option<String>,
-    pub timestamp_url: Option<String>,
-    pub sign_command: Option<String>,
-    pub tsp: bool,
-    pub update_channel: String,
-    pub update_published: bool,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SupportBundleExportRequest {
-    pub created_at_ms: u64,
-    pub config: Vec<SupportEntryRequest>,
-    pub logs: Vec<SupportLogRequest>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ReleaseSmokeCaptureRequest {
-    pub status: String,
-    pub installer_path: String,
-    pub command: String,
-    pub captured_at: String,
-    pub detail: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SupportEntryRequest {
-    pub key: String,
-    pub value: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SupportLogRequest {
-    pub source: String,
-    pub line: String,
+    fn save_file_export_if_persistent(
+        &self,
+        export: &SupportBundleFileExport,
+    ) -> Result<(), String> {
+        match &self.database_path {
+            Some(path) => {
+                crate::release_file_export_persistence::save_file_export_to_path(export, path)
+            }
+            None => Ok(()),
+        }
+    }
 }
 
 #[tauri::command]
@@ -142,6 +114,29 @@ pub fn release_support_bundle_export(
 }
 
 #[tauri::command]
+pub fn release_support_bundle_file_export(
+    state: tauri::State<ReleaseBridgeState>,
+    approvals: tauri::State<crate::approval_bridge::ApprovalBridgeState>,
+    request: crate::release_support_export::SupportBundleFileExportRequest,
+) -> Result<ReleaseStateView, String> {
+    approvals.with_engine(|engine| {
+        let mut store = state
+            .store
+            .lock()
+            .map_err(|_| "Release bridge lock failed.".to_string())?;
+        let view = crate::release_support_export::export_support_bundle_file_record(
+            &mut store, engine, request,
+        )?;
+        let export = store
+            .support_bundle_file_export
+            .as_ref()
+            .ok_or_else(|| "Support bundle file export failed.".to_string())?;
+        state.save_file_export_if_persistent(export)?;
+        Ok(view)
+    })?
+}
+
+#[tauri::command]
 pub fn release_smoke_capture(
     state: tauri::State<ReleaseBridgeState>,
     request: ReleaseSmokeCaptureRequest,
@@ -168,6 +163,7 @@ pub fn release_snapshot_from_store(store: &ReleaseBridgeStore) -> ReleaseStateVi
         &store.profile,
         store.support_bundle.as_ref(),
         store.smoke.as_ref(),
+        store.support_bundle_file_export.as_ref(),
     )
 }
 
@@ -242,43 +238,8 @@ fn load_store_from_path(path: &Path) -> Result<ReleaseBridgeStore, String> {
         profile: crate::release_persistence::load_profile_from_path(path)?
             .unwrap_or_else(default_release_profile),
         smoke: crate::release_persistence::load_smoke_from_path(path)?,
+        support_bundle_file_export:
+            crate::release_file_export_persistence::load_file_export_from_path(path)?,
         support_bundle: crate::release_persistence::load_support_bundle_from_path(path)?,
     })
-}
-
-fn validate_profile_request(request: &ReleaseProfileSaveRequest) -> Result<(), String> {
-    if request.product_name.trim().is_empty()
-        || request.version.trim().is_empty()
-        || request.target_platform.trim().is_empty()
-        || request.bundle_target.trim().is_empty()
-        || request.update_channel.trim().is_empty()
-    {
-        return Err(
-            "Release profile requires product, version, target, bundle, and update channel."
-                .to_string(),
-        );
-    }
-    Ok(())
-}
-
-fn validate_smoke_request(request: &ReleaseSmokeCaptureRequest) -> Result<(), String> {
-    if request.installer_path.trim().is_empty()
-        || request.command.trim().is_empty()
-        || request.captured_at.trim().is_empty()
-        || request.detail.trim().is_empty()
-    {
-        return Err(
-            "Release smoke capture requires installer path, command, timestamp, and detail."
-                .to_string(),
-        );
-    }
-    parse_smoke_status(&request.status).map(|_| ())
-}
-
-fn parse_smoke_status(value: &str) -> Result<ReleaseSmokeStatus, String> {
-    match value {
-        "failed" => Ok(ReleaseSmokeStatus::Failed),
-        "passed" => Ok(ReleaseSmokeStatus::Passed),
-        _ => Err("Release smoke status must be passed or failed.".to_string()),
-    }
 }

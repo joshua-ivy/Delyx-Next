@@ -141,6 +141,7 @@ mod tests {
             profile: crate::release::default_release_profile(),
             smoke: None,
             support_bundle: None,
+            support_bundle_file_export: None,
         }
     }
 

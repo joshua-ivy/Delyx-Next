@@ -1,6 +1,6 @@
 use crate::release::{
     check_signing, ReleaseProfile, ReleaseSmokeRecord, ReleaseSmokeStatus, SigningStatus,
-    SupportBundle,
+    SupportBundle, SupportBundleFileExport,
 };
 use serde::Serialize;
 
@@ -39,6 +39,17 @@ pub struct SigningStateView {
 pub struct SupportBundleStateView {
     pub export_status: String,
     pub secret_policy: String,
+    pub file_export: SupportBundleFileExportView,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SupportBundleFileExportView {
+    pub status: String,
+    pub path: Option<String>,
+    pub exported_at: Option<String>,
+    pub approval_id: Option<String>,
+    pub bytes_written: Option<u64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -52,6 +63,7 @@ pub fn release_snapshot_from_parts(
     profile: &ReleaseProfile,
     support_bundle: Option<&SupportBundle>,
     smoke: Option<&ReleaseSmokeRecord>,
+    file_export: Option<&SupportBundleFileExport>,
 ) -> ReleaseStateView {
     let signing = check_signing(&profile.signing);
     ReleaseStateView {
@@ -64,7 +76,7 @@ pub fn release_snapshot_from_parts(
         },
         smoke: smoke_view(smoke),
         smoke_status: smoke_status_key(smoke.map(|record| record.status)).to_string(),
-        support_bundle: support_bundle_view(support_bundle),
+        support_bundle: support_bundle_view(support_bundle, file_export),
         update_metadata: UpdateMetadataStateView {
             channel: profile.update_metadata.channel.clone(),
             status: if profile.update_metadata.published {
@@ -96,15 +108,39 @@ fn smoke_view(smoke: Option<&ReleaseSmokeRecord>) -> ReleaseSmokeStateView {
     }
 }
 
-fn support_bundle_view(bundle: Option<&SupportBundle>) -> SupportBundleStateView {
+fn support_bundle_view(
+    bundle: Option<&SupportBundle>,
+    file_export: Option<&SupportBundleFileExport>,
+) -> SupportBundleStateView {
     match bundle {
         Some(bundle) => SupportBundleStateView {
             export_status: "available".to_string(),
+            file_export: file_export_view(file_export),
             secret_policy: bundle.secret_policy.clone(),
         },
         None => SupportBundleStateView {
             export_status: "not_exported".to_string(),
+            file_export: file_export_view(file_export),
             secret_policy: "No support bundle export is loaded in this UI session.".to_string(),
+        },
+    }
+}
+
+fn file_export_view(export: Option<&SupportBundleFileExport>) -> SupportBundleFileExportView {
+    match export {
+        Some(export) => SupportBundleFileExportView {
+            approval_id: Some(export.approval_id.clone()),
+            bytes_written: Some(export.bytes_written),
+            exported_at: Some(export.exported_at.clone()),
+            path: Some(export.path.clone()),
+            status: "exported".to_string(),
+        },
+        None => SupportBundleFileExportView {
+            approval_id: None,
+            bytes_written: None,
+            exported_at: None,
+            path: None,
+            status: "not_exported".to_string(),
         },
     }
 }

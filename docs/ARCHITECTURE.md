@@ -51,10 +51,12 @@ complete:
   activate, pause, due-run schedule, and snapshot commands. Activation still
   requires a matching approved scheduled-action proposal. Risky scheduled runs
   generate persisted approval cards through the approval bridge before execution.
-  Release profile, release smoke, and redacted support-bundle state persist to
+  Release profile, release smoke, redacted support-bundle state, and
+  support-bundle file export receipts persist to
   SQLite. The release Tauri bridge exposes persisted profile save, smoke
-  capture, latest support-bundle export, and snapshot commands. Support-bundle
-  config/log entries are redacted before persistence. Approved test artifacts,
+  capture, latest support-bundle export, approval-gated file export, and
+  snapshot commands. Support-bundle config/log entries are redacted before
+  persistence. Approved test artifacts,
   proposed patch diffs, review reports, external-agent run artifacts, and
   research EvidenceStore receipts persist receipt data to SQLite and reload
   with ID continuity. AgentRun EvidenceRecords persist source IDs, locators,
@@ -353,15 +355,18 @@ Owns:
 - support bundle export shape
 - secret redaction policy
 
-Release profile, latest release smoke receipt, and the latest redacted support
-bundle persist to SQLite, including signing inputs, update channel/published
-state, installer smoke status, installer path, smoke command, captured timestamp,
-redacted config summary, redacted logs, and support-bundle metadata. The Tauri
-release bridge exposes UI-ready snapshots plus persisted profile save, smoke
-capture, and latest support-bundle export commands. Support-bundle config/log
-entries are redacted before they are stored. Signing execution, update
-publishing, and support-bundle file export still need explicit bridges before
-this becomes an end-to-end release workflow.
+Release profile, latest release smoke receipt, latest redacted support bundle,
+and latest support-bundle file export receipt persist to SQLite, including
+signing inputs, update channel/published state, installer smoke status,
+installer path, smoke command, captured timestamp, redacted config summary,
+redacted logs, support-bundle metadata, exported file path, approval ID,
+export timestamp, and bytes written. The Tauri release bridge exposes UI-ready
+snapshots plus persisted profile save, smoke capture, latest support-bundle
+export, and approval-gated support-bundle file export commands. Support-bundle
+config/log entries are redacted before they are stored, and file export requires
+a matching approved `FileWrite` proposal plus an approved root. Signing
+execution and update publishing still need explicit bridges before this becomes
+an end-to-end release workflow.
 
 ## Model Layer
 
