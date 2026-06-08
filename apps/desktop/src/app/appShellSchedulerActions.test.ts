@@ -62,7 +62,7 @@ describe("resumeSchedulerRun", () => {
     expect(notify).toHaveBeenCalledWith("Tests are next.", "success");
   });
 
-  it("passes an approved plan patch-draft approval id to the scheduler bridge", async () => {
+  it("does not pass a UI-derived plan patch-draft approval id to the scheduler bridge", async () => {
     await resumeSchedulerRun({
       ...stateWithPlan(["npm test"]),
       actionProposals: [{
@@ -82,10 +82,11 @@ describe("resumeSchedulerRun", () => {
       activePlan: { ...plan(["npm test"]), filesLikelyInvolved: ["src/main.ts"] },
     });
 
-    expect(resumeBridge).toHaveBeenCalledWith(expect.objectContaining({
-      patchDraftApprovalId: "approval-plan-build",
+    const request = resumeBridge.mock.calls[0]?.[0];
+    expect(request).toEqual(expect.objectContaining({
       runId: "run-1",
     }));
+    expect(request).not.toHaveProperty("patchDraftApprovalId");
   });
 
   it("does not pass a UI-derived test approval id to the scheduler bridge", async () => {
@@ -114,7 +115,7 @@ describe("resumeSchedulerRun", () => {
     expect(request).not.toHaveProperty("testApprovalId");
   });
 
-  it("passes an approved repair patch-draft approval id to the scheduler bridge", async () => {
+  it("does not pass a UI-derived repair patch-draft approval id to the scheduler bridge", async () => {
     await resumeSchedulerRun({
       ...stateWithPlan(["npm test"]),
       actionProposals: [repairApproval()],
@@ -123,10 +124,11 @@ describe("resumeSchedulerRun", () => {
       reviews: [repairReview()],
     });
 
-    expect(resumeBridge).toHaveBeenCalledWith(expect.objectContaining({
-      patchDraftApprovalId: "approval-bridge-repair-1",
+    const request = resumeBridge.mock.calls[0]?.[0];
+    expect(request).toEqual(expect.objectContaining({
       runId: "run-1",
     }));
+    expect(request).not.toHaveProperty("patchDraftApprovalId");
   });
 });
 

@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 183/204 checked, 21 open, 89.7%.
+- Phase 2 checkbox progress: 185/206 checked, 21 open, 89.8%.
 - Phase 2 track progress: 6/12 complete, 6/12 in progress.
 - Complete tracks: D3, D4, D6, D8, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D11, D12.
@@ -201,6 +201,7 @@ Progress board:
   - [x] ~~Scheduler patch-apply readiness now has two truthful states: proposed patches return `request_patch_apply_approval` until a separate executable apply approval ID is provided, and only then return `run_patch_apply` with that exact approval ID.~~
   - [x] ~~Rust scheduler can now discover the exact executable patch-apply approval from the persisted approval ledger by matching the patch-apply node ID, so the write-ready state no longer depends on React passing the approval hint; generic same-run FileWrite approvals are rejected.~~
   - [x] ~~Scheduler test readiness is now hydrated in Rust from persisted plan records and approval bridge records: unsafe shell-control test text is cleared, React test hints are ignored, and only an exact executable same-run terminal approval whose scope includes the persisted command is returned.~~
+  - [x] ~~Scheduler PatchDraft readiness is now hydrated in Rust from persisted plan, workspace, review, patch, and approval records: plan and repair draft approvals must be executable same-run FileWrite approvals with exact plan/repair node IDs and matching file scope, stale UI hints are cleared, existing patches block duplicate plan drafts, and generic same-run FileWrite approvals are rejected.~~
   - [x] ~~Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.~~
   - [x] ~~Scheduler and bridge tests prove pending approvals stay waiting, approved single approvals resume, proposed patches request apply approval, verified apply approvals schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, clean stored reviews move to final-support readiness, unresolved review findings block final support, repair-requested reviews surface `repair_requested`, and UI-ready decision views map from real stores.~~
   - [ ] Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
@@ -276,6 +277,7 @@ Progress board:
   - [x] ~~Scheduler-dispatched PatchDraft now uses the scheduler-provided approval ID, so approved repair drafts and approved plan drafts share the same dispatch path instead of silently handling only plan approvals.~~
   - [x] ~~PatchDraft dispatch now re-verifies the Rust scheduler decision inside the registered Tauri command before executing the PatchDraft bridge, so the Focus path can pass plan context without directly selecting PatchDraft execution authority.~~
   - [x] ~~The mounted app path now calls the Rust PatchDraft context dispatcher with only run/project/approval/model inputs, so React no longer chooses PatchDraft files, plan steps, approved roots, or project path for generated patch proposals.~~
+  - [x] ~~The mounted app no longer computes PatchDraft approval IDs from React state: scheduler and resume calls send no PatchDraft approval hint, `run_patch_draft` dispatch requires the Rust scheduler-returned approval ID, and stale React PatchDraft selector logic was removed.~~
   - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.
   - [x] ~~Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.~~
   - [x] ~~Surface richer rollback detail in the UI: checkpoint file list, restore approval ID, stale-restore failures, and post-restore review guidance.~~

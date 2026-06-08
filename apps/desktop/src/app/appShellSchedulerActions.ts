@@ -9,7 +9,6 @@ import type { AgentRunView } from "../features/runs/agentRunTypes";
 import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
-import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
 import { patchApplyApprovalIdForScheduler } from "./patchApplyApproval";
 import { notifyLocalAction } from "./ShellPreferenceController";
 
@@ -34,7 +33,6 @@ export async function resumeSchedulerRun(state: ResumeRunState) {
     hasSupportedTestCommand: false,
     nowMs: Date.now(),
     patchApplyApprovalId: patchApplyApprovalIdForScheduler(state.actionProposals, state.patches),
-    patchDraftApprovalId: patchDraftApprovalId({ ...state, reviews: state.reviews ?? [] }),
     runId: state.activeRun.id,
   });
   if (!decision) {

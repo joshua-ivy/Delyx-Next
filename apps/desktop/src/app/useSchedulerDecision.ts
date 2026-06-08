@@ -11,7 +11,6 @@ import {
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
-import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
 import { patchApplyApprovalIdForScheduler } from "./patchApplyApproval";
 
 export function useSchedulerDecision({
@@ -43,7 +42,6 @@ export function useSchedulerDecision({
       hasSupportedTestCommand: false,
       nowMs: Date.now(),
       patchApplyApprovalId: patchApplyApprovalIdForScheduler(proposals, patches),
-      patchDraftApprovalId: patchDraftApprovalId({ actionProposals: proposals, activePlan, activeProject, activeRun, patches, reviews }),
       runId: activeRun.id,
     }).then((next) => {
       if (!cancelled) {

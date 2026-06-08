@@ -33,6 +33,8 @@ pub mod agent_scheduler_bridge;
 mod agent_scheduler_bridge_apply_tests;
 mod agent_scheduler_bridge_tests;
 mod agent_scheduler_bridge_view;
+mod agent_scheduler_patch_context;
+mod agent_scheduler_patch_context_tests;
 mod agent_scheduler_repair_tests;
 mod agent_scheduler_test_context;
 mod agent_scheduler_test_context_tests;

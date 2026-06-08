@@ -81,7 +81,7 @@ describe("dispatchSchedulerDecision", () => {
 
     expect(draftPatch).toHaveBeenCalledWith(expect.objectContaining({
       actionProposals: [approval()],
-    }), approval());
+    }), "approval-1");
     expect(applyPatch).not.toHaveBeenCalled();
   });
 
@@ -126,7 +126,7 @@ describe("dispatchSchedulerDecision", () => {
 
     expect(draftPatch).toHaveBeenCalledWith(expect.objectContaining({
       actionProposals: [repair],
-    }), repair);
+    }), repair.id);
   });
 
   it("leaves passive scheduler decisions unhandled", async () => {

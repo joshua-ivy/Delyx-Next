@@ -3,6 +3,7 @@ use crate::agent_scheduler::{
     resume_waiting_run, schedule_next, AgentScheduleDecision, AgentSchedulerContext,
 };
 use crate::agent_scheduler_bridge_view::decision_view;
+use crate::agent_scheduler_patch_context::hydrate_patch_draft_request;
 use crate::agent_scheduler_test_context::hydrate_schedule_request;
 use crate::approval_bridge::ApprovalBridgeState;
 use crate::patch_bridge::PatchBridgeState;
@@ -72,6 +73,14 @@ pub fn agent_schedule_next(
             .store
             .lock()
             .map_err(|_| "Review bridge lock failed.".to_string())?;
+        let request = hydrate_patch_draft_request(
+            &thread_store,
+            &approval_store,
+            &patch_store,
+            &review_store,
+            plans.database_path(),
+            request,
+        )?;
         let request = hydrate_schedule_request(
             &thread_store,
             &approval_store,
@@ -124,6 +133,14 @@ pub fn agent_resume_waiting_run(
             .store
             .lock()
             .map_err(|_| "Review bridge lock failed.".to_string())?;
+        let request = hydrate_patch_draft_request(
+            &thread_store,
+            &approval_store,
+            &patch_store,
+            &review_store,
+            plans.database_path(),
+            request,
+        )?;
         let request = hydrate_schedule_request(
             &thread_store,
             &approval_store,

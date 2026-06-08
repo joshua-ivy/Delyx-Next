@@ -13,7 +13,6 @@ import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { proposeApprovedPlanPatchWithOllama } from "./appShellOllamaPatchActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
-import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
 import { runReviewForActiveRun } from "./appShellReviewActions";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { patchApplyApprovalIdForScheduler } from "./patchApplyApproval";
@@ -93,9 +92,8 @@ async function dispatchOneSchedulerDecision(
     return { handled: true };
   }
   if (decision.kind === "run_patch_draft") {
-    const approvalId = decision.approvalIds[0] ?? patchDraftApprovalId(state);
-    const approval = state.actionProposals.find((proposal) => proposal.id === approvalId);
-    const result = approval ? await proposeApprovedPlanPatchWithOllama(state, approval) : undefined;
+    const approvalId = decision.approvalIds[0];
+    const result = approvalId ? await proposeApprovedPlanPatchWithOllama(state, approvalId) : undefined;
     return {
       handled: true,
       nextState: {
@@ -136,7 +134,6 @@ async function nextSchedulerDecision(state: SchedulerDispatchState) {
     hasSupportedTestCommand: false,
     nowMs: Date.now(),
     patchApplyApprovalId: patchApplyApprovalIdForScheduler(state.actionProposals, state.patches),
-    patchDraftApprovalId: patchDraftApprovalId(state),
     runId: state.activeRun.id,
   });
 }

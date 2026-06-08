@@ -1,4 +1,3 @@
-import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
@@ -8,9 +7,6 @@ import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../feature
 import type { ThreadRunSnapshotView } from "../features/threads/threadClient";
 import type { TaskThread, ThreadStatus } from "../features/threads/threadTypes";
 import { recordModelCallFailure } from "./appShellModelRunActions";
-import {
-  patchDraftApprovalId,
-} from "./appShellPatchDraftDecision";
 import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
@@ -22,9 +18,9 @@ export interface OllamaPatchProposalState extends SchedulerDispatchState {
 
 export async function proposeApprovedPlanPatchWithOllama(
   state: OllamaPatchProposalState,
-  approval: ActionProposalView,
+  approvalId: string,
 ): Promise<PatchDraftDispatchResult> {
-  if (patchDraftApprovalId(state) !== approval.id) {
+  if (!approvalId.trim()) {
     return { created: false };
   }
   if (!state.activeThread || !state.activeRun) {
@@ -42,7 +38,7 @@ export async function proposeApprovedPlanPatchWithOllama(
     startPatchDraft(state, thread, model);
     const createdAtMs = Date.now();
     const result = await dispatchPatchDraftFromContextOverBridge({
-      approvalId: approval.id,
+      approvalId,
       hasSupportedTestCommand: false,
       maxBytesPerFile: 20_000,
       model,

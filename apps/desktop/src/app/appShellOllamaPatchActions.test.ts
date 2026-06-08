@@ -52,7 +52,7 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
   it("turns an approved plan into a proposed patch artifact", async () => {
     const state = actionState();
 
-    const result = await proposeApprovedPlanPatchWithOllama(state, approval);
+    const result = await proposeApprovedPlanPatchWithOllama(state, approval.id);
 
     expect(result.created).toBe(true);
     expect(dispatchPatchDraft).toHaveBeenCalledWith(expect.objectContaining({
@@ -68,10 +68,10 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
     expect(appendThreadMessageOverBridge).toHaveBeenCalled();
   });
 
-  it("skips drafting when the run already has a patch", async () => {
-    const state = actionState({ patches: [patch] });
+  it("skips drafting without a scheduler-provided approval id", async () => {
+    const state = actionState();
 
-    const result = await proposeApprovedPlanPatchWithOllama(state, approval);
+    const result = await proposeApprovedPlanPatchWithOllama(state, "");
 
     expect(result.created).toBe(false);
     expect(dispatchPatchDraft).not.toHaveBeenCalled();
@@ -85,7 +85,7 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
       reviews: [repairReview()],
     });
 
-    const result = await proposeApprovedPlanPatchWithOllama(state, repair);
+    const result = await proposeApprovedPlanPatchWithOllama(state, repair.id);
 
     expect(result.created).toBe(true);
     expect(dispatchPatchDraft).toHaveBeenCalledWith(expect.objectContaining({

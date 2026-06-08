@@ -4,6 +4,7 @@ use crate::agent_patch_draft_bridge::{
 use crate::agent_scheduler_bridge::{
     schedule_next_record, AgentScheduleDecisionView, AgentScheduleRequest,
 };
+use crate::agent_scheduler_patch_context::hydrate_patch_draft_request;
 use crate::agent_scheduler_test_context::hydrate_schedule_request;
 use crate::approval_bridge::ApprovalBridgeState;
 use crate::patch_bridge::PatchBridgeState;
@@ -71,11 +72,19 @@ pub(crate) fn verify_scheduler_patch_draft(
             .store
             .lock()
             .map_err(|_| "Review bridge lock failed.".to_string())?;
+        let schedule_request = hydrate_patch_draft_request(
+            &thread_store,
+            &approval_store,
+            &patch_store,
+            &review_store,
+            plans.database_path(),
+            schedule_request(request),
+        )?;
         let schedule_request = hydrate_schedule_request(
             &thread_store,
             &approval_store,
             plans.database_path(),
-            schedule_request(request),
+            schedule_request,
         )?;
         let run = thread_store
             .ledger
