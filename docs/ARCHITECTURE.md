@@ -221,10 +221,11 @@ patch, restore/remove checkpointed files, and record rollback receipts. The
 test-execution node, run only commands accepted by the TestRunner, persist the
 TestArtifact, and record test evidence. The `agent_execute_review` bridge can
 advance persisted patch/test artifacts into a read-only review node and
-ReviewReport artifact. The Focus thread view can trigger that read-only review
-action only when the active run has actual patch or test artifacts, then reloads
-persisted ReviewReports for inline display. Other runtime islands execute real
-work outside the full graph: Ollama chat/plan calls, the generic terminal-worker
+ReviewReport artifact. The Focus thread view loads persisted patch, test, and
+review receipts for the active run; it can trigger that read-only review action
+only when actual patch or test artifacts exist, then reloads persisted
+ReviewReports for inline display. Other runtime islands execute real work
+outside the full graph: Ollama chat/plan calls, the generic terminal-worker
 bridge, and Codex CLI read-only launches. The full Explore -> Plan -> Approve
 -> Build -> Diff -> Test -> Review execution loop remains Phase 2 work. AgentRun
 save/load, Tauri

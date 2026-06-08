@@ -187,7 +187,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - [ ] D6 - Functional Test/Review Loop
   - Run approved tests from the agent loop.
   - Runtime can now execute an explicit approved test command through AgentRun. It reuses the existing TestRunner approval, cwd, command-shape, timeout, output-capture, and artifact persistence gates, but it is not yet automatically chained from patch apply.
-  - Attach test artifacts to the active run automatically.
+  - Focus thread UI now loads persisted test artifacts for the active run instead of passing a static empty test array, so real TestRunner receipts can appear when the runtime creates them.
   - Generate review reports from actual patch/test artifacts.
   - Runtime can now execute an explicit read-only review node through AgentRun. The bridge gathers persisted patch and test artifacts by run ID before creating the ReviewReport, so review input is actual stored receipt data rather than caller-supplied mock state.
   - Focus thread UI can now run that read-only review action when the active run has real patch or test artifacts, reload persisted ReviewReports, and display the resulting review receipt inline.

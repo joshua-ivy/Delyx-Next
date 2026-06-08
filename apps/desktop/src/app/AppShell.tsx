@@ -18,7 +18,6 @@ import { refreshOllamaSettings } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import { currentAgentRuns } from "../features/runs/agentRunData";
-import { currentTestArtifacts } from "../features/tests/testData";
 import { archiveThreadOverBridge, createThreadRunOverBridge, loadThreadRunSnapshot, updateThreadStatusOverBridge } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
@@ -52,7 +51,7 @@ export function AppShell() {
   const activeRun = agentRuns.find((run) => run.id === activeThread?.activeRunId)
     ?? agentRuns.find((run) => run.threadId === activeThread?.id);
   const activePlan = plans.find((plan) => plan.threadId === activeThread?.id);
-  const { patches, reviews, setReviews } = useRunReceipts(activeRun?.id);
+  const { patches, reviews, setReviews, tests } = useRunReceipts(activeRun?.id);
   useEffect(() => {
     let cancelled = false;
     void loadRuntimeBridgeState().then(async (state) => {
@@ -188,7 +187,7 @@ export function AppShell() {
       setReviews,
       setThreads,
       setThreadState,
-      tests: currentTestArtifacts.filter((test) => test.runId === activeRun?.id),
+      tests,
     });
   };
   const decideProposal = (proposalId: string, status: "approved" | "denied") => {
@@ -250,7 +249,7 @@ export function AppShell() {
         patches={patches}
         proposals={actionProposals}
         reviews={reviews}
-        tests={currentTestArtifacts}
+        tests={tests}
         threads={threads}
       />
       <WorkspaceOverlay
