@@ -481,7 +481,9 @@ Model roles:
 
 Secrets must not be stored in the repo.
 OpenAI-compatible providers are currently represented by health/config states,
-not real chat/completion execution. Ollama is the only live model execution path.
+not real chat/completion execution. The frontend maps that backend stub to an
+unavailable/not-wired UI state instead of suggesting that adding an API key would
+make it usable. Ollama is the only live model execution path.
 
 ## Evidence Layer
 

@@ -68,14 +68,17 @@ export function modelSettingsFromRuntimeStatus(
 }
 
 function runtimeProviderView(provider: RuntimeStatusView["providers"][number]): ModelProviderView {
+  const unsupportedOpenAi = provider.kind === "openai_compatible";
   return {
-    detail: provider.message,
+    detail: unsupportedOpenAi
+      ? "OpenAI-compatible calls are not wired yet. Use Ollama for live local calls."
+      : provider.message,
     id: provider.id,
-    kind: providerKind(provider.kind),
+    kind: unsupportedOpenAi ? "unavailable" : providerKind(provider.kind),
     label: provider.label,
     models: provider.models,
-    requiresSecret: provider.kind === "openai_compatible",
-    status: providerStatus(provider.status),
+    requiresSecret: false,
+    status: unsupportedOpenAi ? "not_configured" : providerStatus(provider.status),
   };
 }
 
