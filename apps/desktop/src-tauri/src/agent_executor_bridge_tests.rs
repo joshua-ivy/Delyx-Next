@@ -1,11 +1,13 @@
 #[cfg(test)]
 mod tests {
     use crate::agent_executor_bridge::{
-        execute_patch_apply_record, execute_patch_proposal_record, AgentPatchProposalExecuteRequest,
+        execute_patch_apply_record, execute_patch_proposal_record, execute_patch_restore_record,
+        AgentPatchProposalExecuteRequest,
     };
     use crate::approval::{ApprovalEngine, ProposalInput, RiskLevel, RiskyAction};
     use crate::patch_apply_bridge::PatchApplyRequest;
     use crate::patch_bridge::{patch_snapshot_from_store, PatchBridgeStore, PatchFileRequest};
+    use crate::patch_restore_bridge::PatchRestoreRequest;
     use crate::thread_run_bridge::{
         create_thread_run_record, ThreadRunCreateRequest, ThreadRunStore,
     };
@@ -77,6 +79,50 @@ mod tests {
         let _ = fs::remove_dir_all(root);
     }
 
+    #[test]
+    fn bridge_executes_patch_restore_against_thread_run_store() {
+        let root = temp_workspace("executor-bridge-restore");
+        let file = root.join("settings.toml");
+        fs::write(&file, "network = true\n").unwrap();
+        let mut thread_store = ThreadRunStore::default();
+        let record = create_thread_run_record(&mut thread_store, create_request()).unwrap();
+        let mut patch_store = PatchBridgeStore::default();
+        let (mut approvals, approval_id) = approved_file_write(&record.run.id);
+        let restore_id = approve_more_file_write(&mut approvals, &record.run.id);
+
+        execute_patch_proposal_record(
+            &mut thread_store,
+            &mut patch_store,
+            &approvals,
+            request(&record.run.id, &approval_id, &root, &file),
+        )
+        .unwrap();
+        execute_patch_apply_record(
+            &mut thread_store,
+            &mut patch_store,
+            &approvals,
+            apply_request("executor-bridge-patch-1", &root),
+        )
+        .unwrap();
+        let view = execute_patch_restore_record(
+            &mut thread_store,
+            &mut patch_store,
+            &approvals,
+            restore_request("executor-bridge-patch-1", &restore_id, &root),
+        )
+        .unwrap();
+
+        assert_eq!(view.status, "completed");
+        assert_eq!(fs::read_to_string(&file).unwrap(), "network = true\n");
+        let run = thread_store.ledger.get_run(&record.run.id).unwrap();
+        assert!(run
+            .artifacts
+            .iter()
+            .any(|artifact| artifact.kind == "patch_restore"));
+        assert_eq!(patch_store.records[0].status, "restored");
+        let _ = fs::remove_dir_all(root);
+    }
+
     fn create_request() -> ThreadRunCreateRequest {
         ThreadRunCreateRequest {
             created_at: "2026-06-08T00:00:00.000Z".to_string(),
@@ -102,6 +148,22 @@ mod tests {
         (engine, proposal.id)
     }
 
+    fn approve_more_file_write(engine: &mut ApprovalEngine, run_id: &str) -> String {
+        let proposal = engine.propose(ProposalInput {
+            action: RiskyAction::FileWrite,
+            expected_result: "Restore a patch checkpoint.".to_string(),
+            expires_at: 10_000,
+            node_id: "agent-executor-bridge-restore".to_string(),
+            reason: "Approved rollback needs patch restore.".to_string(),
+            risk: RiskLevel::Medium,
+            rollback_plan: "Restore command is itself the rollback action.".to_string(),
+            run_id: run_id.to_string(),
+            scope: "One patch checkpoint inside the approved root.".to_string(),
+        });
+        engine.approve(&proposal.id, 1, "restore approval").unwrap();
+        proposal.id
+    }
+
     fn request(
         run_id: &str,
         approval_id: &str,
@@ -125,6 +187,15 @@ mod tests {
         PatchApplyRequest {
             approved_roots: vec![root.display().to_string()],
             created_at_ms: 3,
+            proposal_id: proposal_id.to_string(),
+        }
+    }
+
+    fn restore_request(proposal_id: &str, approval_id: &str, root: &Path) -> PatchRestoreRequest {
+        PatchRestoreRequest {
+            approval_id: approval_id.to_string(),
+            approved_roots: vec![root.display().to_string()],
+            created_at_ms: 4,
             proposal_id: proposal_id.to_string(),
         }
     }
