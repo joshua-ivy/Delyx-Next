@@ -135,7 +135,7 @@ now has real persisted or approval-gated functional islands.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 133/170 visible Phase 2 checkboxes are checked. Only 1/12 depth
+Progress read: 135/171 visible Phase 2 checkboxes are checked. Only 1/12 depth
 tracks is fully complete, and 11/12 are in progress. The subchecks below show
 the real completed work; the largest remaining risk is still concentrated in
 D2, D5, D6, and D3.
@@ -246,7 +246,7 @@ D2, D5, D6, and D3.
   - [x] After PatchDraft creates a persisted proposed diff, the renderer reloads real patch/run receipts, asks the Rust scheduler for the next action, and dispatches that decision with the reloaded patch list. This can queue the separate apply approval or continue through already-approved apply/test/review steps without using stale UI state.
   - [x] Focus diff UI now surfaces applied checkpoint state and can queue or execute a separate approval-gated patch restore action through the existing AgentRun restore bridge.
   - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.
-  - [ ] Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
+  - [x] Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - [x] Surface richer rollback detail in the UI: checkpoint file list, restore approval ID, stale-restore failures, and post-restore review guidance.
   - [ ] Connect generated build outputs to test and review steps as a complete repair-capable loop.
 
@@ -293,8 +293,9 @@ D2, D5, D6, and D3.
 - [ ] D11 - Codex Reference Salvage Track (in progress; command prep/receipts/read-only Codex launch adapted)
   - [x] Use `docs/CODEX_REFERENCE_AUDIT.md` as the pick list.
   - [x] Pull only pieces that reduce risk or save real implementation time.
-  - [ ] Candidate direct/adapt pieces still open: exec policy decisions, apply-patch deltas, keyring store, Git baseline/diff helpers, and sandbox capability detection.
-  - [x] Pulled/adapted: PowerShell UTF-8 command prep, read-only Codex CLI launch contract, typed command execution receipts, and scheduler next-action state.
+  - [ ] Candidate direct/adapt pieces still open: exec policy decisions, keyring store, Git baseline/diff helpers, and sandbox capability detection.
+  - [x] Pulled/adapted: PowerShell UTF-8 command prep, read-only Codex CLI launch contract, typed command execution receipts, scheduler next-action state, and apply-patch intent/delta preflight.
+  - [x] Codex apply-patch evaluation now exists as a local patch-engine adaptation: proposed files are classified as create/modify before apply, no-op file proposals are rejected before approval/write, and the UI-ready delta kind persists through SQLite reload.
   - [x] Avoid importing Codex core, generated protocol macros, cloud auth, or broad parser stacks until a PR proves the need.
   - [x] Every Codex-derived change so far has tests, UI-visible state, approval gates, and dependency justification.
 

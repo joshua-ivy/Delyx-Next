@@ -1,5 +1,6 @@
 export type PatchStatus = "proposed" | "applied" | "restored";
 export type DiffLineKind = "context" | "added" | "removed";
+export type PatchFileChangeKind = "create" | "modify";
 
 export interface DiffLineView {
   kind: DiffLineKind;
@@ -10,6 +11,7 @@ export interface PatchFileView {
   path: string;
   before: string;
   after: string;
+  changeKind: PatchFileChangeKind;
   diff: DiffLineView[];
 }
 

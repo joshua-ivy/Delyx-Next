@@ -1,4 +1,4 @@
-use crate::patch::{DiffLine, DiffLineKind, PatchFile, PatchProposal};
+use crate::patch::{DiffLine, DiffLineKind, PatchFile, PatchFileChangeKind, PatchProposal};
 use crate::review::{ReviewAgent, ReviewReport};
 use crate::review_bridge_keys::{decision_key, mode_key, patch_status, priority_key, test_status};
 use crate::test_runner::TestArtifact;
@@ -210,6 +210,7 @@ fn patch_file_input(input: PatchFileReviewInput) -> Result<PatchFile, String> {
     Ok(PatchFile {
         after,
         before: String::new(),
+        change_kind: PatchFileChangeKind::Create,
         diff: input
             .diff
             .into_iter()

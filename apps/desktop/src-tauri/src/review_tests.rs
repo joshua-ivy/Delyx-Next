@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::patch::{DiffLine, DiffLineKind, PatchFile, PatchProposal, PatchStatus};
+    use crate::patch::{
+        DiffLine, DiffLineKind, PatchFile, PatchFileChangeKind, PatchProposal, PatchStatus,
+    };
     use crate::review::{
         FindingPriority, ReviewAgent, ReviewCapability, ReviewDecision, ReviewError,
     };
@@ -104,6 +106,7 @@ mod tests {
             files: vec![PatchFile {
                 after: lines.join("\n"),
                 before: String::new(),
+                change_kind: PatchFileChangeKind::Create,
                 diff: lines
                     .into_iter()
                     .map(|text| DiffLine {

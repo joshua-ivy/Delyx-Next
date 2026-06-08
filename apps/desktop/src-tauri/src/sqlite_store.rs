@@ -97,6 +97,7 @@ fn ensure_patch_file_columns(connection: &Connection) -> rusqlite::Result<()> {
     for (name, definition) in [
         ("before_text", "TEXT NOT NULL DEFAULT ''"),
         ("after_text", "TEXT NOT NULL DEFAULT ''"),
+        ("change_kind", "TEXT NOT NULL DEFAULT 'modify'"),
     ] {
         if !columns.iter().any(|column| column == name) {
             connection.execute(

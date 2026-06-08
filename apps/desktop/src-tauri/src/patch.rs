@@ -1,4 +1,6 @@
 use crate::approval::{ApprovalEngine, ApprovalError, RiskyAction};
+use crate::patch_diff::build_diff;
+pub use crate::patch_diff::{DiffLine, DiffLineKind, PatchFileChangeKind};
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -18,20 +20,8 @@ pub struct PatchFile {
     pub path: PathBuf,
     pub before: String,
     pub after: String,
+    pub change_kind: PatchFileChangeKind,
     pub diff: Vec<DiffLine>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DiffLine {
-    pub kind: DiffLineKind,
-    pub text: String,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DiffLineKind {
-    Context,
-    Added,
-    Removed,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -64,6 +54,7 @@ pub enum PatchError {
     DuplicatePath,
     EmptyPatch,
     Io(String),
+    NoFileChanges,
     OutsideApprovedRoot,
     ProposalNotFound,
 }
@@ -104,12 +95,22 @@ impl PatchEngine {
             if !seen_paths.insert(path.clone()) {
                 return Err(PatchError::DuplicatePath);
             }
+            let existed_before = path.exists();
             let before = read_text(&path)?;
+            if before == file.after {
+                return Err(PatchError::NoFileChanges);
+            }
+            let change_kind = if existed_before {
+                PatchFileChangeKind::Modify
+            } else {
+                PatchFileChangeKind::Create
+            };
             let diff = build_diff(&before, &file.after);
             files.push(PatchFile {
                 path,
                 before,
                 after: file.after,
+                change_kind,
                 diff,
             });
         }
@@ -272,26 +273,6 @@ fn checkpoint_file(path: &Path) -> Result<CheckpointFile, PatchError> {
         path: path.to_path_buf(),
         contents,
     })
-}
-
-fn build_diff(before: &str, after: &str) -> Vec<DiffLine> {
-    if before == after {
-        return vec![DiffLine {
-            kind: DiffLineKind::Context,
-            text: "No text changes.".to_string(),
-        }];
-    }
-    before
-        .lines()
-        .map(|line| DiffLine {
-            kind: DiffLineKind::Removed,
-            text: line.to_string(),
-        })
-        .chain(after.lines().map(|line| DiffLine {
-            kind: DiffLineKind::Added,
-            text: line.to_string(),
-        }))
-        .collect()
 }
 
 fn io_error(error: std::io::Error) -> PatchError {

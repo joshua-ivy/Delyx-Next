@@ -127,6 +127,7 @@ mod tests {
             files: vec![PatchFileView {
                 after: "after\n".to_string(),
                 before: "before\n".to_string(),
+                change_kind: "modify".to_string(),
                 diff: vec![DiffLineView {
                     kind: "added".to_string(),
                     text: "after".to_string(),

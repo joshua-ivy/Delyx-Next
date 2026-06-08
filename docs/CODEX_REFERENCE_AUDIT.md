@@ -25,6 +25,12 @@ artifact-first.
   - Used by approved test commands and approved external terminal workers.
   - Captures command label, cwd, run/approval IDs, timeout, exit status, duration, capped stdout/stderr, truncation flags, and timeline events.
   - No new dependency; approval checks stay in the caller before execution.
+- Apply-patch intent/delta preflight from `codex-rs/apply-patch` ideas.
+  - Implemented locally in the existing patch engine instead of importing Codex core.
+  - Patch files are classified as `create` or `modify` before apply.
+  - No-op file proposals are rejected before approval or file writes.
+  - The UI-ready change kind persists through SQLite reload.
+  - No new dependency; existing approval, stale-file, and checkpoint gates still own writes.
 
 ## Best Phase 2 Picks
 
@@ -52,7 +58,7 @@ artifact-first.
   - Parse patch intent before applying.
   - Report proposed file changes separately from committed deltas.
   - Preserve partial-failure deltas.
-  - Delyx adaptation: replace narrow patch proposal logic after SQLite/checkpoint depth exists.
+  - Delyx adaptation: intent/delta preflight is now pulled; deeper partial-failure delta handling remains a future repair-loop candidate.
 
 - Git utility ideas from `codex-rs/git-utils`
   - Baseline diffs, branch metadata, diff-to-remote, apply/stage helpers.

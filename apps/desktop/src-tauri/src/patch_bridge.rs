@@ -1,4 +1,6 @@
-use crate::patch::{DiffLine, DiffLineKind, PatchEngine, PatchFileInput, PatchProposal};
+use crate::patch::{
+    DiffLine, DiffLineKind, PatchEngine, PatchFileChangeKind, PatchFileInput, PatchProposal,
+};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -68,6 +70,7 @@ pub struct PatchFileView {
     pub path: String,
     pub before: String,
     pub after: String,
+    pub change_kind: String,
     pub diff: Vec<DiffLineView>,
 }
 
@@ -228,8 +231,16 @@ fn file_view(file: &crate::patch::PatchFile) -> PatchFileView {
     PatchFileView {
         after: file.after.clone(),
         before: file.before.clone(),
+        change_kind: change_kind(file.change_kind).to_string(),
         diff: file.diff.iter().map(diff_view).collect(),
         path: file.path.display().to_string(),
+    }
+}
+
+fn change_kind(kind: PatchFileChangeKind) -> &'static str {
+    match kind {
+        PatchFileChangeKind::Create => "create",
+        PatchFileChangeKind::Modify => "modify",
     }
 }
 

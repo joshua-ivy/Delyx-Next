@@ -44,7 +44,7 @@ describe("FocusDiffPeek patch actions", () => {
     fireEvent.click(screen.getByRole("button", { name: "Request restore approval" }));
 
     expect(onPatchAction).toHaveBeenCalledWith("patch-1");
-    expect(screen.getByText("applied / checkpoint-1")).not.toBeNull();
+    expect(screen.getByText("modify / applied / checkpoint-1")).not.toBeNull();
     expect(screen.getByText("Checkpoint files: src/app.ts")).not.toBeNull();
     expect(screen.getByText("Restore is allowed only while files still match this applied patch.")).not.toBeNull();
   });
@@ -95,6 +95,7 @@ function patch(status: PatchProposalView["status"] = "proposed"): PatchProposalV
     files: [{
       after: "const value = 2;\n",
       before: "const value = 1;\n",
+      changeKind: "modify",
       diff: [{ kind: "added", text: "const value = 2;" }],
       path: "src/app.ts",
     }],

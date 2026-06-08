@@ -25,6 +25,7 @@ mod tests {
         assert!(fs::read(&db_path).unwrap().starts_with(b"SQLite format 3"));
         assert_eq!(loaded_snapshot, vec![first.clone()]);
         assert_eq!(first.id, "patch-1");
+        assert_eq!(first.files[0].change_kind, "modify");
         assert_eq!(first.files[0].before, "network = true\n");
         assert_eq!(first.files[0].after, "network = false\n");
         assert!(first.files[0].diff.iter().any(|line| line.kind == "added"));
@@ -40,6 +41,7 @@ mod tests {
         let reloaded = load_from_path(&db_path).unwrap();
 
         assert_eq!(second.id, "patch-2");
+        assert_eq!(reloaded.records[0].files[0].change_kind, "modify");
         assert_eq!(
             patch_snapshot_from_store(&reloaded, "run-1"),
             vec![first, second]

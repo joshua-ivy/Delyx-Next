@@ -23,6 +23,7 @@ mod tests {
 
         assert_eq!(proposal.id, "patch-client-1");
         assert_eq!(proposal.status, "proposed");
+        assert_eq!(proposal.files[0].change_kind, "modify");
         assert_eq!(proposal.files[0].before, "network = true\n");
         assert_eq!(proposal.files[0].after, "network = false\n");
         assert!(proposal.checkpoint_files.is_empty());
@@ -36,6 +37,22 @@ mod tests {
             .iter()
             .any(|line| line.kind == "added"));
         assert_eq!(fs::read_to_string(&file).unwrap(), "network = true\n");
+    }
+
+    #[test]
+    fn patch_bridge_reports_create_intent_without_writing() {
+        let root = temp_workspace("bridge-create-intent");
+        let file = root.join("new.txt");
+        let mut store = PatchBridgeStore::default();
+
+        let proposal = propose_patch_record(
+            &mut store,
+            request("patch-client-1", &root, &file, "created\n"),
+        )
+        .unwrap();
+
+        assert_eq!(proposal.files[0].change_kind, "create");
+        assert!(!file.exists());
     }
 
     #[test]

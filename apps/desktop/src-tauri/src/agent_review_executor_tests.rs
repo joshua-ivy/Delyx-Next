@@ -62,6 +62,7 @@ mod tests {
             files: vec![PatchFileView {
                 after: added.to_string(),
                 before: String::new(),
+                change_kind: "create".to_string(),
                 diff: vec![DiffLineView {
                     kind: "added".to_string(),
                     text: added.to_string(),

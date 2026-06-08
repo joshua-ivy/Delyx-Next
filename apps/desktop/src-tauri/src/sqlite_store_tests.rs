@@ -103,6 +103,7 @@ mod tests {
         assert!(record_columns.contains(&"restore_approval_id".to_string()));
         assert!(columns.contains(&"before_text".to_string()));
         assert!(columns.contains(&"after_text".to_string()));
+        assert!(columns.contains(&"change_kind".to_string()));
         assert_eq!(checkpoint_table_count, 1);
         let _ = fs::remove_file(path);
     }

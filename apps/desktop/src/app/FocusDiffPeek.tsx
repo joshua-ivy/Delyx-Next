@@ -22,7 +22,7 @@ export function FocusDiffPeek({ onPatchAction, patches, proposals, run }: FocusD
     <div className="peek">
       <div className="peek-head">
         <FocusIcon name="diff" /> {file.item.path}
-        <span className="stat">{patchStateLabel(file.patch)}</span>
+        <span className="stat">{file.item.changeKind} / {patchStateLabel(file.patch)}</span>
       </div>
       {file.item.diff.slice(0, 8).map((line, index) => (
         <div className={`dl ${line.kind === "added" ? "add" : line.kind === "removed" ? "del" : "ctx"}`} key={index}>

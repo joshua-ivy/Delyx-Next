@@ -2,7 +2,8 @@
 mod tests {
     use crate::approval::{ApprovalEngine, ApprovalError, ProposalInput, RiskLevel, RiskyAction};
     use crate::patch::{
-        DiffLineKind, PatchEngine, PatchError, PatchFileInput, PatchInput, PatchStatus,
+        DiffLineKind, PatchEngine, PatchError, PatchFileChangeKind, PatchFileInput, PatchInput,
+        PatchStatus,
     };
     use std::fs;
     use std::path::PathBuf;
@@ -20,6 +21,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(proposal.status, PatchStatus::Proposed);
+        assert_eq!(proposal.files[0].change_kind, PatchFileChangeKind::Modify);
         assert_eq!(fs::read_to_string(&file).unwrap(), "network = true\n");
         assert!(proposal.files[0]
             .diff

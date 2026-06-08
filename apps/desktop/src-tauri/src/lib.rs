@@ -94,6 +94,8 @@ mod patch_apply_bridge;
 mod patch_apply_bridge_tests;
 pub mod patch_bridge;
 mod patch_bridge_tests;
+mod patch_diff;
+mod patch_intent_tests;
 pub mod patch_persistence;
 mod patch_persistence_tests;
 mod patch_restore_bridge;

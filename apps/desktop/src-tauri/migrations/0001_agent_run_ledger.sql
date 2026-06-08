@@ -262,6 +262,7 @@ CREATE TABLE IF NOT EXISTS patch_proposal_files (
   path TEXT NOT NULL,
   before_text TEXT NOT NULL DEFAULT '',
   after_text TEXT NOT NULL DEFAULT '',
+  change_kind TEXT NOT NULL DEFAULT 'modify',
   PRIMARY KEY (proposal_id, file_index)
 );
 

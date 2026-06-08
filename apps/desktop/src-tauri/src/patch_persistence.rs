@@ -75,14 +75,15 @@ fn insert_file(
     connection
         .execute(
             "INSERT INTO patch_proposal_files
-             (proposal_id, file_index, path, before_text, after_text)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
+             (proposal_id, file_index, path, before_text, after_text, change_kind)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
             params![
                 proposal_id,
                 file_index as i64,
                 file.path,
                 file.before,
                 file.after,
+                file.change_kind,
             ],
         )
         .map(|_| ())
@@ -156,7 +157,7 @@ fn load_proposals(connection: &Connection) -> Result<Vec<PatchProposalView>, Str
 fn load_files(connection: &Connection, proposal_id: &str) -> Result<Vec<PatchFileView>, String> {
     let mut statement = connection
         .prepare(
-            "SELECT file_index, path, before_text, after_text FROM patch_proposal_files
+            "SELECT file_index, path, before_text, after_text, change_kind FROM patch_proposal_files
              WHERE proposal_id = ?1 ORDER BY file_index",
         )
         .map_err(sql_string)?;
@@ -167,16 +168,18 @@ fn load_files(connection: &Connection, proposal_id: &str) -> Result<Vec<PatchFil
                 row.get::<_, String>(1)?,
                 row.get::<_, String>(2)?,
                 row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
             ))
         })
         .map_err(sql_string)?;
     let files = rows.collect::<Result<Vec<_>, _>>().map_err(sql_string)?;
     files
         .into_iter()
-        .map(|(file_index, path, before, after)| {
+        .map(|(file_index, path, before, after, change_kind)| {
             Ok(PatchFileView {
                 after,
                 before,
+                change_kind,
                 path,
                 diff: load_diff_lines(connection, proposal_id, file_index)?,
             })

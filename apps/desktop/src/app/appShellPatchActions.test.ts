@@ -194,6 +194,7 @@ const patch: PatchProposalView = {
   files: [{
     after: "after\n",
     before: "before\n",
+    changeKind: "modify",
     diff: [{ kind: "added", text: "after" }],
     path: "C:/repo/src/main.ts",
   }],

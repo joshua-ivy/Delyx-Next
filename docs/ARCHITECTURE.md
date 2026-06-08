@@ -329,8 +329,11 @@ The Tauri `patch_propose` bridge exposes proposal-only diffs from explicit
 approved-root file content requests. It uses the Rust PatchEngine to read
 before contents and build UI-ready diff records. Proposed patch records persist
 proposal IDs, approval/run IDs, status, checkpoint IDs, file paths, before/after
-text, and diff lines to SQLite so diff receipts survive restart. The
-`patch_apply_approved` bridge applies an existing proposal only when the
+text, create/modify change kind, and diff lines to SQLite so diff receipts
+survive restart. Inspired by Codex `apply-patch`, the local patch engine now
+classifies proposed file intent before apply and rejects no-op file proposals
+before approval or disk writes. The `patch_apply_approved` bridge applies an
+existing proposal only when the
 matching `FileWrite` approval is executable, the file still matches the proposed
 before text, and the target stays inside approved roots. It writes through the
 checkpointing PatchEngine and persists checkpoint file receipts for review and
@@ -791,3 +794,16 @@ scheduler may still surface a proposed patch as the next step, but the action
 queues or requires the apply-specific approval before any file write occurs.
 The bridge removes renderer-side PatchDraft parsing/orchestration, but it is not
 yet the full autonomous executor/repair loop.
+
+### ADR-0010: Adapt Apply-Patch Intent, Not Codex Core
+
+Decision: Delyx Next adapts the useful `codex-rs/apply-patch` idea of parsing
+intent before apply inside the existing replacement-based PatchEngine. Patch
+files are classified as `create` or `modify`, no-op file proposals are rejected,
+and the change kind is stored in SQLite and surfaced to the Focus diff receipt.
+Delyx does not import Codex core or a broad parser stack for this slice.
+
+Reason: The current runtime already has approval-gated replacement patches,
+stale-file checks, and checkpoint rollback. Intent preflight reduces fake or
+accidental patch proposals now, while deeper partial-failure delta handling can
+wait until the full repair loop exists.

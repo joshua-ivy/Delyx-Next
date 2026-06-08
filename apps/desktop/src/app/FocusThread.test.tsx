@@ -230,6 +230,7 @@ function patch(status: PatchProposalView["status"] = "proposed"): PatchProposalV
     files: [{
       after: "const value = 2;\n",
       before: "const value = 1;\n",
+      changeKind: "modify",
       diff: [{ kind: "added", text: "const value = 2;" }],
       path: "src/app.ts",
     }],
