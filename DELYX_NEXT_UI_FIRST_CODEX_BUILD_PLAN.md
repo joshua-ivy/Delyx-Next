@@ -7,7 +7,7 @@ Last updated: 2026-06-07.
 Audited against the local repo on 2026-06-07. Every marked-off Phase 1 item was
 confirmed accurate; no checkbox was overclaimed. Evidence:
 
-- `cargo fmt --check` and `cargo test --workspace`: 210 passed, 0 failed.
+- `cargo fmt --check` and `cargo test --workspace`: 211 passed, 0 failed.
 - `npm run typecheck`, `npm test` (smoke/source-contract), `npm run build`, `npm run smoke:ui`, and `npm run smoke:tauri`: pass.
 - Browser visual checks passed for the no-thread cockpit at 1280x720 and 390x844: no fake progress/diff/terminal/metric blocks, no inspector, no horizontal overflow.
 - Partial SQLite state, missing execution engine, Ollama-only live model path,
@@ -40,7 +40,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Current Reality
 
 - PR 1-18.1 breadth is skeleton-complete.
-- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state, approved test artifacts, patch proposal diffs, and review reports now use a real SQLite database and migration; deeper artifact/evidence-first stores and mutation bridges are still missing.
+- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state, approved test artifacts, patch proposal diffs, review reports, and external-agent run artifacts now use a real SQLite database and migration; deeper evidence-first stores and mutation bridges are still missing.
 - There is no full execution engine: no scheduler, executor, resume engine, repair loop, or hook runner.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
@@ -131,8 +131,9 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Approved test artifact bridge records now save command, cwd, approval/run IDs, exit status, stdout/stderr, parsed failures, output truncation, and command exec events to SQLite and reload on desktop startup.
   - Patch proposal bridge records now save proposal IDs, approval/run IDs, status, checkpoint ID, file paths, and diff lines to SQLite and reload on desktop startup.
   - Review report bridge records now save report IDs, decisions, summaries, finding order, hunk labels, priorities, and suggested fixes to SQLite and reload on desktop startup.
-  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, skill reload, automation reload, release reload, support-bundle reload, test artifact reload, patch proposal reload, review report reload, UI-ready bridge snapshots, and SQLite file format.
-  - Persist remaining artifact/evidence-first stores that still live only inside AgentRun rows.
+  - External-agent run bridge records now save adapter IDs, status, scope summary, terminal output, diff summary, review-required state, ordered transcript events, and linked test artifact IDs to SQLite and reload on desktop startup.
+  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, skill reload, automation reload, release reload, support-bundle reload, test artifact reload, patch proposal reload, review report reload, external-agent run reload, UI-ready bridge snapshots, and SQLite file format.
+  - Persist remaining evidence-first stores that still live only inside AgentRun rows or detached Rust stores.
   - Next: add mutation/action bridges for persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
   - Add migration/repository tests that prove data survives reload.
 
@@ -179,6 +180,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - [ ] D8 - External Agent Integration Depth
   - Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.
+  - External-agent run receipts now survive restart through SQLite, including transcript and linked test IDs.
   - Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.
   - Add real changed-file/diff capture from external-agent runs instead of review placeholders.
   - Decide whether Claude launch is in scope beyond detection and contract preview.

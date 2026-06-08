@@ -12,7 +12,7 @@ Default stack:
 - React
 - TypeScript
 - Rust
-- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, and review-report persistence are wired first)
+- SQLite (Phase 2 target; AgentRun, thread/run, approval, recent workspace, model-route, memory-store, skill-registry, automation-engine, release-state, test-artifact, patch-proposal, review-report, and external-agent-run persistence are wired first)
 - Vite
 - CSS variables for design tokens
 - Radix UI primitives where useful
@@ -43,9 +43,9 @@ complete:
   The Rust automation engine persists mission contracts and scheduled-run
   records, and a read-only Tauri snapshot bridge feeds the cockpit. Release profile
   and redacted support-bundle state persist to SQLite. Approved test artifacts,
-  proposed patch diffs, and review reports persist receipt data to SQLite and
-  reload into the desktop bridge on startup. Governance mutation bridges are
-  still not live.
+  proposed patch diffs, review reports, and external-agent run artifacts persist
+  receipt data to SQLite and reload into the desktop bridge on startup.
+  Governance mutation bridges are still not live.
 - There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
@@ -182,7 +182,8 @@ terminal-worker bridge, and Codex CLI read-only launches. The full Explore ->
 Plan -> Approve -> Build -> Diff -> Test -> Review execution loop remains
 Phase 2 work. AgentRun save/load, Tauri thread/run bridge session reload,
 approval bridge reload, recent workspace project reload, test artifact bridge
-reload, and patch proposal bridge reload now use SQLite.
+reload, patch proposal bridge reload, review report reload, and external-agent
+run artifact reload now use SQLite.
 
 ## Permission Engine
 
@@ -251,6 +252,9 @@ command contracts produce visible `codex exec` and `claude -p` command arrays
 with explicit permission mode, transcript format, working directory, and Delyx
 tool requirements. Codex CLI read-only launch now flows through external-agent
 approval, terminal-command approval, captured output, and UI-visible artifacts.
+Those external-agent run artifacts persist to SQLite with status, scope,
+terminal output, diff summary, review-required state, ordered transcript events,
+and linked test artifact IDs.
 Approved external terminal workers use the shared command execution artifact so
 their transcript events, stdout/stderr, exit status, and duration follow the
 same receipt shape as tests.

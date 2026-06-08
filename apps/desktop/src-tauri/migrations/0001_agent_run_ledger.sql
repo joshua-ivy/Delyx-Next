@@ -269,3 +269,30 @@ CREATE TABLE IF NOT EXISTS review_findings (
   hunk_label TEXT NOT NULL,
   PRIMARY KEY (report_id, finding_index)
 );
+
+CREATE TABLE IF NOT EXISTS external_agent_run_records (
+  id TEXT PRIMARY KEY NOT NULL,
+  run_id TEXT NOT NULL,
+  adapter_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  terminal_output TEXT NOT NULL,
+  diff_summary TEXT,
+  review_required INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS external_agent_run_events (
+  artifact_id TEXT NOT NULL REFERENCES external_agent_run_records(id) ON DELETE CASCADE,
+  event_index INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  message TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  PRIMARY KEY (artifact_id, event_index)
+);
+
+CREATE TABLE IF NOT EXISTS external_agent_run_tests (
+  artifact_id TEXT NOT NULL REFERENCES external_agent_run_records(id) ON DELETE CASCADE,
+  test_index INTEGER NOT NULL,
+  test_artifact_id TEXT NOT NULL,
+  PRIMARY KEY (artifact_id, test_index)
+);

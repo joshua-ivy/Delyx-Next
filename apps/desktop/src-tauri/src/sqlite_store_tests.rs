@@ -7,13 +7,13 @@ mod tests {
         let connection = open_migrated_memory_database().unwrap();
         let count: i64 = connection
             .query_row(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('agent_runs', 'agent_events', 'artifacts', 'task_threads', 'thread_messages', 'thread_run_records', 'action_proposals', 'approval_bridge_records', 'workspace_project_snapshots', 'model_role_routes', 'memory_candidates', 'memory_records', 'skill_manifests', 'automation_contracts', 'scheduled_runs', 'release_profiles', 'support_bundles', 'test_artifact_records', 'test_parsed_failures', 'test_exec_events', 'patch_proposal_records', 'patch_proposal_files', 'patch_diff_lines', 'review_report_records', 'review_findings')",
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('agent_runs', 'agent_events', 'artifacts', 'task_threads', 'thread_messages', 'thread_run_records', 'action_proposals', 'approval_bridge_records', 'workspace_project_snapshots', 'model_role_routes', 'memory_candidates', 'memory_records', 'skill_manifests', 'automation_contracts', 'scheduled_runs', 'release_profiles', 'support_bundles', 'test_artifact_records', 'test_parsed_failures', 'test_exec_events', 'patch_proposal_records', 'patch_proposal_files', 'patch_diff_lines', 'review_report_records', 'review_findings', 'external_agent_run_records', 'external_agent_run_events', 'external_agent_run_tests')",
                 [],
                 |row| row.get(0),
             )
             .unwrap();
 
-        assert_eq!(count, 25);
+        assert_eq!(count, 28);
     }
 
     #[test]

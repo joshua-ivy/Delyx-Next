@@ -18,12 +18,30 @@ use std::sync::Mutex;
 #[derive(Default)]
 pub struct ExternalAgentRunBridgeState {
     store: Mutex<ExternalAgentRunBridgeStore>,
+    database_path: Option<PathBuf>,
+}
+
+impl ExternalAgentRunBridgeState {
+    pub fn persistent(database_path: PathBuf) -> Result<Self, String> {
+        let store = crate::external_agent_run_persistence::load_from_path(&database_path)?;
+        Ok(Self {
+            store: Mutex::new(store),
+            database_path: Some(database_path),
+        })
+    }
+
+    fn save_if_persistent(&self, store: &ExternalAgentRunBridgeStore) -> Result<(), String> {
+        match &self.database_path {
+            Some(path) => crate::external_agent_run_persistence::save_to_path(store, path),
+            None => Ok(()),
+        }
+    }
 }
 
 #[derive(Default)]
 pub struct ExternalAgentRunBridgeStore {
-    artifacts: Vec<ExternalAgentRunArtifactView>,
-    next_id: usize,
+    pub(crate) artifacts: Vec<ExternalAgentRunArtifactView>,
+    pub(crate) next_id: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -80,7 +98,9 @@ pub fn external_agent_run_codex(
             .store
             .lock()
             .map_err(|_| "External agent run bridge lock failed.".to_string())?;
-        run_codex_agent_record(&mut store, engine, request)
+        let view = run_codex_agent_record(&mut store, engine, request)?;
+        state.save_if_persistent(&store)?;
+        Ok(view)
     })?
 }
 

@@ -46,7 +46,10 @@ fn main() {
             ),
         )
         .manage(
-            delyx_next_desktop::external_agent_run_bridge::ExternalAgentRunBridgeState::default(),
+            delyx_next_desktop::external_agent_run_bridge::ExternalAgentRunBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("external-agent run SQLite state should open"),
         )
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::approval_bridge::approval_decide,

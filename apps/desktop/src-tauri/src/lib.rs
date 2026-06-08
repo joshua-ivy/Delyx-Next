@@ -33,6 +33,8 @@ mod external_agent_guard_tests;
 pub mod external_agent_run_bridge;
 mod external_agent_run_bridge_keys;
 mod external_agent_run_bridge_tests;
+pub mod external_agent_run_persistence;
+mod external_agent_run_persistence_tests;
 mod external_agent_scope;
 pub mod external_agent_status_bridge;
 mod external_agent_status_bridge_tests;
