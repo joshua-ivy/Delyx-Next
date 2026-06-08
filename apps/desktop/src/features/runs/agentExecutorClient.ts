@@ -24,6 +24,13 @@ export interface AgentTestExecutionBridgeView {
   message: string;
 }
 
+export interface AgentReviewExecutionBridgeView {
+  status: "completed" | "failed";
+  runId: string;
+  reviewReportId?: string;
+  message: string;
+}
+
 export async function executePatchProposalNodeOverBridge(
   request: AgentPatchProposalExecuteRequest,
 ): Promise<AgentExecutionBridgeView | undefined> {
@@ -71,6 +78,21 @@ export async function executeTestRunNodeOverBridge(
   }
   try {
     return await invoke<AgentTestExecutionBridgeView>("agent_execute_test_run", { request });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function executeReviewNodeOverBridge(
+  runId: string,
+): Promise<AgentReviewExecutionBridgeView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<AgentReviewExecutionBridgeView>("agent_execute_review", {
+      request: { runId },
+    });
   } catch {
     return undefined;
   }

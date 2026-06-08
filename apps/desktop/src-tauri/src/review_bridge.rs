@@ -8,7 +8,7 @@ use std::sync::Mutex;
 
 #[derive(Default)]
 pub struct ReviewBridgeState {
-    store: Mutex<ReviewBridgeStore>,
+    pub(crate) store: Mutex<ReviewBridgeStore>,
     database_path: Option<PathBuf>,
 }
 
@@ -21,7 +21,7 @@ impl ReviewBridgeState {
         })
     }
 
-    fn save_if_persistent(&self, store: &ReviewBridgeStore) -> Result<(), String> {
+    pub(crate) fn save_if_persistent(&self, store: &ReviewBridgeStore) -> Result<(), String> {
         match &self.database_path {
             Some(path) => crate::review_persistence::save_to_path(store, path),
             None => Ok(()),
