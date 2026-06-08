@@ -117,7 +117,28 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 ## Phase 2 Functional Depth Checklist
 
-- [ ] D1 - Real SQLite Local Store
+### Phase 2 Status Snapshot
+
+Top-line truth on 2026-06-08: Phase 2 is not "mostly done" because the full
+autonomous Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop
+is still missing. It is also not "barely started": most core infrastructure
+now has real persisted or approval-gated functional islands.
+
+- [x] D10 is fully complete.
+- [x] SQLite is real for AgentRun, thread/run, approvals, workspace snapshots, model routes, memory, skills, automations, release/support-bundle state, tests, patches, reviews, external-agent runs, research evidence, and final-answer support links.
+- [x] Ollama is a real local model path for runtime detection, chat, composer replies, plan drafts, route sync, and optional version display.
+- [x] Patch proposal/apply/restore, approved test execution, and read-only review have narrow AgentRun executor bridges with persisted artifacts.
+- [x] Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.
+- [x] Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.
+- [ ] The autonomous scheduler/executor/resume/repair loop is still the main missing spine.
+- [ ] Approved plan -> generated patch -> apply -> test -> review is not yet automatically chained end-to-end.
+- [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
+- [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
+
+Progress read: 1/12 depth tracks fully complete, 11/12 in progress, with the
+largest remaining risk concentrated in D2, D5, D6, and D3.
+
+- [ ] D1 - Real SQLite Local Store (in progress; broad persistence exists, remaining action bridges still open)
   - Added `rusqlite` with bundled SQLite for local Windows-safe storage.
   - AgentRun `save_to_path` / `load_from_path` now use the SQLite migration instead of a tab-separated text helper.
   - Tauri thread/run bridge state now saves threads, messages, run links, and AgentRun rows to SQLite and reloads them on desktop startup.
@@ -145,7 +166,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Next: add mutation/action bridges for the remaining persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
   - Add migration/repository tests that prove data survives reload.
 
-- [ ] D2 - AgentRun Execution Engine
+- [ ] D2 - AgentRun Execution Engine (in progress; narrow executor bridges exist, full scheduler/resume/repair loop missing)
   - Add executor, scheduler, node runner, resume, repair, and hook modules.
   - Make AgentRun the real execution graph, not only an inspector artifact.
   - Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
@@ -159,7 +180,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Use Codex thread/start vs turn/start and command/exec protocol shapes as reference.
   - Keep all risky actions approval-gated.
 
-- [ ] D3 - Behavioral Frontend Tests
+- [ ] D3 - Behavioral Frontend Tests (in progress; focused React tests exist, broad workflow coverage missing)
   - Add Vitest + React Testing Library or Playwright interaction tests.
   - Added Vitest + React Testing Library as a real component-test path, separate from the existing smoke/source-contract verifiers.
   - First behavior test covers FocusThread patch apply visibility/click behavior: Apply appears only for proposed patches with matching approved approvals.
@@ -171,7 +192,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Keep grep/source verifiers only as smoke guards.
   - Stop using source-substring checks as proof of UI behavior.
 
-- [ ] D4 - UI Architecture Decision
+- [ ] D4 - UI Architecture Decision (in progress; FocusShell is live, legacy cleanup and target-stack reconciliation remain)
   - Default workbench migrated to focused React components using the provided Focus prototype as visual source.
   - Legacy string-rendered cockpit files are formally deprecated as mounted UI and retained only as older smoke-contract/reference code until they can be safely deleted.
   - `docs/ARCHITECTURE.md` records FocusShell as the live workbench and legacy cockpit as non-mounted reference code.
@@ -179,7 +200,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Reconcile the plan with Radix/TanStack/Zustand targets.
   - Completed now: no-thread cockpit hides unbacked progress, diff, terminal, inspector, and metric-card furniture; Focus home centers the real composer and keeps setup nudges tied to real repo/model state.
 
-- [ ] D5 - Functional Build Flow
+- [ ] D5 - Functional Build Flow (in progress; manual patch/apply islands exist, automatic build chain missing)
   - Convert approved plans into patch proposals through the runtime engine.
   - Runtime can now convert an explicit approved patch-proposal request into a persisted AgentRun patch node; it is not yet wired from the UI plan/build flow and does not generate patch content by itself.
   - Runtime can now execute an explicit approved PatchProposal apply node through AgentRun. This is real file I/O through the existing stale-file and checkpoint gates, but it is not yet automatically chained from plan approval.
@@ -193,7 +214,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Surface real diffs and rollback state in the UI.
   - Connect build outputs to test and review steps.
 
-- [ ] D6 - Functional Test/Review Loop
+- [ ] D6 - Functional Test/Review Loop (in progress; manual approved tests/review exist, automatic post-build loop missing)
   - Run approved tests from the agent loop.
   - Runtime can now execute an explicit approved test command through AgentRun. It reuses the existing TestRunner approval, cwd, command-shape, timeout, output-capture, and artifact persistence gates, but it is not yet automatically chained from patch apply.
   - Focus thread UI now loads persisted test artifacts for the active run instead of passing a static empty test array, so real TestRunner receipts can appear when the runtime creates them.
@@ -204,13 +225,13 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Focus thread UI can now run that read-only review action when the active run has real patch or test artifacts, reload persisted ReviewReports, and display the resulting review receipt inline.
   - Prevent final "tested" claims unless linked artifacts exist.
 
-- [ ] D7 - Model Integration Depth
+- [ ] D7 - Model Integration Depth (in progress; Ollama is real, OpenAI-compatible remains out of live scope)
   - OpenAI-compatible providers are out of live scope for now. The frontend maps the typed backend stub to an unavailable/not-wired UI state instead of suggesting a missing API key would make it usable.
   - Revisit only with real calls, keyring-backed secret handling, health checks, and tests.
   - Runtime status now optionally probes real local Ollama `/api/version` and surfaces the version in Settings when available; missing version data does not override the model-readiness probe.
   - Add Ollama version/readiness and optional pull-progress UI only when backed by real local state.
 
-- [ ] D8 - External Agent Integration Depth
+- [ ] D8 - External Agent Integration Depth (in progress; Codex read-only launch works, write-capable isolation/diff capture missing)
   - Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.
   - External-agent run receipts now survive restart through SQLite, including transcript and linked test IDs.
   - Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.
@@ -218,7 +239,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Decide whether Claude launch is in scope beyond detection and contract preview.
   - If no, keep them detection/contract-preview only and label them that way in UI.
 
-- [ ] D9 - Evidence and Final Answer Receipts
+- [ ] D9 - Evidence and Final Answer Receipts (in progress; final support bridge exists, broader claim support synthesis missing)
   - Added a narrow final-answer support synthesis bridge for existing AgentRun evidence and passed persisted test artifacts.
   - Focus thread UI now shows final support receipt counts when AgentOutcome exists.
   - Focus can record final support from an existing assistant message only; it links existing AgentRun evidence and passed persisted tests through the Tauri bridge and does not generate new prose or infer claims.
@@ -230,7 +251,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Split crates only when real pressure justifies it.
   - Keep target architecture as an extraction map, not a fake repo shape.
 
-- [ ] D11 - Codex Reference Salvage Track
+- [ ] D11 - Codex Reference Salvage Track (in progress; command prep/receipts/read-only Codex launch adapted)
   - Use `docs/CODEX_REFERENCE_AUDIT.md` as the pick list.
   - Pull only pieces that reduce risk or save real implementation time.
   - Candidate direct/adapt pieces: exec policy decisions, command exec artifacts, thread/turn protocol shape, apply-patch deltas, keyring store, Ollama readiness, Git baseline/diff helpers, sandbox capability detection.
@@ -238,7 +259,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Avoid importing Codex core, generated protocol macros, cloud auth, or broad parser stacks until a PR proves the need.
   - Every Codex-derived change needs tests, UI-visible state, approval gates, and dependency justification.
 
-- [ ] D12 - Refined Windows Desktop App
+- [ ] D12 - Refined Windows Desktop App (in progress; dev desktop package refined, production signing/updater depth missing)
   - Current truth: Delyx Next has a usable Tauri Windows desktop shell and NSIS package path, but it is still an unsigned dev product without updater/signing polish.
   - Added explicit `dev:desktop` scripts for the Tauri Windows shell; `dev` remains the browser/Vite preview.
   - Tauri config now declares the stable main window label, centered native decorated window behavior, native dark theme, bundle publisher/descriptions, and app/installer icon paths.
