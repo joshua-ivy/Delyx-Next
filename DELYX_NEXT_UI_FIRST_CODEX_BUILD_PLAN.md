@@ -131,14 +131,14 @@ now has real persisted or approval-gated functional islands.
 - [x] ~~Stored review findings now block final support until accepted or repaired, and exact findings can create persisted repair-request markers plus scoped repair PatchDraft approvals.~~
 - [x] ~~Focus UI now hides fake plan/diff/test/review blocks and renders real thread, run, model, approval, patch, test, review, and final-support receipts.~~
 - [x] ~~Windows dev desktop packaging now has aligned `0.1.0` metadata, generated app/installer icons, native dark theme, single-instance behavior, and verified NSIS output.~~
-- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, Rust-owned PatchDraft/apply/test/review steps, and one-step approval-safe dispatcher now exist.
-- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft/apply/test/review scheduler steps are Rust-owned now, but the remaining gap is making the full repair/build loop autonomous instead of renderer-triggered.
+- [ ] The full autonomous executor/repair/hook loop is still the main missing spine; a conservative scheduler decision bridge, UI next-action line, repair marker, apply-approval request state, Rust-owned PatchDraft/apply/test/review steps, an initial Rust driver, and one-step approval-safe dispatcher now exist.
+- [ ] Generated patch proposals can now continue through apply -> test -> review -> final-support scheduling when approvals and receipts exist; PatchDraft/apply/test/review scheduler steps and an initial apply/test/review/final-support driver are Rust-owned now, but the remaining gap is making PatchDraft/model generation, approval-proposal creation, repair queueing, hooks, and the mounted UI handoff fully driver-owned.
 - [x] ~~Broad frontend behavior coverage now covers project/thread creation, planning, approvals, diff/test/review artifacts, evidence support, error, blocked, expired, and empty states with React Testing Library component/action tests.~~
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
 Progress board:
 
-- Phase 2 checkbox progress: 192/238 checked, 46 open, 80.7%.
+- Phase 2 checkbox progress: 200/239 checked, 39 open, 83.7%.
 - Phase 2 track progress: 5/12 complete, 7/12 in progress.
 - Complete tracks: D3, D4, D6, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D8, D11, D12.
@@ -178,16 +178,17 @@ Progress board:
 - [ ] D2 - AgentRun Execution Engine (in progress; scheduler/resume decisions and narrow executor bridges exist, full autonomous executor/repair/hook loop missing)
   - [ ] Add complete executor, scheduler, node runner, resume, repair, and hook modules.
   - [ ] Make AgentRun the real execution graph for the full loop, not only an inspector artifact plus narrow executor islands.
-  - [ ] Add `agent_drive.rs`: a bounded Rust driver loop over `schedule_next` that dispatches scheduler decisions to executor steps and returns a typed audit trail.
-  - [ ] Add `agent_drive_bridge.rs`: a Tauri `agent_drive_run` command that the renderer can call once per run/resume instead of ping-ponging scheduler decisions through TypeScript.
-  - [ ] Define typed drive results: `DriveOutcome`, `DriveStep`, and `DriveStop` for awaiting approval, approval proposal needed, repair queued, completed, blocked, failed, or step-budget exhausted.
-  - [ ] Keep the driver autonomous only between approval boundaries; file writes, terminal commands, connector actions, durable memory saves, scheduled risky actions, and external agents must still stop for approvals.
-  - [ ] Persist/checkpoint after every driver progress step so restart never hides a partial apply/test/review/final-support transition.
+  - [x] ~~Added `agent_drive.rs`: a bounded Rust driver loop over `schedule_next` that dispatches scheduler-owned resume/apply/test/review/final-support decisions to executor steps and returns a typed audit trail. PatchDraft/model generation and approval-proposal creation still intentionally yield.~~
+  - [x] ~~Added `agent_drive_bridge.rs`: a Tauri `agent_drive_run` command that the renderer can call once per run/resume for the Rust-owned driver path instead of manually ping-ponging those scheduler decisions through TypeScript.~~
+  - [x] ~~Defined typed drive results: `AgentDriveOutcomeView`, `AgentDriveStepView`, and `AgentDriveStopView` for awaiting approval, approval proposal needed, repair requested, patch draft ready, completed, blocked, terminal, or step-budget exhausted states.~~
+  - [x] ~~The driver is autonomous only between approval boundaries: it can execute already-approved apply/test steps, read-only review, resume, and final-support synthesis, but it stops at ungranted apply approvals, missing test approvals, PatchDraft/model generation, and repair-requested states.~~
+  - [x] ~~The `agent_drive_run` command persists thread/run, patch, test, and review stores after every driver progress step so restart cannot hide a partial apply/test/review/final-support transition.~~
   - [ ] Establish one canonical lock order for thread, patch, test, review, approval, plan, workspace, and external-agent stores before the driver holds multiple stores.
-  - [ ] Thread one command-entry `now_ms` through every scheduler/approval check in the driver instead of rereading time per step.
-  - [ ] Add a progress/no-repeat guard in addition to `MAX_DRIVE_STEPS` so non-progressing decisions block instead of looping.
+  - [x] ~~The driver threads one command-entry `now_ms` through scheduler and approval checks instead of rereading time per step.~~
+  - [x] ~~The driver has both `MAX_DRIVE_STEPS` and a repeated-decision progress guard so non-progressing scheduler states block instead of looping.~~
   - [ ] Shrink the renderer scheduler dispatcher into a thin `agent_drive_run` caller once the Rust driver covers the same decisions.
   - [ ] Add driver tests for ungranted apply approval, apply -> tests -> review -> final support, failed node halt, step-budget halt, and no approval bypass.
+  - [x] ~~Initial driver tests prove ungranted apply approvals stop without persistence, review -> final-support completes with per-step persistence, and approved patch apply performs real file I/O then yields truthfully when tests are not ready.~~
   - [ ] Optional safety-depth: add a run-scoped `AutoApprovePolicy` with file globs, max writes, expiry, and visible `auto_granted` approval records before any Codex-like "approve once for this scope" behavior.
   - [ ] Decide the PatchDraft worker route for the driver: local Ollama remains default, while live Claude or a direct Anthropic route can become explicit opt-in stronger workers after their gates exist.
   - [x] ~~Added `AgentScheduler`: it reads real AgentRun, approval, patch, test, and review stores and returns conservative next-step decisions for wait, single-approval resume, patch-apply approval request, verified patch apply, tests, review, final-support readiness, terminal, complete, or blocked states.~~

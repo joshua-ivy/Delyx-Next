@@ -145,6 +145,14 @@ complete:
   patch/test artifacts by run ID, moves the visible thread to reviewing, and
   executes the existing read-only review bridge. The mounted renderer supplies
   only run/clock/timestamp inputs for scheduler-selected review.
+  The first Rust-owned driver, `agent_drive_run`, now wraps the scheduler in a
+  bounded loop with typed `steps` and `stopped_because` output. It can resume a
+  single ready approval, execute scheduler-owned patch apply, approved tests,
+  read-only review, and final-support synthesis, then persists thread/run,
+  patch, test, and review state after every progress step. It still yields at
+  PatchDraft/model generation, missing test approval, apply-approval proposal,
+  and repair-request states until those boundaries have driver-owned proposal
+  creation and UI handoff.
   PatchDraft approval readiness is discovered in Rust from persisted plan,
   workspace, review, patch, and approval records: the approval must be an
   executable same-run FileWrite approval with the exact plan or repair node ID
@@ -365,7 +373,9 @@ state. Other runtime islands execute real work
 outside the full graph: Ollama chat/plan calls, the generic terminal-worker
 bridge, and Codex CLI read-only launches. The full Explore -> Plan -> Approve
 -> Build -> Diff -> Test -> Review execution loop remains Phase 2 work until
-a Rust-owned bounded driver replaces the renderer scheduler-dispatch loop.
+the new Rust-owned bounded driver also owns PatchDraft/model generation,
+approval-proposal creation, repair queueing, hooks, and the mounted renderer
+handoff.
 AgentRun
   save/load, Tauri
   thread/run bridge session reload, approval bridge reload, plan record reload, recent workspace

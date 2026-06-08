@@ -1,3 +1,9 @@
+pub mod agent_drive;
+mod agent_drive_apply_tests;
+pub mod agent_drive_bridge;
+mod agent_drive_steps;
+mod agent_drive_tests;
+pub mod agent_drive_types;
 pub mod agent_executor;
 mod agent_executor_apply_tests;
 pub mod agent_executor_bridge;
