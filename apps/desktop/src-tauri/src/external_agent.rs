@@ -1,5 +1,6 @@
 use crate::approval::{ApprovalEngine, RiskyAction};
 use crate::external_agent_adapters::default_adapters;
+use crate::external_agent_diff::{capture_external_agent_diff, snapshot_external_agent_diff};
 use crate::external_agent_scope::{checked_approved_path, checked_scoped_path};
 use crate::external_agent_terminal::run_worker_command;
 pub use crate::external_agent_types::{
@@ -91,7 +92,15 @@ impl ExternalAgentBridge {
             .iter()
             .map(|path| checked_scoped_path(path, &scope))
             .collect::<Result<Vec<_>, _>>()?;
+        let diff_snapshot = request
+            .capture_plan
+            .capture_diff
+            .then(|| snapshot_external_agent_diff(&changed_files));
         let worker = run_worker_command(&request, &scope, now)?;
+        let diff_capture = diff_snapshot
+            .as_ref()
+            .filter(|_| !changed_files.is_empty())
+            .map(capture_external_agent_diff);
         let mut transcript = vec![
             event(
                 ExternalAgentEventKind::Started,
@@ -123,16 +132,22 @@ impl ExternalAgentBridge {
             ));
         }
         let diff_summary = request.capture_plan.capture_diff.then(|| {
-            if changed_files.is_empty() {
+            if let Some(capture) = &diff_capture {
+                capture.summary()
+            } else if changed_files.is_empty() {
                 "Diff capture requested for Delyx review; no changed files were reported by the worker.".to_string()
             } else {
                 format!("Diff capture requested for Delyx review across {} changed file(s).", changed_files.len())
             }
         });
-        if diff_summary.is_some() {
+        if let Some(capture) = &diff_capture {
+            for receipt in &capture.receipts {
+                transcript.push(event(ExternalAgentEventKind::DiffCaptured, receipt, now));
+            }
+        } else if diff_summary.is_some() {
             transcript.push(event(
                 ExternalAgentEventKind::DiffCaptured,
-                "Diff artifact must be reviewed by Delyx UI.",
+                "Diff capture requested, but no changed-file receipt was available.",
                 now,
             ));
         }

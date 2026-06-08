@@ -27,7 +27,7 @@ mod tests {
             &mut store,
             &approvals,
             request(&external_id, &terminal_id, &root, Some("checkpoint-1")),
-            fake_codex_contract(&root, passing_command()),
+            fake_codex_contract(&root, mutating_command()),
             &mut bridge,
         )
         .unwrap();
@@ -40,7 +40,12 @@ mod tests {
             .diff_summary
             .as_ref()
             .unwrap()
-            .contains("Delyx review"));
+            .contains("1 modified"));
+        assert!(artifact.transcript.iter().any(|event| {
+            event.kind == "diff_captured"
+                && event.message.contains("src")
+                && event.message.contains("modified")
+        }));
         assert_eq!(
             external_agent_run_snapshot_from_store(&store, "run-1"),
             vec![artifact]
@@ -244,6 +249,26 @@ mod tests {
             (
                 "sh".to_string(),
                 vec!["-c".to_string(), "echo codex jsonl".to_string()],
+            )
+        }
+    }
+
+    fn mutating_command() -> (String, Vec<String>) {
+        if cfg!(windows) {
+            (
+                "cmd".to_string(),
+                vec![
+                    "/C".to_string(),
+                    "echo changed> src\\main.rs && echo codex jsonl".to_string(),
+                ],
+            )
+        } else {
+            (
+                "sh".to_string(),
+                vec![
+                    "-c".to_string(),
+                    "printf 'changed\\n' > src/main.rs && echo codex jsonl".to_string(),
+                ],
             )
         }
     }

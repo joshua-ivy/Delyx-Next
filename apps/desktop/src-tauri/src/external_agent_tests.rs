@@ -52,7 +52,7 @@ mod tests {
         assert!(artifact
             .terminal_output
             .contains("prototype external agent bridge"));
-        assert!(artifact.diff_summary.unwrap().contains("Delyx review"));
+        assert!(artifact.diff_summary.unwrap().contains("1 unchanged"));
         assert!(artifact.review_required);
     }
 

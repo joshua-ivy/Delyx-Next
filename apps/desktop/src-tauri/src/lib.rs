@@ -60,6 +60,7 @@ pub mod external_agent_command_contracts;
 mod external_agent_command_contracts_tests;
 pub mod external_agent_contract_bridge;
 mod external_agent_contract_bridge_tests;
+mod external_agent_diff;
 mod external_agent_guard_tests;
 pub mod external_agent_run_bridge;
 mod external_agent_run_bridge_keys;

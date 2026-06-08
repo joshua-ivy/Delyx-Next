@@ -420,8 +420,12 @@ and linked test artifact IDs.
 Approved external terminal workers use the shared command execution artifact so
 their transcript events, stdout/stderr, exit status, and duration follow the
 same receipt shape as tests.
-Codex write-capable launch and any diff-capturing external run still require a
-real checkpoint or isolated worktree. Claude launch remains preview-only.
+Diff-capturing external runs snapshot explicitly reported changed files before
+the approved worker command and compare their bytes afterward, recording
+created, deleted, modified, unchanged, and unreadable receipts instead of a
+review placeholder. Write-capable Codex launch still needs real checkpoint or
+isolated-worktree creation before the UI can enable it. Claude launch remains
+preview-only.
 
 ## Memory Governance
 
