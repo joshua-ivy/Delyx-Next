@@ -48,6 +48,8 @@ pub mod local_store_bridge;
 mod local_store_bridge_tests;
 pub mod memory;
 pub mod memory_bridge;
+mod memory_bridge_tests;
+mod memory_bridge_views;
 pub mod memory_persistence;
 mod memory_persistence_tests;
 mod memory_tests;

@@ -40,7 +40,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 ## Current Reality
 
 - PR 1-18.1 breadth is skeleton-complete.
-- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state, approved test artifacts, patch proposal diffs, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration; automatic final-answer support synthesis, remaining evidence/action bridges, and mutation bridges are still missing.
+- SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state, approved test artifacts, patch proposal diffs, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory has a narrow approval-gated mutation bridge for candidate propose/promote/suppress and record suppress; automatic final-answer support synthesis plus remaining governance mutation bridges are still missing.
 - There is no full execution engine: no scheduler, executor, resume engine, repair loop, or hook runner.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
@@ -125,6 +125,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Recent workspace project snapshots now save project metadata, rules files, approved roots, Git metadata, and indexed file names to SQLite.
   - Model role routes now save to SQLite; runtime status reloads a valid saved coding route before falling back to the first ready Ollama model.
   - The Rust memory governance store now saves candidates, promoted records, suppression state, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
+  - Memory candidate propose, approved promotion, candidate suppression, and record suppression now run through a Tauri bridge backed by the persisted MemoryStore. Durable memory promotion still requires a matching approved `DurableMemorySave` proposal and a completed source run.
   - The Rust skill registry now saves imported skills, trust, activation status, permissions, source hashes, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
   - The Rust automation engine now saves mission contracts, active/paused status, schedules, allowed tools, scheduled run records, approval links, and ID continuity to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
   - Release profile and latest redacted support bundle now save to SQLite; a read-only Tauri snapshot bridge feeds the cockpit.
@@ -135,9 +136,9 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Research EvidenceStore records now save run IDs, source kind, title, locator, excerpt, stance, normalized claim keys, and post-reload ID continuity to SQLite.
   - AgentRun EvidenceRecords now save source IDs, URIs, quotes, hashes, retrieval timestamps, and relevance metadata to SQLite; thread/run snapshots expose those receipts back to the UI instead of returning an empty evidence array.
   - AgentOutcome now saves linked evidence record IDs and test artifact IDs to SQLite; thread/run snapshots expose those support links to the UI.
-  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, skill reload, automation reload, release reload, support-bundle reload, test artifact reload, patch proposal reload, review report reload, external-agent run reload, research evidence reload, AgentOutcome support reload, UI-ready bridge snapshots, and SQLite file format.
-  - Persist remaining automatic final-answer support records and action bridges that still live only inside detached runtime state.
-  - Next: add mutation/action bridges for persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
+  - SQLite tests prove migration tables, foreign keys, child records, run reload, thread/run session reload, approval reload, workspace snapshot reload, model route reload, memory reload, memory mutation reload, skill reload, automation reload, release reload, support-bundle reload, test artifact reload, patch proposal reload, review report reload, external-agent run reload, research evidence reload, AgentOutcome support reload, UI-ready bridge snapshots, and SQLite file format.
+  - Persist remaining automatic final-answer support records and non-memory action bridges that still live only inside detached runtime state.
+  - Next: add mutation/action bridges for the remaining persisted governance stores only when the matching approval gates and UI states are ready, then split remaining artifact/evidence stores only where AgentRun persistence is not enough.
   - Add migration/repository tests that prove data survives reload.
 
 - [ ] D2 - AgentRun Execution Engine

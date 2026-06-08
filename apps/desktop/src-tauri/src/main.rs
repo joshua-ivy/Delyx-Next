@@ -12,6 +12,12 @@ fn main() {
             ),
         )
         .manage(
+            delyx_next_desktop::memory_bridge::MemoryBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("memory SQLite state should open"),
+        )
+        .manage(
             delyx_next_desktop::patch_bridge::PatchBridgeState::persistent(
                 delyx_next_desktop::sqlite_store::default_database_path(),
             )
@@ -61,6 +67,10 @@ fn main() {
             delyx_next_desktop::external_agent_run_bridge::external_agent_run_codex,
             delyx_next_desktop::external_agent_run_bridge::external_agent_run_snapshot,
             delyx_next_desktop::external_agent_status_bridge::external_agent_status,
+            delyx_next_desktop::memory_bridge::memory_candidate_propose,
+            delyx_next_desktop::memory_bridge::memory_candidate_suppress,
+            delyx_next_desktop::memory_bridge::memory_promote_approved,
+            delyx_next_desktop::memory_bridge::memory_record_suppress,
             delyx_next_desktop::memory_bridge::memory_snapshot,
             delyx_next_desktop::patch_bridge::patch_propose,
             delyx_next_desktop::patch_bridge::patch_snapshot,

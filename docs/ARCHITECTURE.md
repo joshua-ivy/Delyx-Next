@@ -38,7 +38,10 @@ complete:
   indexed file names. Model role routes persist to SQLite and are validated
   against current provider health before becoming active. The Rust memory
   governance store persists candidates, durable records, suppression state, and
-  ID continuity, and a read-only Tauri snapshot bridge feeds the cockpit. The Rust skill
+  ID continuity. Its Tauri bridge now exposes persisted candidate propose,
+  approved promote, candidate suppress, record suppress, and snapshot commands.
+  Durable memory promotion still requires a matching approved memory-save
+  proposal and a completed source run. The Rust skill
   registry persists imported manifests, trust, permissions, status, source
   hashes, and ID continuity, and a read-only Tauri snapshot bridge feeds the cockpit.
   The Rust automation engine persists mission contracts and scheduled-run
@@ -284,10 +287,12 @@ Owns:
 
 The Rust `MemoryStore` persists candidates and records to SQLite, including
 candidate status, record suppression, source run/thread IDs, and post-reload ID
-continuity. The Tauri `memory_snapshot` command exposes a read-only UI-ready
-view to the cockpit. Memory proposal, suppression, and promotion mutation
-workflows still need explicit approval-gated bridges before this becomes an
-end-to-end user workflow.
+continuity. The Tauri memory bridge exposes UI-ready snapshots plus persisted
+candidate propose, approved promote, candidate suppress, and record suppress
+commands. Promotion uses the shared approval engine and rejects unapproved,
+mismatched, expired, wrong-action, or non-completed-source-run saves. Frontend
+controls for those mutations are still shallow; the bridge and snapshots are the
+current source of truth.
 
 ## Skills
 
