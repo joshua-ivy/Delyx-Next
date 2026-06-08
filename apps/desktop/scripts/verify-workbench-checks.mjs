@@ -65,6 +65,8 @@ export const requiredChecks = [
   ["src/features/threads/threadClient.ts", "updateThreadStatusOverBridge"],
   ["src/features/threads/threadClient.ts", "archiveThreadOverBridge"],
   ["src/app/AppShell.tsx", "loadThreadRunSnapshot(activeProject.id)"],
+  ["src/app/AppShell.tsx", "loadPatchSnapshot(activeRun.id)"],
+  ["src/app/AppShell.tsx", "patches={patches}"],
   ["src/app/cockpitStateTransitions.ts", "updateThreadStatusOverBridge(activeThread.id"],
   ["src/app/AppShell.tsx", "setAgentRuns"],
   ["src/app/appShellCommands.ts", "paletteCommands"],

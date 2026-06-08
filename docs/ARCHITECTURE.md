@@ -270,6 +270,9 @@ rollback. The `patch_restore_approved` bridge requires its own executable
 `FileWrite` approval, verifies the file still matches the applied `after` text,
 stays inside approved roots, and then writes or removes files from the persisted
 checkpoint receipts while recording the restore approval ID.
+The Focus UI loads `patch_snapshot` for the active run so persisted patch
+receipts can surface as real diffs; it does not synthesize placeholder diffs
+when the runtime has not produced a PatchProposal.
 The Tauri `test_run_approved` bridge exposes approved test-command execution
 through the Rust TestRunner. It reads the same Rust ApprovalEngine owned by the
 approval bridge, rejects pending or mismatched approvals, captures stdout,

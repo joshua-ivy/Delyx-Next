@@ -15,7 +15,9 @@ import { currentMobileState } from "../features/mobile/mobileData";
 import { currentModelSettings } from "../features/models/modelData";
 import { refreshOllamaSettings } from "../features/models/ollamaClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
+import { loadPatchSnapshot } from "../features/patches/patchClient";
 import { currentPatchProposals } from "../features/patches/patchData";
+import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import { currentReviewReports } from "../features/review/reviewData";
 import { currentAgentRuns } from "../features/runs/agentRunData";
@@ -43,6 +45,7 @@ export function AppShell() {
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
   const [modelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
+  const [patches, setPatches] = useState<PatchProposalView[]>(currentPatchProposals);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
   const { automationState, memoryState, releaseState, skillState } = usePersistedInspectorState();
   const riskPolicy = useApprovalPolicy();
@@ -120,6 +123,22 @@ export function AppShell() {
   useEffect(() => {
     document.documentElement.dataset.mode = activeThread?.mode ?? "build";
   }, [activeThread?.mode]);
+  useEffect(() => {
+    if (!activeRun?.id) {
+      setPatches([]);
+      return;
+    }
+    setPatches([]);
+    let cancelled = false;
+    void loadPatchSnapshot(activeRun.id).then((snapshot) => {
+      if (!cancelled) {
+        setPatches(snapshot ?? []);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeRun?.id]);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
@@ -231,7 +250,7 @@ export function AppShell() {
           setThreadState("ready");
         }}
         onSendInstruction={sendInstruction}
-        patches={currentPatchProposals}
+        patches={patches}
         proposals={actionProposals}
         tests={currentTestArtifacts}
         threads={threads}

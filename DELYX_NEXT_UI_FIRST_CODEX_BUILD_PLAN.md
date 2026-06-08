@@ -171,6 +171,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - [ ] D5 - Functional Build Flow
   - Convert approved plans into patch proposals through the runtime engine.
   - Runtime can now convert an explicit approved patch-proposal request into a persisted AgentRun patch node; it is not yet wired from the UI plan/build flow and does not generate patch content by itself.
+  - Focus UI now loads persisted patch snapshots for the active run instead of passing a static empty patch array, so real PatchProposal diffs can appear when the runtime creates them.
   - Patch apply and restore now have persisted approval-gated bridges with stale-file protection and checkpoint receipts; the runtime engine still needs to call them automatically from the build flow.
   - Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - Surface real diffs and rollback state in the UI.
