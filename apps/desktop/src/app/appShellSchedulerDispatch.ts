@@ -15,10 +15,8 @@ import { proposeApprovedPlanPatchWithOllama } from "./appShellOllamaPatchActions
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
 import { runReviewForActiveRun } from "./appShellReviewActions";
-import { activeTestApprovalId } from "./appShellTestApprovalDecision";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { patchApplyApprovalIdForScheduler } from "./patchApplyApproval";
-import { firstRunnableTestCommand } from "./testCommand";
 
 const maxAutoSteps = 4;
 
@@ -135,12 +133,11 @@ async function nextSchedulerDecision(state: SchedulerDispatchState) {
     return undefined;
   }
   return scheduleNextRunActionOverBridge({
-    hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
+    hasSupportedTestCommand: false,
     nowMs: Date.now(),
     patchApplyApprovalId: patchApplyApprovalIdForScheduler(state.actionProposals, state.patches),
     patchDraftApprovalId: patchDraftApprovalId(state),
     runId: state.activeRun.id,
-    testApprovalId: activeTestApprovalId(state),
   });
 }
 

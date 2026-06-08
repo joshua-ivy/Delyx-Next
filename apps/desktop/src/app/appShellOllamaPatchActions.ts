@@ -15,8 +15,6 @@ import { updateRunsForThreadStatus } from "./appShellRunActions";
 import { modeForThreadStatus } from "./appShellThreadActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
 import type { SchedulerDispatchState } from "./appShellSchedulerDispatch";
-import { activeTestApprovalId } from "./appShellTestApprovalDecision";
-import { firstRunnableTestCommand } from "./testCommand";
 
 export interface OllamaPatchProposalState extends SchedulerDispatchState {
   modelSettings: ModelSettingsView;
@@ -45,13 +43,12 @@ export async function proposeApprovedPlanPatchWithOllama(
     const createdAtMs = Date.now();
     const result = await dispatchPatchDraftFromContextOverBridge({
       approvalId: approval.id,
-      hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
+      hasSupportedTestCommand: false,
       maxBytesPerFile: 20_000,
       model,
       nowMs: createdAtMs,
       projectId: state.activeProject.id,
       runId: run.id,
-      testApprovalId: activeTestApprovalId(state),
     });
     if (!result || result.status !== "completed") {
       throw new Error(result?.message ?? "Desktop bridge did not capture the patch proposal.");

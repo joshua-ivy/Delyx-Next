@@ -57,12 +57,13 @@ describe("proposeApprovedPlanPatchWithOllama", () => {
     expect(result.created).toBe(true);
     expect(dispatchPatchDraft).toHaveBeenCalledWith(expect.objectContaining({
       approvalId: "approval-1",
-      hasSupportedTestCommand: true,
+      hasSupportedTestCommand: false,
       maxBytesPerFile: 20_000,
       model: "qwen3-coder:30b",
       projectId: "project-1",
       runId: "run-1",
     }));
+    expect(dispatchPatchDraft.mock.calls[0]?.[0]).not.toHaveProperty("testApprovalId");
     expect(state.setPatches).toHaveBeenCalledWith([patch]);
     expect(appendThreadMessageOverBridge).toHaveBeenCalled();
   });

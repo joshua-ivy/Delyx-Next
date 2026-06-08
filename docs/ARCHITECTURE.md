@@ -105,12 +105,14 @@ complete:
   request, verified patch apply, tests, review, final-support readiness,
   terminal, complete, or blocked. Patch-apply readiness is derived in Rust from
   the persisted approval ledger when an exact patch-apply node approval exists;
-  generic same-run FileWrite approvals do not authorize that state. The Focus UI can
-  render that decision as a next-action line without inventing runtime state.
-  Resume actions forward the active plan's supported test-command signal back
-  into the scheduler bridge, so resume decisions use the same real plan context
-  as the visible scheduler line. Persisted plan records now reload beside
-  thread/run snapshots, so that context can survive restart. After the non-risky resume transition, the
+  generic same-run FileWrite approvals do not authorize that state. Test
+  readiness is also hydrated in Rust from persisted plan records and approval
+  bridge records, so renderer resume calls do not pass supported-test or
+  test-approval hints. Unsafe shell-control test text is cleared, and `run_tests`
+  receives only an exact executable same-run terminal approval whose scope
+  includes the persisted command. The Focus UI can render that decision as a
+  next-action line without inventing runtime state. Persisted plan records now
+  reload beside thread/run snapshots, so that context can survive restart. After the non-risky resume transition, the
   bridge returns a post-resume scheduler decision when persisted patch, test, or
   review work is ready; otherwise it falls back to the visible resume decision.
   Approval decisions can also trigger that non-risky resume transition when the
@@ -313,8 +315,11 @@ approved existing PatchProposal into a patch-apply node, write files through the
 stale-file/checkpoint PatchEngine path, and record patch-apply receipts. The
 scheduler exposes `request_patch_apply_approval` until the separate apply
 approval is executable, and exposes `run_patch_apply` only with that exact
-approval ID, discovered from the persisted approval node when the UI does not
-provide a hint. The
+approval ID, discovered from the persisted approval node. Test readiness follows
+the same persisted-context rule: `agent_schedule_next` and
+`agent_resume_waiting_run` load the run's persisted plan, reject shell-control
+test text, and return `run_tests` only with an exact executable same-run
+terminal approval whose scope includes that command. The
 `agent_execute_patch_restore` bridge can advance an approved existing applied
 PatchProposal into a patch-restore node, require a separate executable
 `FileWrite` approval, verify current file contents still match the applied
@@ -881,11 +886,13 @@ renderer-side PatchDraft parsing and context selection, but it is not yet the
 full autonomous executor/repair loop.
 
 Scheduler-selected tests follow the same rule for terminal approvals. The
-renderer may pass the active plan's approved test approval ID as a scheduler
-hint, but the Rust scheduler only echoes it on `run_tests` after verifying that
-it is an executable same-run `TerminalCommand` approval. The test action then
-uses that exact approval ID instead of rediscovering a replacement approval in
-renderer state.
+renderer no longer passes the active plan's supported test-command state or an
+approved test approval ID as scheduler hints. The Rust scheduler derives that
+context from the persisted plan and approval ledger, rejects shell-control test
+text, and only returns a `run_tests` approval ID after verifying an executable
+same-run `TerminalCommand` approval whose scope includes the persisted command.
+The test action then uses that exact approval ID instead of rediscovering a
+replacement approval in renderer state.
 
 ### ADR-0010: Adapt Apply-Patch Intent, Not Codex Core
 

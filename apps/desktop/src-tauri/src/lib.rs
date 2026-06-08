@@ -34,6 +34,8 @@ mod agent_scheduler_bridge_apply_tests;
 mod agent_scheduler_bridge_tests;
 mod agent_scheduler_bridge_view;
 mod agent_scheduler_repair_tests;
+mod agent_scheduler_test_context;
+mod agent_scheduler_test_context_tests;
 mod agent_scheduler_tests;
 pub mod agent_test_executor;
 pub mod agent_test_executor_bridge;

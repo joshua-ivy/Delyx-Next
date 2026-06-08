@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 182/203 checked, 21 open, 89.7%.
+- Phase 2 checkbox progress: 183/204 checked, 21 open, 89.7%.
 - Phase 2 track progress: 6/12 complete, 6/12 in progress.
 - Complete tracks: D3, D4, D6, D8, D9, D10.
 - In-progress tracks: D1, D2, D5, D7, D11, D12.
@@ -180,11 +180,11 @@ Progress board:
   - [x] ~~Added `AgentScheduler`: it reads real AgentRun, approval, patch, test, and review stores and returns conservative next-step decisions for wait, single-approval resume, patch-apply approval request, verified patch apply, tests, review, final-support readiness, terminal, complete, or blocked states.~~
   - [x] ~~Added `resume_waiting_run`: it resumes a run only when exactly one approval for that run is executable; multiple ready approvals, missing approvals, pending approvals, and zero clocks stay blocked or waiting instead of guessing.~~
   - [x] ~~Added Tauri scheduler commands: `agent_schedule_next` exposes the current scheduler decision to the UI, and `agent_resume_waiting_run` persists a non-risky resume transition only after the Rust scheduler finds exactly one executable approval.~~
-  - [x] ~~Focus resume actions pass the active plan's supported test-command signal into `agent_resume_waiting_run`, so a test-ready run does not become falsely blocked after approval resume.~~
+  - [x] ~~Focus scheduler calls no longer decide test readiness or pass UI-derived test approval IDs; they ask the Rust bridge to schedule/resume from persisted state.~~
   - [x] ~~Persisted plan snapshots now reload beside thread/run snapshots, so scheduler and PatchDraft paths can recover typed plan context after restart instead of relying only on live renderer memory.~~
   - [x] ~~The resume bridge now returns the post-resume scheduler decision when persisted patch/test/review work is ready, falling back to the visible resume decision when no persisted next action exists.~~
   - [x] ~~Approval decisions now auto-resume through the scheduler bridge only when the approved proposal is the last pending approval for that run.~~
-  - [x] ~~Approval resume now passes the freshly decided proposal state into the scheduler request, so same-turn PatchDraft/test approval hints are not one render behind.~~
+  - [x] ~~Approval resume now passes the freshly decided proposal state into scheduler orchestration, so same-turn PatchDraft/apply approval selection is not one render behind.~~
   - [x] ~~Added a one-step scheduler dispatcher that can run the post-resume scheduler-selected action for approved patch apply, approved/approval-queued tests, read-only review, or final-support recording from real persisted artifacts.~~
   - [x] ~~The scheduler dispatcher now asks the Rust scheduler for a bounded next decision after each dispatched action and can continue through ready patch/test/review/final-support steps without inventing artifacts.~~
   - [x] ~~Manual scheduler resume now dispatches the returned scheduler decision, and the visible PatchDraft next-action line can trigger that same resume/dispatch path after reload.~~
@@ -200,6 +200,7 @@ Progress board:
   - [x] ~~PatchDraft context construction now has a Rust-owned dispatch command: it loads the persisted thread/run, approved plan, workspace snapshot, approval scope, and matching repair finding context before executing the scheduler-verified PatchDraft bridge.~~
   - [x] ~~Scheduler patch-apply readiness now has two truthful states: proposed patches return `request_patch_apply_approval` until a separate executable apply approval ID is provided, and only then return `run_patch_apply` with that exact approval ID.~~
   - [x] ~~Rust scheduler can now discover the exact executable patch-apply approval from the persisted approval ledger by matching the patch-apply node ID, so the write-ready state no longer depends on React passing the approval hint; generic same-run FileWrite approvals are rejected.~~
+  - [x] ~~Scheduler test readiness is now hydrated in Rust from persisted plan records and approval bridge records: unsafe shell-control test text is cleared, React test hints are ignored, and only an exact executable same-run terminal approval whose scope includes the persisted command is returned.~~
   - [x] ~~Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.~~
   - [x] ~~Scheduler and bridge tests prove pending approvals stay waiting, approved single approvals resume, proposed patches request apply approval, verified apply approvals schedule patch apply, applied patches require supported test-command evidence, stored patch/test artifacts schedule review, clean stored reviews move to final-support readiness, unresolved review findings block final support, repair-requested reviews surface `repair_requested`, and UI-ready decision views map from real stores.~~
   - [ ] Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
@@ -215,7 +216,7 @@ Progress board:
   - [x] ~~Added FocusThread behavior coverage for live run placement: latest user message, single running activity line, then assistant reply.~~
   - [x] ~~Added FocusThread empty-artifact coverage so plan/diff/test/review placeholder blocks stay hidden until real artifacts exist.~~
   - [x] ~~Added FocusSchedulerPeek behavior coverage for scheduler-selected patch apply, tests, review, final support, resume, and passive wait states.~~
-  - [x] ~~Added scheduler resume-action coverage proving runnable plan test commands are forwarded to the bridge while unsafe shell-control text is rejected.~~
+  - [x] ~~Added scheduler resume-action coverage proving React leaves test readiness to the Rust bridge and does not forward UI-derived supported-test or test-approval hints.~~
   - [x] ~~Added scheduler bridge coverage proving post-resume applied-patch state schedules tests when a supported command exists.~~
   - [x] ~~Added approval-decision resume policy coverage for approved, denied, and still-pending approval sets.~~
   - [x] ~~Added approval orchestration coverage proving safe resume is called only when the approval policy allows it and receives the freshly decided approval state before scheduler dispatch.~~
@@ -291,7 +292,7 @@ Progress board:
   - [x] ~~Focus thread UI can now run that read-only review action when the active run has real patch or test artifacts, reload persisted ReviewReports, and display the resulting review receipt inline.~~
   - [x] ~~AgentScheduler can now identify applied patches that need tests, block when no supported test command exists, schedule review from real patch/test artifacts, and report final-support readiness after a stored review; Focus UI shows those real next actions when the desktop bridge is available.~~
   - [x] ~~The scheduler dispatcher can automatically queue/run the scheduler-selected test step after the final approval resumes the run, and can dispatch read-only review/final-support steps from persisted artifacts.~~
-  - [x] ~~`agent_resume_waiting_run` and `agent_schedule_next` now accept a test approval hint, verify it as an executable same-run `TerminalCommand`, and return it on the `run_tests` decision; the Focus dispatcher passes that exact ID into `agent_execute_test_run`.~~
+  - [x] ~~`agent_resume_waiting_run` and `agent_schedule_next` now hydrate test readiness from persisted plan records, verify an exact executable same-run `TerminalCommand` approval from the approval ledger, and return that ID on the `run_tests` decision; the Focus dispatcher passes that exact ID into `agent_execute_test_run`.~~
   - [x] ~~The scheduler dispatcher can continue from a completed dispatched action to the next scheduler-selected test/review/final-support step within a bounded loop.~~
   - [x] ~~Review reports with unresolved findings now block final support, and an exact finding-level repair request is persisted before the run can move back toward build.~~
   - [x] ~~Approved repair requests now flow back to build through persisted review status, a scoped approval card, scheduler-selected PatchDraft, and tests covering that handoff; generated repair outputs can continue through apply, test, review, and final-support scheduling when approvals and receipts exist.~~

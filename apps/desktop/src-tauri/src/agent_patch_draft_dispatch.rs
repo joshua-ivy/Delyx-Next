@@ -4,8 +4,10 @@ use crate::agent_patch_draft_bridge::{
 use crate::agent_scheduler_bridge::{
     schedule_next_record, AgentScheduleDecisionView, AgentScheduleRequest,
 };
+use crate::agent_scheduler_test_context::hydrate_schedule_request;
 use crate::approval_bridge::ApprovalBridgeState;
 use crate::patch_bridge::PatchBridgeState;
+use crate::plan_bridge::PlanBridgeState;
 use crate::review_bridge::ReviewBridgeState;
 use crate::test_runner_bridge::TestRunnerBridgeState;
 use crate::thread_run_bridge::ThreadRunBridgeState;
@@ -30,9 +32,12 @@ pub fn agent_dispatch_patch_draft(
     tests: tauri::State<TestRunnerBridgeState>,
     reviews: tauri::State<ReviewBridgeState>,
     approvals: tauri::State<ApprovalBridgeState>,
+    plans: tauri::State<PlanBridgeState>,
     request: AgentPatchDraftDispatchRequest,
 ) -> Result<AgentPatchDraftBridgeView, String> {
-    verify_scheduler_patch_draft(&threads, &patches, &tests, &reviews, &approvals, &request)?;
+    verify_scheduler_patch_draft(
+        &threads, &patches, &tests, &reviews, &approvals, &plans, &request,
+    )?;
     execute_patch_draft_record(&threads, &patches, &approvals, request.execute)
 }
 
@@ -42,9 +47,14 @@ pub(crate) fn verify_scheduler_patch_draft(
     tests: &TestRunnerBridgeState,
     reviews: &ReviewBridgeState,
     approvals: &ApprovalBridgeState,
+    plans: &PlanBridgeState,
     request: &AgentPatchDraftDispatchRequest,
 ) -> Result<(), String> {
-    let decision = approvals.with_engine(|engine| {
+    let approval_store = approvals
+        .store
+        .lock()
+        .map_err(|_| "Approval bridge lock failed.".to_string())?;
+    let decision = {
         let thread_store = threads
             .store
             .lock()
@@ -61,20 +71,25 @@ pub(crate) fn verify_scheduler_patch_draft(
             .store
             .lock()
             .map_err(|_| "Review bridge lock failed.".to_string())?;
-        let schedule_request = schedule_request(request);
+        let schedule_request = hydrate_schedule_request(
+            &thread_store,
+            &approval_store,
+            plans.database_path(),
+            schedule_request(request),
+        )?;
         let run = thread_store
             .ledger
             .get_run(&request.execute.run_id)
             .map_err(|error| format!("{error:?}"))?;
-        Ok::<AgentScheduleDecisionView, String>(schedule_next_record(
+        schedule_next_record(
             run,
-            engine,
+            &approval_store.engine,
             &patch_store,
             &test_store,
             &review_store,
             &schedule_request,
-        ))
-    })??;
+        )
+    };
     verify_patch_draft_decision(&decision, &request.execute.approval_id)
 }
 

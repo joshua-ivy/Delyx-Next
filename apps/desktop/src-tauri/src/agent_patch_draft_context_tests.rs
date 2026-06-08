@@ -46,7 +46,7 @@ mod tests {
             &plans,
             &AgentPatchDraftContextRequest {
                 approval_id: approval_id.clone(),
-                has_supported_test_command: true,
+                has_supported_test_command: false,
                 max_bytes_per_file: Some(12_000),
                 model: "qwen3-coder:30b".to_string(),
                 now_ms: 42,

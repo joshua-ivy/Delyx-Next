@@ -3,8 +3,10 @@ use crate::agent_scheduler::{
     resume_waiting_run, schedule_next, AgentScheduleDecision, AgentSchedulerContext,
 };
 use crate::agent_scheduler_bridge_view::decision_view;
+use crate::agent_scheduler_test_context::hydrate_schedule_request;
 use crate::approval_bridge::ApprovalBridgeState;
 use crate::patch_bridge::PatchBridgeState;
+use crate::plan_bridge::PlanBridgeState;
 use crate::review_bridge::ReviewBridgeState;
 use crate::test_runner_bridge::TestRunnerBridgeState;
 use crate::thread_run_bridge::ThreadRunBridgeState;
@@ -46,9 +48,14 @@ pub fn agent_schedule_next(
     patches: tauri::State<PatchBridgeState>,
     tests: tauri::State<TestRunnerBridgeState>,
     reviews: tauri::State<ReviewBridgeState>,
+    plans: tauri::State<PlanBridgeState>,
     request: AgentScheduleRequest,
 ) -> Result<AgentScheduleDecisionView, String> {
-    approvals.with_engine(|engine| {
+    let approval_store = approvals
+        .store
+        .lock()
+        .map_err(|_| "Approval bridge lock failed.".to_string())?;
+    {
         let thread_store = threads
             .store
             .lock()
@@ -65,19 +72,25 @@ pub fn agent_schedule_next(
             .store
             .lock()
             .map_err(|_| "Review bridge lock failed.".to_string())?;
+        let request = hydrate_schedule_request(
+            &thread_store,
+            &approval_store,
+            plans.database_path(),
+            request,
+        )?;
         let run = thread_store
             .ledger
             .get_run(&request.run_id)
             .map_err(|error| format!("{error:?}"))?;
         Ok(schedule_next_record(
             run,
-            engine,
+            &approval_store.engine,
             &patch_store,
             &test_store,
             &review_store,
             &request,
         ))
-    })?
+    }
 }
 
 #[tauri::command]
@@ -87,9 +100,14 @@ pub fn agent_resume_waiting_run(
     patches: tauri::State<PatchBridgeState>,
     tests: tauri::State<TestRunnerBridgeState>,
     reviews: tauri::State<ReviewBridgeState>,
+    plans: tauri::State<PlanBridgeState>,
     request: AgentScheduleRequest,
 ) -> Result<AgentScheduleDecisionView, String> {
-    approvals.with_engine(|engine| {
+    let approval_store = approvals
+        .store
+        .lock()
+        .map_err(|_| "Approval bridge lock failed.".to_string())?;
+    {
         let mut thread_store = threads
             .store
             .lock()
@@ -106,9 +124,15 @@ pub fn agent_resume_waiting_run(
             .store
             .lock()
             .map_err(|_| "Review bridge lock failed.".to_string())?;
+        let request = hydrate_schedule_request(
+            &thread_store,
+            &approval_store,
+            plans.database_path(),
+            request,
+        )?;
         let decision = resume_waiting_run_record(
             &mut thread_store,
-            engine,
+            &approval_store.engine,
             &patch_store,
             &test_store,
             &review_store,
@@ -116,7 +140,7 @@ pub fn agent_resume_waiting_run(
         )?;
         threads.persist(&thread_store)?;
         Ok(decision)
-    })?
+    }
 }
 
 pub fn schedule_next_record(

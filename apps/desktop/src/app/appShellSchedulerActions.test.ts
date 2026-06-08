@@ -38,16 +38,16 @@ beforeEach(() => {
 });
 
 describe("resumeSchedulerRun", () => {
-  it("passes the active plan supported-test signal to the scheduler bridge", async () => {
+  it("lets the Rust scheduler hydrate supported-test context", async () => {
     await resumeSchedulerRun(stateWithPlan([".\\.tools\\npm.cmd test"]));
 
     expect(resumeBridge).toHaveBeenCalledWith(expect.objectContaining({
-      hasSupportedTestCommand: true,
+      hasSupportedTestCommand: false,
       runId: "run-1",
     }));
   });
 
-  it("does not treat unsafe shell-control test text as supported", async () => {
+  it("does not parse shell-control test text in the React resume path", async () => {
     await resumeSchedulerRun(stateWithPlan(["npm test && whoami"]));
 
     expect(resumeBridge).toHaveBeenCalledWith(expect.objectContaining({
@@ -88,7 +88,7 @@ describe("resumeSchedulerRun", () => {
     }));
   });
 
-  it("passes an approved test approval id to the scheduler bridge", async () => {
+  it("does not pass a UI-derived test approval id to the scheduler bridge", async () => {
     await resumeSchedulerRun({
       ...stateWithPlan(["npm test"]),
       actionProposals: [{
@@ -106,10 +106,12 @@ describe("resumeSchedulerRun", () => {
       }],
     });
 
-    expect(resumeBridge).toHaveBeenCalledWith(expect.objectContaining({
+    const request = resumeBridge.mock.calls[0]?.[0];
+    expect(request).toEqual(expect.objectContaining({
+      hasSupportedTestCommand: false,
       runId: "run-1",
-      testApprovalId: "approval-run-tests",
     }));
+    expect(request).not.toHaveProperty("testApprovalId");
   });
 
   it("passes an approved repair patch-draft approval id to the scheduler bridge", async () => {

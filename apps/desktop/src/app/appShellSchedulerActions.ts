@@ -10,10 +10,8 @@ import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
-import { activeTestApprovalId } from "./appShellTestApprovalDecision";
 import { patchApplyApprovalIdForScheduler } from "./patchApplyApproval";
 import { notifyLocalAction } from "./ShellPreferenceController";
-import { firstRunnableTestCommand } from "./testCommand";
 
 interface ResumeRunState {
   actionProposals: ActionProposalView[];
@@ -33,12 +31,11 @@ export async function resumeSchedulerRun(state: ResumeRunState) {
     return undefined;
   }
   const decision = await resumeWaitingRunOverBridge({
-    hasSupportedTestCommand: Boolean(firstRunnableTestCommand(state.activePlan?.testsToRun)),
+    hasSupportedTestCommand: false,
     nowMs: Date.now(),
     patchApplyApprovalId: patchApplyApprovalIdForScheduler(state.actionProposals, state.patches),
     patchDraftApprovalId: patchDraftApprovalId({ ...state, reviews: state.reviews ?? [] }),
     runId: state.activeRun.id,
-    testApprovalId: activeTestApprovalId(state),
   });
   if (!decision) {
     notifyLocalAction("Desktop bridge is required to resume the run", "warning");

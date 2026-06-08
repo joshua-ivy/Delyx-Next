@@ -12,9 +12,7 @@ import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
-import { activeTestApprovalId } from "./appShellTestApprovalDecision";
 import { patchApplyApprovalIdForScheduler } from "./patchApplyApproval";
-import { firstRunnableTestCommand } from "./testCommand";
 
 export function useSchedulerDecision({
   activePlan,
@@ -42,12 +40,11 @@ export function useSchedulerDecision({
     }
     let cancelled = false;
     void scheduleNextRunActionOverBridge({
-      hasSupportedTestCommand: Boolean(firstRunnableTestCommand(activePlan?.testsToRun)),
+      hasSupportedTestCommand: false,
       nowMs: Date.now(),
       patchApplyApprovalId: patchApplyApprovalIdForScheduler(proposals, patches),
       patchDraftApprovalId: patchDraftApprovalId({ actionProposals: proposals, activePlan, activeProject, activeRun, patches, reviews }),
       runId: activeRun.id,
-      testApprovalId: activeTestApprovalId({ actionProposals: proposals, activePlan, activeRun }),
     }).then((next) => {
       if (!cancelled) {
         setDecision(next);

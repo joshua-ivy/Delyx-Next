@@ -45,7 +45,9 @@ pub fn agent_dispatch_patch_draft_from_context(
         patch_draft_approval_id: Some(request.approval_id),
         test_approval_id: request.test_approval_id,
     };
-    verify_scheduler_patch_draft(&threads, &patches, &tests, &reviews, &approvals, &dispatch)?;
+    verify_scheduler_patch_draft(
+        &threads, &patches, &tests, &reviews, &approvals, &plans, &dispatch,
+    )?;
     execute_patch_draft_record(&threads, &patches, &approvals, dispatch.execute)
 }
 
