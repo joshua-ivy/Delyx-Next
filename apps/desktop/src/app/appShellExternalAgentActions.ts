@@ -12,6 +12,15 @@ import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { upsertActionProposal } from "./appShellApprovalActions";
+import {
+  approvedCodexProposal,
+  codexApprovalExpired,
+  codexNodeId,
+  codexSandbox,
+  currentCodexProposal,
+  type CodexApprovalAction,
+  type CodexPermissionMode,
+} from "./appShellExternalAgentApprovals";
 import { recordApprovalProposalForRun } from "./appShellRunActions";
 import { notifyLocalAction } from "./ShellPreferenceController";
 
@@ -62,8 +71,8 @@ export async function runCodexExternalAgentForRun(state: ExternalAgentPreviewSta
   }
   const approvals = approvedCodexApprovals(state);
   if (!approvals) {
-    await queueCodexApprovalProposals(state);
-    notifyLocalAction("Approve the Codex external-agent and terminal-command proposals, then run Codex again", "warning");
+    const result = await queueCodexApprovalProposals(state);
+    notifyLocalAction(codexQueueMessage(result), "warning");
     return;
   }
   const permissionMode = permissionModeForState(state);
@@ -107,40 +116,55 @@ function contractTask(thread: TaskThread) {
 
 async function queueCodexApprovalProposals(state: ExternalAgentPreviewState) {
   if (!state.activeThread || !state.activeRun) {
-    return;
+    return "waiting";
   }
+  let denied = false;
+  let queued = false;
   const proposals = [
-    existingCodexProposal(state, "external_agent") ?? codexExternalProposal(state),
-    existingCodexProposal(state, "run_terminal") ?? codexTerminalProposal(state),
+    codexProposalToQueue(state, "external_agent"),
+    codexProposalToQueue(state, "run_terminal"),
   ];
   for (const proposal of proposals) {
+    if (proposal === "denied") {
+      denied = true;
+      continue;
+    }
+    if (!proposal) {
+      continue;
+    }
     const recorded = await proposeApprovalOverBridge(proposal) ?? proposal;
     state.setActionProposals((current) => upsertActionProposal(current, recorded));
     state.setAgentRuns((current) => recordApprovalProposalForRun(current, state.activeThread!, recorded, new Date().toISOString()));
+    queued = true;
   }
+  return denied ? "denied" : queued ? "queued" : "waiting";
 }
 
 function approvedCodexApprovals(state: ExternalAgentPreviewState) {
-  const external = existingCodexProposal(state, "external_agent", "approved");
-  const terminal = existingCodexProposal(state, "run_terminal", "approved");
+  const permissionMode = permissionModeForState(state);
+  const external = approvedCodexProposal(state.actionProposals, state.activeRun?.id, "external_agent", permissionMode);
+  const terminal = approvedCodexProposal(state.actionProposals, state.activeRun?.id, "run_terminal", permissionMode);
   return external && terminal ? { external, terminal } : undefined;
 }
 
-function existingCodexProposal(
+function codexProposalToQueue(
   state: ExternalAgentPreviewState,
-  actionType: ActionProposalView["actionType"],
-  status?: ActionProposalView["status"],
-) {
-  const runId = state.activeRun?.id;
-  if (!runId) {
+  actionType: CodexApprovalAction,
+): ActionProposalView | "denied" | undefined {
+  const existing = currentCodexProposal(
+    state.actionProposals,
+    state.activeRun?.id,
+    actionType,
+    permissionModeForState(state),
+  );
+  if (existing?.status === "denied") {
+    return "denied";
+  }
+  if (existing && !codexApprovalExpired(existing)) {
     return undefined;
   }
-  return state.actionProposals.find((proposal) => (
-    proposal.runId === runId
-    && proposal.actionType === actionType
-    && proposal.nodeId === codexNodeId(runId, actionType, permissionModeForState(state))
-    && (status ? proposal.status === status : proposal.status === "pending" || proposal.status === "approved")
-  ));
+  const fallback = actionType === "external_agent" ? codexExternalProposal(state) : codexTerminalProposal(state);
+  return existing ? { ...fallback, id: `${fallback.id}-${Date.now()}` } : fallback;
 }
 
 function codexExternalProposal(state: ExternalAgentPreviewState): ActionProposalView {
@@ -200,24 +224,19 @@ function isolationFromRun(run: AgentRunView) {
   return checkpointId || worktreeId ? { checkpointId, worktreeId } : undefined;
 }
 
-function permissionModeForState(state: ExternalAgentPreviewState) {
+function permissionModeForState(state: ExternalAgentPreviewState): CodexPermissionMode {
   return state.activePlan?.decision === "approved" ? "workspace_write" : "read_only";
-}
-
-function codexNodeId(
-  runId: string,
-  actionType: ActionProposalView["actionType"],
-  permissionMode: "read_only" | "workspace_write",
-) {
-  return `${runId}-codex-${actionType}-${permissionMode}`;
-}
-
-function codexSandbox(permissionMode: "read_only" | "workspace_write") {
-  return permissionMode === "read_only" ? "read-only" : "workspace-write";
 }
 
 function expiresAt() {
   return new Date(Date.now() + 30 * 60 * 1000).toISOString();
+}
+
+function codexQueueMessage(result: "denied" | "queued" | "waiting") {
+  if (result === "denied") {
+    return "Codex approval was denied; Delyx will not launch Codex for this run";
+  }
+  return "Approve the Codex external-agent and terminal-command proposals, then run Codex again";
 }
 
 function metadataString(value: unknown) {

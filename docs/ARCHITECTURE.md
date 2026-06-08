@@ -163,6 +163,11 @@ Current Codex-inspired local adaptation:
   timeout, exit status, duration, capped stdout/stderr, truncation flags, and
   timeline events. It is used only after Delyx approval gates have already
   authorized the test command or external terminal worker.
+- Codex external-agent launch approval selection treats both required approvals
+  as executable only while approved and unexpired. Pending approvals are not
+  duplicated, denied approvals block launch, and expired external-agent or
+  terminal approvals are requeued with fresh bridge client IDs so persisted
+  approval dedupe cannot revive stale execution authority.
 
 ## Source File Size Budget
 

@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 154/189 checked, 35 open.
+- Visible checkbox progress: 155/190 checked, 35 open.
 - Parent track boxes are status gates; they stay open until the full track is functionally complete.
 - Depth tracks: 1/12 complete, 11/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
@@ -293,6 +293,7 @@ Progress board:
 - [ ] D8 - External Agent Integration Depth (in progress; Codex read-only launch works, write-capable isolation/diff capture missing)
   - [x] Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.
   - [x] External-agent run receipts now survive restart through SQLite, including transcript and linked test IDs.
+  - [x] Codex external-agent approval selection now rejects expired approved approvals, avoids duplicate pending approvals, blocks denied approvals, and queues fresh bridge client IDs for expired external-agent or terminal approvals before any launch.
   - [ ] Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.
   - [ ] Add real changed-file/diff capture from external-agent runs instead of review placeholders.
   - [ ] Decide whether Claude launch is in scope beyond detection and contract preview.
