@@ -1,3 +1,7 @@
+pub mod agent_executor;
+pub mod agent_executor_bridge;
+mod agent_executor_bridge_tests;
+mod agent_executor_tests;
 pub mod agent_run;
 pub mod agent_run_commands;
 mod agent_run_evidence_persistence;

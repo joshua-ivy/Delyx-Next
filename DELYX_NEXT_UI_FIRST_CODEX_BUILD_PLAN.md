@@ -41,7 +41,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - PR 1-18.1 breadth is skeleton-complete.
 - SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state and file-export receipts, approved test artifacts, patch proposal/apply/restore receipts, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automation contracts/scheduled runs, release/support-bundle state, support-bundle file export, patch apply/restore, and final-answer support synthesis have narrow persisted mutation bridges; remaining action bridges are still missing.
-- There is no full execution engine: no scheduler, executor, resume engine, repair loop, or hook runner.
+- There is no full execution engine: no scheduler, multi-node executor, repair loop, or hook runner. A narrow AgentRun executor can now run one approval-gated patch-proposal node and record run events/artifacts/evidence.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
 - OpenAI-compatible providers are health/config stubs only.
@@ -149,6 +149,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Add executor, scheduler, node runner, resume, repair, and hook modules.
   - Make AgentRun the real execution graph, not only an inspector artifact.
   - Added a shared `CommandExecArtifact` primitive for approved command receipts; it now feeds the test runner and external terminal worker.
+  - Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
   - Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.
   - Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
   - Use Codex thread/start vs turn/start and command/exec protocol shapes as reference.
@@ -169,6 +170,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - [ ] D5 - Functional Build Flow
   - Convert approved plans into patch proposals through the runtime engine.
+  - Runtime can now convert an explicit approved patch-proposal request into a persisted AgentRun patch node; it is not yet wired from the UI plan/build flow and does not generate patch content by itself.
   - Patch apply and restore now have persisted approval-gated bridges with stale-file protection and checkpoint receipts; the runtime engine still needs to call them automatically from the build flow.
   - Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - Surface real diffs and rollback state in the UI.
@@ -211,6 +213,11 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Pulled/adapted: PowerShell UTF-8 command prep, read-only Codex CLI launch contract, and typed command execution receipts.
   - Avoid importing Codex core, generated protocol macros, cloud auth, or broad parser stacks until a PR proves the need.
   - Every Codex-derived change needs tests, UI-visible state, approval gates, and dependency justification.
+
+- [ ] D12 - Refined Windows Desktop App
+  - Current truth: Delyx Next runs through Tauri, but it is not yet a refined Windows desktop product.
+  - Add Windows app identity, icon assets, installer metadata, window sizing, native menu decisions, startup/reopen behavior, release smoke checks, and packaged build verification.
+  - Keep the desktop shell tied to real local runtime state; do not use packaging polish to hide missing agent behavior.
 
 ## Validation Gates
 

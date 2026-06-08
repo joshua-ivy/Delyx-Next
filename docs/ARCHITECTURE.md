@@ -65,8 +65,11 @@ complete:
   bridge exposes receipts and outcome support links to the UI. A narrow
   final-answer support bridge now links existing AgentRun EvidenceRecord IDs and
   passed persisted test artifact IDs into AgentOutcome and saves the result to
-  SQLite. Remaining governance/action bridges are still not live.
-- There is no AgentRun executor, scheduler, resume engine, repair loop, or hook
+  SQLite. A narrow patch-proposal executor bridge can now wait on pending
+  `FileWrite` approvals, run one approved AgentRun patch-proposal node, persist
+  the patch proposal, and record node events, artifact IDs, and diff evidence
+  receipts. Remaining governance/action bridges are still not live.
+- There is no full AgentRun scheduler, multi-node executor, repair loop, or hook
   runner yet.
 - Frontend checks are smoke/source-contract verifiers, not behavioral
   component/interaction tests.
@@ -196,19 +199,22 @@ Core agents:
 - ResearchAgent
 
 The AgentRun graph is the future execution/resume engine, not just an inspector artifact.
-Current state: the graph is still primarily an inspection and bridge artifact.
-Only narrow runtime islands execute real work: Ollama chat/plan calls,
-approval-gated test commands, patch/checkpoint primitives, the generic
-terminal-worker bridge, and Codex CLI read-only launches. The full Explore ->
-Plan -> Approve -> Build -> Diff -> Test -> Review execution loop remains
-Phase 2 work. AgentRun save/load, Tauri thread/run bridge session reload,
-approval bridge reload, recent workspace project reload, test artifact bridge
-reload, patch proposal bridge reload, review report reload, and external-agent
-run artifact reload now use SQLite. Research EvidenceStore receipts also
-persist to SQLite, including source kind, locator, excerpt, stance, and
-normalized claim keys. AgentRun EvidenceRecords also persist non-lossy receipt
-metadata, and AgentOutcome support ID links are serialized through desktop
-thread/run snapshots.
+Current state: the graph is still primarily an inspection and bridge artifact,
+with one narrow execution path. The `agent_execute_patch_proposal` bridge can
+advance a run from a pending approval boundary into an approved patch-proposal
+node, persist the patch proposal, and record node events, artifact IDs, and diff
+evidence receipts. Other runtime islands execute real work outside the full
+graph: Ollama chat/plan calls, approval-gated test commands, patch apply/restore
+primitives, the generic terminal-worker bridge, and Codex CLI read-only
+launches. The full Explore -> Plan -> Approve -> Build -> Diff -> Test ->
+Review execution loop remains Phase 2 work. AgentRun save/load, Tauri
+thread/run bridge session reload, approval bridge reload, recent workspace
+project reload, test artifact bridge reload, patch proposal bridge reload,
+review report reload, and external-agent run artifact reload now use SQLite.
+Research EvidenceStore receipts also persist to SQLite, including source kind,
+locator, excerpt, stance, and normalized claim keys. AgentRun EvidenceRecords
+also persist non-lossy receipt metadata, and AgentOutcome support ID links are
+serialized through desktop thread/run snapshots.
 
 ## Permission Engine
 

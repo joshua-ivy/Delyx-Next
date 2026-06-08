@@ -5,7 +5,7 @@ use std::sync::Mutex;
 
 #[derive(Default)]
 pub struct PatchBridgeState {
-    store: Mutex<PatchBridgeStore>,
+    pub(crate) store: Mutex<PatchBridgeStore>,
     database_path: Option<PathBuf>,
 }
 
@@ -24,7 +24,7 @@ impl PatchBridgeState {
         })
     }
 
-    fn save_if_persistent(&self, store: &PatchBridgeStore) -> Result<(), String> {
+    pub(crate) fn save_if_persistent(&self, store: &PatchBridgeStore) -> Result<(), String> {
         match &self.database_path {
             Some(path) => crate::patch_persistence::save_to_path(store, path),
             None => Ok(()),
