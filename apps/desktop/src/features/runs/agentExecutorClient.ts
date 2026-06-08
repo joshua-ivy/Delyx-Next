@@ -4,6 +4,7 @@ import type {
   PatchProposalRequestView,
   PatchRestoreRequestView,
 } from "../patches/patchClient";
+import type { TestRunRequestView } from "../tests/testClient";
 
 export interface AgentPatchProposalExecuteRequest extends PatchProposalRequestView {
   createdAtMs: number;
@@ -13,6 +14,13 @@ export interface AgentExecutionBridgeView {
   status: "completed" | "failed" | "waiting_for_approval";
   runId: string;
   patchId?: string;
+  message: string;
+}
+
+export interface AgentTestExecutionBridgeView {
+  status: "completed" | "failed" | "waiting_for_approval";
+  runId: string;
+  testArtifactId?: string;
   message: string;
 }
 
@@ -50,6 +58,19 @@ export async function executePatchRestoreNodeOverBridge(
   }
   try {
     return await invoke<AgentExecutionBridgeView>("agent_execute_patch_restore", { request });
+  } catch {
+    return undefined;
+  }
+}
+
+export async function executeTestRunNodeOverBridge(
+  request: TestRunRequestView,
+): Promise<AgentTestExecutionBridgeView | undefined> {
+  if (!hasTauriRuntime()) {
+    return undefined;
+  }
+  try {
+    return await invoke<AgentTestExecutionBridgeView>("agent_execute_test_run", { request });
   } catch {
     return undefined;
   }

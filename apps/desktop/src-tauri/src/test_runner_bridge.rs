@@ -8,7 +8,7 @@ use std::sync::Mutex;
 
 #[derive(Default)]
 pub struct TestRunnerBridgeState {
-    store: Mutex<TestRunnerBridgeStore>,
+    pub(crate) store: Mutex<TestRunnerBridgeStore>,
     database_path: Option<PathBuf>,
 }
 
@@ -26,7 +26,7 @@ impl TestRunnerBridgeState {
         })
     }
 
-    fn save_if_persistent(&self, store: &TestRunnerBridgeStore) -> Result<(), String> {
+    pub(crate) fn save_if_persistent(&self, store: &TestRunnerBridgeStore) -> Result<(), String> {
         match &self.database_path {
             Some(path) => crate::test_runner_persistence::save_to_path(store, path),
             None => Ok(()),

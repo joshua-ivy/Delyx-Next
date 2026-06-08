@@ -67,9 +67,11 @@ complete:
   passed persisted test artifact IDs into AgentOutcome and saves the result to
   SQLite. Narrow patch executor bridges can now wait on pending `FileWrite`
   approvals, run approved AgentRun patch-proposal, patch-apply, and
-  patch-restore nodes, persist patch state, write files only through the
-  stale-file/checkpoint PatchEngine path, and record node events, artifact IDs,
-  and diff evidence receipts.
+  patch-restore nodes, and approved test-execution nodes. Patch nodes persist
+  patch state, write files only through the stale-file/checkpoint PatchEngine
+  path, and record node events, artifact IDs, and diff evidence receipts. Test
+  nodes reuse the TestRunner command-shape, approval, cwd, timeout, output
+  capture, and persistence path before recording AgentRun test receipts.
   Remaining governance/action bridges are still not live.
 - There is no full AgentRun scheduler, multi-node executor, repair loop, or hook
   runner yet.
@@ -211,12 +213,14 @@ stale-file/checkpoint PatchEngine path, and record patch-apply receipts. The
 `agent_execute_patch_restore` bridge can advance an approved existing applied
 PatchProposal into a patch-restore node, require a separate executable
 `FileWrite` approval, verify current file contents still match the applied
-patch, restore/remove checkpointed files, and record rollback receipts. Other
-runtime islands execute real work outside the full graph: Ollama chat/plan
-calls, approval-gated test commands, the generic terminal-worker bridge, and
-Codex CLI read-only launches. The full Explore -> Plan -> Approve -> Build ->
-Diff -> Test -> Review execution loop remains Phase 2 work. AgentRun save/load,
-Tauri
+patch, restore/remove checkpointed files, and record rollback receipts. The
+`agent_execute_test_run` bridge can advance an approved test command into a
+test-execution node, run only commands accepted by the TestRunner, persist the
+TestArtifact, and record test evidence. Other runtime islands execute real work
+outside the full graph: Ollama chat/plan calls, the generic terminal-worker
+bridge, and Codex CLI read-only launches. The full Explore -> Plan -> Approve
+-> Build -> Diff -> Test -> Review execution loop remains Phase 2 work.
+AgentRun save/load, Tauri
 thread/run bridge session reload, approval bridge reload, recent workspace
 project reload, test artifact bridge reload, patch proposal bridge reload,
 review report reload, and external-agent run artifact reload now use SQLite.

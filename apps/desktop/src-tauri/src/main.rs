@@ -79,6 +79,7 @@ fn main() {
             delyx_next_desktop::agent_executor_bridge::agent_execute_patch_apply,
             delyx_next_desktop::agent_executor_bridge::agent_execute_patch_proposal,
             delyx_next_desktop::agent_executor_bridge::agent_execute_patch_restore,
+            delyx_next_desktop::agent_test_executor_bridge::agent_execute_test_run,
             delyx_next_desktop::approval_bridge::approval_decide,
             delyx_next_desktop::approval_bridge::approval_propose,
             delyx_next_desktop::approval_bridge::approval_snapshot,

@@ -41,7 +41,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - PR 1-18.1 breadth is skeleton-complete.
 - SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state and file-export receipts, approved test artifacts, patch proposal/apply/restore receipts, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automation contracts/scheduled runs, release/support-bundle state, support-bundle file export, patch apply/restore, and final-answer support synthesis have narrow persisted mutation bridges; remaining action bridges are still missing.
-- There is no full execution engine: no scheduler, multi-node executor, repair loop, or hook runner. Narrow AgentRun executor nodes can now run approval-gated patch proposal, apply, and restore work while recording run events/artifacts/evidence.
+- There is no full execution engine: no scheduler, multi-node executor, repair loop, or hook runner. Narrow AgentRun executor nodes can now run approval-gated patch proposal/apply/restore and approved test-command work while recording run events/artifacts/evidence.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
 - Ollama is the only real live model execution path.
 - OpenAI-compatible providers are health/config stubs only.
@@ -152,6 +152,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
   - Added a narrow `agent_execute_patch_proposal` bridge that waits on pending `FileWrite` approvals, runs an approved patch-proposal node through AgentRun, persists the patch proposal, and records node events, artifact IDs, and diff evidence receipts.
   - Added a narrow `agent_execute_patch_apply` bridge that waits on pending `FileWrite` approvals, applies an existing PatchProposal through the stale-file/checkpoint PatchEngine path, writes only after approval, and records AgentRun node events, patch-apply artifacts, and diff evidence receipts.
   - Added a narrow `agent_execute_patch_restore` bridge that requires a separate executable `FileWrite` approval, restores/removes checkpointed files only when current contents still match the applied patch, and records AgentRun rollback events, artifacts, and evidence receipts.
+  - Added a narrow `agent_execute_test_run` bridge that waits on pending `TerminalCommand` approvals, runs only commands accepted by the TestRunner, captures the persisted TestArtifact, and records AgentRun test-execution events, artifacts, and evidence receipts.
   - Model calls now emit visible `model_call.started` events so the UI can show real in-flight local model work without fake chain-of-thought.
   - Drive Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review through runtime state.
   - Use Codex thread/start vs turn/start and command/exec protocol shapes as reference.
@@ -184,6 +185,7 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 
 - [ ] D6 - Functional Test/Review Loop
   - Run approved tests from the agent loop.
+  - Runtime can now execute an explicit approved test command through AgentRun. It reuses the existing TestRunner approval, cwd, command-shape, timeout, output-capture, and artifact persistence gates, but it is not yet automatically chained from patch apply.
   - Attach test artifacts to the active run automatically.
   - Generate review reports from actual patch/test artifacts.
   - Prevent final "tested" claims unless linked artifacts exist.
