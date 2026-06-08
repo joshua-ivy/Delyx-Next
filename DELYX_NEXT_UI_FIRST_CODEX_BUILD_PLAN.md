@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 151/186 checked, 35 open.
+- Visible checkbox progress: 152/187 checked, 35 open.
 - Parent track boxes are status gates; they stay open until the full track is functionally complete.
 - Depth tracks: 1/12 complete, 11/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
@@ -259,6 +259,7 @@ Progress board:
   - [x] Focus diff UI now surfaces applied checkpoint state and can queue or execute a separate approval-gated patch restore action through the existing AgentRun restore bridge.
   - [x] Review findings can now request a bounded repair marker that re-enters build state; the full repair loop still must generate the next patch through the executor rather than treating the marker as a completed repair.
   - [x] Exact review repair requests now queue a scoped `FileWrite` approval for the finding path and can re-enter the existing PatchDraft path to propose a follow-up diff; generated repair patches still require the separate apply approval before disk writes.
+  - [x] Scheduler-dispatched PatchDraft now uses the scheduler-provided approval ID, so approved repair drafts and approved plan drafts share the same dispatch path instead of silently handling only plan approvals.
   - [ ] Move PatchDraft into the full autonomous executor/repair loop instead of a renderer-invoked narrow command.
   - [x] Evaluate Codex `apply-patch` parser/delta model before deepening the local patch engine.
   - [x] Surface richer rollback detail in the UI: checkpoint file list, restore approval ID, stale-restore failures, and post-restore review guidance.

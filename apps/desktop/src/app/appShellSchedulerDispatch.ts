@@ -13,7 +13,7 @@ import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { proposeApprovedPlanPatchWithOllama } from "./appShellOllamaPatchActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
-import { patchDraftApprovalForApprovedPlan, patchDraftApprovalId } from "./appShellPatchDraftDecision";
+import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
 import { runReviewForActiveRun } from "./appShellReviewActions";
 import { activeTestApprovalId } from "./appShellTestApprovalDecision";
 import { runTestsForActiveRun } from "./appShellTestActions";
@@ -78,7 +78,8 @@ async function dispatchOneSchedulerDecision(
     return { handled: true };
   }
   if (decision.kind === "run_patch_draft") {
-    const approval = patchDraftApprovalForApprovedPlan(state);
+    const approvalId = decision.approvalIds[0] ?? patchDraftApprovalId(state);
+    const approval = state.actionProposals.find((proposal) => proposal.id === approvalId);
     const result = approval ? await proposeApprovedPlanPatchWithOllama(state, approval) : undefined;
     return {
       handled: true,

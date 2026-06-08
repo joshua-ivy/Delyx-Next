@@ -101,6 +101,21 @@ describe("dispatchSchedulerDecision", () => {
     expect(applyPatch).toHaveBeenCalledWith(expect.objectContaining({ patch }));
   });
 
+  it("dispatches repair patch draft decisions by scheduler approval id", async () => {
+    const repair = repairApproval();
+    draftPatch.mockResolvedValue({ created: true, patches: [], snapshot: undefined });
+    scheduleNext.mockResolvedValue(undefined);
+
+    await dispatchSchedulerDecision(state({ repairReady: true }), {
+      ...decision("run_patch_draft"),
+      approvalIds: [repair.id],
+    });
+
+    expect(draftPatch).toHaveBeenCalledWith(expect.objectContaining({
+      actionProposals: [repair],
+    }), repair);
+  });
+
   it("leaves passive scheduler decisions unhandled", async () => {
     scheduleNext.mockResolvedValue(undefined);
     const handled = await dispatchSchedulerDecision(state(), decision("wait_for_approval"));
@@ -113,10 +128,20 @@ describe("dispatchSchedulerDecision", () => {
   });
 });
 
-function state({ draftReady = false, patches = [], testReady = false }: { draftReady?: boolean; patches?: PatchProposalView[]; testReady?: boolean } = {}) {
+function state({
+  draftReady = false,
+  patches = [],
+  repairReady = false,
+  testReady = false,
+}: {
+  draftReady?: boolean;
+  patches?: PatchProposalView[];
+  repairReady?: boolean;
+  testReady?: boolean;
+} = {}) {
   const activePlan = draftReady || testReady ? plan() : undefined;
   return {
-    actionProposals: draftReady ? [approval()] : testReady ? [testApproval()] : [],
+    actionProposals: repairReady ? [repairApproval()] : draftReady ? [approval()] : testReady ? [testApproval()] : [],
     activePlan,
     activeProject: {
       approvalPolicy: "manual",
@@ -135,7 +160,7 @@ function state({ draftReady = false, patches = [], testReady = false }: { draftR
     activeThread: undefined,
     modelSettings: { providers: [], routes: [], selectedProviderId: "ollama-local" },
     patches,
-    reviews: [],
+    reviews: repairReady ? [repairReview()] : [],
     setActionProposals: vi.fn(),
     setAgentRuns: vi.fn(),
     setPatches: vi.fn(),
@@ -199,6 +224,31 @@ function testApproval() {
     scope: { commands: ["npm test"], kind: "terminal" as const, root: "C:\\repo", summary: "Run tests" },
     status: "approved" as const,
   };
+}
+
+function repairApproval() {
+  return {
+    actionType: "edit_file" as const,
+    expectedResult: "Draft a repair patch.",
+    expiresAt: "2999-01-01T00:00:00.000Z",
+    id: "approval-repair-1",
+    nodeId: "run-1-repair-review-1-finding-1",
+    rationale: "Repair finding.",
+    requiredPermission: "edit_file",
+    riskLabel: "high" as const,
+    runId: "run-1",
+    scope: { kind: "file" as const, paths: ["src/main.ts"], root: "C:\\repo", summary: "Repair src/main.ts" },
+    status: "approved" as const,
+  };
+}
+
+function repairReview() {
+  return {
+    decision: "revise_requested" as const,
+    findings: [{ filePath: "src/main.ts", id: "finding-1" }],
+    id: "review-1",
+    runId: "run-1",
+  } as never;
 }
 
 function plan() {
