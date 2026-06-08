@@ -1,4 +1,5 @@
 export type ExternalAgentAdapterStatus = "available" | "missing" | "not_checked";
+export type ExternalAgentAdapterKind = "claude_code" | "codex_cli" | "generic_terminal";
 export type ExternalAgentContractStatus = "draft" | "approval_required" | "expired";
 export type ExternalAgentEventKind =
   | "command"
@@ -22,6 +23,7 @@ export interface ExternalAgentStateView {
 
 export interface ExternalAgentAdapterView {
   id: string;
+  kind: ExternalAgentAdapterKind;
   label: string;
   status: ExternalAgentAdapterStatus;
   detail: string;

@@ -138,7 +138,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Visible checkbox progress: 155/190 checked, 35 open.
+- Visible checkbox progress: 157/190 checked, 33 open.
 - Parent track boxes are status gates; they stay open until the full track is functionally complete.
 - Depth tracks: 1/12 complete, 11/12 in progress.
 - Parent track boxes stay open until that track is functionally complete end-to-end.
@@ -296,8 +296,8 @@ Progress board:
   - [x] Codex external-agent approval selection now rejects expired approved approvals, avoids duplicate pending approvals, blocks denied approvals, and queues fresh bridge client IDs for expired external-agent or terminal approvals before any launch.
   - [ ] Add real checkpoint/worktree creation before enabling write-capable Codex launch from the UI.
   - [ ] Add real changed-file/diff capture from external-agent runs instead of review placeholders.
-  - [ ] Decide whether Claude launch is in scope beyond detection and contract preview.
-  - [ ] If no, keep them detection/contract-preview only and label them that way in UI.
+  - [x] Claude launch is out of Phase 2 scope beyond detection and command-contract preview.
+  - [x] Claude adapter status now labels detection/contract-preview-only scope instead of implying launch support.
 
 - [ ] D9 - Evidence and Final Answer Receipts (in progress; final support bridge exists, broader claim support synthesis missing)
   - [x] Added a narrow final-answer support synthesis bridge for existing AgentRun evidence and passed persisted test artifacts.

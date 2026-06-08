@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   ExternalAgentAdapterView,
+  ExternalAgentAdapterKind,
   ExternalAgentCommandContractView,
   ExternalAgentPermissionMode,
   ExternalAgentRunArtifactView,
@@ -61,17 +62,28 @@ export function externalAgentBridgeUnavailableState(
   return {
     ...current,
     adapters: [
-      notCheckedAdapter("codex-cli", "Codex CLI"),
-      notCheckedAdapter("claude-code", "Claude Code"),
-      notCheckedAdapter("generic-terminal", "Generic terminal agent"),
+      notCheckedAdapter("codex-cli", "codex_cli", "Codex CLI"),
+      notCheckedAdapter(
+        "claude-code",
+        "claude_code",
+        "Claude Code",
+        "Desktop bridge unavailable in web preview; detection and command-contract preview only.",
+      ),
+      notCheckedAdapter("generic-terminal", "generic_terminal", "Generic terminal agent"),
     ],
   };
 }
 
-function notCheckedAdapter(id: string, label: string): ExternalAgentAdapterView {
+function notCheckedAdapter(
+  id: string,
+  kind: ExternalAgentAdapterKind,
+  label: string,
+  detail = "Desktop bridge unavailable in web preview; adapter detection was not checked.",
+): ExternalAgentAdapterView {
   return {
-    detail: "Desktop bridge unavailable in web preview; adapter detection was not checked.",
+    detail,
     id,
+    kind,
     label,
     status: "not_checked",
   };

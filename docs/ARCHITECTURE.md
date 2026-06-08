@@ -168,6 +168,10 @@ Current Codex-inspired local adaptation:
   duplicated, denied approvals block launch, and expired external-agent or
   terminal approvals are requeued with fresh bridge client IDs so persisted
   approval dedupe cannot revive stale execution authority.
+- Claude Code is intentionally detection and command-contract preview only in
+  Phase 2. Adapter status strings label that scope explicitly; no Claude launch
+  path is exposed until isolation, approval, transcript, and diff behavior are
+  implemented and tested.
 
 ## Source File Size Budget
 

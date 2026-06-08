@@ -33,11 +33,20 @@ pub fn external_agent_status_from_adapters(
 
 fn adapter_status(adapter: ExternalAgentAvailability) -> ExternalAgentAdapterStatusView {
     ExternalAgentAdapterStatusView {
-        detail: adapter.detail,
+        detail: adapter_detail(adapter.kind, adapter.detail),
         id: adapter.adapter_id,
         kind: kind_key(adapter.kind).to_string(),
         label: adapter.display_name,
         status: status_key(adapter.status).to_string(),
+    }
+}
+
+fn adapter_detail(kind: ExternalAgentKind, detail: String) -> String {
+    match kind {
+        ExternalAgentKind::ClaudeCode => {
+            format!("{detail} Detection and command-contract preview only; launch is not enabled.")
+        }
+        _ => detail,
     }
 }
 
