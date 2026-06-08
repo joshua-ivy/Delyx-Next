@@ -9,6 +9,7 @@ import { loadThreadRunSnapshot } from "../features/threads/threadClient";
 import type { TaskThread, ThreadUiState } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { patchDraftApprovalId } from "./appShellPatchDraftDecision";
+import { activeTestApprovalId } from "./appShellTestApprovalDecision";
 import { notifyLocalAction } from "./ShellPreferenceController";
 import { firstRunnableTestCommand } from "./testCommand";
 
@@ -33,6 +34,7 @@ export async function resumeSchedulerRun(state: ResumeRunState) {
     nowMs: Date.now(),
     patchDraftApprovalId: patchDraftApprovalId(state),
     runId: state.activeRun.id,
+    testApprovalId: activeTestApprovalId(state),
   });
   if (!decision) {
     notifyLocalAction("Desktop bridge is required to resume the run", "warning");

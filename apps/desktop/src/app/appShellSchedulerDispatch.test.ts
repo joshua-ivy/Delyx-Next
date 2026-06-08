@@ -67,6 +67,20 @@ describe("dispatchSchedulerDecision", () => {
     expect(recordFinal).toHaveBeenCalledWith(base);
   });
 
+  it("dispatches scheduler-verified test approvals by id", async () => {
+    scheduleNext.mockResolvedValue(undefined);
+
+    await dispatchSchedulerDecision(state({ testReady: true }), {
+      ...decision("run_tests"),
+      approvalIds: ["approval-test"],
+    });
+
+    expect(runTests).toHaveBeenCalledWith(expect.objectContaining({
+      schedulerConfirmedRunTests: true,
+      schedulerTestApprovalId: "approval-test",
+    }));
+  });
+
   it("dispatches patch draft decisions and continues with reloaded patches", async () => {
     const patch = patchView();
     draftPatch.mockResolvedValue({
@@ -99,10 +113,11 @@ describe("dispatchSchedulerDecision", () => {
   });
 });
 
-function state({ draftReady = false, patches = [] }: { draftReady?: boolean; patches?: PatchProposalView[] } = {}) {
+function state({ draftReady = false, patches = [], testReady = false }: { draftReady?: boolean; patches?: PatchProposalView[]; testReady?: boolean } = {}) {
+  const activePlan = draftReady || testReady ? plan() : undefined;
   return {
-    actionProposals: draftReady ? [approval()] : [],
-    activePlan: draftReady ? plan() : undefined,
+    actionProposals: draftReady ? [approval()] : testReady ? [testApproval()] : [],
+    activePlan,
     activeProject: {
       approvalPolicy: "manual",
       approvedRoots: ["C:\\repo"],
@@ -166,6 +181,22 @@ function approval() {
     riskLabel: "high" as const,
     runId: "run-1",
     scope: { kind: "file" as const, paths: ["src/main.ts"], root: "C:\\repo", summary: "Edit src/main.ts" },
+    status: "approved" as const,
+  };
+}
+
+function testApproval() {
+  return {
+    actionType: "run_terminal" as const,
+    expectedResult: "Run tests.",
+    expiresAt: "2999-01-01T00:00:00.000Z",
+    id: "approval-test",
+    nodeId: "node-test",
+    rationale: "Validate patch.",
+    requiredPermission: "terminal_command",
+    riskLabel: "medium" as const,
+    runId: "run-1",
+    scope: { commands: ["npm test"], kind: "terminal" as const, root: "C:\\repo", summary: "Run tests" },
     status: "approved" as const,
   };
 }

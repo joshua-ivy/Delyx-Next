@@ -15,6 +15,8 @@ pub struct AgentScheduleRequest {
     pub has_supported_test_command: bool,
     #[serde(default)]
     pub patch_draft_approval_id: Option<String>,
+    #[serde(default)]
+    pub test_approval_id: Option<String>,
     pub now_ms: u64,
 }
 
@@ -130,6 +132,7 @@ pub fn schedule_next_record(
             patches,
             reviews,
             run,
+            test_approval_id: request.test_approval_id.as_deref(),
             tests,
         }),
     )
@@ -218,7 +221,16 @@ fn decision_view(run_id: &str, decision: AgentScheduleDecision) -> AgentSchedule
             output.test_count = test_count;
             output
         }
-        AgentScheduleDecision::RunTests { reason } => view("run_tests", run_id, reason),
+        AgentScheduleDecision::RunTests {
+            approval_id,
+            reason,
+        } => {
+            let mut output = view("run_tests", run_id, reason);
+            if let Some(approval_id) = approval_id {
+                output.approval_ids = vec![approval_id];
+            }
+            output
+        }
         AgentScheduleDecision::Terminal { status } => {
             let mut output = view("terminal", run_id, format!("Run is {status:?}."));
             output.status = Some(format!("{status:?}"));

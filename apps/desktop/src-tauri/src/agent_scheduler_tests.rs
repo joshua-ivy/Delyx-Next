@@ -222,6 +222,7 @@ mod tests {
             patches,
             reviews,
             run,
+            test_approval_id: None,
             tests,
         }
     }

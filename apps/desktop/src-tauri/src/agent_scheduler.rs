@@ -29,6 +29,7 @@ pub enum AgentScheduleDecision {
         test_count: usize,
     },
     RunTests {
+        approval_id: Option<String>,
         reason: String,
     },
     Terminal {
@@ -47,6 +48,7 @@ pub struct AgentSchedulerContext<'a> {
     pub patches: &'a PatchBridgeStore,
     pub reviews: &'a ReviewBridgeStore,
     pub run: &'a AgentRun,
+    pub test_approval_id: Option<&'a str>,
     pub tests: &'a TestRunnerBridgeStore,
 }
 
@@ -74,9 +76,10 @@ pub fn schedule_next(context: AgentSchedulerContext<'_>) -> AgentScheduleDecisio
     }
     if patches.iter().any(|patch| patch.status == "applied") && tests.is_empty() {
         return if context.has_supported_test_command {
+            let approval_id = test_approval_id(&context);
             AgentScheduleDecision::RunTests {
-                reason: "An applied patch exists and a supported test command is available."
-                    .to_string(),
+                approval_id: approval_id.clone(),
+                reason: test_reason(approval_id.as_deref()),
             }
         } else {
             blocked("An applied patch exists, but no supported test command is available.")
@@ -172,10 +175,45 @@ fn patch_draft_approval_ready(
     now_ms: u64,
     run_id: &str,
 ) -> bool {
+    approval_ready(
+        approvals,
+        approval_id,
+        now_ms,
+        RiskyAction::FileWrite,
+        run_id,
+    )
+}
+
+fn test_approval_id(context: &AgentSchedulerContext<'_>) -> Option<String> {
+    let approval_id = context.test_approval_id?;
+    approval_ready(
+        context.approvals,
+        approval_id,
+        context.now_ms,
+        RiskyAction::TerminalCommand,
+        &context.run.id,
+    )
+    .then(|| approval_id.to_string())
+}
+
+fn approval_ready(
+    approvals: &ApprovalEngine,
+    approval_id: &str,
+    now_ms: u64,
+    action: RiskyAction,
+    run_id: &str,
+) -> bool {
     !approval_id.trim().is_empty()
         && approvals
-            .assert_can_execute_action_for_run(approval_id, now_ms, RiskyAction::FileWrite, run_id)
+            .assert_can_execute_action_for_run(approval_id, now_ms, action, run_id)
             .is_ok()
+}
+
+fn test_reason(approval_id: Option<&str>) -> String {
+    match approval_id {
+        Some(id) => format!("Approved test command {id} is ready to run."),
+        None => "An applied patch exists and a supported test command is available.".to_string(),
+    }
 }
 
 fn blocked(reason: impl Into<String>) -> AgentScheduleDecision {

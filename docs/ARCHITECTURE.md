@@ -799,6 +799,13 @@ The renderer no longer runs a separate after-approval side path. The bridge
 removes renderer-side PatchDraft parsing/orchestration, but it is not yet the
 full autonomous executor/repair loop.
 
+Scheduler-selected tests follow the same rule for terminal approvals. The
+renderer may pass the active plan's approved test approval ID as a scheduler
+hint, but the Rust scheduler only echoes it on `run_tests` after verifying that
+it is an executable same-run `TerminalCommand` approval. The test action then
+uses that exact approval ID instead of rediscovering a replacement approval in
+renderer state.
+
 ### ADR-0010: Adapt Apply-Patch Intent, Not Codex Core
 
 Decision: Delyx Next adapts the useful `codex-rs/apply-patch` idea of parsing

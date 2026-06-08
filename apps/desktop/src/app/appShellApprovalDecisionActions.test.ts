@@ -40,7 +40,9 @@ describe("decideApprovalAndMaybeResume", () => {
     await decideApprovalAndMaybeResume(state, decided.id, "approved");
 
     expect(decideApproval).toHaveBeenCalledWith(state, decided.id, "approved");
-    expect(resumeRun).toHaveBeenCalledWith(state);
+    expect(resumeRun).toHaveBeenCalledWith(expect.objectContaining({
+      actionProposals: [decided],
+    }));
     expect(dispatchDecision).toHaveBeenCalledWith(expect.objectContaining({
       actionProposals: [decided],
     }), decision());

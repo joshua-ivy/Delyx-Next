@@ -77,6 +77,7 @@ export interface AgentScheduleRequestView {
   runId: string;
   hasSupportedTestCommand: boolean;
   patchDraftApprovalId?: string;
+  testApprovalId?: string;
   nowMs: number;
 }
 

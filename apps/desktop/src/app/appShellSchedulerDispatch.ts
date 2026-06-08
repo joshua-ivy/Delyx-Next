@@ -15,6 +15,7 @@ import { proposeApprovedPlanPatchWithOllama } from "./appShellOllamaPatchActions
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { patchDraftApprovalForApprovedPlan, patchDraftApprovalId } from "./appShellPatchDraftDecision";
 import { runReviewForActiveRun } from "./appShellReviewActions";
+import { activeTestApprovalId } from "./appShellTestApprovalDecision";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { firstRunnableTestCommand } from "./testCommand";
 
@@ -89,7 +90,11 @@ async function dispatchOneSchedulerDecision(
     };
   }
   if (decision.kind === "run_tests") {
-    await runTestsForActiveRun({ ...state, schedulerConfirmedRunTests: true });
+    await runTestsForActiveRun({
+      ...state,
+      schedulerConfirmedRunTests: true,
+      schedulerTestApprovalId: decision.approvalIds[0],
+    });
     return { handled: true };
   }
   if (decision.kind === "run_review") {
@@ -116,6 +121,7 @@ async function nextSchedulerDecision(state: SchedulerDispatchState) {
     nowMs: Date.now(),
     patchDraftApprovalId: patchDraftApprovalId(state),
     runId: state.activeRun.id,
+    testApprovalId: activeTestApprovalId(state),
   });
 }
 

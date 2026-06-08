@@ -15,7 +15,7 @@ mod tests {
         let mut thread_store = ThreadRunStore::default();
         let run = thread_store.ledger.create_run("thread-1").unwrap();
         let mut approvals = ApprovalEngine::new();
-        let proposal = seed_approval(&mut approvals, &run.id, true);
+        let proposal = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
         let mut patches = PatchBridgeStore::default();
         patches.records.push(patch(&run.id, &proposal.id));
 
@@ -38,7 +38,7 @@ mod tests {
         let mut thread_store = ThreadRunStore::default();
         let run = thread_store.ledger.create_run("thread-1").unwrap();
         let mut approvals = ApprovalEngine::new();
-        let proposal = seed_approval(&mut approvals, &run.id, true);
+        let proposal = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
         thread_store
             .ledger
             .wait_for_approval(&run.id, &proposal.id)
@@ -65,7 +65,7 @@ mod tests {
         let mut thread_store = ThreadRunStore::default();
         let run = thread_store.ledger.create_run("thread-1").unwrap();
         let mut approvals = ApprovalEngine::new();
-        let proposal = seed_approval(&mut approvals, &run.id, true);
+        let proposal = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
         thread_store
             .ledger
             .wait_for_approval(&run.id, &proposal.id)
@@ -94,7 +94,7 @@ mod tests {
         let mut thread_store = ThreadRunStore::default();
         let run = thread_store.ledger.create_run("thread-1").unwrap();
         let mut approvals = ApprovalEngine::new();
-        let proposal = seed_approval(&mut approvals, &run.id, true);
+        let proposal = seed_approval(&mut approvals, &run.id, true, RiskyAction::FileWrite);
 
         let view = schedule_next_record(
             thread_store.ledger.get_run(&run.id).unwrap(),
@@ -113,13 +113,40 @@ mod tests {
         assert!(view.message.contains("PatchDraftAgent"));
     }
 
+    #[test]
+    fn scheduler_bridge_attaches_verified_test_approval_for_ui() {
+        let mut thread_store = ThreadRunStore::default();
+        let run = thread_store.ledger.create_run("thread-1").unwrap();
+        let mut approvals = ApprovalEngine::new();
+        let proposal = seed_approval(&mut approvals, &run.id, true, RiskyAction::TerminalCommand);
+        let mut patches = PatchBridgeStore::default();
+        patches.records.push(applied_patch(&run.id));
+
+        let view = schedule_next_record(
+            thread_store.ledger.get_run(&run.id).unwrap(),
+            &approvals,
+            &patches,
+            &TestRunnerBridgeStore::default(),
+            &ReviewBridgeStore::default(),
+            &AgentScheduleRequest {
+                test_approval_id: Some(proposal.id.clone()),
+                ..request(&run.id)
+            },
+        );
+
+        assert_eq!(view.kind, "run_tests");
+        assert_eq!(view.approval_ids, vec![proposal.id]);
+        assert!(view.message.contains("Approved test command"));
+    }
+
     fn seed_approval(
         approvals: &mut ApprovalEngine,
         run_id: &str,
         approve: bool,
+        action: RiskyAction,
     ) -> crate::approval::ActionProposal {
         let proposal = approvals.propose(ProposalInput {
-            action: RiskyAction::FileWrite,
+            action,
             expected_result: "Apply a proposed patch.".to_string(),
             expires_at: 10,
             node_id: "scheduler-bridge-node".to_string(),
@@ -141,6 +168,7 @@ mod tests {
             now_ms: 3,
             patch_draft_approval_id: None,
             run_id: run_id.to_string(),
+            test_approval_id: None,
         }
     }
 

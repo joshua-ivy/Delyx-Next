@@ -13,6 +13,7 @@ import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/thread
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { upsertActionProposal } from "./appShellApprovalActions";
 import { recordApprovalProposalForRun } from "./appShellRunActions";
+import { activeTestApproval } from "./appShellTestApprovalDecision";
 import { updateThreadAndRunStatus } from "./cockpitStateTransitions";
 import { notifyLocalAction } from "./ShellPreferenceController";
 import { firstRunnableTestCommand, type RunnableTestCommand } from "./testCommand";
@@ -24,6 +25,7 @@ interface TestRunState {
   activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
   patches: PatchProposalView[];
+  schedulerTestApprovalId?: string;
   schedulerConfirmedRunTests?: boolean;
   setActionProposals: Dispatch<SetStateAction<ActionProposalView[]>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
@@ -50,7 +52,14 @@ export async function runTestsForActiveRun(state: TestRunState) {
     notifyLocalAction("No supported test command exists in the active plan", "warning");
     return;
   }
-  const approval = activeTestApproval(state, command);
+  const schedulerApproval = state.schedulerTestApprovalId
+    ? activeTestApproval(state, command, state.schedulerTestApprovalId)
+    : undefined;
+  if (state.schedulerTestApprovalId && !schedulerApproval) {
+    notifyLocalAction("Scheduler-selected test approval is no longer executable", "warning");
+    return;
+  }
+  const approval = schedulerApproval ?? reusableTestApproval(state, command);
   if (!approval || approval.status !== "approved") {
     await queueTestApproval(state, command, approval);
     return;
@@ -116,7 +125,7 @@ async function reloadTestState(state: TestRunState) {
   }
 }
 
-function activeTestApproval(state: TestRunState, command: RunnableTestCommand) {
+function reusableTestApproval(state: TestRunState, command: RunnableTestCommand) {
   const now = Date.now();
   return state.actionProposals.find((proposal) => (
     proposal.runId === state.activeRun?.id

@@ -87,6 +87,30 @@ describe("resumeSchedulerRun", () => {
       runId: "run-1",
     }));
   });
+
+  it("passes an approved test approval id to the scheduler bridge", async () => {
+    await resumeSchedulerRun({
+      ...stateWithPlan(["npm test"]),
+      actionProposals: [{
+        actionType: "run_terminal",
+        expectedResult: "Run tests.",
+        expiresAt: "2999-01-01T00:00:00.000Z",
+        id: "approval-run-tests",
+        nodeId: "node-test",
+        rationale: "Validate the applied patch.",
+        requiredPermission: "terminal_command",
+        riskLabel: "medium",
+        runId: "run-1",
+        scope: { commands: ["npm test"], kind: "terminal", root: "C:\\repo", summary: "Run tests" },
+        status: "approved",
+      }],
+    });
+
+    expect(resumeBridge).toHaveBeenCalledWith(expect.objectContaining({
+      runId: "run-1",
+      testApprovalId: "approval-run-tests",
+    }));
+  });
 });
 
 function stateWithPlan(testsToRun: string[]) {
