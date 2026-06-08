@@ -135,7 +135,7 @@ now has real persisted or approval-gated functional islands.
 - [ ] Broad frontend behavior coverage is still missing beyond focused component tests.
 - [ ] Production Windows signing, updater publishing, and install/upgrade smoke are still open.
 
-Progress read: 105/144 visible Phase 2 checkboxes are checked. Only 1/12 depth
+Progress read: 107/146 visible Phase 2 checkboxes are checked. Only 1/12 depth
 tracks is fully complete, and 11/12 are in progress. The subchecks below show
 the real completed work; the largest remaining risk is still concentrated in
 D2, D5, D6, and D3.
@@ -199,6 +199,7 @@ D2, D5, D6, and D3.
   - [x] Added FocusSchedulerPeek behavior coverage for scheduler-selected patch apply, tests, review, final support, resume, and passive wait states.
   - [x] Added scheduler resume-action coverage proving runnable plan test commands are forwarded to the bridge while unsafe shell-control text is rejected.
   - [x] Added approval-decision resume policy coverage for approved, denied, and still-pending approval sets.
+  - [x] Added approval orchestration coverage proving safe resume is called only when the approval policy allows it.
   - [ ] Cover project creation, thread creation, planning, approval, diff, test artifact, review, evidence, error, blocked, expired, and empty states.
   - [x] Keep grep/source verifiers only as smoke guards.
   - [x] Stop using source-substring checks as proof of UI behavior.
@@ -208,6 +209,7 @@ D2, D5, D6, and D3.
   - [x] Legacy string-rendered cockpit files are formally deprecated as mounted UI and retained only as older smoke-contract/reference code until they can be safely deleted.
   - [x] `docs/ARCHITECTURE.md` records FocusShell as the live workbench and legacy cockpit as non-mounted reference code.
   - [x] Add focused behavior tests around the Focus component tree and direct action callbacks.
+  - [x] Extracted approval decision plus safe scheduler resume orchestration out of `AppShell.tsx` to keep the shell under the source-file budget.
   - [ ] Reconcile the plan with Radix/TanStack/Zustand targets.
   - [x] No-thread cockpit hides unbacked progress, diff, terminal, inspector, and metric-card furniture; Focus home centers the real composer and keeps setup nudges tied to real repo/model state.
 

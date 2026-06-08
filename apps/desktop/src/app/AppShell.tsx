@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
+import { decideApprovalAndMaybeResume } from "./appShellApprovalDecisionActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
 import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
 import { runReviewForActiveRun } from "./appShellReviewActions";
@@ -7,7 +8,6 @@ import { resumeSchedulerRun } from "./appShellSchedulerActions";
 import { runTestsForActiveRun } from "./appShellTestActions";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { sendComposerInstruction } from "./cockpitComposerBindings";
-import { decideFocusApproval, shouldResumeAfterApprovalDecision } from "./focusApprovalDecision";
 import { FocusShell } from "./FocusShell";
 import { externalAgentBridgeUnavailableState, loadExternalAgentStatus } from "../features/externalAgents/externalAgentClient";
 import { currentExternalAgentState } from "../features/externalAgents/externalAgentData";
@@ -210,7 +210,9 @@ export function AppShell() {
     });
   };
   const decideProposal = (proposalId: string, status: "approved" | "denied") => {
-    void decideFocusApproval({
+    void decideApprovalAndMaybeResume({
+      activePlan,
+      activeProject,
       activeRun,
       activeThread,
       actionProposals,
@@ -218,11 +220,7 @@ export function AppShell() {
       setAgentRuns,
       setThreads,
       setThreadState,
-    }, proposalId, status).then((decided) => {
-      if (decided && shouldResumeAfterApprovalDecision(decided, actionProposals, proposalId)) {
-        void resumeSchedulerRun({ activePlan, activeProject, activeRun, setAgentRuns, setThreads, setThreadState });
-      }
-    });
+    }, proposalId, status);
   };
   const archiveActiveThread = () => {
     if (!activeThread) {
