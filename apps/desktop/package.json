@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\vite\\bin\\vite.js --host 127.0.0.1 --port 1420 --configLoader runner",
     "dev:desktop": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\@tauri-apps\\cli\\tauri.js dev",
+    "dev:desktop:cuda": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\@tauri-apps\\cli\\tauri.js dev --features embedded_mistral_cuda",
     "build": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\typescript\\bin\\tsc -b && ..\\..\\.tools\\node.cmd ..\\..\\node_modules\\vite\\bin\\vite.js build --configLoader runner",
     "typecheck": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\typescript\\bin\\tsc -b",
     "test": "..\\..\\.tools\\node.cmd ./scripts/verify-workbench.mjs && ..\\..\\.tools\\node.cmd ./scripts/verify-markdown-render.mjs && ..\\..\\.tools\\node.cmd ./scripts/verify-ollama-agent.mjs && ..\\..\\.tools\\node.cmd ./scripts/release-smoke.mjs && ..\\..\\.tools\\npm.cmd --workspace @delyx/desktop run test:unit",
     "test:unit": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\vitest\\vitest.mjs run --config vite.config.ts",
     "package:windows": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\@tauri-apps\\cli\\tauri.js build --bundles nsis",
+    "package:windows:cuda": "..\\..\\.tools\\node.cmd ..\\..\\node_modules\\@tauri-apps\\cli\\tauri.js build --bundles nsis --features embedded_mistral_cuda",
     "release:smoke": "..\\..\\.tools\\node.cmd ./scripts/release-smoke.mjs",
     "smoke:ui": "..\\..\\.tools\\node.cmd ./scripts/smoke-ui.mjs",
     "smoke:tauri": "..\\..\\.tools\\node.cmd ./scripts/smoke-tauri.mjs",
