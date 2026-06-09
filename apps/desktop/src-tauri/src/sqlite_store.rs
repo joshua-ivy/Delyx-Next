@@ -40,6 +40,24 @@ fn migrate(connection: &Connection) -> rusqlite::Result<()> {
     ensure_evidence_columns(connection)?;
     ensure_patch_record_columns(connection)?;
     ensure_patch_file_columns(connection)?;
+    ensure_local_model_profile_columns(connection)?;
+    Ok(())
+}
+
+fn ensure_local_model_profile_columns(connection: &Connection) -> rusqlite::Result<()> {
+    let columns = table_columns(connection, "local_model_profiles")?;
+    for (name, definition) in [
+        ("tokenizer_path", "TEXT"),
+        ("load_status", "TEXT NOT NULL DEFAULT 'unloaded'"),
+        ("last_error", "TEXT"),
+    ] {
+        if !columns.iter().any(|column| column == name) {
+            connection.execute(
+                &format!("ALTER TABLE local_model_profiles ADD COLUMN {name} {definition}"),
+                [],
+            )?;
+        }
+    }
     Ok(())
 }
 

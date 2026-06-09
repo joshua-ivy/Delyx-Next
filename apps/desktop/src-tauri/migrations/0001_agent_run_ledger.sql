@@ -354,3 +354,21 @@ CREATE TABLE IF NOT EXISTS research_evidence_records (
   stance TEXT NOT NULL,
   claim_key TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS local_model_profiles (
+  id TEXT PRIMARY KEY NOT NULL,
+  display_name TEXT NOT NULL,
+  runtime TEXT NOT NULL,
+  format TEXT NOT NULL,
+  model_path TEXT NOT NULL,
+  chat_template_path TEXT,
+  tokenizer_path TEXT,
+  context_window INTEGER NOT NULL DEFAULT 8192,
+  supports_tools INTEGER NOT NULL DEFAULT 0,
+  sha256 TEXT,
+  size_bytes INTEGER,
+  load_status TEXT NOT NULL DEFAULT 'unloaded',
+  last_error TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

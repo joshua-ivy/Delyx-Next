@@ -120,6 +120,8 @@ mod memory_persistence_tests;
 mod memory_tests;
 pub mod mobile;
 mod mobile_tests;
+pub mod model_embedded_persistence;
+mod model_embedded_persistence_tests;
 mod model_ollama;
 mod model_ollama_tests;
 mod model_ollama_version;
