@@ -85,6 +85,7 @@ fn main() {
             .expect("external-agent run SQLite state should open"),
         )
         .manage(delyx_next_desktop::secret_bridge::SecretBridgeState::keyring())
+        .manage(delyx_next_desktop::model_embedded::EmbeddedRuntimeState::new())
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::agent_drive_bridge::agent_drive_run,
             delyx_next_desktop::agent_patch_apply_step::agent_run_patch_apply_step,
@@ -104,6 +105,7 @@ fn main() {
             delyx_next_desktop::approval_bridge::approval_decide,
             delyx_next_desktop::cli_chat::cli_chat,
             delyx_next_desktop::cli_review::cli_review,
+            delyx_next_desktop::model_chat::model_chat,
             delyx_next_desktop::approval_bridge::approval_propose,
             delyx_next_desktop::approval_bridge::approval_snapshot,
             delyx_next_desktop::approval_bridge_taxonomy::approval_taxonomy,
