@@ -254,6 +254,9 @@ fn ollama_model(id: String) -> ModelInfo {
         display_name: id.clone(),
         id,
         supports_tools: false,
+        format: None,
+        runtime: None,
+        path: None,
     }
 }
 

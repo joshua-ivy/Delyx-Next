@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import type { ModelProviderView, ModelSettingsView } from "../features/models/modelTypes";
+import type { ModelProviderView, ModelSelectionKey, ModelSettingsView } from "../features/models/modelTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusIcon, type FocusIconName } from "./focusAtoms";
 import { selectedModel, selectedProvider } from "./focusFormat";
@@ -101,7 +101,7 @@ export function FocusModelMenu({
   modelSettings: ModelSettingsView;
   onClose: () => void;
   onRefreshModels: () => void;
-  onSelectModel: (modelId: string) => void;
+  onSelectModel: (selection: ModelSelectionKey) => void;
   onSelectQaqc: (adapterId: string | undefined) => void;
   qaqcAdapterId?: string;
 }) {
@@ -115,7 +115,7 @@ export function FocusModelMenu({
       <div className="menu-list">
         {usable.flatMap((item) => item.models.map((model) => {
           const isActive = item.id === activeProvider?.id && model === activeModel;
-          return <button className={`menu-item${isActive ? " on" : ""}`} key={`${item.id}:${model}`} onClick={() => { onSelectModel(model); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{modelTitle(item, model)}</b><span>{providerSubtitle(item)}</span></span>{isActive && <span className="mi-meta active">active</span>}</button>;
+          return <button className={`menu-item${isActive ? " on" : ""}`} key={`${item.id}:${model}`} onClick={() => { onSelectModel({ modelId: model, providerId: item.id }); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{modelTitle(item, model)}</b><span>{providerSubtitle(item)}</span></span>{isActive && <span className="mi-meta active">active</span>}</button>;
         }))}
         {usable.length === 0 && <button className="menu-item" onClick={onRefreshModels} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>No models loaded</b><span>Refresh Ollama, or install a CLI / add a key in Settings.</span></span><span className="mi-meta">refresh</span></button>}
       </div>

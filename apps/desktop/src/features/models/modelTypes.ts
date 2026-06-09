@@ -1,5 +1,10 @@
-export type ProviderKind = "ollama" | "openai_compatible" | "cli" | "unavailable";
-export type ProviderStatus = "ready" | "missing_key" | "not_configured" | "unreachable";
+export type ProviderKind = "delyx_local" | "ollama" | "openai_compatible" | "cli" | "unavailable";
+export type ProviderStatus = "ready" | "loading" | "missing_key" | "model_missing" | "not_configured" | "unreachable" | "failed";
+
+export interface ModelSelectionKey {
+  providerId: string;
+  modelId: string;
+}
 export type ModelRole = "answer" | "helper" | "deepResearch" | "maxReasoning" | "coding" | "embedding" | "scoring";
 
 export interface ModelProviderView {

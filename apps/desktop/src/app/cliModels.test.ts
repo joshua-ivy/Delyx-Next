@@ -37,14 +37,14 @@ describe("cliModels", () => {
 
   it("selecting a CLI model points the selection at that provider", () => {
     const merged = mergeCliProviders(baseSettings(), adapters());
-    const selected = selectModelRoute(merged, adapters(), "claude-code");
+    const selected = selectModelRoute(merged, adapters(), { modelId: "claude-code", providerId: "claude-code" });
     expect(selected.selectedProviderId).toBe("claude-code");
     expect(cliAdapterForSelection(selected)).toBe("claude-code");
   });
 
   it("selecting a non-CLI model leaves CLI routing off", () => {
     const merged = mergeCliProviders(baseSettings(), adapters());
-    const selected = selectModelRoute(merged, adapters(), "local-test-coder");
+    const selected = selectModelRoute(merged, adapters(), { modelId: "local-test-coder", providerId: "ollama-local" });
     expect(cliAdapterForSelection(selected)).toBeUndefined();
   });
 });

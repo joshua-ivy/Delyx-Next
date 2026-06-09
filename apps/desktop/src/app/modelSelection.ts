@@ -1,12 +1,24 @@
-import type { ModelSettingsView } from "../features/models/modelTypes";
+import type { ModelSelectionKey, ModelSettingsView } from "../features/models/modelTypes";
 
-export function selectOllamaCodingModel(settings: ModelSettingsView, modelId: string): ModelSettingsView {
+/**
+ * Provider-aware coding-route selection. Disambiguates models by (provider, model)
+ * so a model name shared by two providers (e.g. delyx-local and ollama-local)
+ * selects the chosen provider instead of always defaulting to one.
+ */
+export function selectCodingModel(
+  settings: ModelSettingsView,
+  selection: ModelSelectionKey,
+): ModelSettingsView {
+  const provider = settings.providers.find((item) => item.id === selection.providerId);
+  if (!provider || provider.status !== "ready" || !provider.models.includes(selection.modelId)) {
+    return settings;
+  }
   return {
     ...settings,
     routes: [
-      { modelId, providerId: "ollama-local", role: "coding", saved: false },
-      ...settings.routes.filter((route) => !(route.providerId === "ollama-local" && route.role === "coding")),
+      { modelId: selection.modelId, providerId: selection.providerId, role: "coding", saved: false },
+      ...settings.routes.filter((route) => route.role !== "coding"),
     ],
-    selectedProviderId: "ollama-local",
+    selectedProviderId: selection.providerId,
   };
 }

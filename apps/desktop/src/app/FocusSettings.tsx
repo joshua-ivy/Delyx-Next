@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import type { ModelSettingsView } from "../features/models/modelTypes";
+import type { ModelSelectionKey, ModelSettingsView } from "../features/models/modelTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
@@ -17,7 +17,7 @@ interface FocusSettingsProps {
   modelSettings: ModelSettingsView;
   onModeChange: (mode: FocusMode) => void;
   onRefreshModels: () => void;
-  onSelectModel: (modelId: string) => void;
+  onSelectModel: (selection: ModelSelectionKey) => void;
   project: WorkspaceProject;
   threads: TaskThread[];
 }
@@ -65,7 +65,7 @@ function General({ desktopShell, mode, onModeChange }: { desktopShell: DesktopSh
   </Section>;
 }
 
-function Models({ modelSettings, onRefreshModels, onSelectModel }: { modelSettings: ModelSettingsView; onRefreshModels: () => void; onSelectModel: (modelId: string) => void }) {
+function Models({ modelSettings, onRefreshModels, onSelectModel }: { modelSettings: ModelSettingsView; onRefreshModels: () => void; onSelectModel: (selection: ModelSelectionKey) => void }) {
   const provider = selectedProvider(modelSettings);
   const activeModel = selectedModel(modelSettings);
   return <>
@@ -79,7 +79,7 @@ function Models({ modelSettings, onRefreshModels, onSelectModel }: { modelSettin
     </Section>
     <Section label="Routes">
       {(provider?.models ?? []).map((model) => <Row key={model} title={model} detail="Local Ollama model">
-        <button className="select" onClick={() => onSelectModel(model)} type="button">{activeModel === model ? "Active" : "Use model"}</button>
+        <button className="select" onClick={() => onSelectModel({ modelId: model, providerId: provider?.id ?? modelSettings.selectedProviderId })} type="button">{activeModel === model ? "Active" : "Use model"}</button>
       </Row>)}
       {(provider?.models.length ?? 0) === 0 && <Row title="No local models loaded" detail={provider?.detail ?? "Provider status has not loaded."}><span className="tag off">empty</span></Row>}
     </Section>

@@ -13,7 +13,7 @@ import { currentExternalAgentState } from "../features/externalAgents/externalAg
 import type { ExternalAgentStateView } from "../features/externalAgents/externalAgentTypes";
 import { currentModelSettings } from "../features/models/modelData";
 import { refreshOllamaSettings } from "../features/models/ollamaClient";
-import type { ModelSettingsView } from "../features/models/modelTypes";
+import type { ModelSelectionKey, ModelSettingsView } from "../features/models/modelTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import { currentAgentRuns } from "../features/runs/agentRunData";
 import { archiveThreadOverBridge } from "../features/threads/threadClient";
@@ -144,8 +144,8 @@ export function AppShell() {
       threads,
     }, value);
   };
-  const selectModel = (modelId: string) => {
-    setModelSettings((current) => selectModelRoute(current, externalAgentState.adapters, modelId));
+  const selectModel = (selection: ModelSelectionKey) => {
+    setModelSettings((current) => selectModelRoute(current, externalAgentState.adapters, selection));
   };
   const selectQaqc = (adapterId: string | undefined) => {
     setQaqcAdapterId(adapterId);

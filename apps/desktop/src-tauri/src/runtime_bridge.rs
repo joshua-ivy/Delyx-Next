@@ -189,6 +189,7 @@ fn provider_status(
 fn provider_kind(kind: ProviderKind) -> &'static str {
     match kind {
         ProviderKind::Mock => "mock",
+        ProviderKind::DelyxLocal => "delyx_local",
         ProviderKind::Ollama => "ollama",
         ProviderKind::OpenAiCompatible => "openai_compatible",
     }
@@ -196,7 +197,10 @@ fn provider_kind(kind: ProviderKind) -> &'static str {
 
 fn provider_status_label(status: ProviderStatus) -> &'static str {
     match status {
+        ProviderStatus::Failed => "failed",
+        ProviderStatus::Loading => "loading",
         ProviderStatus::MissingApiKey => "missing_key",
+        ProviderStatus::ModelMissing => "model_missing",
         ProviderStatus::NotConfigured => "not_configured",
         ProviderStatus::Ready => "ready",
         ProviderStatus::Unreachable => "unreachable",

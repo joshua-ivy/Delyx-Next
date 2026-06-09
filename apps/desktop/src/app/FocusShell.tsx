@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
-import type { ModelSettingsView } from "../features/models/modelTypes";
+import type { ModelSelectionKey, ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import type { PlanView } from "../features/plans/planTypes";
 import type { ReviewReportView } from "../features/review/reviewTypes";
@@ -39,7 +39,7 @@ interface FocusShellProps {
   onRunReview: () => void;
   onRunTests: () => void;
   onRunCommand: (commandId: string) => void;
-  onSelectModel: (modelId: string) => void;
+  onSelectModel: (selection: ModelSelectionKey) => void;
   onSelectQaqc: (adapterId: string | undefined) => void;
   qaqcAdapterId?: string;
   onSelectThread: (threadId: string) => void;

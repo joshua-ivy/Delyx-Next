@@ -50,7 +50,10 @@ function selectedProvider(settings: ModelSettingsView) {
 
 function statusLabel(provider: ModelProviderView) {
   const labels: Record<ModelProviderView["status"], string> = {
+    failed: "failed",
+    loading: "loading",
     missing_key: "missing API key",
+    model_missing: "model missing",
     not_configured: "not configured",
     ready: "ready",
     unreachable: "unreachable",

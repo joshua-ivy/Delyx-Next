@@ -71,6 +71,9 @@ mod tests {
                 display_name: "Remote model".to_string(),
                 id: "remote-model".to_string(),
                 supports_tools: true,
+                format: None,
+                runtime: None,
+                path: None,
             }],
             secret_policy: SecretPolicy::ExternalSecretOnly,
         });

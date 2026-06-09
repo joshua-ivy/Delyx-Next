@@ -11,6 +11,7 @@ pub struct ModelProvider {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProviderKind {
     Mock,
+    DelyxLocal,
     Ollama,
     OpenAiCompatible,
 }
@@ -18,9 +19,12 @@ pub enum ProviderKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProviderStatus {
     Ready,
+    Loading,
     MissingApiKey,
+    ModelMissing,
     NotConfigured,
     Unreachable,
+    Failed,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -36,6 +40,23 @@ pub struct ModelInfo {
     pub display_name: String,
     pub context_window: u32,
     pub supports_tools: bool,
+    pub format: Option<String>,
+    pub runtime: Option<String>,
+    pub path: Option<String>,
+}
+
+impl ModelInfo {
+    pub fn local_chat_model(id: &str, display_name: &str, context_window: u32) -> Self {
+        Self {
+            id: id.to_string(),
+            display_name: display_name.to_string(),
+            context_window,
+            supports_tools: false,
+            format: Some("gguf".to_string()),
+            runtime: Some("mistralrs".to_string()),
+            path: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -233,6 +254,33 @@ fn model(id: &str, display_name: &str, supports_tools: bool) -> ModelInfo {
         display_name: display_name.to_string(),
         context_window: 8192,
         supports_tools,
+        format: None,
+        runtime: None,
+        path: None,
+    }
+}
+
+pub fn delyx_local_provider(checked_at: u64, models: Vec<ModelInfo>) -> ModelProvider {
+    let ready = !models.is_empty();
+    ModelProvider {
+        id: "delyx-local".to_string(),
+        kind: ProviderKind::DelyxLocal,
+        label: "Delyx Local".to_string(),
+        health: ProviderHealth {
+            checked_at,
+            status: if ready {
+                ProviderStatus::Ready
+            } else {
+                ProviderStatus::NotConfigured
+            },
+            message: if ready {
+                format!("{} Delyx-managed local model(s) available.", models.len())
+            } else {
+                "No Delyx-managed local models imported yet.".to_string()
+            },
+        },
+        models,
+        secret_policy: SecretPolicy::NoSecretRequired,
     }
 }
 

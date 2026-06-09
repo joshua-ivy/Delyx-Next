@@ -1,6 +1,6 @@
 import type { ExternalAgentAdapterView } from "../features/externalAgents/externalAgentTypes";
-import type { ModelProviderView, ModelSettingsView } from "../features/models/modelTypes";
-import { selectOllamaCodingModel } from "./modelSelection";
+import type { ModelProviderView, ModelSelectionKey, ModelSettingsView } from "../features/models/modelTypes";
+import { selectCodingModel } from "./modelSelection";
 
 // CLI agents that can answer chat read-only via their subscription (CLI-first).
 const CLI_LABELS: Record<string, string> = {
@@ -37,12 +37,12 @@ export function mergeCliProviders(
 export function selectModelRoute(
   settings: ModelSettingsView,
   adapters: ExternalAgentAdapterView[],
-  modelId: string,
+  selection: ModelSelectionKey,
 ): ModelSettingsView {
-  if (adapters.some((adapter) => adapter.id === modelId && CLI_LABELS[adapter.id])) {
-    return { ...settings, selectedProviderId: modelId };
+  if (adapters.some((adapter) => adapter.id === selection.providerId && CLI_LABELS[adapter.id])) {
+    return { ...settings, selectedProviderId: selection.providerId };
   }
-  return selectOllamaCodingModel(settings, modelId);
+  return selectCodingModel(settings, selection);
 }
 
 /** The selected CLI adapter id, or undefined when a non-CLI model is selected. */

@@ -146,6 +146,9 @@ mod tests {
             display_name: id.to_string(),
             id: id.to_string(),
             supports_tools: true,
+            format: None,
+            runtime: None,
+            path: None,
         }
     }
 
