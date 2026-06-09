@@ -108,6 +108,8 @@ fn main() {
             delyx_next_desktop::model_chat::model_chat,
             delyx_next_desktop::model_embedded_bridge::local_model_import,
             delyx_next_desktop::model_embedded_bridge::local_model_list,
+            delyx_next_desktop::model_embedded_bridge::local_model_list_ollama,
+            delyx_next_desktop::model_embedded_bridge::local_model_import_ollama,
             delyx_next_desktop::model_embedded_bridge::local_model_set_sampling,
             delyx_next_desktop::model_embedded_bridge::local_model_unload,
             delyx_next_desktop::model_embedded_bridge::local_model_remove_profile,

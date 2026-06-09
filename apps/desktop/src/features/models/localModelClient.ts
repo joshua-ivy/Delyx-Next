@@ -44,8 +44,22 @@ export interface LocalModelLifecycleView {
   profile?: LocalModelProfile;
 }
 
+export interface OllamaModelEntry {
+  name: string;
+  blobPath: string;
+  sizeBytes?: number;
+}
+
 export function importLocalModel(request: ImportLocalModelRequest) {
   return invoke<LocalModelLifecycleView>("local_model_import", { request });
+}
+
+export function listOllamaModels() {
+  return invoke<OllamaModelEntry[]>("local_model_list_ollama");
+}
+
+export function importOllamaModel(name: string) {
+  return invoke<LocalModelLifecycleView>("local_model_import_ollama", { request: { id: name } });
 }
 
 export function listLocalModels() {

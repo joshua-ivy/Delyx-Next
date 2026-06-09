@@ -59,6 +59,33 @@ pub fn local_model_set_sampling(
 }
 
 #[tauri::command]
+pub fn local_model_list_ollama() -> Result<Vec<crate::ollama_models::OllamaModel>, String> {
+    let dir = crate::ollama_models::default_ollama_models_dir()
+        .ok_or_else(|| "Could not locate the Ollama models directory.".to_string())?;
+    Ok(crate::ollama_models::discover_ollama_models(&dir))
+}
+
+#[tauri::command]
+pub fn local_model_import_ollama(
+    runtime: tauri::State<crate::runtime_bridge::RuntimeBridgeState>,
+    request: LocalModelIdRequest,
+) -> Result<LocalModelLifecycleView, String> {
+    let dir = crate::ollama_models::default_ollama_models_dir()
+        .ok_or_else(|| "Could not locate the Ollama models directory.".to_string())?;
+    let model = crate::ollama_models::discover_ollama_models(&dir)
+        .into_iter()
+        .find(|model| model.name == request.id)
+        .ok_or_else(|| format!("Ollama model `{}` was not found.", request.id))?;
+    let profile =
+        crate::ollama_models::import_ollama_profile_to_path(runtime.database_path(), &model)?;
+    Ok(LocalModelLifecycleView {
+        status: "imported".to_string(),
+        message: format!("Imported {} from Ollama.", profile.display_name),
+        profile: Some(profile),
+    })
+}
+
+#[tauri::command]
 pub async fn local_model_unload(
     embedded: tauri::State<'_, EmbeddedRuntimeState>,
     request: LocalModelIdRequest,

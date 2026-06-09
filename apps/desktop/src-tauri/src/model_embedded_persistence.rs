@@ -175,7 +175,7 @@ pub fn set_sampling_to_path(path: &Path, request: ModelSamplingRequest) -> Resul
     Ok(())
 }
 
-fn stable_profile_id(file_name: &str) -> String {
+pub(crate) fn stable_profile_id(file_name: &str) -> String {
     let mut id = file_name
         .trim()
         .trim_end_matches(".gguf")
@@ -200,7 +200,10 @@ fn non_empty(value: Option<String>) -> Option<String> {
         .filter(|item| !item.is_empty())
 }
 
-fn upsert_profile(connection: &Connection, profile: &LocalModelProfile) -> Result<(), String> {
+pub(crate) fn upsert_profile(
+    connection: &Connection,
+    profile: &LocalModelProfile,
+) -> Result<(), String> {
     connection
         .execute(
             "INSERT INTO local_model_profiles (

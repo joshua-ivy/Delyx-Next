@@ -1,12 +1,15 @@
 import { Fragment, useEffect, useState } from "react";
 import {
   importLocalModel,
+  importOllamaModel,
   listLocalModels,
+  listOllamaModels,
   removeLocalModelProfile,
   setLocalModelSampling,
   unloadLocalModel,
   type LocalModelProfile,
   type ModelSamplingRequest,
+  type OllamaModelEntry,
 } from "../features/models/localModelClient";
 
 export function LocalModelSettingsPanel() {
@@ -17,12 +20,28 @@ export function LocalModelSettingsPanel() {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const [desktopOnly, setDesktopOnly] = useState(false);
+  const [ollama, setOllama] = useState<OllamaModelEntry[]>([]);
 
   async function refresh() {
     try {
       setProfiles(await listLocalModels());
     } catch {
       setDesktopOnly(true);
+      return;
+    }
+    try {
+      setOllama(await listOllamaModels());
+    } catch {
+      setOllama([]);
+    }
+  }
+
+  async function importFromOllama(name: string) {
+    try {
+      setStatus((await importOllamaModel(name)).message);
+      await refresh();
+    } catch (cause) {
+      setStatus(String(cause));
     }
   }
 
@@ -109,6 +128,17 @@ export function LocalModelSettingsPanel() {
           <SamplingEditor onSave={saveSampling} profile={profile} />
         </Fragment>
       ))}
+      {ollama.length > 0 && (
+        <>
+          <div className="ey">Reuse from Ollama</div>
+          <div className="set-lead">Models you already pulled with Ollama — import to run them in the embedded runtime, no re-download.</div>
+          {ollama.map((entry) => (
+            <Row detail={entry.blobPath} key={entry.name} title={entry.name}>
+              <button className="select" onClick={() => void importFromOllama(entry.name)} type="button">Import</button>
+            </Row>
+          ))}
+        </>
+      )}
     </div>
   );
 }
