@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   importLocalModel,
   listLocalModels,
   removeLocalModelProfile,
+  setLocalModelSampling,
   unloadLocalModel,
   type LocalModelProfile,
+  type ModelSamplingRequest,
 } from "../features/models/localModelClient";
 
 export function LocalModelSettingsPanel() {
@@ -63,6 +65,15 @@ export function LocalModelSettingsPanel() {
     await refresh();
   }
 
+  async function saveSampling(request: ModelSamplingRequest) {
+    try {
+      setStatus((await setLocalModelSampling(request)).message);
+      await refresh();
+    } catch (cause) {
+      setStatus(String(cause));
+    }
+  }
+
   if (desktopOnly) {
     return (
       <div className="set-sec">
@@ -89,14 +100,49 @@ export function LocalModelSettingsPanel() {
       {status && <Row detail={status} title="Status"><span className="tag live">ok</span></Row>}
       {profiles && profiles.length === 0 && <Row detail="No Delyx-managed local models imported yet." title="No models"><span className="tag off">empty</span></Row>}
       {(profiles ?? []).map((profile) => (
-        <Row detail={`${profile.format} · ${profile.modelPath}${profile.lastError ? ` · error: ${profile.lastError}` : ""}`} key={profile.id} title={profile.displayName}>
-          <span className={`tag ${profile.loadStatus === "failed" ? "off" : "live"}`}>{profile.loadStatus}</span>
-          <button className="select" onClick={() => void unload(profile.id)} type="button">Unload</button>
-          <button className="select" onClick={() => void remove(profile.id)} type="button">Remove</button>
-        </Row>
+        <Fragment key={profile.id}>
+          <Row detail={`${profile.format} · ${profile.modelPath}${profile.lastError ? ` · error: ${profile.lastError}` : ""}`} title={profile.displayName}>
+            <span className={`tag ${profile.loadStatus === "failed" ? "off" : "live"}`}>{profile.loadStatus}</span>
+            <button className="select" onClick={() => void unload(profile.id)} type="button">Unload</button>
+            <button className="select" onClick={() => void remove(profile.id)} type="button">Remove</button>
+          </Row>
+          <SamplingEditor onSave={saveSampling} profile={profile} />
+        </Fragment>
       ))}
     </div>
   );
+}
+
+function SamplingEditor({ onSave, profile }: { onSave: (request: ModelSamplingRequest) => void; profile: LocalModelProfile }) {
+  const [temperature, setTemperature] = useState(numText(profile.temperature));
+  const [topP, setTopP] = useState(numText(profile.topP));
+  const [topK, setTopK] = useState(numText(profile.topK));
+  const [repeatPenalty, setRepeatPenalty] = useState(numText(profile.repeatPenalty));
+  const [maxTokens, setMaxTokens] = useState(numText(profile.maxTokens));
+  return (
+    <Row detail="Tune sampling for this model. Blank = model default. Applies to chat and PatchDraft." title="Sampling">
+      <input aria-label={`${profile.id} temperature`} className="pal-input" onChange={(event) => setTemperature(event.target.value)} placeholder="temp" value={temperature} />
+      <input aria-label={`${profile.id} top_p`} className="pal-input" onChange={(event) => setTopP(event.target.value)} placeholder="top_p" value={topP} />
+      <input aria-label={`${profile.id} top_k`} className="pal-input" onChange={(event) => setTopK(event.target.value)} placeholder="top_k" value={topK} />
+      <input aria-label={`${profile.id} repeat_penalty`} className="pal-input" onChange={(event) => setRepeatPenalty(event.target.value)} placeholder="rep" value={repeatPenalty} />
+      <input aria-label={`${profile.id} max_tokens`} className="pal-input" onChange={(event) => setMaxTokens(event.target.value)} placeholder="max" value={maxTokens} />
+      <button className="select" onClick={() => onSave({ id: profile.id, maxTokens: numInt(maxTokens), repeatPenalty: num(repeatPenalty), temperature: num(temperature), topK: numInt(topK), topP: num(topP) })} type="button">Save sampling</button>
+    </Row>
+  );
+}
+
+function numText(value: number | undefined): string {
+  return value === undefined ? "" : String(value);
+}
+
+function num(value: string): number | undefined {
+  const trimmed = value.trim();
+  return trimmed === "" || Number.isNaN(Number(trimmed)) ? undefined : Number(trimmed);
+}
+
+function numInt(value: string): number | undefined {
+  const parsed = num(value);
+  return parsed === undefined ? undefined : Math.trunc(parsed);
 }
 
 function Row({ children, detail, title }: { children: React.ReactNode; detail: string; title: string }) {

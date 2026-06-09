@@ -57,7 +57,7 @@ pub async fn send_embedded_chat(
 ) -> Result<ModelChatResult, String> {
     validate_profile(&profile)?;
     let loaded = load_or_get_model(state, database_path, &profile).await?;
-    let request = text_messages(messages)?;
+    let request = chat_request(messages, &profile)?;
     let response = loaded
         .model
         .send_chat_request(request)
@@ -164,8 +164,11 @@ fn validate_profile(profile: &LocalModelProfile) -> Result<(), String> {
 }
 
 #[cfg(feature = "embedded_mistral")]
-fn text_messages(messages: Vec<ModelChatMessage>) -> Result<mistralrs::TextMessages, String> {
-    let mut request = mistralrs::TextMessages::new();
+fn chat_request(
+    messages: Vec<ModelChatMessage>,
+    profile: &LocalModelProfile,
+) -> Result<mistralrs::RequestBuilder, String> {
+    let mut builder = mistralrs::RequestBuilder::new();
     for message in messages {
         let role = match message.role.as_str() {
             "assistant" => mistralrs::TextMessageRole::Assistant,
@@ -177,7 +180,22 @@ fn text_messages(messages: Vec<ModelChatMessage>) -> Result<mistralrs::TextMessa
         if content.is_empty() {
             return Err("Chat messages cannot be empty.".to_string());
         }
-        request = request.add_message(role, content);
+        builder = builder.add_message(role, content);
     }
-    Ok(request)
+    // Apply the profile's tuned sampling params (the reason for the embedded runtime).
+    Ok(builder.set_sampling(mistralrs::SamplingParams {
+        temperature: profile.temperature,
+        top_k: profile.top_k.map(|value| value as usize),
+        top_p: profile.top_p,
+        min_p: None,
+        top_n_logprobs: 0,
+        frequency_penalty: None,
+        presence_penalty: None,
+        repetition_penalty: profile.repeat_penalty,
+        stop_toks: None,
+        max_len: profile.max_tokens.map(|value| value as usize),
+        logits_bias: None,
+        n_choices: 1,
+        dry_params: None,
+    }))
 }

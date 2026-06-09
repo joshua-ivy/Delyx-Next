@@ -369,6 +369,11 @@ CREATE TABLE IF NOT EXISTS local_model_profiles (
   size_bytes INTEGER,
   load_status TEXT NOT NULL DEFAULT 'unloaded',
   last_error TEXT,
+  temperature REAL,
+  top_p REAL,
+  top_k INTEGER,
+  repeat_penalty REAL,
+  max_tokens INTEGER,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

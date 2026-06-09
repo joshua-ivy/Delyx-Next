@@ -7,7 +7,7 @@ use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LocalModelProfile {
     pub id: String,
@@ -23,6 +23,22 @@ pub struct LocalModelProfile {
     pub size_bytes: Option<u64>,
     pub load_status: String,
     pub last_error: Option<String>,
+    pub temperature: Option<f64>,
+    pub top_p: Option<f64>,
+    pub top_k: Option<u32>,
+    pub repeat_penalty: Option<f32>,
+    pub max_tokens: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelSamplingRequest {
+    pub id: String,
+    pub temperature: Option<f64>,
+    pub top_p: Option<f64>,
+    pub top_k: Option<u32>,
+    pub repeat_penalty: Option<f32>,
+    pub max_tokens: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -124,7 +140,39 @@ fn profile_from_request(request: ImportLocalModelRequest) -> Result<LocalModelPr
         size_bytes: Some(metadata.len()),
         load_status: "unloaded".to_string(),
         last_error: None,
+        temperature: None,
+        top_p: None,
+        top_k: None,
+        repeat_penalty: None,
+        max_tokens: None,
     })
+}
+
+pub fn set_sampling_to_path(path: &Path, request: ModelSamplingRequest) -> Result<(), String> {
+    let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_string)?;
+    let changed = connection
+        .execute(
+            "UPDATE local_model_profiles
+             SET temperature = ?2, top_p = ?3, top_k = ?4, repeat_penalty = ?5, max_tokens = ?6,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?1",
+            params![
+                request.id.trim(),
+                request.temperature,
+                request.top_p,
+                request.top_k,
+                request.repeat_penalty.map(|value| value as f64),
+                request.max_tokens,
+            ],
+        )
+        .map_err(sql_string)?;
+    if changed == 0 {
+        return Err(format!(
+            "Local model profile `{}` was not found.",
+            request.id
+        ));
+    }
+    Ok(())
 }
 
 fn stable_profile_id(file_name: &str) -> String {
@@ -157,8 +205,9 @@ fn upsert_profile(connection: &Connection, profile: &LocalModelProfile) -> Resul
         .execute(
             "INSERT INTO local_model_profiles (
                 id, display_name, runtime, format, model_path, chat_template_path, tokenizer_path,
-                context_window, supports_tools, sha256, size_bytes, load_status, last_error
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
+                context_window, supports_tools, sha256, size_bytes, load_status, last_error,
+                temperature, top_p, top_k, repeat_penalty, max_tokens
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)
              ON CONFLICT(id) DO UPDATE SET
                 display_name = excluded.display_name,
                 runtime = excluded.runtime,
@@ -187,6 +236,11 @@ fn upsert_profile(connection: &Connection, profile: &LocalModelProfile) -> Resul
                 profile.size_bytes.map(|value| value as i64),
                 profile.load_status,
                 profile.last_error,
+                profile.temperature,
+                profile.top_p,
+                profile.top_k,
+                profile.repeat_penalty.map(|value| value as f64),
+                profile.max_tokens,
             ],
         )
         .map(|_| ())
@@ -197,7 +251,8 @@ fn list_profiles(connection: &Connection) -> Result<Vec<LocalModelProfile>, Stri
     let mut statement = connection
         .prepare(
             "SELECT id, display_name, runtime, format, model_path, chat_template_path, tokenizer_path,
-                    context_window, supports_tools, sha256, size_bytes, load_status, last_error
+                    context_window, supports_tools, sha256, size_bytes, load_status, last_error,
+                    temperature, top_p, top_k, repeat_penalty, max_tokens
              FROM local_model_profiles
              ORDER BY display_name",
         )
@@ -218,6 +273,11 @@ fn list_profiles(connection: &Connection) -> Result<Vec<LocalModelProfile>, Stri
                 size_bytes: row.get::<_, Option<i64>>(10)?.map(|value| value as u64),
                 load_status: row.get(11)?,
                 last_error: row.get(12)?,
+                temperature: row.get(13)?,
+                top_p: row.get(14)?,
+                top_k: row.get::<_, Option<i64>>(15)?.map(|value| value as u32),
+                repeat_penalty: row.get::<_, Option<f64>>(16)?.map(|value| value as f32),
+                max_tokens: row.get::<_, Option<i64>>(17)?.map(|value| value as u32),
             })
         })
         .map_err(sql_string)?;

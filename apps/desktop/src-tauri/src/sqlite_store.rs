@@ -50,6 +50,11 @@ fn ensure_local_model_profile_columns(connection: &Connection) -> rusqlite::Resu
         ("tokenizer_path", "TEXT"),
         ("load_status", "TEXT NOT NULL DEFAULT 'unloaded'"),
         ("last_error", "TEXT"),
+        ("temperature", "REAL"),
+        ("top_p", "REAL"),
+        ("top_k", "INTEGER"),
+        ("repeat_penalty", "REAL"),
+        ("max_tokens", "INTEGER"),
     ] {
         if !columns.iter().any(|column| column == name) {
             connection.execute(

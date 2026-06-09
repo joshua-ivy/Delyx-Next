@@ -14,6 +14,20 @@ export interface LocalModelProfile {
   sizeBytes?: number;
   loadStatus: string;
   lastError?: string;
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  repeatPenalty?: number;
+  maxTokens?: number;
+}
+
+export interface ModelSamplingRequest {
+  id: string;
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  repeatPenalty?: number;
+  maxTokens?: number;
 }
 
 export interface ImportLocalModelRequest {
@@ -36,6 +50,10 @@ export function importLocalModel(request: ImportLocalModelRequest) {
 
 export function listLocalModels() {
   return invoke<LocalModelProfile[]>("local_model_list");
+}
+
+export function setLocalModelSampling(request: ModelSamplingRequest) {
+  return invoke<LocalModelLifecycleView>("local_model_set_sampling", { request });
 }
 
 export function unloadLocalModel(id: string) {

@@ -4,11 +4,12 @@
 use crate::model_embedded::EmbeddedRuntimeState;
 use crate::model_embedded_persistence::{
     delete_profile_from_path, import_profile_to_path, list_profiles_from_path,
-    ImportLocalModelRequest, LocalModelProfile,
+    load_profile_from_path, set_sampling_to_path, ImportLocalModelRequest, LocalModelProfile,
+    ModelSamplingRequest,
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LocalModelLifecycleView {
     pub status: String,
@@ -40,6 +41,21 @@ pub fn local_model_list(
     runtime: tauri::State<crate::runtime_bridge::RuntimeBridgeState>,
 ) -> Result<Vec<LocalModelProfile>, String> {
     list_profiles_from_path(runtime.database_path())
+}
+
+#[tauri::command]
+pub fn local_model_set_sampling(
+    runtime: tauri::State<crate::runtime_bridge::RuntimeBridgeState>,
+    request: ModelSamplingRequest,
+) -> Result<LocalModelLifecycleView, String> {
+    let id = request.id.clone();
+    set_sampling_to_path(runtime.database_path(), request)?;
+    let profile = load_profile_from_path(runtime.database_path(), &id)?;
+    Ok(LocalModelLifecycleView {
+        status: "sampling_updated".to_string(),
+        message: format!("Updated sampling for {}.", profile.display_name),
+        profile: Some(profile),
+    })
 }
 
 #[tauri::command]

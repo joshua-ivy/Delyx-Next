@@ -2,7 +2,8 @@
 mod tests {
     use crate::model_embedded_persistence::{
         delete_profile_from_path, import_profile_to_path, list_profiles_from_path,
-        load_profile_from_path, mark_profile_status, ImportLocalModelRequest,
+        load_profile_from_path, mark_profile_status, set_sampling_to_path, ImportLocalModelRequest,
+        ModelSamplingRequest,
     };
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -68,6 +69,36 @@ mod tests {
                 .unwrap_err()
                 .contains("does not exist")
         );
+    }
+
+    #[test]
+    fn sampling_params_round_trip() {
+        let dir = temp_dir("sampling");
+        let model = dir.join("m.gguf");
+        std::fs::write(&model, b"x").unwrap();
+        let db = dir.join("db.sqlite3");
+        let profile = import_profile_to_path(&db, request(model.display().to_string())).unwrap();
+        assert_eq!(profile.temperature, None);
+
+        set_sampling_to_path(
+            &db,
+            ModelSamplingRequest {
+                id: profile.id.clone(),
+                temperature: Some(0.7),
+                top_p: Some(0.9),
+                top_k: Some(40),
+                repeat_penalty: Some(1.1),
+                max_tokens: Some(512),
+            },
+        )
+        .unwrap();
+
+        let reloaded = load_profile_from_path(&db, &profile.id).unwrap();
+        assert_eq!(reloaded.temperature, Some(0.7));
+        assert_eq!(reloaded.top_p, Some(0.9));
+        assert_eq!(reloaded.top_k, Some(40));
+        assert_eq!(reloaded.max_tokens, Some(512));
+        assert!((reloaded.repeat_penalty.unwrap() - 1.1).abs() < 1e-6);
     }
 
     fn request(model_path: String) -> ImportLocalModelRequest {
