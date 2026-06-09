@@ -24,6 +24,7 @@ describe("FocusProviders", () => {
   it("detects CLIs, shows key state, and saves a pasted key through the bridge", async () => {
     invoke.mockImplementation((cmd: string) => {
       if (cmd === "secret_status") return Promise.resolve(status(false, false));
+      if (cmd === "local_model_list") return Promise.resolve([]);
       if (cmd === "external_agent_status") {
         return Promise.resolve({
           adapters: [

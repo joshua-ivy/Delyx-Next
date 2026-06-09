@@ -123,6 +123,7 @@ mod mobile_tests;
 pub mod model_chat;
 mod model_chat_tests;
 pub mod model_embedded;
+pub mod model_embedded_bridge;
 pub mod model_embedded_persistence;
 mod model_embedded_persistence_tests;
 mod model_ollama;

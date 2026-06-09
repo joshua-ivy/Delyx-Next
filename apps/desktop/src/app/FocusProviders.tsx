@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { loadExternalAgentStatus } from "../features/externalAgents/externalAgentClient";
 import type { ExternalAgentAdapterView } from "../features/externalAgents/externalAgentTypes";
+import { LocalModelSettingsPanel } from "./LocalModelSettingsPanel";
 import { clearSecret, loadSecretStatus, setSecret, type SecretProviderView } from "./secretClient";
 
 const CLI_SETUP: Record<string, { install: string; login: string }> = {
@@ -72,6 +73,7 @@ export function FocusProviders() {
 
   return (
     <>
+      <LocalModelSettingsPanel />
       <div className="set-sec">
         <div className="ey">Agent CLIs</div>
         {(adapters ?? []).filter((adapter) => CLI_SETUP[adapter.id]).map((adapter) => (

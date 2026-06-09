@@ -16,6 +16,11 @@ Default stack:
 - Vite
 - CSS variables for design tokens
 - Lucide icons
+- `mistralrs` 0.8.1 (Rust, **optional**, behind the `embedded_mistral` feature) —
+  in-process local GGUF model runtime so Delyx Local works without Ollama. Heavy
+  (pulls candle/reqwest/hf-hub); default builds exclude it and use a stub. Verified
+  to compile on Windows; `cargo test --workspace --features embedded_mistral` is
+  green. `tokio` is enabled (default build) for the async `model_chat` command.
 - `keyring` (Rust) — narrow, justified dependency for storing cloud-provider API
   keys in the OS keyring (Windows Credential Manager / macOS Keychain / Linux
   Secret Service) instead of the repo, `settings.json`, or SQLite, satisfying the
