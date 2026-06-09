@@ -43,7 +43,14 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - SQLite is partially implemented. AgentRun save/load, Tauri thread/run session state, approval bridge state, typed plan records, recent workspace project snapshots, model role routes, memory governance, skill registry, automation engine, release/support-bundle state and file-export receipts, approved test artifacts, patch proposal/apply/restore receipts, review reports, external-agent run artifacts, research EvidenceStore receipts, AgentRun EvidenceRecords, and AgentOutcome support ID links now use a real SQLite database and migration. Memory, skills, automations, release/support-bundle state, plan save/decision state, support-bundle file export, patch apply/restore, and final-answer support synthesis have narrow persisted mutation bridges; remaining action bridges are still missing.
 - There is no full execution engine: no multi-node autonomous executor, repair loop, or hook runner. A narrow scheduler/resume bridge can now choose and expose the next safe action from persisted approvals, patches, tests, and reviews, while a one-step dispatcher can run the scheduler-selected approved patch apply, test, review, or final-support action from real artifacts. Narrow AgentRun executor nodes can run approval-gated patch draft/proposal/apply/restore, approved test-command work, and read-only review work while recording run events/artifacts/evidence.
 - The default Explore -> Plan -> Approve -> Build -> Diff -> Test -> Review loop is not autonomous.
-- Ollama is the only real live model execution path.
+- Live model execution paths: a first-class in-process **Delyx Local** runtime
+  (feature-gated `embedded_mistral`, mistralrs 0.8.1 — import a local GGUF, select
+  it, chat through the provider-aware `model_chat` command), **Ollama** (optional
+  adapter), and **Claude/Codex CLI** chat/QA-QC. Default builds ship the Delyx
+  Local scaffold with a stub; the real runtime compiles with
+  `--features embedded_mistral` (verified green). Remaining embedded tail:
+  PatchDraft still generates via the Ollama path (PR G — async migration to
+  `model_chat`).
 - OpenAI-compatible providers are health/config stubs only.
 - Codex CLI has an approval-gated read-only launch bridge with captured terminal output and UI artifacts.
 - Codex write-capable launch now creates real checkpoint receipts for planned files before execution; worktree isolation can still come later.

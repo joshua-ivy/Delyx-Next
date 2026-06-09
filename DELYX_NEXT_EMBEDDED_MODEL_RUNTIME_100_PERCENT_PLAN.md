@@ -1921,37 +1921,40 @@ Rules:
 Mark these only when actually true:
 
 ```md
-- [ ] ProviderKind has DelyxLocal / `delyx_local`.
-- [ ] ProviderStatus supports loading/model_missing/failed.
-- [ ] ModelInfo carries runtime/format/path metadata.
-- [ ] Frontend ProviderKind supports `delyx_local`.
-- [ ] Model picker passes providerId + modelId.
-- [ ] SQLite has local_model_profiles.
-- [ ] Local model profile import/list/delete works.
-- [ ] runtime_status lists Delyx Local profiles.
-- [ ] default coding route prefers Delyx Local, then Ollama.
-- [ ] mistral.rs is feature-gated.
-- [ ] EmbeddedRuntimeState loads/unloads models.
-- [ ] `model_chat` command dispatches Delyx Local and Ollama.
-- [ ] Composer uses `sendModelChat`, not `sendOllamaChat`.
-- [ ] PatchDraft uses `send_model_chat`, not `send_ollama_chat`.
-- [ ] UI shows no imported model / ready / loading / failed / unloaded states.
-- [ ] Removing profile does not delete model file.
-- [ ] Ollama adapter still works.
-- [ ] CLI providers still work.
-- [ ] Tests cover local profile persistence.
-- [ ] Tests cover runtime status Delyx Local provider.
-- [ ] Tests cover provider-aware model selection.
-- [ ] Tests cover PatchDraft provider propagation.
-- [ ] README updated.
-- [ ] docs/ARCHITECTURE.md updated.
-- [ ] build plan current reality updated.
-- [ ] npm typecheck passes.
-- [ ] npm test passes.
-- [ ] npm build passes.
-- [ ] cargo test --workspace passes.
-- [ ] cargo test --workspace --features embedded_mistral passes.
-- [ ] Desktop manual test works with Ollama stopped.
+- [x] ProviderKind has DelyxLocal / `delyx_local`.
+- [x] ProviderStatus supports loading/model_missing/failed.
+- [x] ModelInfo carries runtime/format/path metadata.
+- [x] Frontend ProviderKind supports `delyx_local`.
+- [x] Model picker passes providerId + modelId.
+- [x] SQLite has local_model_profiles.
+- [x] Local model profile import/list/delete works.
+- [x] runtime_status lists Delyx Local profiles.
+- [x] default coding route prefers Delyx Local, then Ollama.
+- [x] mistral.rs is feature-gated.
+- [x] EmbeddedRuntimeState loads/unloads models.
+- [x] `model_chat` command dispatches Delyx Local and Ollama.
+- [x] Composer uses `sendModelChat`, not `sendOllamaChat`.
+- [ ] PatchDraft uses `send_model_chat`, not `send_ollama_chat`. (PR G — async migration still open.)
+- [x] UI shows no imported model / ready / loading / failed / unloaded states.
+- [x] Removing profile does not delete model file.
+- [x] Ollama adapter still works.
+- [x] CLI providers still work.
+- [x] Tests cover local profile persistence.
+- [ ] Tests cover runtime status Delyx Local provider. (Registration compiles + is exercised, but no dedicated test yet.)
+- [x] Tests cover provider-aware model selection.
+- [ ] Tests cover PatchDraft provider propagation. (PR G.)
+- [x] README updated.
+- [x] docs/ARCHITECTURE.md updated.
+- [x] build plan current reality updated.
+- [x] npm typecheck passes.
+- [x] npm test passes.
+- [x] npm build passes.
+- [x] cargo test --workspace passes.
+- [x] cargo test --workspace --features embedded_mistral passes.
+- [ ] Desktop manual test works with Ollama stopped. (Needs a build with --features embedded_mistral + a real GGUF on your machine.)
 ```
 
-When all boxes are checked, Delyx Next has a real direct local model path.
+Status: PRs A–F and H–I are landed and green (chat works end-to-end through the
+embedded runtime). PR G (PatchDraft via `model_chat`, an async migration) and PR
+J's remaining doc/test tail are the only open items. When all boxes are checked,
+Delyx Next has a real direct local model path for both chat and PatchDraft.

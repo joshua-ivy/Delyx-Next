@@ -13,6 +13,17 @@ Start with the source of truth:
 - `AGENTS.md`
 - `docs/`
 
+## Local models
+
+Delyx Next can run a **Delyx Local** model in-process — import a local `.gguf`
+file in Settings → Providers & Keys, select it as your chat model, and it answers
+through the embedded runtime. Ollama remains an optional adapter, and the
+Claude/Codex CLIs can be selected for chat or as a QA/QC reviewer. The embedded
+runtime is feature-gated; build the desktop app with `--features embedded_mistral`
+to enable real local inference (default builds ship the scaffold + a clear
+"not compiled" message). Imported model weights stay on disk; removing a profile
+never deletes the file.
+
 The PR 1-18 implementation sequence is skeleton-complete in the local scaffold:
 typed models, Tauri bridge slices, honest empty-state UI, and deterministic
 slice tests exist. It is not yet functionally complete as an autonomous
