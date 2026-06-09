@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import type { ModelSettingsView } from "../features/models/modelTypes";
+import type { ModelProviderView, ModelSettingsView } from "../features/models/modelTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusIcon, type FocusIconName } from "./focusAtoms";
 import { selectedModel, selectedProvider } from "./focusFormat";
@@ -101,17 +101,35 @@ export function FocusModelMenu({
   onRefreshModels: () => void;
   onSelectModel: (modelId: string) => void;
 }) {
-  const provider = selectedProvider(modelSettings);
+  const activeProvider = selectedProvider(modelSettings);
   const activeModel = selectedModel(modelSettings);
+  const usable = modelSettings.providers.filter((item) => item.models.length > 0);
   return <Scrim onClose={onClose} position="center">
     <div className="menu" data-screen-label="Model picker">
-      <div className="menu-head"><div className="ey">{provider?.label ?? "Models"} / {provider?.status ?? "not loaded"}</div><h3 className="disp">Choose a local model</h3></div>
+      <div className="menu-head"><div className="ey">{usable.length} provider(s) ready</div><h3 className="disp">Choose a model</h3></div>
       <div className="menu-list">
-        {(provider?.models ?? []).map((model) => <button className={`menu-item${model === activeModel ? " on" : ""}`} key={model} onClick={() => { onSelectModel(model); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{model}</b><span>Local Ollama model</span></span>{model === activeModel && <span className="mi-meta active">active</span>}</button>)}
-        {(provider?.models.length ?? 0) === 0 && <button className="menu-item" onClick={onRefreshModels} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>No local models loaded</b><span>{provider?.detail ?? "Refresh Ollama status."}</span></span><span className="mi-meta">refresh</span></button>}
+        {usable.flatMap((item) => item.models.map((model) => {
+          const isActive = item.id === activeProvider?.id && model === activeModel;
+          return <button className={`menu-item${isActive ? " on" : ""}`} key={`${item.id}:${model}`} onClick={() => { onSelectModel(model); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{modelTitle(item, model)}</b><span>{providerSubtitle(item)}</span></span>{isActive && <span className="mi-meta active">active</span>}</button>;
+        }))}
+        {usable.length === 0 && <button className="menu-item" onClick={onRefreshModels} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>No models loaded</b><span>Refresh Ollama, or install a CLI / add a key in Settings.</span></span><span className="mi-meta">refresh</span></button>}
       </div>
     </div>
   </Scrim>;
+}
+
+function modelTitle(provider: ModelProviderView, model: string) {
+  return provider.kind === "cli" ? provider.label : model;
+}
+
+function providerSubtitle(provider: ModelProviderView) {
+  if (provider.kind === "cli") {
+    return "Subscription CLI · prompts go off-device";
+  }
+  if (provider.kind === "ollama") {
+    return "Local Ollama model";
+  }
+  return provider.label;
 }
 
 interface PaletteItem {
