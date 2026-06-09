@@ -72,7 +72,7 @@ function runtimeProviderView(provider: RuntimeStatusView["providers"][number]): 
   const unsupportedOpenAi = provider.kind === "openai_compatible";
   return {
     detail: unsupportedOpenAi
-      ? "OpenAI-compatible calls are not wired yet. Use Ollama for live local calls."
+      ? "OpenAI-compatible calls are not wired yet. Use Delyx Local or Ollama for live local calls."
       : provider.message,
     id: provider.id,
     kind: unsupportedOpenAi ? "unavailable" : providerKind(provider.kind),
@@ -85,14 +85,13 @@ function runtimeProviderView(provider: RuntimeStatusView["providers"][number]): 
 }
 
 function providerKind(kind: string): ProviderKind {
-  if (kind === "ollama" || kind === "openai_compatible") {
+  if (kind === "delyx_local" || kind === "ollama" || kind === "openai_compatible") {
     return kind;
   }
   return "unavailable";
 }
 
 function providerStatus(status: string): ProviderStatus {
-  return status === "missing_key" || status === "ready" || status === "unreachable"
-    ? status
-    : "not_configured";
+  const known = ["failed", "loading", "missing_key", "model_missing", "not_configured", "ready", "unreachable"];
+  return known.includes(status) ? (status as ProviderStatus) : "not_configured";
 }

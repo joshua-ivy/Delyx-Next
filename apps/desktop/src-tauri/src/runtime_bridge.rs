@@ -1,11 +1,13 @@
 use crate::{
     desktop_shell_info,
+    model_embedded_persistence::list_profiles_from_path,
     model_ollama::{
         detect_local_ollama_provider, send_ollama_chat, OllamaChatMessage, OllamaChatResult,
     },
     model_ollama_version::detect_local_ollama_version,
     model_provider::{
-        ModelInfo, ModelProvider, ModelRegistry, ModelRole, ProviderKind, ProviderStatus,
+        delyx_local_provider, ModelInfo, ModelProvider, ModelRegistry, ModelRole, ProviderKind,
+        ProviderStatus,
     },
 };
 use serde::Serialize;
@@ -22,6 +24,10 @@ pub struct RuntimeBridgeState {
 impl RuntimeBridgeState {
     pub fn persistent(database_path: PathBuf) -> Self {
         Self { database_path }
+    }
+
+    pub fn database_path(&self) -> &Path {
+        &self.database_path
     }
 }
 
@@ -89,6 +95,7 @@ pub fn runtime_status_with_provider_and_version(
     ollama_version: Option<String>,
 ) -> Result<RuntimeStatusView, String> {
     let mut registry = ModelRegistry::with_runtime_defaults(0);
+    registry.register_provider(delyx_local_provider(0, local_model_infos(database_path)?));
     registry.register_provider(ollama);
     for route in crate::model_provider_persistence::load_routes_from_path(database_path)? {
         let _ = registry.save_role_route(route.role, &route.provider_id, &route.model_id);
@@ -106,19 +113,41 @@ fn save_detected_coding_route(
     registry: &mut ModelRegistry,
     database_path: &Path,
 ) -> Result<(), String> {
-    if let Some(model_id) = first_ready_ollama_model(registry).map(|model| model.id.clone()) {
-        let _ = registry.save_role_route(ModelRole::Coding, "ollama-local", &model_id);
+    // Prefer a Delyx-managed embedded model, then fall back to Ollama.
+    let detected = first_ready_model(registry, "delyx-local")
+        .map(|model| ("delyx-local".to_string(), model.id.clone()))
+        .or_else(|| {
+            first_ready_model(registry, "ollama-local")
+                .map(|model| ("ollama-local".to_string(), model.id.clone()))
+        });
+    if let Some((provider_id, model_id)) = detected {
+        let _ = registry.save_role_route(ModelRole::Coding, &provider_id, &model_id);
         crate::model_provider_persistence::save_routes_to_path(database_path, registry.routes())?;
     }
     Ok(())
 }
 
-fn first_ready_ollama_model(registry: &ModelRegistry) -> Option<&ModelInfo> {
+fn local_model_infos(database_path: &Path) -> Result<Vec<ModelInfo>, String> {
+    Ok(list_profiles_from_path(database_path)?
+        .into_iter()
+        .map(|profile| ModelInfo {
+            id: profile.id,
+            display_name: profile.display_name,
+            context_window: profile.context_window,
+            supports_tools: profile.supports_tools,
+            format: Some(profile.format),
+            runtime: Some(profile.runtime),
+            path: Some(profile.model_path),
+        })
+        .collect())
+}
+
+fn first_ready_model<'a>(registry: &'a ModelRegistry, provider_id: &str) -> Option<&'a ModelInfo> {
     registry
         .list_providers()
         .iter()
         .find(|provider| {
-            provider.id == "ollama-local" && provider.health.status == ProviderStatus::Ready
+            provider.id == provider_id && provider.health.status == ProviderStatus::Ready
         })
         .and_then(|provider| provider.models.first())
 }

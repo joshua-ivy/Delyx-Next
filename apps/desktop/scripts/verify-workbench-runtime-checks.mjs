@@ -17,7 +17,7 @@ export const runtimeChecks = [
   ["src/features/review/reviewTypes.ts", "ReviewReportView"],
   ["src/features/review/reviewTypes.ts", "ReviewFindingView"],
   ["src/features/models/modelData.ts", "currentModelSettings"],
-  ["src/features/models/modelData.ts", "selectedProviderId: \"ollama-local\""],
+  ["src/features/models/modelData.ts", "selectedProviderId: \"delyx-local\""],
   ["src/features/models/modelData.ts", "Not wired yet. Use Ollama for live local model calls."],
   ["src/features/models/modelData.ts", "routes: []"],
   ["src/features/models/modelTypes.ts", "ModelSettingsView"],

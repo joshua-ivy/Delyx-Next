@@ -1,8 +1,17 @@
 import type { ModelSettingsView } from "./modelTypes";
 
 export const currentModelSettings: ModelSettingsView = {
-  selectedProviderId: "ollama-local",
+  selectedProviderId: "delyx-local",
   providers: [
+    {
+      detail: "No Delyx-managed local models imported yet.",
+      id: "delyx-local",
+      kind: "delyx_local",
+      label: "Delyx Local",
+      models: [],
+      requiresSecret: false,
+      status: "not_configured",
+    },
     {
       detail: "No local endpoint configured yet.",
       id: "ollama-local",
