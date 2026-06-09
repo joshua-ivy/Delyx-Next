@@ -30,18 +30,20 @@ Imported model weights stay on disk; removing a profile never deletes the file.
 The default build runs the embedded runtime on **CPU**. To use an NVIDIA GPU
 (much faster), build with the CUDA feature:
 
+This repo uses a bundled Node/npm under `.tools\` (there is no global `npm`):
+
 ```
-npm run dev:desktop:cuda        # dev
-npm run package:windows:cuda    # installer
+$env:CUDA_COMPUTE_CAP = "120"            # RTX 50-series; set before building
+.\.tools\npm.cmd run dev:desktop:cuda     # dev
+.\.tools\npm.cmd run package:windows:cuda # installer
 ```
 
 Prerequisites (on the build machine):
 
 - A recent NVIDIA driver and the **CUDA Toolkit 12.x** (`nvcc` on `PATH`). For
   RTX 50-series (Blackwell, compute capability 12.0) use **CUDA Toolkit 12.8+**.
-- If the build can't auto-detect your GPU's compute capability, set it first:
-  PowerShell `$env:CUDA_COMPUTE_CAP = "120"` (120 = RTX 50-series, 89 = RTX 40,
-  86 = RTX 30).
+- If the build can't auto-detect your GPU's compute capability, set
+  `CUDA_COMPUTE_CAP` first (120 = RTX 50-series, 89 = RTX 40, 86 = RTX 30).
 
 The first CUDA build is heavy (it compiles candle's CUDA kernels). Pick a model
 that fits VRAM — a 14B `Q4_K_M`/`Q5_K_M` (~9–11 GB) fits a 16 GB card with room
