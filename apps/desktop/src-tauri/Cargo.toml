@@ -23,8 +23,10 @@ tokio = { version = "1", features = ["sync", "rt-multi-thread", "macros"] }
 mistralrs = { version = "0.8.1", optional = true, default-features = false }
 
 [features]
-default = []
-# Embedded in-process local model runtime. Heavy dependency; opt-in only.
+# Embedded in-process local model runtime is ON by default so the desktop app
+# ships with Delyx Local working out of the box (no manual flag). Build with
+# --no-default-features for a lean build without the embedded runtime.
+default = ["embedded_mistral"]
 embedded_mistral = ["dep:mistralrs"]
 embedded_mistral_cuda = ["embedded_mistral", "mistralrs/cuda"]
 

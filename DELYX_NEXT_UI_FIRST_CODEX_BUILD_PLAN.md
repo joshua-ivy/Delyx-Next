@@ -46,11 +46,12 @@ confirmed accurate; no checkbox was overclaimed. Evidence:
 - Live model execution paths: a first-class in-process **Delyx Local** runtime
   (feature-gated `embedded_mistral`, mistralrs 0.8.1 — import a local GGUF, select
   it, chat through the provider-aware `model_chat` command), **Ollama** (optional
-  adapter), and **Claude/Codex CLI** chat/QA-QC. Default builds ship the Delyx
-  Local scaffold with a stub; the real runtime compiles with
-  `--features embedded_mistral` (verified green). Remaining embedded tail:
-  PatchDraft still generates via the Ollama path (PR G — async migration to
-  `model_chat`).
+  adapter), and **Claude/Codex CLI** chat/QA-QC. The `embedded_mistral` feature
+  is **on by default**, so `tauri dev`/`build` and `cargo build`/`test` include
+  the real in-process runtime (a lean `--no-default-features` build keeps the
+  stub). Delyx Local is the default provider; users switch to Ollama in Settings
+  if they prefer. Remaining embedded tail: PatchDraft still generates via the
+  Ollama path (PR G — async migration to `model_chat`).
 - OpenAI-compatible providers are health/config stubs only.
 - Codex CLI has an approval-gated read-only launch bridge with captured terminal output and UI artifacts.
 - Codex write-capable launch now creates real checkpoint receipts for planned files before execution; worktree isolation can still come later.
