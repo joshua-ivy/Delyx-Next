@@ -42,6 +42,11 @@ Prerequisites (on the build machine):
 
 - A recent NVIDIA driver and the **CUDA Toolkit 12.x** (`nvcc` on `PATH`). For
   RTX 50-series (Blackwell, compute capability 12.0) use **CUDA Toolkit 12.8+**.
+- **Visual Studio Build Tools with the "Desktop development with C++" workload.**
+  nvcc needs MSVC's `cl.exe` on `PATH`, so run the CUDA build from a
+  **"x64 Native Tools Command Prompt for VS"** (or a Developer PowerShell via
+  `Enter-VsDevShell`). A plain terminal will fail with
+  `nvcc fatal : Cannot find compiler 'cl.exe' in PATH`.
 - If the build can't auto-detect your GPU's compute capability, set
   `CUDA_COMPUTE_CAP` first (120 = RTX 50-series, 89 = RTX 40, 86 = RTX 30).
 
