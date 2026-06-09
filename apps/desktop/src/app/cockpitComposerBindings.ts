@@ -129,7 +129,7 @@ async function requestCliReply(state: ComposerBindingState, thread: TaskThread, 
     state.setAgentRuns((current) => recordModelCallResult(current, thread, adapterId, adapterId, result.text, now));
     notifyLocalAction(`${adapterId} replied`, "success");
   } catch (error) {
-    recordModelFailure(state, thread, adapterId, error instanceof Error ? error.message : "CLI request failed.");
+    recordModelFailure(state, thread, adapterId, errorText(error, "CLI request failed."));
   }
 }
 
@@ -158,8 +158,18 @@ async function requestModelReplyInner(state: ComposerBindingState, thread: TaskT
       void runQaqcReview(state, thread, response.text);
     }
   } catch (error) {
-    recordModelFailure(state, thread, route.modelId, error instanceof Error ? error.message : "Model request failed.");
+    recordModelFailure(state, thread, route.modelId, errorText(error, "Model request failed."));
   }
+}
+
+function errorText(error: unknown, fallback: string): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string" && error.trim()) {
+    return error;
+  }
+  return fallback;
 }
 
 function providerLabel(providerId: string): string {
