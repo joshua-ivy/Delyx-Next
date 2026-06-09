@@ -174,6 +174,7 @@ mod tests {
         AgentPatchDraftStepRequest {
             max_bytes_per_file: Some(20_000),
             model: "qwen3-coder:30b".to_string(),
+            provider_id: "ollama-local".to_string(),
             now_ms: 43,
             project_id: "project-1".to_string(),
             run_id: run_id.to_string(),

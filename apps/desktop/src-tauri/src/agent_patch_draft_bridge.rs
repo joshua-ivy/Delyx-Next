@@ -7,11 +7,12 @@ use crate::agent_patch_draft_receipts::{
     record_model_failed, record_model_started,
 };
 use crate::approval_bridge::ApprovalBridgeState;
-use crate::model_ollama::send_ollama_chat;
+use crate::model_chat::{send_model_chat, ModelChatMessage};
+use crate::model_embedded::EmbeddedRuntimeState;
 use crate::patch_bridge::PatchBridgeState;
 use crate::thread_run_bridge::ThreadRunBridgeState;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+use std::path::Path;
 
 #[cfg(test)]
 use crate::agent_patch_draft_receipts::{
@@ -30,6 +31,7 @@ pub struct AgentPatchDraftExecuteRequest {
     pub approval_id: String,
     pub approved_roots: Vec<String>,
     pub project_path: String,
+    pub provider_id: String,
     pub model: String,
     pub goal: String,
     pub plan_steps: Vec<String>,
@@ -54,14 +56,31 @@ pub(crate) fn execute_patch_draft_record(
     threads: &ThreadRunBridgeState,
     patches: &PatchBridgeState,
     approvals: &ApprovalBridgeState,
+    embedded: &EmbeddedRuntimeState,
+    database_path: &Path,
     request: AgentPatchDraftExecuteRequest,
 ) -> Result<AgentPatchDraftBridgeView, String> {
     validate_request(&request)?;
     let files = read_draft_files(&request)?;
     record_draft_file_reads(&threads, &request, &files)?;
     let node_id = record_model_started(&threads, &request)?;
-    let messages = draft_messages(&request, &files);
-    match send_ollama_chat(request.model.clone(), messages, Duration::from_secs(120)) {
+    let messages = draft_messages(&request, &files)
+        .into_iter()
+        .map(|message| ModelChatMessage {
+            role: message.role,
+            content: message.content,
+        })
+        .collect();
+    // PatchDraft runs on a Tauri sync command thread, so block on the async,
+    // provider-aware model_chat (Delyx Local or Ollama) here.
+    let chat = tauri::async_runtime::block_on(send_model_chat(
+        database_path,
+        embedded,
+        request.provider_id.clone(),
+        request.model.clone(),
+        messages,
+    ));
+    match chat {
         Ok(response) => {
             let mut thread_store = lock_thread_store(&threads)?;
             record_model_completed(&mut thread_store, &request, &node_id, &response.text)?;
@@ -107,5 +126,5 @@ pub(crate) fn execute_patch_draft_from_model_text(
     record_model_completed(thread_store, request, &node.id, model_text)?;
     let patch_request = patch_request_from_draft_text(request, files, model_text)?;
     let view = execute_patch_proposal_record(thread_store, patch_store, approvals, patch_request)?;
-    Ok(draft_view(view, &request.model, "ollama-local"))
+    Ok(draft_view(view, &request.model, &request.provider_id))
 }

@@ -34,12 +34,21 @@ pub fn agent_dispatch_patch_draft(
     reviews: tauri::State<ReviewBridgeState>,
     approvals: tauri::State<ApprovalBridgeState>,
     plans: tauri::State<PlanBridgeState>,
+    embedded: tauri::State<crate::model_embedded::EmbeddedRuntimeState>,
+    runtime: tauri::State<crate::runtime_bridge::RuntimeBridgeState>,
     request: AgentPatchDraftDispatchRequest,
 ) -> Result<AgentPatchDraftBridgeView, String> {
     verify_scheduler_patch_draft(
         &threads, &patches, &tests, &reviews, &approvals, &plans, &request,
     )?;
-    execute_patch_draft_record(&threads, &patches, &approvals, request.execute)
+    execute_patch_draft_record(
+        &threads,
+        &patches,
+        &approvals,
+        &embedded,
+        runtime.database_path(),
+        request.execute,
+    )
 }
 
 pub(crate) fn verify_scheduler_patch_draft(

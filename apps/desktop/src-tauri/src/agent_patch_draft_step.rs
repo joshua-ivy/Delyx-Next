@@ -19,6 +19,7 @@ use serde::Deserialize;
 pub struct AgentPatchDraftStepRequest {
     pub run_id: String,
     pub project_id: String,
+    pub provider_id: String,
     pub model: String,
     pub now_ms: u64,
     pub max_bytes_per_file: Option<usize>,
@@ -32,6 +33,8 @@ pub fn agent_run_patch_draft_step(
     reviews: tauri::State<ReviewBridgeState>,
     approvals: tauri::State<ApprovalBridgeState>,
     plans: tauri::State<PlanBridgeState>,
+    embedded: tauri::State<crate::model_embedded::EmbeddedRuntimeState>,
+    runtime: tauri::State<crate::runtime_bridge::RuntimeBridgeState>,
     request: AgentPatchDraftStepRequest,
 ) -> Result<AgentPatchDraftBridgeView, String> {
     let context = scheduler_patch_draft_context_request(
@@ -48,7 +51,14 @@ pub fn agent_run_patch_draft_step(
     verify_scheduler_patch_draft(
         &threads, &patches, &tests, &reviews, &approvals, &plans, &dispatch,
     )?;
-    execute_patch_draft_record(&threads, &patches, &approvals, dispatch.execute)
+    execute_patch_draft_record(
+        &threads,
+        &patches,
+        &approvals,
+        &embedded,
+        runtime.database_path(),
+        dispatch.execute,
+    )
 }
 
 pub(crate) fn scheduler_patch_draft_context_request(
@@ -129,6 +139,7 @@ pub(crate) fn scheduler_patch_draft_context_request(
         has_supported_test_command: false,
         max_bytes_per_file: request.max_bytes_per_file,
         model: request.model.clone(),
+        provider_id: request.provider_id.clone(),
         now_ms: request.now_ms,
         project_id: request.project_id.clone(),
         run_id: request.run_id.clone(),
@@ -139,10 +150,13 @@ pub(crate) fn scheduler_patch_draft_context_request(
 fn validate_step_request(request: &AgentPatchDraftStepRequest) -> Result<(), String> {
     if request.run_id.trim().is_empty()
         || request.project_id.trim().is_empty()
+        || request.provider_id.trim().is_empty()
         || request.model.trim().is_empty()
         || request.now_ms == 0
     {
-        return Err("PatchDraft step requires run, project, model, and clock.".to_string());
+        return Err(
+            "PatchDraft step requires run, project, provider, model, and clock.".to_string(),
+        );
     }
     Ok(())
 }

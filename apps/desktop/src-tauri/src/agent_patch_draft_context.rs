@@ -4,6 +4,7 @@ use crate::agent_patch_draft_bridge::{
 use crate::agent_patch_draft_dispatch::{
     verify_scheduler_patch_draft, AgentPatchDraftDispatchRequest,
 };
+use crate::agent_scheduler_patch_context::repair_relative_path;
 use crate::approval_bridge::{ApprovalBridgeState, PermissionScopeView};
 use crate::patch_bridge::PatchBridgeState;
 use crate::plan_bridge::{PlanBridgeState, PlanView};
@@ -19,6 +20,7 @@ pub struct AgentPatchDraftContextRequest {
     pub run_id: String,
     pub project_id: String,
     pub approval_id: String,
+    pub provider_id: String,
     pub model: String,
     pub has_supported_test_command: bool,
     #[serde(default)]
@@ -35,6 +37,8 @@ pub fn agent_dispatch_patch_draft_from_context(
     reviews: tauri::State<ReviewBridgeState>,
     approvals: tauri::State<ApprovalBridgeState>,
     plans: tauri::State<PlanBridgeState>,
+    embedded: tauri::State<crate::model_embedded::EmbeddedRuntimeState>,
+    runtime: tauri::State<crate::runtime_bridge::RuntimeBridgeState>,
     request: AgentPatchDraftContextRequest,
 ) -> Result<AgentPatchDraftBridgeView, String> {
     let execute = context_execute_request(&threads, &reviews, &approvals, &plans, &request)?;
@@ -48,7 +52,14 @@ pub fn agent_dispatch_patch_draft_from_context(
     verify_scheduler_patch_draft(
         &threads, &patches, &tests, &reviews, &approvals, &plans, &dispatch,
     )?;
-    execute_patch_draft_record(&threads, &patches, &approvals, dispatch.execute)
+    execute_patch_draft_record(
+        &threads,
+        &patches,
+        &approvals,
+        &embedded,
+        runtime.database_path(),
+        dispatch.execute,
+    )
 }
 
 pub(crate) fn context_execute_request(
@@ -90,6 +101,7 @@ pub(crate) fn context_execute_request(
         goal: draft.goal,
         max_bytes_per_file: request.max_bytes_per_file,
         model: request.model.clone(),
+        provider_id: request.provider_id.clone(),
         plan_steps: draft.steps,
         project_path: project.path,
         run_id: request.run_id.clone(),
@@ -101,11 +113,13 @@ fn validate_context_request(request: &AgentPatchDraftContextRequest) -> Result<(
     if request.run_id.trim().is_empty()
         || request.project_id.trim().is_empty()
         || request.approval_id.trim().is_empty()
+        || request.provider_id.trim().is_empty()
         || request.model.trim().is_empty()
         || request.now_ms == 0
     {
         return Err(
-            "PatchDraft context requires run, project, approval, model, and clock.".to_string(),
+            "PatchDraft context requires run, project, approval, provider, model, and clock."
+                .to_string(),
         );
     }
     Ok(())
@@ -257,32 +271,6 @@ fn approved_plan_files(
         .take(4)
         .cloned()
         .collect()
-}
-
-fn repair_relative_path(file_path: &str, project_path: &str) -> Option<String> {
-    let normalized = file_path.replace('\\', "/");
-    let root = project_path
-        .replace('\\', "/")
-        .trim_end_matches('/')
-        .to_string();
-    let absolute = normalized.starts_with('/') || normalized.as_bytes().get(1) == Some(&b':');
-    let relative = if absolute
-        && normalized
-            .to_lowercase()
-            .starts_with(&format!("{}/", root.to_lowercase()))
-    {
-        normalized[root.len() + 1..].to_string()
-    } else if absolute {
-        return None;
-    } else {
-        normalized.trim_start_matches("./").to_string()
-    };
-    let parts = relative
-        .split('/')
-        .filter(|part| !part.is_empty())
-        .collect::<Vec<_>>();
-    (!parts.is_empty() && parts.iter().all(|part| *part != "." && *part != ".."))
-        .then(|| parts.join("/"))
 }
 
 fn same_path(left: &str, right: &str) -> bool {

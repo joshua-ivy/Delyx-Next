@@ -1,5 +1,5 @@
+import { selectedCodingRoute } from "../features/models/modelClient";
 import type { ModelSettingsView } from "../features/models/modelTypes";
-import { selectedOllamaModel } from "../features/models/ollamaClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import { runPatchDraftSchedulerStepOverBridge } from "../features/runs/agentExecutorClient";
@@ -24,20 +24,21 @@ export async function proposeApprovedPlanPatchWithOllama(
   }
   const thread = state.activeThread!;
   const run = state.activeRun!;
-  const model = selectedOllamaModel(state.modelSettings);
-  if (!model) {
-    recordPatchDraftFailure(state, thread, "ollama-local", "Ollama is not ready to draft a patch.");
+  const route = selectedCodingRoute(state.modelSettings);
+  if (!route) {
+    recordPatchDraftFailure(state, thread, "no-model", "No ready model is selected to draft a patch.");
     return { created: false };
   }
 
   try {
-    startPatchDraft(state, thread, model);
+    startPatchDraft(state, thread, `${route.providerId}/${route.modelId}`);
     const createdAtMs = Date.now();
     const result = await runPatchDraftSchedulerStepOverBridge({
       maxBytesPerFile: 20_000,
-      model,
+      model: route.modelId,
       nowMs: createdAtMs,
       projectId: state.activeProject.id,
+      providerId: route.providerId,
       runId: run.id,
     });
     if (!result || result.status !== "completed") {
@@ -55,7 +56,7 @@ export async function proposeApprovedPlanPatchWithOllama(
 
 function startPatchDraft(state: OllamaPatchProposalState, thread: TaskThread, model: string) {
   const now = new Date().toISOString();
-  appendMessage(state, thread.id, { role: "system", body: `Ollama PatchDraftAgent is drafting with ${model}.` }, "building");
+  appendMessage(state, thread.id, { role: "system", body: `PatchDraftAgent is drafting with ${model}.` }, "building");
   state.setThreadState("ready");
   state.setAgentRuns((current) => updateRunsForThreadStatus(current, thread, "building", now));
 }

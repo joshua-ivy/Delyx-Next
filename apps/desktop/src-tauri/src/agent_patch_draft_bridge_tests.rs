@@ -127,6 +127,7 @@ mod tests {
             goal: "Update value.".to_string(),
             max_bytes_per_file: Some(20_000),
             model: "qwen3-coder:30b".to_string(),
+            provider_id: "ollama-local".to_string(),
             plan_steps: vec!["Update src/main.ts".to_string()],
             project_path: root.display().to_string(),
             run_id: run_id.to_string(),

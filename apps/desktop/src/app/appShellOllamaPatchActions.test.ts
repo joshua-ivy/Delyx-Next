@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { selectedOllamaModel } from "../features/models/ollamaClient";
+import { selectedCodingRoute } from "../features/models/modelClient";
 import { loadPatchSnapshot } from "../features/patches/patchClient";
 import type { PatchProposalView } from "../features/patches/patchTypes";
 import { runPatchDraftSchedulerStepOverBridge } from "../features/runs/agentExecutorClient";
 import { appendThreadMessageOverBridge, loadThreadRunSnapshot } from "../features/threads/threadClient";
 import { proposeApprovedPlanPatchWithOllama, type OllamaPatchProposalState } from "./appShellOllamaPatchActions";
 
-vi.mock("../features/models/ollamaClient", () => ({
-  selectedOllamaModel: vi.fn(),
+vi.mock("../features/models/modelClient", () => ({
+  selectedCodingRoute: vi.fn(),
 }));
 
 vi.mock("../features/runs/agentExecutorClient", () => ({
@@ -31,11 +31,11 @@ vi.mock("./ShellPreferenceController", () => ({
 const dispatchPatchDraft = vi.mocked(runPatchDraftSchedulerStepOverBridge);
 const loadPatches = vi.mocked(loadPatchSnapshot);
 const loadSnapshot = vi.mocked(loadThreadRunSnapshot);
-const model = vi.mocked(selectedOllamaModel);
+const route = vi.mocked(selectedCodingRoute);
 
 beforeEach(() => {
   vi.clearAllMocks();
-  model.mockReturnValue("qwen3-coder:30b");
+  route.mockReturnValue({ modelId: "qwen3-coder:30b", providerId: "ollama-local", role: "coding", saved: false });
   dispatchPatchDraft.mockResolvedValue({
     message: "Patch proposal patch-1 captured.",
     model: "qwen3-coder:30b",

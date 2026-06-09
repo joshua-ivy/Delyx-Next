@@ -18,6 +18,7 @@ export interface AgentPatchDraftExecuteRequest {
   filesLikelyInvolved: string[];
   goal: string;
   maxBytesPerFile?: number;
+  providerId: string;
   model: string;
   planSteps: string[];
   projectPath: string;
@@ -37,6 +38,7 @@ export interface AgentPatchDraftContextRequest {
   approvalId: string;
   hasSupportedTestCommand: boolean;
   maxBytesPerFile?: number;
+  providerId: string;
   model: string;
   nowMs: number;
   projectId: string;
@@ -46,6 +48,7 @@ export interface AgentPatchDraftContextRequest {
 
 export interface AgentPatchDraftStepRequest {
   maxBytesPerFile?: number;
+  providerId: string;
   model: string;
   nowMs: number;
   projectId: string;
