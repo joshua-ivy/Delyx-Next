@@ -84,6 +84,7 @@ fn main() {
             )
             .expect("external-agent run SQLite state should open"),
         )
+        .manage(delyx_next_desktop::secret_bridge::SecretBridgeState::keyring())
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::agent_drive_bridge::agent_drive_run,
             delyx_next_desktop::agent_patch_apply_step::agent_run_patch_apply_step,
@@ -135,6 +136,9 @@ fn main() {
             delyx_next_desktop::runtime_bridge::ollama_chat,
             delyx_next_desktop::runtime_bridge::runtime_status,
             delyx_next_desktop::sandbox_capability::sandbox_capability,
+            delyx_next_desktop::secret_bridge::secret_set,
+            delyx_next_desktop::secret_bridge::secret_clear,
+            delyx_next_desktop::secret_bridge::secret_status,
             delyx_next_desktop::skills_bridge::skill_activate,
             delyx_next_desktop::skills_bridge::skill_disable,
             delyx_next_desktop::skills_bridge::skill_import,

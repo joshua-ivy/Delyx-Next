@@ -4,10 +4,11 @@ import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { FocusIcon } from "./focusAtoms";
+import { FocusProviders } from "./FocusProviders";
 import { gitChangeLabel, modeLabel, selectedModel, selectedProvider, type FocusMode } from "./focusFormat";
 import type { DesktopShellStatusView } from "./runtimeBridge";
 
-type SettingsTab = "general" | "models" | "workspace" | "privacy" | "appearance" | "keys";
+type SettingsTab = "general" | "models" | "providers" | "workspace" | "privacy" | "appearance" | "keys";
 
 interface FocusSettingsProps {
   activeRun: AgentRunView | undefined;
@@ -24,6 +25,7 @@ interface FocusSettingsProps {
 const tabs: [SettingsTab, string][] = [
   ["general", "General"],
   ["models", "Models & Providers"],
+  ["providers", "Providers & Keys"],
   ["workspace", "Workspace"],
   ["privacy", "Privacy & Local Data"],
   ["appearance", "Appearance"],
@@ -43,6 +45,7 @@ export function FocusSettings(props: FocusSettingsProps) {
           <div className="set-tabs">{tabs.map(([id, label]) => <button className={`set-tab${tab === id ? " on" : ""}`} key={id} onClick={() => setTab(id)} type="button">{label}</button>)}</div>
           {tab === "general" && <General desktopShell={props.desktopShell} mode={props.mode} onModeChange={props.onModeChange} />}
           {tab === "models" && <Models modelSettings={props.modelSettings} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} />}
+          {tab === "providers" && <FocusProviders />}
           {tab === "workspace" && <Workspace activeRun={props.activeRun} project={props.project} threads={props.threads} />}
           {tab === "privacy" && <Privacy />}
           {tab === "appearance" && <Appearance compact={compact} mode={props.mode} onCompact={() => setCompact((value) => !value)} onModeChange={props.onModeChange} />}

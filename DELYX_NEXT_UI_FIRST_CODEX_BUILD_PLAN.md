@@ -139,7 +139,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 228/256 checked, 28 open, 89.1%.
+- Phase 2 checkbox progress: 230/256 checked, 26 open, 89.8%.
 - Phase 2 track progress: 6/12 complete, 6/12 in progress.
 - Complete tracks: D1, D3, D4, D6, D9, D10.
 - In-progress tracks: D2, D5, D7, D8, D11, D12.
@@ -336,8 +336,10 @@ Progress board:
 
 - [ ] D7 - Model Integration Depth (in progress; Ollama is real, OpenAI-compatible remains out of live scope)
   - [x] ~~OpenAI-compatible providers are out of live scope for now. The frontend maps the typed backend stub to an unavailable/not-wired UI state instead of suggesting a missing API key would make it usable.~~
-  - [ ] Revisit OpenAI-compatible providers only with real calls, keyring-backed secret handling, health checks, and tests.
-  - [ ] Add a direct Anthropic route only as explicit opt-in model depth with keyring-backed secrets, approval-visible cloud boundary state, health checks, and deterministic route tests.
+  - [x] ~~Added keyring-backed secret storage (`secret_store` + `secret_bridge`, OS keyring via the `keyring` crate) with `secret_set`/`secret_clear`/`secret_status` commands that never return the secret value, covered by `secret_bridge_tests` against an in-memory store.~~
+  - [x] ~~Added a Settings "Providers & Keys" surface (`FocusProviders`) that auto-detects the Claude Code and Codex CLIs (PATH), shows their install/login commands when missing, and lets the user paste, see set/not-set state for, and clear Anthropic and OpenAI API keys. Covered by `FocusProviders.test.tsx`.~~
+  - [ ] Revisit OpenAI-compatible providers with real calls and health checks. (Keyring storage + key entry now done; the live HTTPS call path, health probe, and route tests remain — needs an HTTPS client dependency since the current model path is plaintext-loopback Ollama only.)
+  - [ ] Add a direct Anthropic route with live calls, approval-visible cloud boundary state, health checks, and deterministic route tests. (Keyring-backed secret + Settings entry now done; live execution and the off-device cloud-boundary approval remain.)
   - [x] ~~Runtime status now optionally probes real local Ollama `/api/version` and surfaces the version in Settings when available; missing version data does not override the model-readiness probe.~~
   - [ ] Add pull-progress UI only when backed by real local state.
 

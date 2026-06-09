@@ -16,6 +16,10 @@ Default stack:
 - Vite
 - CSS variables for design tokens
 - Lucide icons
+- `keyring` (Rust) — narrow, justified dependency for storing cloud-provider API
+  keys in the OS keyring (Windows Credential Manager / macOS Keychain / Linux
+  Secret Service) instead of the repo, `settings.json`, or SQLite, satisfying the
+  "secrets never in the repo" rule. Used only by `secret_store`/`secret_bridge`.
 
 Radix UI, TanStack Query, and Zustand are not installed in Phase 2. The live
 Focus workbench uses small React components, local hooks, explicit Tauri bridge
