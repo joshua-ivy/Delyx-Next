@@ -75,6 +75,8 @@ mod automation_bridge_views;
 pub mod automation_persistence;
 mod automation_persistence_tests;
 mod automation_tests;
+pub mod cli_chat;
+mod cli_chat_tests;
 pub mod command_exec;
 mod command_exec_tests;
 mod d1_shared_store_tests;
