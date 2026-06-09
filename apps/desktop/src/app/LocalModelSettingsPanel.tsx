@@ -109,11 +109,11 @@ export function LocalModelSettingsPanel() {
       <div className="ey">Delyx Local models</div>
       <div className="set-lead">Import a local .gguf file to run it in-process — no Ollama required. Weights stay on disk; Delyx stores only the path. Removing a model never deletes the file.</div>
       <Row detail="Absolute path to a .gguf model file on this machine." title="Model file path">
-        <input aria-label="Model file path" className="pal-input" onChange={(event) => setPath(event.target.value)} placeholder="C:\\models\\your-model.Q4_K_M.gguf" value={path} />
+        <input aria-label="Model file path" className="set-input" onChange={(event) => setPath(event.target.value)} placeholder="C:\\models\\your-model.Q4_K_M.gguf" value={path} />
       </Row>
       <Row detail="Optional display name and context window." title="Details">
-        <input aria-label="Display name" className="pal-input" onChange={(event) => setName(event.target.value)} placeholder="Display name (optional)" value={name} />
-        <input aria-label="Context window" className="pal-input" onChange={(event) => setContext(event.target.value)} placeholder="ctx (e.g. 8192)" value={context} />
+        <input aria-label="Display name" className="set-input" onChange={(event) => setName(event.target.value)} placeholder="Display name (optional)" value={name} />
+        <input aria-label="Context window" className="set-input" onChange={(event) => setContext(event.target.value)} placeholder="ctx (e.g. 8192)" value={context} />
         <button className="select" disabled={busy || !path.trim()} onClick={() => void doImport()} type="button">{busy ? "Importing…" : "Import"}</button>
       </Row>
       {status && <Row detail={status} title="Status"><span className="tag live">ok</span></Row>}
@@ -151,18 +151,18 @@ function SamplingEditor({ onSave, profile }: { onSave: (request: ModelSamplingRe
   const [maxTokens, setMaxTokens] = useState(numText(profile.maxTokens));
   return (
     <Row detail="Tune sampling for this model. Blank = model default. Applies to chat and PatchDraft." title="Sampling">
-      <input aria-label={`${profile.id} temperature`} className="pal-input" onChange={(event) => setTemperature(event.target.value)} placeholder="temp" value={temperature} />
-      <input aria-label={`${profile.id} top_p`} className="pal-input" onChange={(event) => setTopP(event.target.value)} placeholder="top_p" value={topP} />
-      <input aria-label={`${profile.id} top_k`} className="pal-input" onChange={(event) => setTopK(event.target.value)} placeholder="top_k" value={topK} />
-      <input aria-label={`${profile.id} repeat_penalty`} className="pal-input" onChange={(event) => setRepeatPenalty(event.target.value)} placeholder="rep" value={repeatPenalty} />
-      <input aria-label={`${profile.id} max_tokens`} className="pal-input" onChange={(event) => setMaxTokens(event.target.value)} placeholder="max" value={maxTokens} />
+      <input aria-label={`${profile.id} temperature`} className="set-input" onChange={(event) => setTemperature(event.target.value)} placeholder="temp" value={temperature} />
+      <input aria-label={`${profile.id} top_p`} className="set-input" onChange={(event) => setTopP(event.target.value)} placeholder="top_p" value={topP} />
+      <input aria-label={`${profile.id} top_k`} className="set-input" onChange={(event) => setTopK(event.target.value)} placeholder="top_k" value={topK} />
+      <input aria-label={`${profile.id} repeat_penalty`} className="set-input" onChange={(event) => setRepeatPenalty(event.target.value)} placeholder="rep" value={repeatPenalty} />
+      <input aria-label={`${profile.id} max_tokens`} className="set-input" onChange={(event) => setMaxTokens(event.target.value)} placeholder="max" value={maxTokens} />
       <button className="select" onClick={() => onSave({ id: profile.id, maxTokens: numInt(maxTokens), repeatPenalty: num(repeatPenalty), temperature: num(temperature), topK: numInt(topK), topP: num(topP) })} type="button">Save sampling</button>
     </Row>
   );
 }
 
-function numText(value: number | undefined): string {
-  return value === undefined ? "" : String(value);
+function numText(value: number | null | undefined): string {
+  return value === undefined || value === null ? "" : String(value);
 }
 
 function num(value: string): number | undefined {

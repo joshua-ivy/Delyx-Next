@@ -78,27 +78,29 @@ mod tests {
         std::fs::write(&model, b"x").unwrap();
         let db = dir.join("db.sqlite3");
         let profile = import_profile_to_path(&db, request(model.display().to_string())).unwrap();
-        assert_eq!(profile.temperature, None);
+        // Import seeds balanced defaults rather than null.
+        assert_eq!(profile.temperature, Some(0.7));
+        assert_eq!(profile.top_k, Some(40));
 
         set_sampling_to_path(
             &db,
             ModelSamplingRequest {
                 id: profile.id.clone(),
-                temperature: Some(0.7),
-                top_p: Some(0.9),
-                top_k: Some(40),
-                repeat_penalty: Some(1.1),
+                temperature: Some(0.35),
+                top_p: Some(0.8),
+                top_k: Some(20),
+                repeat_penalty: Some(1.05),
                 max_tokens: Some(512),
             },
         )
         .unwrap();
 
         let reloaded = load_profile_from_path(&db, &profile.id).unwrap();
-        assert_eq!(reloaded.temperature, Some(0.7));
-        assert_eq!(reloaded.top_p, Some(0.9));
-        assert_eq!(reloaded.top_k, Some(40));
+        assert_eq!(reloaded.temperature, Some(0.35));
+        assert_eq!(reloaded.top_p, Some(0.8));
+        assert_eq!(reloaded.top_k, Some(20));
         assert_eq!(reloaded.max_tokens, Some(512));
-        assert!((reloaded.repeat_penalty.unwrap() - 1.1).abs() < 1e-6);
+        assert!((reloaded.repeat_penalty.unwrap() - 1.05).abs() < 1e-6);
     }
 
     fn request(model_path: String) -> ImportLocalModelRequest {

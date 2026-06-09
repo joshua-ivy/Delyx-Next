@@ -129,7 +129,7 @@ function KeyRow(props: {
     >
       <input
         aria-label={`${props.provider.label} API key`}
-        className="pal-input"
+        className="set-input"
         onChange={(event) => props.onChange(event.target.value)}
         placeholder={props.provider.hasKey ? "Replace key…" : "Paste API key…"}
         type="password"

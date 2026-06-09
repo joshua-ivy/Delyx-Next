@@ -72,10 +72,10 @@ pub fn import_ollama_profile_to_path(
         size_bytes: model.size_bytes,
         load_status: "unloaded".to_string(),
         last_error: None,
-        temperature: None,
-        top_p: None,
-        top_k: None,
-        repeat_penalty: None,
+        temperature: Some(crate::model_embedded_persistence::DEFAULT_TEMPERATURE),
+        top_p: Some(crate::model_embedded_persistence::DEFAULT_TOP_P),
+        top_k: Some(crate::model_embedded_persistence::DEFAULT_TOP_K),
+        repeat_penalty: Some(crate::model_embedded_persistence::DEFAULT_REPEAT_PENALTY),
         max_tokens: None,
     };
     let connection =

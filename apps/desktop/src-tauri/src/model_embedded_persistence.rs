@@ -140,13 +140,19 @@ fn profile_from_request(request: ImportLocalModelRequest) -> Result<LocalModelPr
         size_bytes: Some(metadata.len()),
         load_status: "unloaded".to_string(),
         last_error: None,
-        temperature: None,
-        top_p: None,
-        top_k: None,
-        repeat_penalty: None,
+        temperature: Some(DEFAULT_TEMPERATURE),
+        top_p: Some(DEFAULT_TOP_P),
+        top_k: Some(DEFAULT_TOP_K),
+        repeat_penalty: Some(DEFAULT_REPEAT_PENALTY),
         max_tokens: None,
     })
 }
+
+/// Balanced starting sampling for local coding/chat models (tunable per model).
+pub(crate) const DEFAULT_TEMPERATURE: f64 = 0.7;
+pub(crate) const DEFAULT_TOP_P: f64 = 0.9;
+pub(crate) const DEFAULT_TOP_K: u32 = 40;
+pub(crate) const DEFAULT_REPEAT_PENALTY: f32 = 1.1;
 
 pub fn set_sampling_to_path(path: &Path, request: ModelSamplingRequest) -> Result<(), String> {
     let connection = crate::sqlite_store::open_migrated_database(path).map_err(sql_string)?;
