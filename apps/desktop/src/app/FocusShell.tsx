@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ActionProposalView } from "../features/approvals/approvalTypes";
 import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { PatchProposalView } from "../features/patches/patchTypes";
@@ -56,7 +56,18 @@ export function FocusShell(props: FocusShellProps) {
   const [view, setView] = useState<FocusView>(props.activeThread ? "thread" : "home");
   const [overlay, setOverlay] = useState<FocusOverlay>();
   const [fallbackMode, setFallbackMode] = useState<FocusMode>("build");
-  const mode = focusMode(props.activeThread, fallbackMode);
+  // The workflow-derived mode follows thread status; a manual chip pick overrides
+  // it until the workflow actually advances (then we clear the override).
+  const derivedMode = focusMode(props.activeThread, fallbackMode);
+  const [userMode, setUserMode] = useState<FocusMode | undefined>(undefined);
+  const lastDerivedMode = useRef(derivedMode);
+  useEffect(() => {
+    if (lastDerivedMode.current !== derivedMode) {
+      lastDerivedMode.current = derivedMode;
+      setUserMode(undefined);
+    }
+  }, [derivedMode]);
+  const mode = userMode ?? derivedMode;
   const visibleThreads = props.threads.filter((thread) => !thread.archived);
   const activePatches = props.activeRun ? props.patches.filter((patch) => patch.runId === props.activeRun?.id) : [];
   const activeProposals = props.activeRun ? props.proposals.filter((proposal) => proposal.runId === props.activeRun?.id) : [];
@@ -89,7 +100,10 @@ export function FocusShell(props: FocusShellProps) {
     props.onSendInstruction(value);
     setView("thread");
   };
-  const setMode = (next: FocusMode) => setFallbackMode(next);
+  const setMode = (next: FocusMode) => {
+    setUserMode(next);
+    setFallbackMode(next);
+  };
 
   return (
     <div className="focus-app" data-mode={mode}>

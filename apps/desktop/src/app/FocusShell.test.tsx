@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ModelSettingsView } from "../features/models/modelTypes";
+import type { TaskThread } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { FocusShell } from "./FocusShell";
 
@@ -22,6 +23,19 @@ describe("FocusShell", () => {
     expect(onSendInstruction).toHaveBeenCalledWith("build the agent");
   });
 
+  it("lets the user switch modes from the chips on an active thread", () => {
+    renderShell({ activeThread: thread() });
+
+    const stage = () => document.querySelector('[data-screen-label="Active thread"]');
+    // Thread status maps to the "explore" mode by default.
+    expect(stage()?.getAttribute("data-mode")).toBe("explore");
+
+    fireEvent.click(screen.getByRole("button", { name: "Plan" }));
+    expect(stage()?.getAttribute("data-mode")).toBe("plan");
+    fireEvent.click(screen.getByRole("button", { name: "Build" }));
+    expect(stage()?.getAttribute("data-mode")).toBe("build");
+  });
+
   it("opens settings from the keyboard and shows real desktop shell state", () => {
     renderShell();
 
@@ -33,13 +47,13 @@ describe("FocusShell", () => {
   });
 });
 
-function renderShell({ onSendInstruction = vi.fn() } = {}) {
+function renderShell({ onSendInstruction = vi.fn(), activeThread = undefined as TaskThread | undefined } = {}) {
   return render(
     <FocusShell
       activePlan={undefined}
       activeProject={project()}
       activeRun={undefined}
-      activeThread={undefined}
+      activeThread={activeThread}
       desktopShell={{
         mainWindowLabel: "main",
         nativeMenuPolicy: "renderer_command_ui",
@@ -72,6 +86,24 @@ function renderShell({ onSendInstruction = vi.fn() } = {}) {
       threads={[]}
     />,
   );
+}
+
+function thread(): TaskThread {
+  return {
+    activeRunId: undefined,
+    archived: false,
+    createdAt: "2026-06-09T00:00:00.000Z",
+    createdLabel: "now",
+    goal: "Build a feature.",
+    id: "thread-1",
+    messages: [{ body: "hello", role: "user" }],
+    mode: "explore",
+    projectId: "project-1",
+    runIds: [],
+    status: "idle",
+    title: "Build a feature",
+    updatedAt: "2026-06-09T00:00:00.000Z",
+  };
 }
 
 function project(): WorkspaceProject {
