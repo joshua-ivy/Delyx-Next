@@ -1,4 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
+import { sendCliChat } from "./cliChatClient";
+import { cliAdapterForSelection } from "./cliModels";
 import { sendOllamaChat, selectedOllamaModel } from "../features/models/ollamaClient";
 import type { ModelSettingsView, ThreadRoleMessage } from "../features/models/modelTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
@@ -105,7 +107,37 @@ function ensureThreadRun(state: ComposerBindingState, thread: TaskThread) {
   return runnableThread;
 }
 
-async function requestOllamaReply(state: ComposerBindingState, thread: TaskThread) {
+function requestOllamaReply(state: ComposerBindingState, thread: TaskThread) {
+  const cliAdapter = cliAdapterForSelection(state.modelSettings);
+  if (cliAdapter) {
+    void requestCliReply(state, thread, cliAdapter);
+    return;
+  }
+  void requestOllamaReplyInner(state, thread);
+}
+
+async function requestCliReply(state: ComposerBindingState, thread: TaskThread, adapterId: string) {
+  markThread(state, thread.id, "exploring");
+  state.setAgentRuns((current) => updateRunsForThreadStatus(current, thread, "exploring", new Date().toISOString()));
+  try {
+    state.setAgentRuns((current) => recordModelCallStarted(current, thread, adapterId, new Date().toISOString()));
+    const result = await sendCliChat(adapterId, cliPrompt(thread), state.activeProject.path);
+    const now = new Date().toISOString();
+    appendMessage(state, thread.id, { role: "assistant", body: result.text }, "idle");
+    state.setAgentRuns((current) => recordModelCallResult(current, thread, adapterId, adapterId, result.text, now));
+    notifyLocalAction(`${adapterId} replied`, "success");
+  } catch (error) {
+    recordOllamaFailure(state, thread, adapterId, error instanceof Error ? error.message : "CLI request failed.");
+  }
+}
+
+function cliPrompt(thread: TaskThread): string {
+  return thread.messages
+    .map((message) => `${message.role === "user" ? "User" : message.role === "assistant" ? "Assistant" : "System"}: ${message.body}`)
+    .join("\n\n");
+}
+
+async function requestOllamaReplyInner(state: ComposerBindingState, thread: TaskThread) {
   const model = selectedOllamaModel(state.modelSettings);
   markThread(state, thread.id, "exploring");
   state.setAgentRuns((current) => updateRunsForThreadStatus(current, thread, "exploring", new Date().toISOString()));

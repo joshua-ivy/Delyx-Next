@@ -1,4 +1,4 @@
-export type ProviderKind = "ollama" | "openai_compatible" | "unavailable";
+export type ProviderKind = "ollama" | "openai_compatible" | "cli" | "unavailable";
 export type ProviderStatus = "ready" | "missing_key" | "not_configured" | "unreachable";
 export type ModelRole = "answer" | "helper" | "deepResearch" | "maxReasoning" | "coding" | "embedding" | "scoring";
 

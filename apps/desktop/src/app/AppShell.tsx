@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
 import { decideApprovalAndMaybeResume, resumeAndDispatchSchedulerRun } from "./appShellApprovalDecisionActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
@@ -22,7 +22,7 @@ import { WorkspaceOverlay } from "../features/workspace/WorkspaceOverlay";
 import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, webRuntimeBridge, type RuntimeBridgeState } from "./runtimeBridge";
-import { selectOllamaCodingModel } from "./modelSelection";
+import { mergeCliProviders, selectModelRoute } from "./cliModels";
 import { useRunApprovals } from "./useRunApprovals";
 import { useRunReceipts } from "./useRunReceipts";
 import { useSchedulerDecision } from "./useSchedulerDecision";
@@ -39,7 +39,7 @@ export function AppShell() {
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [projects, setProjects] = useState<WorkspaceProject[]>([currentWorkspaceProject]);
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
-  const [modelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
+  const [baseModelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
   const activeProject = projects[0] ?? currentWorkspaceProject;
@@ -51,6 +51,10 @@ export function AppShell() {
   const { actionProposals, setActionProposals } = useRunApprovals(activeRun?.id);
   const { patches, reviews, setPatches, setReviews, setTests, tests } = useRunReceipts(activeRun?.id);
   const schedulerDecision = useSchedulerDecision({ activePlan, activeProject, activeRun, patches, proposals: actionProposals, reviews, tests });
+  const modelSettings = useMemo(
+    () => mergeCliProviders(baseModelSettings, externalAgentState.adapters),
+    [baseModelSettings, externalAgentState.adapters],
+  );
   useEffect(() => {
     let cancelled = false;
     void loadRuntimeBridgeState().then(async (state) => {
@@ -139,7 +143,7 @@ export function AppShell() {
     }, value);
   };
   const selectModel = (modelId: string) => {
-    setModelSettings((current) => selectOllamaCodingModel(current, modelId));
+    setModelSettings((current) => selectModelRoute(current, externalAgentState.adapters, modelId));
   };
   const runReview = () => {
     void runReviewForActiveRun({
