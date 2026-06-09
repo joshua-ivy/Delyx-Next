@@ -58,15 +58,17 @@ pub async fn send_embedded_chat(
     validate_profile(&profile)?;
     let loaded = load_or_get_model(state, database_path, &profile).await?;
     let request = chat_request(messages, &profile)?;
-    let response = loaded
-        .model
-        .send_chat_request(request)
-        .await
-        .map_err(|error| {
-            let message = format!("Local model chat failed: {error}");
+    let response = match loaded.model.send_chat_request(request).await {
+        Ok(response) => response,
+        Err(error) => {
+            // A crashed engine closes its channel and stays broken; drop the
+            // cached model so the next attempt reloads from scratch.
+            state.loaded.lock().await.remove(&profile.id);
+            let message = describe_chat_error(&error.to_string(), &profile.display_name);
             let _ = mark_profile_status(database_path, &profile.id, "failed", Some(&message));
-            message
-        })?;
+            return Err(message);
+        }
+    };
     let text = response
         .choices
         .first()
@@ -83,6 +85,19 @@ pub async fn send_embedded_chat(
         model: profile.id,
         text,
     })
+}
+
+#[cfg(feature = "embedded_mistral")]
+fn describe_chat_error(error: &str, name: &str) -> String {
+    if error.contains("channel closed") || error.to_lowercase().contains("out of memory") {
+        format!(
+            "Local model `{name}` engine stopped mid-response — usually not enough memory for a \
+             model this large on CPU. Try a smaller quantization or model (a 7B/14B Q4 fits 16-32GB \
+             RAM), or use a GPU build."
+        )
+    } else {
+        format!("Local model chat failed: {error}")
+    }
 }
 
 #[cfg(feature = "embedded_mistral")]
