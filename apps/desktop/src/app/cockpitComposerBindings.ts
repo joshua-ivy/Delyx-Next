@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { sendCliChat } from "./cliChatClient";
 import { qaqcVerdictMessage, sendCliReview } from "./cliReviewClient";
 import { cliAdapterForSelection } from "./cliModels";
-import { sendOllamaChat, selectedOllamaModel } from "../features/models/ollamaClient";
+import { selectedCodingRoute, sendModelChat } from "../features/models/modelClient";
 import type { ModelSettingsView, ThreadRoleMessage } from "../features/models/modelTypes";
 import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TaskThread, ThreadStatus, ThreadUiState } from "../features/threads/threadTypes";
@@ -84,7 +84,7 @@ async function createThreadFromComposer(state: ComposerBindingState, goal: strin
   state.setThreads((current) => [runnableThread, ...current]);
   state.setActiveThreadId(runnableThread.id);
   state.setThreadState("ready");
-  void requestOllamaReply(state, runnableThread);
+  void requestModelReply(state, runnableThread);
 }
 
 function continueThreadFromComposer(state: ComposerBindingState, body: string) {
@@ -96,7 +96,7 @@ function continueThreadFromComposer(state: ComposerBindingState, body: string) {
   const updatedThread = withUserMessage(ensureThreadRun(state, thread), body, now);
   void appendThreadMessageOverBridge(updatedThread.id, { role: "user", body }, now);
   state.setThreads((current) => current.map((item) => (item.id === updatedThread.id ? updatedThread : item)));
-  void requestOllamaReply(state, updatedThread);
+  void requestModelReply(state, updatedThread);
 }
 
 function ensureThreadRun(state: ComposerBindingState, thread: TaskThread) {
@@ -109,13 +109,13 @@ function ensureThreadRun(state: ComposerBindingState, thread: TaskThread) {
   return runnableThread;
 }
 
-function requestOllamaReply(state: ComposerBindingState, thread: TaskThread) {
+function requestModelReply(state: ComposerBindingState, thread: TaskThread) {
   const cliAdapter = cliAdapterForSelection(state.modelSettings);
   if (cliAdapter) {
     void requestCliReply(state, thread, cliAdapter);
     return;
   }
-  void requestOllamaReplyInner(state, thread);
+  void requestModelReplyInner(state, thread);
 }
 
 async function requestCliReply(state: ComposerBindingState, thread: TaskThread, adapterId: string) {
@@ -129,7 +129,7 @@ async function requestCliReply(state: ComposerBindingState, thread: TaskThread, 
     state.setAgentRuns((current) => recordModelCallResult(current, thread, adapterId, adapterId, result.text, now));
     notifyLocalAction(`${adapterId} replied`, "success");
   } catch (error) {
-    recordOllamaFailure(state, thread, adapterId, error instanceof Error ? error.message : "CLI request failed.");
+    recordModelFailure(state, thread, adapterId, error instanceof Error ? error.message : "CLI request failed.");
   }
 }
 
@@ -139,27 +139,37 @@ function cliPrompt(thread: TaskThread): string {
     .join("\n\n");
 }
 
-async function requestOllamaReplyInner(state: ComposerBindingState, thread: TaskThread) {
-  const model = selectedOllamaModel(state.modelSettings);
+async function requestModelReplyInner(state: ComposerBindingState, thread: TaskThread) {
+  const route = selectedCodingRoute(state.modelSettings);
   markThread(state, thread.id, "exploring");
   state.setAgentRuns((current) => updateRunsForThreadStatus(current, thread, "exploring", new Date().toISOString()));
-  if (!model) {
-    recordOllamaFailure(state, thread, "ollama-local", "Ollama is not ready. Start Ollama and pull a model, then send again.");
+  if (!route) {
+    recordModelFailure(state, thread, "no-model", "No ready model is selected. Import a Delyx Local model or select Ollama/CLI.");
     return;
   }
   try {
-    state.setAgentRuns((current) => recordModelCallStarted(current, thread, model, new Date().toISOString()));
-    const response = await sendOllamaChat(state.modelSettings, modelMessages(thread));
+    state.setAgentRuns((current) => recordModelCallStarted(current, thread, route.modelId, new Date().toISOString()));
+    const response = await sendModelChat(state.modelSettings, modelMessages(thread));
     const now = new Date().toISOString();
     appendMessage(state, thread.id, { role: "assistant", body: response.text }, "idle");
     state.setAgentRuns((current) => recordModelCallResult(current, thread, response.providerId, response.model, response.text, now));
-    notifyLocalAction(`Ollama replied with ${response.model}`, "success");
+    notifyLocalAction(`${providerLabel(response.providerId)} replied with ${response.model}`, "success");
     if (state.qaqcAdapterId) {
       void runQaqcReview(state, thread, response.text);
     }
   } catch (error) {
-    recordOllamaFailure(state, thread, model, error instanceof Error ? error.message : "Ollama request failed.");
+    recordModelFailure(state, thread, route.modelId, error instanceof Error ? error.message : "Model request failed.");
   }
+}
+
+function providerLabel(providerId: string): string {
+  if (providerId === "delyx-local") {
+    return "Delyx Local";
+  }
+  if (providerId === "ollama-local") {
+    return "Ollama";
+  }
+  return providerId;
 }
 
 async function runQaqcReview(state: ComposerBindingState, thread: TaskThread, content: string) {
@@ -186,7 +196,7 @@ async function runQaqcReview(state: ComposerBindingState, thread: TaskThread, co
   }
 }
 
-function recordOllamaFailure(state: ComposerBindingState, thread: TaskThread, model: string, message: string) {
+function recordModelFailure(state: ComposerBindingState, thread: TaskThread, model: string, message: string) {
   const now = new Date().toISOString();
   appendMessage(state, thread.id, { role: "system", body: message }, "blocked");
   state.setAgentRuns((current) => recordModelCallFailure(current, thread, model, message, now));

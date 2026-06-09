@@ -1,10 +1,10 @@
 export const ollamaAgentChecks = [
-  ["src/app/cockpitComposerBindings.ts", "sendOllamaChat"],
+  ["src/app/cockpitComposerBindings.ts", "sendModelChat"],
   ["src/app/cockpitComposerBindings.ts", "appendThreadMessageOverBridge"],
   ["src/app/cockpitComposerBindings.ts", "updateThreadStatusOverBridge"],
   ["src/app/cockpitComposerBindings.ts", "recordModelCallResult"],
   ["src/app/cockpitComposerBindings.ts", "recordModelCallFailure"],
-  ["src/app/cockpitComposerBindings.ts", "Ollama is not ready"],
+  ["src/app/cockpitComposerBindings.ts", "No ready model is selected"],
   ["src/app/cockpitPlanBindings.ts", "createPlanWithOllama"],
   ["src/app/appShellCommands.ts", "Ask local Ollama to draft a read-only plan"],
   ["src/app/appShellCommands.ts", "createPlanWithOllama(context)"],
