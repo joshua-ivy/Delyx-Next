@@ -103,6 +103,7 @@ fn main() {
             delyx_next_desktop::agent_test_step::agent_run_test_step,
             delyx_next_desktop::approval_bridge::approval_decide,
             delyx_next_desktop::cli_chat::cli_chat,
+            delyx_next_desktop::cli_review::cli_review,
             delyx_next_desktop::approval_bridge::approval_propose,
             delyx_next_desktop::approval_bridge::approval_snapshot,
             delyx_next_desktop::approval_bridge_taxonomy::approval_taxonomy,

@@ -139,7 +139,7 @@ now has real persisted or approval-gated functional islands.
 
 Progress board:
 
-- Phase 2 checkbox progress: 231/256 checked, 25 open, 90.2%.
+- Phase 2 checkbox progress: 232/257 checked, 25 open, 90.3%. (One item added beyond the original plan: the CLI-first QA/QC reviewer.)
 - Phase 2 track progress: 6/12 complete, 6/12 in progress.
 - Complete tracks: D1, D3, D4, D6, D9, D10.
 - In-progress tracks: D2, D5, D7, D8, D11, D12.
@@ -345,6 +345,7 @@ Progress board:
   - [ ] Add pull-progress UI only when backed by real local state.
 
 - [ ] D8 - External Agent Integration Depth (in progress; Codex read/write path exists, live Claude read/write bridge now landed with stream-json parsing; tail = installed-binary flag verification, parser-derived diff cross-check, optional `--add-dir`/`--model`)
+  - [x] ~~CLI-first QA/QC reviewer: a read-only `cli_review` command builds a strict review prompt, runs the selected CLI (`claude -p` / `codex exec --sandbox read-only`) via the `cli_chat` path, and parses a PASS/FAIL/unclear verdict (ambiguous never silently passes). The chat UI has a "QA/QC reviewer" selector; when set, each local-model reply is reviewed and a verdict system message is appended (failing reviews mark the thread blocked). Covered by `cli_review_tests` + `cliReviewClient.test.ts`. This is the user's top use case: checking a local ~30B model's code before it reaches the user.~~
   - [x] ~~Codex CLI read-only launch is wired behind external-agent and terminal approvals with captured terminal output and UI artifacts.~~
   - [x] ~~External-agent run receipts now survive restart through SQLite, including transcript and linked test IDs.~~
   - [x] ~~Codex external-agent approval selection now rejects expired approved approvals, avoids duplicate pending approvals, blocks denied approvals, and queues fresh bridge client IDs for expired external-agent or terminal approvals before any launch.~~

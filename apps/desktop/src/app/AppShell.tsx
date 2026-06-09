@@ -41,6 +41,7 @@ export function AppShell() {
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
   const [baseModelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
+  const [qaqcAdapterId, setQaqcAdapterId] = useState<string | undefined>(undefined);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
@@ -135,6 +136,7 @@ export function AppShell() {
       activeRun,
       activeThread,
       modelSettings,
+      qaqcAdapterId,
       setActiveThreadId,
       setAgentRuns,
       setThreads,
@@ -144,6 +146,9 @@ export function AppShell() {
   };
   const selectModel = (modelId: string) => {
     setModelSettings((current) => selectModelRoute(current, externalAgentState.adapters, modelId));
+  };
+  const selectQaqc = (adapterId: string | undefined) => {
+    setQaqcAdapterId(adapterId);
   };
   const runReview = () => {
     void runReviewForActiveRun({
@@ -258,6 +263,8 @@ export function AppShell() {
         onRunTests={runTests}
         onRunCommand={runPaletteCommand}
         onSelectModel={selectModel}
+        onSelectQaqc={selectQaqc}
+        qaqcAdapterId={qaqcAdapterId}
         onSelectThread={(threadId) => {
           setActiveThreadId(threadId);
           setThreadState("ready");

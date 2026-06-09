@@ -40,6 +40,8 @@ interface FocusShellProps {
   onRunTests: () => void;
   onRunCommand: (commandId: string) => void;
   onSelectModel: (modelId: string) => void;
+  onSelectQaqc: (adapterId: string | undefined) => void;
+  qaqcAdapterId?: string;
   onSelectThread: (threadId: string) => void;
   onSendInstruction: (value: string) => void;
   patches: PatchProposalView[];
@@ -108,7 +110,7 @@ export function FocusShell(props: FocusShellProps) {
 
       {overlay === "palette" && <FocusCommandPalette onArchiveActive={props.onArchiveActive} onClose={() => setOverlay(undefined)} onOpenModels={() => setOverlay("models")} onOpenThreads={() => setOverlay("threads")} onOpenWorkspace={props.onOpenWorkspace} onRunCommand={props.onRunCommand} onView={(next) => setView(next)} />}
       {overlay === "threads" && <FocusThreadsMenu activeThreadId={props.activeThread?.id} onClose={() => setOverlay(undefined)} onNewThread={() => setView("home")} onSelectThread={(threadId) => { props.onSelectThread(threadId); setView("thread"); }} threads={visibleThreads} />}
-      {overlay === "models" && <FocusModelMenu modelSettings={props.modelSettings} onClose={() => setOverlay(undefined)} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} />}
+      {overlay === "models" && <FocusModelMenu modelSettings={props.modelSettings} onClose={() => setOverlay(undefined)} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} onSelectQaqc={props.onSelectQaqc} qaqcAdapterId={props.qaqcAdapterId} />}
     </div>
   );
 }

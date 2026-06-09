@@ -61,6 +61,7 @@ function renderShell({ onSendInstruction = vi.fn() } = {}) {
       onRunReview={vi.fn()}
       onRunTests={vi.fn()}
       onSelectModel={vi.fn()}
+      onSelectQaqc={vi.fn()}
       onSelectThread={vi.fn()}
       onSendInstruction={onSendInstruction}
       patches={[]}

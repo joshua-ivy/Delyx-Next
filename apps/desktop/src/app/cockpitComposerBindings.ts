@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { sendCliChat } from "./cliChatClient";
+import { qaqcVerdictMessage, sendCliReview } from "./cliReviewClient";
 import { cliAdapterForSelection } from "./cliModels";
 import { sendOllamaChat, selectedOllamaModel } from "../features/models/ollamaClient";
 import type { ModelSettingsView, ThreadRoleMessage } from "../features/models/modelTypes";
@@ -21,6 +22,7 @@ export interface ComposerBindingState {
   activeRun: AgentRunView | undefined;
   activeThread: TaskThread | undefined;
   modelSettings: ModelSettingsView;
+  qaqcAdapterId?: string;
   setActiveThreadId: Dispatch<SetStateAction<string | undefined>>;
   setAgentRuns: Dispatch<SetStateAction<AgentRunView[]>>;
   setThreads: Dispatch<SetStateAction<TaskThread[]>>;
@@ -152,8 +154,35 @@ async function requestOllamaReplyInner(state: ComposerBindingState, thread: Task
     appendMessage(state, thread.id, { role: "assistant", body: response.text }, "idle");
     state.setAgentRuns((current) => recordModelCallResult(current, thread, response.providerId, response.model, response.text, now));
     notifyLocalAction(`Ollama replied with ${response.model}`, "success");
+    if (state.qaqcAdapterId) {
+      void runQaqcReview(state, thread, response.text);
+    }
   } catch (error) {
     recordOllamaFailure(state, thread, model, error instanceof Error ? error.message : "Ollama request failed.");
+  }
+}
+
+async function runQaqcReview(state: ComposerBindingState, thread: TaskThread, content: string) {
+  const adapter = state.qaqcAdapterId;
+  if (!adapter) {
+    return;
+  }
+  try {
+    const result = await sendCliReview(adapter, thread.goal, content, state.activeProject.path);
+    appendMessage(
+      state,
+      thread.id,
+      { role: "system", body: qaqcVerdictMessage(adapter, result) },
+      result.verdict === "fail" ? "blocked" : "idle",
+    );
+    notifyLocalAction(`QA/QC ${result.verdict} via ${adapter}`, result.verdict === "fail" ? "warning" : "success");
+  } catch (error) {
+    appendMessage(
+      state,
+      thread.id,
+      { role: "system", body: `QA/QC review via ${adapter} failed: ${error instanceof Error ? error.message : "review failed"}` },
+      "idle",
+    );
   }
 }
 

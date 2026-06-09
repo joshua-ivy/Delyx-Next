@@ -95,15 +95,20 @@ export function FocusModelMenu({
   onClose,
   onRefreshModels,
   onSelectModel,
+  onSelectQaqc,
+  qaqcAdapterId,
 }: {
   modelSettings: ModelSettingsView;
   onClose: () => void;
   onRefreshModels: () => void;
   onSelectModel: (modelId: string) => void;
+  onSelectQaqc: (adapterId: string | undefined) => void;
+  qaqcAdapterId?: string;
 }) {
   const activeProvider = selectedProvider(modelSettings);
   const activeModel = selectedModel(modelSettings);
   const usable = modelSettings.providers.filter((item) => item.models.length > 0);
+  const cliReviewers = modelSettings.providers.filter((item) => item.kind === "cli");
   return <Scrim onClose={onClose} position="center">
     <div className="menu" data-screen-label="Model picker">
       <div className="menu-head"><div className="ey">{usable.length} provider(s) ready</div><h3 className="disp">Choose a model</h3></div>
@@ -113,6 +118,12 @@ export function FocusModelMenu({
           return <button className={`menu-item${isActive ? " on" : ""}`} key={`${item.id}:${model}`} onClick={() => { onSelectModel(model); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{modelTitle(item, model)}</b><span>{providerSubtitle(item)}</span></span>{isActive && <span className="mi-meta active">active</span>}</button>;
         }))}
         {usable.length === 0 && <button className="menu-item" onClick={onRefreshModels} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>No models loaded</b><span>Refresh Ollama, or install a CLI / add a key in Settings.</span></span><span className="mi-meta">refresh</span></button>}
+      </div>
+      <div className="menu-head"><div className="ey">QA/QC reviewer</div><h3 className="disp">Check generated code with a CLI</h3></div>
+      <div className="menu-list">
+        <button className={`menu-item${!qaqcAdapterId ? " on" : ""}`} onClick={() => { onSelectQaqc(undefined); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>None</b><span>No QA/QC review of local-model output</span></span>{!qaqcAdapterId && <span className="mi-meta active">active</span>}</button>
+        {cliReviewers.map((item) => <button className={`menu-item${item.id === qaqcAdapterId ? " on" : ""}`} key={item.id} onClick={() => { onSelectQaqc(item.id); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{item.label}</b><span>Reviews each local-model reply read-only</span></span>{item.id === qaqcAdapterId && <span className="mi-meta active">active</span>}</button>)}
+        {cliReviewers.length === 0 && <button className="menu-item" onClick={onClose} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>No review CLIs detected</b><span>Install the Claude Code or Codex CLI to enable QA/QC.</span></span><span className="mi-meta">off</span></button>}
       </div>
     </div>
   </Scrim>;
