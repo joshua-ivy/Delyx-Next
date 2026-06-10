@@ -10,7 +10,7 @@ export const agentRuntimeChecks = [
   ["src-tauri/src/model_ollama.rs", "send_ollama_chat"],
   ["src-tauri/src/model_ollama.rs", "POST /api/chat HTTP/1.1"],
   ["src-tauri/src/model_ollama.rs", "parse_ollama_model_names"],
-  ["src-tauri/src/runtime_bridge.rs", "pub fn ollama_chat"],
+  ["src-tauri/src/runtime_bridge.rs", "pub async fn ollama_chat"],
   ["src-tauri/src/main.rs", "runtime_bridge::ollama_chat"],
   ["src/features/models/ollamaClient.ts", "invoke<OllamaChatResult>(\"ollama_chat\""],
   ["src/features/models/ollamaClient.ts", "sendOllamaChatOverHttp"],

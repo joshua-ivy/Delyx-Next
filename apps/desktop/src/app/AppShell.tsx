@@ -1,10 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
-import { decideApprovalAndMaybeResume, resumeAndDispatchSchedulerRun } from "./appShellApprovalDecisionActions";
-import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
-import { recordFinalSupportForActiveThread } from "./appShellFinalAnswerActions";
-import { requestRepairForReviewFinding, runReviewForActiveRun } from "./appShellReviewActions";
-import { runTestsForActiveRun } from "./appShellTestActions";
+import { buildFocusRunHandlers } from "./appShellRunHandlers";
 import { paletteCommands, runAppShellCommand } from "./appShellCommands";
 import { sendComposerInstruction } from "./cockpitComposerBindings";
 import { FocusShell } from "./FocusShell";
@@ -23,7 +19,7 @@ import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, webRuntimeBridge, type RuntimeBridgeState } from "./runtimeBridge";
 import { mergeCliProviders, selectModelRoute } from "./cliModels";
-import { ensureProject } from "../features/projects/projectClient";
+import { useAgentSelections } from "./useAgentSelections";
 import { useRunApprovals } from "./useRunApprovals";
 import { useRunReceipts } from "./useRunReceipts";
 import { useSchedulerDecision } from "./useSchedulerDecision";
@@ -42,14 +38,6 @@ export function AppShell() {
   const [workspaceState, setWorkspaceState] = useState<WorkspaceUiState>("ready");
   const [baseModelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
-  const [qaqcAdapterId, setQaqcAdapterId] = useState<string | undefined>(undefined);
-  const [qaqcModel, setQaqcModel] = useState<string | undefined>(undefined);
-  const [workerAdapterId, setWorkerAdapterId] = useState<string | undefined>(undefined);
-  const [workerMode, setWorkerMode] = useState<"read_only" | "workspace_write">("read_only");
-  // Auto-enable QA/QC once when a reviewer CLI is first detected. Tracked by a ref
-  // so turning it off manually afterwards isn't re-enabled on the next render.
-  const qaqcAutoSelected = useRef(false);
-  const [nativeProjectId, setNativeProjectId] = useState<string | undefined>(undefined);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
@@ -60,6 +48,9 @@ export function AppShell() {
   const { actionProposals, setActionProposals } = useRunApprovals(activeRun?.id);
   const { patches, reviews, setPatches, setReviews, setTests, tests } = useRunReceipts(activeRun?.id);
   const schedulerDecision = useSchedulerDecision({ activePlan, activeProject, activeRun, patches, proposals: actionProposals, reviews, tests });
+  const {
+    nativeProjectId, qaqcAdapterId, qaqcModel, selectQaqc, selectQaqcModel, selectWorker, workerAdapterId, workerMode,
+  } = useAgentSelections(externalAgentState.adapters, activeProject);
   const modelSettings = useMemo(
     () => mergeCliProviders(baseModelSettings, externalAgentState.adapters),
     [baseModelSettings, externalAgentState.adapters],
@@ -98,20 +89,6 @@ export function AppShell() {
       cancelled = true;
     };
   }, []);
-  // Default QA/QC on: pick the first detected reviewer CLI (Claude Code, else
-  // Codex) so generated code is checked out of the box. Runs once.
-  useEffect(() => {
-    if (qaqcAutoSelected.current || qaqcAdapterId) {
-      return;
-    }
-    const reviewer =
-      externalAgentState.adapters.find((adapter) => adapter.id === "claude-code" && adapter.status === "available")
-      ?? externalAgentState.adapters.find((adapter) => adapter.id === "codex-cli" && adapter.status === "available");
-    if (reviewer) {
-      qaqcAutoSelected.current = true;
-      setQaqcAdapterId(reviewer.id);
-    }
-  }, [externalAgentState.adapters, qaqcAdapterId]);
   useEffect(() => {
     let cancelled = false;
     setWorkspaceState("loading");
@@ -130,22 +107,6 @@ export function AppShell() {
     };
   }, []);
   useProjectSnapshots({ projectId: activeProject.id, setActiveThreadId, setAgentRuns, setPlans, setThreads, setThreadState });
-  // Resolve (or create) the native project record for the active workspace so the
-  // attachment pipeline has a real project id + policy to classify against.
-  useEffect(() => {
-    let cancelled = false;
-    setNativeProjectId(undefined);
-    void ensureProject(activeProject.name, activeProject.path)
-      .then((record) => {
-        if (!cancelled) setNativeProjectId(record.id);
-      })
-      .catch(() => {
-        // Desktop runtime unavailable — attachments stay disabled.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [activeProject.name, activeProject.path]);
   useEffect(() => {
     document.documentElement.dataset.mode = activeThread?.mode ?? "build";
   }, [activeThread?.mode]);
@@ -221,87 +182,11 @@ export function AppShell() {
       }
     });
   };
-  const selectQaqc = (adapterId: string | undefined) => {
-    setQaqcAdapterId(adapterId);
-    // Reset to the new reviewer's economical default model.
-    setQaqcModel(undefined);
-  };
-  const selectQaqcModel = (model: string) => {
-    setQaqcModel(model);
-  };
-  const selectWorker = (adapterId: string | undefined, mode: "read_only" | "workspace_write" = "read_only") => {
-    setWorkerAdapterId(adapterId);
-    setWorkerMode(mode);
-  };
-  const runReview = () => {
-    void runReviewForActiveRun({
-      activeProject,
-      activeRun,
-      activeThread,
-      patches: activeRun ? patches.filter((patch) => patch.runId === activeRun.id) : [],
-      setAgentRuns,
-      setReviews,
-      setThreads,
-      setThreadState,
-      tests,
-    });
-  };
-  const runTests = () => {
-    void runTestsForActiveRun({
-      actionProposals,
-      activePlan,
-      activeProject,
-      activeRun,
-      activeThread,
-      patches,
-      setActionProposals,
-      setAgentRuns,
-      setTests,
-      setThreads,
-      setThreadState,
-    });
-  };
-  const recordFinal = () => {
-    void recordFinalSupportForActiveThread({
-      activeRun,
-      activeThread,
-      reviews,
-      setAgentRuns,
-      setThreads,
-      setThreadState,
-    });
-  };
-  const requestRepair = (reportId: string, findingId: string) => { void requestRepairForReviewFinding({ actionProposals, activeProject, activeRun, activeThread, reviews, setActionProposals, setAgentRuns, setReviews, setThreads, setThreadState }, reportId, findingId); };
-  const applyPatch = (patchId: string) => {
-    void applyApprovedPatchForActiveRun({
-      actionProposals, activeProject, activeRun, activeThread,
-      patch: patches.find((patch) => patch.id === patchId),
-      setActionProposals, setAgentRuns,
-      setPatches,
-      setThreads,
-      setThreadState,
-    });
-  };
-  const decideProposal = (proposalId: string, status: "approved" | "denied") => {
-    void decideApprovalAndMaybeResume({
-      activePlan,
-      activeProject,
-      activeRun,
-      activeThread,
-      actionProposals,
-      modelSettings,
-      patches,
-      reviews,
-      setActionProposals,
-      setAgentRuns,
-      setPatches,
-      setReviews,
-      setTests,
-      setThreads,
-      setThreadState,
-      tests,
-    }, proposalId, status);
-  };
+  const { applyPatch, decideProposal, recordFinal, requestRepair, resumeRun, runReview, runTests } = buildFocusRunHandlers({
+    actionProposals, activePlan, activeProject, activeRun, activeThread, modelSettings,
+    patches, reviews, setActionProposals, setAgentRuns, setPatches, setReviews, setTests,
+    setThreads, setThreadState, tests,
+  });
   const archiveActiveThread = () => {
     if (!activeThread) {
       setThreadState("empty");
@@ -342,7 +227,7 @@ export function AppShell() {
         onRequestRepair={requestRepair}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
         onLocalModelsChanged={refreshRuntimeModels}
-        onResumeRun={() => { void resumeAndDispatchSchedulerRun({ actionProposals, activePlan, activeProject, activeRun, activeThread, modelSettings, patches, reviews, setActionProposals, setAgentRuns, setPatches, setReviews, setTests, setThreads, setThreadState, tests }); }}
+        onResumeRun={resumeRun}
         onRunReview={runReview}
         onRunTests={runTests}
         onRunCommand={runPaletteCommand}

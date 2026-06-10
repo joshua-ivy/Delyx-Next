@@ -2,12 +2,11 @@
 //! snapshot the current proposals for a project/thread. Approval, parsing, and
 //! context packs arrive in later PRs; PR2 stops at typed, persisted proposals.
 
-use crate::attachment::AttachmentParseStatus;
 use crate::attachment::{
-    accept_proposal, classify, infer_kind, stable_proposal_id, AttachmentKind, AttachmentProposal,
-    AttachmentProposalStatus, AttachmentRecord, AttachmentScope, AttachmentSourceKind,
-    ClassifyInput,
+    accept_proposal, AttachmentParseStatus, AttachmentProposal, AttachmentProposalStatus,
+    AttachmentRecord,
 };
+use crate::attachment_bridge_ops::{create_context_pack, parse_attachment, propose_attachment};
 use crate::attachment_diagnostics::{attachment_report, AttachmentReportEntry};
 use crate::attachment_evidence::{
     evidence_from_pack, list_evidence_for_thread, save_evidence_batch_to_path,
@@ -15,21 +14,20 @@ use crate::attachment_evidence::{
 };
 use crate::attachment_external::external_snapshot_chunks;
 use crate::attachment_media::chunk_pdf_pages;
-use crate::attachment_parser::{is_text_like, parse_attachment_text};
 use crate::attachment_persistence::{
-    list_chunks_from_path, list_proposals_from_path, list_records_from_path,
-    load_proposal_from_path, load_record_from_path, save_chunks_to_path, save_proposal_to_path,
-    save_record_to_path, set_proposal_status_to_path, set_record_parse_status_to_path,
+    list_proposals_from_path, list_records_from_path, load_proposal_from_path,
+    load_record_from_path, save_chunks_to_path, save_record_to_path, set_proposal_status_to_path,
+    set_record_parse_status_to_path,
 };
-use crate::context_pack::{
-    load_context_pack_from_path, save_context_pack_to_path, select_context, ChunkCandidate,
-    ContextPack,
-};
-use crate::project::ApprovalPolicyRecord;
-use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use crate::context_pack::{load_context_pack_from_path, ContextPack};
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+pub use crate::attachment_bridge_types::{
+    AttachmentApproveRequest, AttachmentExternalSnapshotRequest, AttachmentParsePdfRequest,
+    AttachmentParseRequest, AttachmentParseResultView, AttachmentProposalIdRequest,
+    AttachmentProposeRequest, AttachmentSnapshotView, ContextPackCreateRequest,
+};
 
 pub struct AttachmentBridgeState {
     database_path: PathBuf,
@@ -41,121 +39,12 @@ impl AttachmentBridgeState {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AttachmentProposeRequest {
-    pub project_id: String,
-    #[serde(default)]
-    pub thread_id: Option<String>,
-    pub source_kind: AttachmentSourceKind,
-    pub display_name: String,
-    pub source_locator: String,
-    #[serde(default)]
-    pub scope_mode: Option<String>,
-    #[serde(default)]
-    pub detected_kind: Option<AttachmentKind>,
-    #[serde(default)]
-    pub estimated_bytes: Option<u64>,
-    #[serde(default)]
-    pub estimated_file_count: Option<u32>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AttachmentSnapshotView {
-    pub project_id: String,
-    pub thread_id: Option<String>,
-    pub proposals: Vec<AttachmentProposal>,
-    pub records: Vec<AttachmentRecord>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AttachmentApproveRequest {
-    pub proposal_id: String,
-    /// The id of the approval that cleared this attachment (links record→approval).
-    #[serde(default)]
-    pub approval_id: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AttachmentProposalIdRequest {
-    pub proposal_id: String,
-}
-
 #[tauri::command]
 pub fn attachment_propose(
     state: tauri::State<AttachmentBridgeState>,
     request: AttachmentProposeRequest,
 ) -> Result<AttachmentProposal, String> {
-    if request.project_id.trim().is_empty() {
-        return Err("Attachment proposal requires a project.".to_string());
-    }
-    if request.source_locator.trim().is_empty() {
-        return Err("Attachment proposal requires a source locator.".to_string());
-    }
-
-    let detected_kind = request
-        .detected_kind
-        .unwrap_or_else(|| infer_kind(&request.source_locator));
-
-    // Pull the project's approval policy + read scopes if it exists; otherwise
-    // fall back to safe defaults so a proposal can still be classified.
-    // `project_id` is already the stable id, so look it up directly.
-    let project = crate::project_persistence::load_project_from_path(
-        &state.database_path,
-        &request.project_id,
-    )
-    .ok()
-    .flatten();
-    let policy = project
-        .as_ref()
-        .map(|p| p.approval_policy.clone())
-        .unwrap_or_default();
-    let in_read_scope = in_read_scope(&request, project.as_ref(), &policy);
-
-    let classification = classify(ClassifyInput {
-        source_kind: request.source_kind,
-        detected_kind,
-        estimated_bytes: request.estimated_bytes,
-        estimated_file_count: request.estimated_file_count,
-        in_read_scope,
-        policy: &policy,
-    });
-
-    let status = if classification.requires_approval {
-        AttachmentProposalStatus::NeedsApproval
-    } else {
-        AttachmentProposalStatus::Pending
-    };
-
-    let proposal = AttachmentProposal {
-        id: stable_proposal_id(
-            &request.project_id,
-            request.thread_id.as_deref(),
-            &request.source_locator,
-        ),
-        project_id: request.project_id,
-        thread_id: request.thread_id,
-        source_kind: request.source_kind,
-        detected_kind,
-        display_name: request.display_name,
-        source_locator: request.source_locator,
-        proposed_scope: AttachmentScope {
-            mode: request.scope_mode.unwrap_or_else(|| "thread".to_string()),
-        },
-        estimated_bytes: request.estimated_bytes,
-        estimated_file_count: request.estimated_file_count,
-        requires_approval: classification.requires_approval,
-        approval_reason: classification.reason,
-        risk: classification.risk,
-        status,
-        approval_id: None,
-        created_at: String::new(),
-        updated_at: String::new(),
-    };
-    save_proposal_to_path(&state.database_path, &proposal)
+    propose_attachment(&state.database_path, request)
 }
 
 #[tauri::command]
@@ -201,25 +90,6 @@ pub fn attachment_approve(
     Ok(saved)
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AttachmentParseRequest {
-    pub attachment_id: String,
-    /// Optional inline content (e.g. read by the frontend via FileReader). When
-    /// absent, the record's `original_locator` is read as a local file path.
-    #[serde(default)]
-    pub content: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AttachmentParseResultView {
-    pub attachment_id: String,
-    pub parse_status: String,
-    pub chunk_count: usize,
-    pub partial: bool,
-}
-
 /// Parse an accepted attachment's text into chunks with line-range locators.
 /// Non-text kinds are marked unsupported; oversized content yields `partial`.
 #[tauri::command]
@@ -227,73 +97,8 @@ pub fn attachment_parse(
     state: tauri::State<AttachmentBridgeState>,
     request: AttachmentParseRequest,
 ) -> Result<AttachmentParseResultView, String> {
-    let record = load_record_from_path(&state.database_path, &request.attachment_id)?
-        .ok_or_else(|| format!("Attachment `{}` was not found.", request.attachment_id))?;
-
-    if !is_text_like(record.detected_kind) {
-        let updated = set_record_parse_status_to_path(
-            &state.database_path,
-            &record.id,
-            AttachmentParseStatus::Unsupported,
-        )?;
-        return Ok(AttachmentParseResultView {
-            attachment_id: updated.id,
-            parse_status: updated.parse_status.as_str().to_string(),
-            chunk_count: 0,
-            partial: false,
-        });
-    }
-
-    let content = match request.content {
-        Some(content) => content,
-        None => match std::fs::read_to_string(&record.original_locator) {
-            Ok(content) => content,
-            Err(_) => {
-                let updated = set_record_parse_status_to_path(
-                    &state.database_path,
-                    &record.id,
-                    AttachmentParseStatus::Failed,
-                )?;
-                return Ok(AttachmentParseResultView {
-                    attachment_id: updated.id,
-                    parse_status: updated.parse_status.as_str().to_string(),
-                    chunk_count: 0,
-                    partial: false,
-                });
-            }
-        },
-    };
-
-    let output = parse_attachment_text(&record.display_name, record.detected_kind, &content);
-    save_chunks_to_path(&state.database_path, &record.id, &output.chunks)?;
-    let status = if output.partial {
-        AttachmentParseStatus::Partial
-    } else {
-        AttachmentParseStatus::Parsed
-    };
-    let updated = set_record_parse_status_to_path(&state.database_path, &record.id, status)?;
-    Ok(AttachmentParseResultView {
-        attachment_id: updated.id,
-        parse_status: updated.parse_status.as_str().to_string(),
-        chunk_count: output.chunks.len(),
-        partial: output.partial,
-    })
+    parse_attachment(&state.database_path, request)
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ContextPackCreateRequest {
-    pub project_id: String,
-    pub thread_id: String,
-    #[serde(default)]
-    pub run_id: Option<String>,
-    #[serde(default)]
-    pub budget_tokens: Option<u32>,
-    #[serde(default)]
-    pub pinned_locators: Option<Vec<String>>,
-}
-
-const DEFAULT_CONTEXT_BUDGET_TOKENS: u32 = 4_000;
 
 /// Build a scoped context pack from the thread's parsed attachment chunks. Only
 /// parsed/partial attachments contribute; pinned locators are always included.
@@ -302,60 +107,7 @@ pub fn context_pack_create(
     state: tauri::State<AttachmentBridgeState>,
     request: ContextPackCreateRequest,
 ) -> Result<ContextPack, String> {
-    let records = list_records_from_path(
-        &state.database_path,
-        &request.project_id,
-        Some(&request.thread_id),
-    )?;
-    let mut candidates = Vec::new();
-    for record in records {
-        if !matches!(
-            record.parse_status,
-            AttachmentParseStatus::Parsed | AttachmentParseStatus::Partial
-        ) {
-            continue;
-        }
-        for chunk in list_chunks_from_path(&state.database_path, &record.id)? {
-            candidates.push(ChunkCandidate {
-                attachment_id: record.id.clone(),
-                locator: chunk.locator,
-                text: chunk.text,
-                token_estimate: chunk.token_estimate,
-            });
-        }
-    }
-
-    let pinned: HashSet<String> = request
-        .pinned_locators
-        .unwrap_or_default()
-        .into_iter()
-        .collect();
-    let budget = request
-        .budget_tokens
-        .unwrap_or(DEFAULT_CONTEXT_BUDGET_TOKENS);
-    let selection = select_context(candidates, budget, &pinned);
-
-    let pack = ContextPack {
-        id: format!("pack-{:x}", unique_stamp()),
-        project_id: request.project_id,
-        thread_id: request.thread_id,
-        run_id: request.run_id,
-        strategy: selection.strategy,
-        budget_tokens: budget,
-        used_tokens: selection.used_tokens,
-        status: selection.status,
-        items: selection.items,
-        created_at: String::new(),
-        excluded_count: selection.excluded_count,
-    };
-    save_context_pack_to_path(&state.database_path, &pack)
-}
-
-fn unique_stamp() -> u128 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|value| value.as_nanos())
-        .unwrap_or(0)
+    create_context_pack(&state.database_path, request)
 }
 
 fn now_millis_string() -> String {
@@ -400,15 +152,6 @@ pub fn attachment_evidence_snapshot(
     list_evidence_for_thread(&state.database_path, &project_id, &thread_id)
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AttachmentParsePdfRequest {
-    pub attachment_id: String,
-    /// Already-extracted page texts (e.g. from a webview-side PDF extractor),
-    /// one string per page. Empty pages are skipped.
-    pub pages: Vec<String>,
-}
-
 /// Store per-page chunks for a PDF whose text was extracted elsewhere. No
 /// extractable text → `partial` (never a fake "parsed").
 #[tauri::command]
@@ -433,16 +176,6 @@ pub fn attachment_parse_pdf(
         chunk_count: chunks.len(),
         partial,
     })
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AttachmentExternalSnapshotRequest {
-    pub attachment_id: String,
-    /// Text fetched by the webview for this URL/connector resource.
-    pub content: String,
-    #[serde(default)]
-    pub retrieved_at_ms: Option<u64>,
 }
 
 /// Store a fetched URL/connector snapshot on an approved external attachment.
@@ -501,22 +234,4 @@ pub fn attachment_expire(
         AttachmentProposalStatus::Expired,
         None,
     )
-}
-
-fn in_read_scope(
-    request: &AttachmentProposeRequest,
-    project: Option<&crate::project::ProjectRecord>,
-    _policy: &ApprovalPolicyRecord,
-) -> Option<bool> {
-    // Scope only applies to local file paths.
-    let is_local = matches!(
-        request.source_kind,
-        AttachmentSourceKind::LocalFile
-            | AttachmentSourceKind::LocalFolder
-            | AttachmentSourceKind::ProjectFile
-    );
-    if !is_local {
-        return None;
-    }
-    project.map(|p| p.can_read_path(&request.source_locator))
 }
