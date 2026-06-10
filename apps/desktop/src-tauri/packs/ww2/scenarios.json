@@ -1,0 +1,23 @@
+[
+  {
+    "id": "normandy-1944",
+    "title": "Rifleman - Normandy, June 1944",
+    "startDate": "1944-06-05",
+    "startLocation": "Aboard LCI-94 in the English Channel, off Omaha Beach",
+    "opening": "The Channel is rough and the landing craft smells of diesel, seawater, and three hundred seasick men. Nobody slept. Sergeant Kowalski moves down the packed deck checking gear by red flashlight - Mae West, rifle wrapped against the spray, the invasion francs they handed out like play money. 'Listen,' he says, close to your ear over the engines. 'When the ramp drops, you don't stop. Not for gear, not for nothing, not for me. You get to the shingle.' Somewhere ahead in the dark is France. H-Hour is 0630.",
+    "squad": [
+      { "name": "Sgt. Frank Kowalski", "role": "squad leader", "trait": "Chicago steelworker, profane and gentle, memorizes everyone's hometown" },
+      { "name": "Cpl. Dee Ricks", "role": "BAR gunner", "trait": "Texan, cool under fire, awful poker player" },
+      { "name": "Pvt. Sal Marino", "role": "rifleman", "trait": "Brooklyn, fastest mouth in the company, scared of cows" },
+      { "name": "Pvt. Eugene 'Doc' Loomis", "role": "medic", "trait": "conscientious about everything, carries extra morphine and photographs" },
+      { "name": "Pvt. Henry Otoole", "role": "radioman", "trait": "farm kid, fixes anything with wire and patience" }
+    ],
+    "timelinePressure": [
+      "1944-06-06 D-Day - Omaha Beach and the bluffs",
+      "1944-06-13 Into the hedgerow country - the bocage fight begins",
+      "1944-07-25 Operation Cobra - the breakout",
+      "1944-08-25 Paris is liberated",
+      "1944-12-16 The Ardennes erupts - the Battle of the Bulge"
+    ]
+  }
+]

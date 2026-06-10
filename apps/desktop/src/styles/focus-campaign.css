@@ -1,0 +1,273 @@
+/* Campaign Mode: era picker, play timeline, squad rail, dice blocks. */
+.focus-app .campaign-stage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.focus-app .campaign-error {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-radius: var(--r-md);
+  color: var(--danger);
+  font-size: 12.5px;
+  margin: 8px 16px 0;
+  padding: 8px 12px;
+}
+
+/* --- Home: pack / scenario / create --- */
+.focus-app .campaign-home {
+  display: grid;
+  gap: 22px;
+  margin: 0 auto;
+  max-width: 860px;
+  overflow-y: auto;
+  padding: 24px 16px 48px;
+  width: 100%;
+}
+
+.focus-app .campaign-h2 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.focus-app .campaign-cards {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  margin-bottom: 12px;
+}
+
+.focus-app .campaign-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.focus-app .campaign-card:hover {
+  border-color: var(--accent-line);
+}
+
+.focus-app .campaign-card.on {
+  background: linear-gradient(135deg, var(--accent-soft), transparent 70%), var(--surface);
+  border-color: var(--accent-line);
+}
+
+.focus-app .campaign-card b {
+  font-size: 13.5px;
+}
+
+.focus-app .campaign-card .mono,
+.focus-app .campaign-card-meta {
+  color: var(--fg-3);
+  font-size: 12px;
+}
+
+.focus-app .campaign-create {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.focus-app .campaign-create .in {
+  flex: 1 1 220px;
+}
+
+/* --- Play layout: timeline + rail + composer --- */
+.focus-app .campaign-play {
+  display: grid;
+  flex: 1;
+  gap: 0 16px;
+  grid-template-areas: "timeline rail" "composer rail";
+  grid-template-columns: minmax(0, 1fr) 250px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  padding: 0 16px 14px;
+}
+
+.focus-app .campaign-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  grid-area: timeline;
+  overflow-y: auto;
+  padding: 16px 4px 8px 0;
+}
+
+.focus-app .campaign-scene {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 12px 14px;
+  position: relative;
+}
+
+.focus-app .campaign-scene.streaming {
+  border-color: var(--accent-line);
+}
+
+.focus-app .campaign-player {
+  align-items: center;
+  color: var(--fg-3);
+  display: flex;
+  font-size: 12.5px;
+  gap: 8px;
+  padding: 2px 4px;
+}
+
+.focus-app .campaign-player svg {
+  height: 13px;
+  width: 13px;
+}
+
+.focus-app .campaign-turn {
+  display: grid;
+  gap: 8px;
+}
+
+/* --- Dice --- */
+.focus-app .campaign-dice {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  display: flex;
+  font-size: 12.5px;
+  gap: 10px;
+  padding: 8px 12px;
+  width: fit-content;
+}
+
+.focus-app .campaign-dice svg {
+  height: 15px;
+  width: 15px;
+}
+
+.focus-app .campaign-dice.success {
+  border-color: color-mix(in srgb, var(--success, #3fb950) 45%, transparent);
+}
+
+.focus-app .campaign-dice.partial {
+  border-color: color-mix(in srgb, var(--warn, #d29922) 45%, transparent);
+}
+
+.focus-app .campaign-dice.setback {
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+/* --- QA/QC chip on each scene --- */
+.focus-app .campaign-qaqc {
+  background: transparent;
+  border: none;
+  bottom: 6px;
+  color: var(--fg-3);
+  cursor: pointer;
+  font-size: 12px;
+  position: absolute;
+  right: 8px;
+}
+
+.focus-app .campaign-qaqc.corrected {
+  color: var(--warn, #d29922);
+}
+
+.focus-app .campaign-qaqc.clean {
+  color: var(--success, #3fb950);
+}
+
+.focus-app .campaign-qaqc-notes {
+  border-left: 2px solid var(--warn, #d29922);
+  color: var(--fg-3);
+  font-size: 12px;
+  margin-left: 6px;
+  padding: 2px 10px;
+  white-space: pre-wrap;
+}
+
+/* --- Right rail --- */
+.focus-app .campaign-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  grid-area: rail;
+  overflow-y: auto;
+  padding: 16px 0 8px;
+}
+
+.focus-app .campaign-rail-block {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  display: grid;
+  font-size: 12.5px;
+  gap: 6px;
+  padding: 10px 12px;
+}
+
+.focus-app .campaign-rail-block h3 {
+  color: var(--fg-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.focus-app .campaign-char {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.focus-app .campaign-char-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-app .campaign-char-status {
+  color: var(--fg-3);
+  font-size: 11px;
+}
+
+.focus-app .campaign-event {
+  border-left: 2px solid var(--line);
+  color: var(--fg-3);
+  font-size: 12px;
+  padding-left: 8px;
+}
+
+/* --- Composer --- */
+.focus-app .campaign-composer {
+  display: grid;
+  gap: 8px;
+  grid-area: composer;
+  padding-top: 8px;
+}
+
+.focus-app .campaign-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.focus-app .campaign-input {
+  align-items: flex-end;
+  display: flex;
+  gap: 8px;
+}
+
+.focus-app .campaign-input .in {
+  flex: 1;
+}

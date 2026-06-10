@@ -17,6 +17,12 @@ fn main() {
             .expect("automation SQLite state should open"),
         )
         .manage(
+            delyx_next_desktop::campaign_bridge::CampaignBridgeState::persistent(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            )
+            .expect("campaign SQLite state should open"),
+        )
+        .manage(
             delyx_next_desktop::local_store_bridge::LocalStoreBridgeState::persistent(
                 delyx_next_desktop::sqlite_store::default_database_path(),
             ),
@@ -111,6 +117,17 @@ fn main() {
             delyx_next_desktop::agent_test_executor_bridge::agent_execute_test_run,
             delyx_next_desktop::agent_test_step::agent_run_test_step,
             delyx_next_desktop::approval_bridge::approval_decide,
+            delyx_next_desktop::campaign_bridge::campaign_create,
+            delyx_next_desktop::campaign_bridge::campaign_pack_list,
+            delyx_next_desktop::campaign_bridge::campaign_memory_commit,
+            delyx_next_desktop::campaign_bridge::campaign_memory_prompt,
+            delyx_next_desktop::campaign_bridge::campaign_qaqc_prompt,
+            delyx_next_desktop::campaign_bridge::campaign_set_rating,
+            delyx_next_desktop::campaign_bridge::campaign_snapshot,
+            delyx_next_desktop::campaign_bridge::campaign_turn_commit,
+            delyx_next_desktop::campaign_bridge::campaign_turn_prompt,
+            delyx_next_desktop::campaign_bridge::campaign_turn_qaqc_commit,
+            delyx_next_desktop::campaign_bridge::campaign_turns,
             delyx_next_desktop::cli_chat::cli_chat,
             delyx_next_desktop::cli_review::cli_review,
             delyx_next_desktop::model_chat::model_chat,

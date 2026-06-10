@@ -2,6 +2,7 @@ use rusqlite::Connection;
 use std::path::{Path, PathBuf};
 
 const AGENT_RUN_MIGRATION: &str = include_str!("../migrations/0001_agent_run_ledger.sql");
+const CAMPAIGN_MODE_MIGRATION: &str = include_str!("../migrations/0002_campaign_mode.sql");
 
 pub fn default_database_path() -> PathBuf {
     if let Some(path) = std::env::var_os("DELYX_NEXT_DB_PATH") {
@@ -36,6 +37,7 @@ pub fn open_migrated_memory_database() -> rusqlite::Result<Connection> {
 fn migrate(connection: &Connection) -> rusqlite::Result<()> {
     connection.pragma_update(None, "foreign_keys", "ON")?;
     connection.execute_batch(AGENT_RUN_MIGRATION)?;
+    connection.execute_batch(CAMPAIGN_MODE_MIGRATION)?;
     ensure_agent_run_columns(connection)?;
     ensure_evidence_columns(connection)?;
     ensure_patch_record_columns(connection)?;

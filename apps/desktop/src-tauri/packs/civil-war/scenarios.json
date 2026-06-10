@@ -1,0 +1,42 @@
+[
+  {
+    "id": "union-1862",
+    "title": "Army of the Potomac - Antietam Campaign, 1862",
+    "startDate": "1862-09-04",
+    "startLocation": "Camp near Rockville, Maryland",
+    "opening": "The army is moving again, and this time the rumor mill agrees on one thing: Lee has crossed the Potomac. The war has come north. Your regiment - hard-used since the Peninsula - draws fresh cartridges and three days' rations, which the veterans say means a fight inside the week. Sergeant Doyle walks the company street at dusk, checking shoes the way other men check rifles. 'Maryland roads are stone,' he says. 'March on your feet now, fight on them later.' Somewhere ahead, beyond South Mountain, forty thousand men in butternut are looking for the same thing you are: a reason this all ends.",
+    "squad": [
+      { "name": "Sgt. Patrick Doyle", "role": "squad sergeant", "trait": "Irish-born, iron patience, keeps a list of every man he's lost" },
+      { "name": "Cpl. Nathan Hale Webb", "role": "corporal", "trait": "schoolteacher, reads the men's letters aloud" },
+      { "name": "Pvt. Charlie Ostrander", "role": "rifleman", "trait": "sixteen and lied about it, fastest loader in the company" },
+      { "name": "Pvt. Gideon Frye", "role": "rifleman", "trait": "farmer with a brother in the 5th Virginia" },
+      { "name": "Levi Freeman", "role": "company cook and teamster", "trait": "escaped slavery in Virginia; knows every road south, fears recapture more than shells" }
+    ],
+    "timelinePressure": [
+      "1862-09-14 South Mountain - the passes are forced",
+      "1862-09-17 Antietam - the bloodiest single day in American history",
+      "1862-09-22 Lincoln issues the preliminary Emancipation Proclamation",
+      "1862-12-13 Fredericksburg - the long winter begins"
+    ]
+  },
+  {
+    "id": "confederate-1862",
+    "title": "Army of Northern Virginia - Maryland, 1862",
+    "startDate": "1862-09-04",
+    "startLocation": "Ford on the Potomac near Leesburg, Virginia",
+    "opening": "The river is cool around your knees and the band on the far bank is playing 'Maryland, My Maryland' badly. The army is barefoot, sunburned, and somehow singing - it has whipped two Union armies this summer and believes General Lee can do anything. Your messmate Eli says Maryland will rise to join the Confederacy; Corporal Settle says Maryland will mostly hide its chickens. Your haversack holds green corn and not much else. Up the column a courier gallops past, raising dust, carrying orders nobody will tell you about.",
+    "squad": [
+      { "name": "Cpl. Asa Settle", "role": "corporal", "trait": "dry wit, third year of war, trusts nothing he can't eat" },
+      { "name": "Pvt. Eli Tanner", "role": "rifleman", "trait": "true believer, writes poetry, terrible shot" },
+      { "name": "Pvt. Marcus Boyd", "role": "rifleman", "trait": "joined to stay beside his cousin, now buries his letters unsent" },
+      { "name": "Pvt. John Quill", "role": "skirmisher", "trait": "mountain hunter, reads ground like print" },
+      { "name": "Doc Harlan", "role": "regimental musician and stretcher bearer", "trait": "carries men out under fire and never carries a gun" }
+    ],
+    "timelinePressure": [
+      "1862-09-13 Union soldiers find Lee's lost Special Order 191 wrapped around three cigars",
+      "1862-09-15 Harpers Ferry surrenders to Jackson",
+      "1862-09-17 Sharpsburg - the army fights for its life along Antietam Creek",
+      "1862-09-18 The long retreat across the Potomac"
+    ]
+  }
+]

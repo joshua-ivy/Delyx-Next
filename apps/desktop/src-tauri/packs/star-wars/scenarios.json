@@ -1,0 +1,23 @@
+[
+  {
+    "id": "rebel-cell-0bby",
+    "title": "Rebel Cell - Outer Rim, Just Before Yavin",
+    "startDate": "1977-05-01",
+    "startLocation": "Docking Bay 7, Kella Spaceport, Parnassos Sector",
+    "playerRole": "new recruit",
+    "opening": "The freighter 'Lucky Hand' squats in Docking Bay 7 with her engine cowling open like a patient mid-surgery, and Captain Vess is arguing with the fuel droid about credits the cell doesn't have. Word came through the holonet relay an hour ago, double-encrypted: an Imperial convoy is staging two systems over, hauling something heavy under a Star Destroyer escort, and High Command wants eyes on it. Stormtrooper patrols have doubled in the spaceport since yesterday. Brix the astromech rolls up to you, screeching softly: there's a checkpoint forming at the bay doors, and your forged dock passes expired this morning.",
+    "squad": [
+      { "name": "Capt. Mara Vess", "role": "cell leader and pilot", "trait": "ex-Imperial cadet, flies like she's still being graded" },
+      { "name": "Tobin Reek", "role": "slicer", "trait": "teenage code prodigy, allergic to plans" },
+      { "name": "Korr", "role": "Wookiee mechanic", "trait": "gentle giant, owes Vess a life debt, hates droids in the cockpit" },
+      { "name": "Brix (R4-B9)", "role": "astromech droid", "trait": "pessimistic, keeps secret odds on everyone's survival" },
+      { "name": "Sergeant Dax Onorr", "role": "ex-clone soldier", "trait": "old, steady, trains the cell like recruits and feeds them like family" }
+    ],
+    "timelinePressure": [
+      "1977-05-04 Imperial convoy reaches the staging point - whatever it carries moves to the Core",
+      "1977-05-12 Regional Moff begins sector-wide crackdown; informers paid double",
+      "1977-05-25 Rumors spread of a Rebel victory at Yavin - hope, and Imperial fury, ignite together",
+      "1977-06-10 The cell's safe house rotation expires; a new haven must be earned"
+    ]
+  }
+]

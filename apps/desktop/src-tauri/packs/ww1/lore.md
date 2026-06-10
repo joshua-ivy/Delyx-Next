@@ -1,0 +1,19 @@
+# The Great War - GM Lore
+
+## Trench Life
+A frontline trench is a zigzag ditch about eight feet deep, floored with duckboards over standing water. Soldiers rotate: a few days in the firing line, a few in support, then rest billets in a village behind the lines. The daily rhythm is "stand-to" at dawn and dusk (everyone on the firestep, rifles ready, because attacks come at first light), then sentry duty, repair work, and ration parties at night. Rats grow bold and enormous; lice are universal ("chatting" means picking them from seams). Food is bully beef, hard biscuit, and stew carried up in containers that arrive cold. Rum ration comes before an attack. Trench foot rots feet that stay wet; officers inspect feet like rifles.
+
+## Weapons and Equipment
+The American rifleman of 1918 carries the M1903 Springfield or the M1917 Enfield, both bolt-action, five-round magazines, accurate and slow. The French-made Chauchat automatic rifle is issued to AEF squads: it works, barely - the open-sided magazine packs with mud and it jams constantly. Officers carry the M1911 pistol. Grenades are the French F1 or British Mills bomb. The machine guns that rule no-man's-land are the German MG08 and Allied Vickers and Hotchkiss - belt-fed, water-cooled, firing all day from fixed positions. Artillery causes most casualties of the war: a "whizz-bang" arrives faster than its sound, a heavy "crump" buries dugouts. The M1 Garand does not exist yet - it arrives in 1936.
+
+## Gas
+Gas arrives by shell with a soft plop instead of a bang, or drifts as a cloud on the wind. Chlorine smells of pineapple and bleach; phosgene of fresh-cut hay; mustard of garlic, and it burns skin hours after exposure, lingering in shell holes and on clothing for days. The cry "GAS! GAS!" sends every man fumbling for his small box respirator - six seconds to mask if drilled, and the drill is everything. Horses have masks too. Gas rarely kills outright in 1918; it blinds, blisters, and fills the casualty stations.
+
+## No-Man's-Land
+Between the trench lines lies anywhere from thirty yards to half a mile of cratered mud, rusted wire in belts ten feet deep, and the unburied dead of old attacks. Crossing happens at night: wiring parties, listening posts, and trench raids with clubs, knives, and bombs because rifles are too loud and too long. Flares (Very lights) turn night to day - the drill when one goes up is to freeze, not dive. Star shells hang and drift. Machine guns fire on fixed lines across gaps in the wire even in pitch dark.
+
+## The AEF
+The American Expeditionary Forces under General Pershing arrive green and proud, two million strong by late 1918. The French and British want American battalions fed into their own divisions; Pershing refuses - Americans fight as an American army. The doughboys train with French instructors and borrow French gear: Chauchats, 75mm guns, Adrian helmets swapped for British Brodies. Quiet sectors like the Vosges are where green divisions learn; Seicheprey, Cantigny, Belleau Wood, and the Meuse-Argonne are where they earn their name. The Harlem Hellfighters of the 369th serve under French command and spend more days in combat than any other American regiment.
+
+## Voices of 1918
+Soldiers' slang: "Boche" or "Fritz" or "Jerry" for the Germans, "doughboy" for the American infantryman, "poilu" for his French counterpart. "Over the top" means leaving the trench in an attack. A "Blighty one" is a wound bad enough to send a British soldier home; Americans say "getting a ticket". "Cooties" are lice, "iron rations" the emergency tin you must not eat, "no man's land" needs no translation. Letters home are censored by junior officers; soldiers write around the truth. Shell shock is real and poorly understood - men shake, go mute, or stop hearing; good sergeants shield them, bad ones call it cowardice.

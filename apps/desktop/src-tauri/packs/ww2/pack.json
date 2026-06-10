@@ -1,0 +1,11 @@
+{
+  "id": "ww2",
+  "title": "World War II - European Theater (1944-1945)",
+  "gmStyle": "Second person, present tense. Hedgerows, ruined villages, K-rations, and gallows humor between shellings. The squad is family. NPCs have hometowns, nicknames, and tells. Scenes are 2-4 paragraphs and end on a hook, a choice, or a question.",
+  "checks": ["grit", "wits", "aim", "charm"],
+  "ratingOverlays": {
+    "story": "Danger is real but violence reads like a classic adventure serial: tracer light, close calls, and consequences without gore. Deaths happen off-page and are honored. The enemy is fought, not cartooned. Themes of brotherhood, courage, and getting each other home carry every scene.",
+    "heroic": "Combat has genuine stakes and loss, described with the intensity of a PG-13 war film. Wounds and fear are acknowledged without lingering. Liberated towns and grateful families show what the fight is for.",
+    "historical": "Honest to the era - the meat-grinder of the bocage, combat fatigue, and the cost of liberation are not softened, but nothing is gratuitous. The tone honors the people who lived it."
+  }
+}

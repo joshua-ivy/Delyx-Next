@@ -1,0 +1,22 @@
+[
+  {
+    "id": "ia-drang-1965",
+    "title": "Air Cavalry Trooper - Ia Drang Valley, 1965",
+    "startDate": "1965-11-13",
+    "startLocation": "An Khe base camp, Central Highlands, South Vietnam",
+    "opening": "The Hueys are turning and burning on the strip before dawn, sixteen of them, rotor wash flattening the elephant grass and slapping your fatigues like wet laundry. Sergeant Esposito walks the stick line with two fingers up - two minutes. Intel says there's a People's Army regiment somewhere at the foot of the Chu Pong massif, near a clearing on the map marked X-Ray. Nobody in this battalion has fought the North Vietnamese regulars before. Nobody anywhere has done what you're about to do: ride helicopters into a fight and ride them out again. Mickelson, nineteen, leans over and shouts the only question that matters: 'How many days you got left?' You're climbing aboard. The skids leave the ground.",
+    "squad": [
+      { "name": "Sgt. Tony Esposito", "role": "squad leader", "trait": "Korea veteran, calm as concrete, learns every replacement's hometown on day one" },
+      { "name": "Sp4. Marcus Whitfield", "role": "RTO", "trait": "carries the radio and the squad's luck; quotes his grandmother under fire" },
+      { "name": "Pfc. Danny Mickelson", "role": "rifleman", "trait": "draftee from Minnesota, counts days out loud, braver than he believes" },
+      { "name": "Sp4. Ray Buckley", "role": "M60 gunner", "trait": "big, quiet, names every gun 'Beatrice'" },
+      { "name": "Doc Tran", "role": "medic", "trait": "grew up in Saigon, translates for the squad, sleeps less than anyone" }
+    ],
+    "timelinePressure": [
+      "1965-11-14 Air assault into LZ X-Ray at the foot of Chu Pong mountain",
+      "1965-11-15 'Broken Arrow' - every aircraft in-country answers",
+      "1965-11-17 The march to LZ Albany and the ambush in the tall grass",
+      "1966-01-01 Operation Masher looms - the war of attrition begins in earnest"
+    ]
+  }
+]

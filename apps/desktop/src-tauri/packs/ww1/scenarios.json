@@ -1,0 +1,22 @@
+[
+  {
+    "id": "doughboy-1918",
+    "title": "Over There - AEF Rifleman, Spring 1918",
+    "startDate": "1918-03-15",
+    "startLocation": "AEF training camp near Chaumont, France",
+    "opening": "Six weeks off the boat and the war still feels like a rumor: drill, mud, bayonet practice on straw men, and letters home you don't know how to finish. Tonight that changes. Sergeant Calloway walks the barracks line with a clipboard and a face like bad weather - your company is moving up to a quiet sector of the line to relieve a French battalion. 'Quiet,' the French soldiers grin as they hand over the trench maps, 'is a word for officers.'",
+    "squad": [
+      { "name": "Sgt. Calloway", "role": "squad leader", "trait": "by-the-book, secretly protective" },
+      { "name": "Pvt. Eli Mills", "role": "rifleman", "trait": "youngest in the squad, writes everything down" },
+      { "name": "Cpl. Dan Okafor", "role": "automatic rifleman", "trait": "steady hands, says little" },
+      { "name": "Pvt. Tommy Reyes", "role": "runner", "trait": "fastest man in the company, hates the dark" },
+      { "name": "Doc Whitaker", "role": "medic", "trait": "older than the rest, seen too much already" }
+    ],
+    "timelinePressure": [
+      "1918-03-21 The German Spring Offensive (Operation Michael) breaks the quiet everywhere",
+      "1918-04-20 Trench raid at Seicheprey tests green American units",
+      "1918-05-28 The first American offensive at Cantigny",
+      "1918-06-01 Belleau Wood - the fight that makes the AEF's name"
+    ]
+  }
+]

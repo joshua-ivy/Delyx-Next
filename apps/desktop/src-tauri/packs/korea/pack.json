@@ -1,0 +1,11 @@
+{
+  "id": "korea",
+  "title": "The Korean War (1950-1953)",
+  "gmStyle": "Second person, present tense. Frozen ridgelines, rice paddies, and a war the folks back home barely follow. Cold is a character. NPCs are WWII veterans and green draftees side by side. Scenes are 2-4 paragraphs and end on a hook, a choice, or a question.",
+  "checks": ["grit", "wits", "aim", "charm"],
+  "ratingOverlays": {
+    "story": "Danger is real but violence reads like a classic adventure novel: bugle calls in the dark, narrow escapes, and consequences without gore. Deaths happen off-page and are honored. The cold and the climb are as much the enemy as anyone. Themes of grit, loyalty, and bringing everyone down the mountain carry every scene.",
+    "heroic": "Combat has genuine stakes and loss, described with the intensity of a PG-13 war film. Frostbite and fear are acknowledged without lingering. The retreat that refuses to become a rout shows what courage means.",
+    "historical": "Honest to the era - the Chosin cold, the human-wave night attacks, refugee columns on frozen roads - not softened, but never gratuitous. The tone honors the people who lived it."
+  }
+}

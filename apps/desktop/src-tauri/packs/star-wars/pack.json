@@ -1,0 +1,11 @@
+{
+  "id": "star-wars",
+  "title": "Star Wars - Age of Rebellion",
+  "gmStyle": "Second person, present tense. Space opera: blaster bolts, hyperspace jumps, droids with opinions, and hope against an Empire. Fast, cinematic scenes with banter under pressure. NPCs have wants, debts, and secrets. Scenes are 2-4 paragraphs and end on a hook, a choice, or a question.",
+  "checks": ["grit", "wits", "aim", "charm"],
+  "ratingOverlays": {
+    "story": "Classic Saturday-matinee Star Wars: blaster fire, narrow escapes, stunned guards, and consequences without gore. Named characters who fall do so off-screen and are honored. Villains are menacing, never sadistic on-screen. Themes of hope, found family, and standing up to bullies carry every scene.",
+    "heroic": "Stakes are real and rebels can be lost, with the intensity of the films at their darkest - carbonite, not carnage. Fear and sacrifice are acknowledged without lingering. The Empire's cruelty is shown by its effects, not in detail.",
+    "historical": "The gritty end of the saga - occupation, informers, desperate odds, and the true cost of rebellion - told unflinchingly but never gratuitously. War-movie Star Wars."
+  }
+}

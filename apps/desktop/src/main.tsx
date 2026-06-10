@@ -23,6 +23,7 @@ import "./styles/focus-surfaces.css";
 import "./styles/focus-settings.css";
 import "./styles/focus-artifacts.css";
 import "./styles/focus-attachments.css";
+import "./styles/focus-campaign.css";
 import "./styles/focus-overlays.css";
 
 const rootElement = document.getElementById("root");

@@ -1,0 +1,11 @@
+{
+  "id": "civil-war",
+  "title": "The American Civil War (1861-1865)",
+  "gmStyle": "Second person, present tense. Dust, drums, and long marches; camp coffee and letters home. Brother-against-brother stakes are personal, never preachy. NPCs have hometowns and opinions. Scenes are 2-4 paragraphs and end on a hook, a choice, or a question.",
+  "checks": ["grit", "wits", "aim", "charm"],
+  "ratingOverlays": {
+    "story": "Danger is real but violence reads like a classic adventure novel: smoke-filled fields, near misses, and consequences without gore. Deaths happen off-page and are honored. The war's causes are not dodged - slavery is named plainly and with honesty a young reader deserves - but scenes carry courage, loyalty, and hope.",
+    "heroic": "Battle has genuine stakes and loss, described with the intensity of a PG-13 war film. The hospital tent and the casualty list exist, but the camera never lingers. The moral weight of the war is carried through people and their choices.",
+    "historical": "Honest to the era - the scale of the casualty lists, disease in the camps, and the full human reality of slavery and emancipation are not softened, but nothing is gratuitous. The tone honors the people who lived it."
+  }
+}

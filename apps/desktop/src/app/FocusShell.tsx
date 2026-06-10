@@ -9,6 +9,7 @@ import type { AgentRunView } from "../features/runs/agentRunTypes";
 import type { TestArtifactView } from "../features/tests/testTypes";
 import type { TaskThread } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
+import { CampaignScreen } from "../features/campaigns/CampaignView";
 import { FocusHome } from "./FocusHome";
 import { FocusCommandPalette, FocusModelMenu, FocusThreadsMenu } from "./FocusOverlays";
 import { FocusSettings } from "./FocusSettings";
@@ -17,7 +18,7 @@ import { FocusIcon, RailIconButton } from "./focusAtoms";
 import { focusMode, selectedModel, type FocusMode } from "./focusFormat";
 import type { DesktopShellStatusView } from "./runtimeBridge";
 
-type FocusView = "home" | "thread" | "settings";
+type FocusView = "home" | "thread" | "settings" | "campaign";
 type FocusOverlay = "palette" | "threads" | "models" | undefined;
 
 interface FocusShellProps {
@@ -96,6 +97,9 @@ export function FocusShell(props: FocusShellProps) {
       } else if ((event.ctrlKey || event.metaKey) && key === "n") {
         event.preventDefault();
         setView("home");
+      } else if ((event.ctrlKey || event.metaKey) && key === "g") {
+        event.preventDefault();
+        setView("campaign");
       } else if (key === "escape") {
         setOverlay(undefined);
       }
@@ -122,6 +126,7 @@ export function FocusShell(props: FocusShellProps) {
         <button className="rail-logo" onClick={() => setView("home")} title="Home" type="button">D</button>
         <RailIconButton active={view === "home"} icon="home" label="Home" onClick={() => setView("home")} />
         <RailIconButton active={overlay === "threads"} icon="threads" label="Threads" onClick={() => setOverlay("threads")} />
+        <RailIconButton active={view === "campaign"} icon="dice" label="Campaigns (Ctrl G)" onClick={() => setView("campaign")} />
         <button className="rail-btn" title="Commands (Ctrl K)" type="button" onClick={() => setOverlay("palette")}><FocusIcon name="cmd" /></button>
         <div className="rail-spacer" />
         <div className="rail-pipe">{[0, 1, 2, 3, 4].map((item) => <span className={`rail-pd${item === stepForMode(mode) ? " on" : ""}`} key={item} />)}</div>
@@ -131,6 +136,7 @@ export function FocusShell(props: FocusShellProps) {
       {view === "home" && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} projectId={props.nativeProjectId} />}
       {view === "thread" && props.activeThread && <FocusThread activePlan={props.activePlan} mode={mode} model={selectedModel(props.modelSettings)} onApplyPatch={props.onApplyPatch} onApprovePlan={props.onApprovePlan} onDecideProposal={props.onDecideProposal} onModeChange={setMode} onOpenPalette={() => setOverlay("palette")} onRecordFinal={props.onRecordFinal} onRequestRepair={props.onRequestRepair} onResumeRun={props.onResumeRun} onRunReview={props.onRunReview} onRunTests={props.onRunTests} onSend={send} onLaunchWorker={props.onLaunchWorker} projectId={props.nativeProjectId} patches={activePatches} proposals={activeProposals} reviews={props.reviews.filter((report) => report.runId === props.activeRun?.id)} run={props.activeRun} schedulerDecision={props.schedulerDecision} tests={activeTests} thread={props.activeThread} />}
       {view === "thread" && !props.activeThread && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} projectId={props.nativeProjectId} />}
+      {view === "campaign" && <CampaignScreen modelSettings={props.modelSettings} onExit={() => setView("home")} projectId={props.nativeProjectId ?? props.activeProject.id} qaqcAdapterId={props.qaqcAdapterId} workingDirectory={props.activeProject.path} />}
       {view === "settings" && <FocusSettings activeRun={props.activeRun} desktopShell={props.desktopShell} mode={mode} modelSettings={props.modelSettings} onLocalModelsChanged={props.onLocalModelsChanged} onModeChange={setMode} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} project={props.activeProject} threads={visibleThreads} />}
 
       {overlay === "palette" && <FocusCommandPalette onArchiveActive={props.onArchiveActive} onClose={() => setOverlay(undefined)} onOpenModels={() => setOverlay("models")} onOpenThreads={() => setOverlay("threads")} onOpenWorkspace={props.onOpenWorkspace} onRunCommand={props.onRunCommand} onView={(next) => setView(next)} />}

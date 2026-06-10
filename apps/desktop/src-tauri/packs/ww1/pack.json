@@ -1,0 +1,11 @@
+{
+  "id": "ww1",
+  "title": "The Great War (1914-1918)",
+  "gmStyle": "Second person, present tense. Grounded, sensory, human-scale. NPCs have names, voices, and wants of their own. Scenes are 2-4 paragraphs and end on a hook, a choice, or a question.",
+  "checks": ["grit", "wits", "aim", "charm"],
+  "ratingOverlays": {
+    "story": "Danger is real but violence reads like a classic adventure novel: courage, close calls, and consequences without gore. Deaths happen off-page and are honored, never described in detail. No period slurs. Themes of friendship, duty, and hope carry every scene.",
+    "heroic": "Combat has genuine stakes and loss, described with the intensity of a PG-13 war film. Injuries are acknowledged and matter, but the camera never lingers. Grief and fear are shown honestly through people, not through graphic detail.",
+    "historical": "Honest to the era - attrition, gas, shell shock, and the scale of loss are not softened, but nothing is gratuitous or lingered on for shock. The tone honors the people who lived it."
+  }
+}

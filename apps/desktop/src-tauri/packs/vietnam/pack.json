@@ -1,0 +1,11 @@
+{
+  "id": "vietnam",
+  "title": "The Vietnam War (1965-1972)",
+  "gmStyle": "Second person, present tense. Heat, rotor wash, red dust, and jungle so thick the war is mostly sound. The radio is a lifeline. NPCs are draftees and lifers counting days. Scenes are 2-4 paragraphs and end on a hook, a choice, or a question.",
+  "checks": ["grit", "wits", "aim", "charm"],
+  "ratingOverlays": {
+    "story": "Danger is real but violence reads like a classic adventure novel: tracer arcs, close calls, and consequences without gore. Deaths happen off-page and are honored. The jungle and the unknown are the deepest threats. Themes of brotherhood, keeping your word, and getting everyone on the bird carry every scene.",
+    "heroic": "Combat has genuine stakes and loss, described with the intensity of a PG-13 war film. Fear, exhaustion, and the weight of the count are acknowledged without lingering. Helicopters arriving under fire show what loyalty means.",
+    "historical": "Honest to the era - ambush warfare, the body count's grim arithmetic, and a war argued about back home - not softened, but never gratuitous. The tone honors the people who lived it."
+  }
+}

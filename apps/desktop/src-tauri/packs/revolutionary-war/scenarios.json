@@ -1,0 +1,23 @@
+[
+  {
+    "id": "minuteman-1775",
+    "title": "Minuteman - Lexington and Concord, 1775",
+    "startDate": "1775-04-18",
+    "startLocation": "Buckman Tavern, Lexington, Massachusetts",
+    "playerRole": "militiaman",
+    "opening": "The tavern fire has burned low and nobody has gone home. Word came at midnight: Regulars are out of Boston, crossing the water, marching this way - after the powder stores at Concord, most likely, and after Mr. Hancock and Mr. Adams besides. Captain Parker stands by the door with his hat in his hands, counting heads. Your musket is loaded with the ball you cast last winter. Somewhere down the dark Boston road, you can just hear it now: drums.",
+    "squad": [
+      { "name": "Capt. John Parker", "role": "militia captain", "trait": "calm, coughing, chooses words like coin" },
+      { "name": "Asa Brown", "role": "neighbor and militiaman", "trait": "your oldest friend, quick temper" },
+      { "name": "Silas Hadley", "role": "blacksmith", "trait": "strong as his anvil, slow to anger" },
+      { "name": "Rebecca Munroe", "role": "tavern keeper's daughter", "trait": "carries messages nobody suspects" },
+      { "name": "Old Amos", "role": "veteran of the French war", "trait": "has seen battle and never talks about it" }
+    ],
+    "timelinePressure": [
+      "1775-04-19 The shot heard round the world at Lexington Green; the long retreat from Concord",
+      "1775-05-10 Fort Ticonderoga taken; cannon for the cause",
+      "1775-06-17 Bunker Hill - 'don't fire until you see the whites of their eyes'",
+      "1776-07-04 The Declaration is read aloud in every town square"
+    ]
+  }
+]

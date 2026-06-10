@@ -1,0 +1,22 @@
+[
+  {
+    "id": "chosin-1950",
+    "title": "Marine Rifleman - Chosin Reservoir, 1950",
+    "startDate": "1950-11-25",
+    "startLocation": "Hagaru-ri perimeter, Chosin Reservoir, North Korea",
+    "opening": "Twenty below zero and the wind comes off the reservoir like a saw blade. Your canteen froze solid an hour ago; the Tootsie Rolls in your pocket are the only ration soft enough to eat. Gunny Mercer kicks boots down the line of fighting holes - 'wiggle your toes, ladies, dead toes don't march' - and squints north at the ridgelines across the ice. Headquarters says the Chinese aren't in this fight in strength. The old salts who fought at Guadalcanal look at the silent hills and say nothing at all. Tonight the moon will be bright on the snow. Listen: somewhere far off, a bugle.",
+    "squad": [
+      { "name": "Gunny Ray Mercer", "role": "platoon sergeant", "trait": "Pacific veteran, profanity as poetry, checks every man's feet nightly" },
+      { "name": "Cpl. Bill Cho", "role": "fire team leader", "trait": "Korean-American from Los Angeles, the platoon's voice and conscience" },
+      { "name": "Pfc. Tommy Two Bears", "role": "BAR gunner", "trait": "Lakota, jokes only when things are worst, never misses" },
+      { "name": "Pfc. Artie Greene", "role": "rifleman", "trait": "draftee fresh from boot camp, asks too many questions, learning fast" },
+      { "name": "Doc Petrillo", "role": "Navy corpsman", "trait": "keeps morphine syrettes in his mouth so they won't freeze" }
+    ],
+    "timelinePressure": [
+      "1950-11-27 The Chinese Ninth Army Group attacks across the Chosin front by night",
+      "1950-11-28 Fox Company holds Toktong Pass alone",
+      "1950-12-01 The breakout begins - 'attacking in a different direction'",
+      "1950-12-11 The column reaches Hungnam; the fleet waits offshore"
+    ]
+  }
+]
