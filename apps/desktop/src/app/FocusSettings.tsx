@@ -5,6 +5,7 @@ import type { TaskThread } from "../features/threads/threadTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { FocusIcon } from "./focusAtoms";
 import { FocusProviders } from "./FocusProviders";
+import { ProjectTrustPanel } from "../features/projects/ProjectTrustPanel";
 import { gitChangeLabel, modeLabel, selectedModel, selectedProvider, type FocusMode } from "./focusFormat";
 import type { DesktopShellStatusView } from "./runtimeBridge";
 
@@ -15,6 +16,7 @@ interface FocusSettingsProps {
   desktopShell: DesktopShellStatusView | undefined;
   mode: FocusMode;
   modelSettings: ModelSettingsView;
+  onLocalModelsChanged?: () => void;
   onModeChange: (mode: FocusMode) => void;
   onRefreshModels: () => void;
   onSelectModel: (selection: ModelSelectionKey) => void;
@@ -45,7 +47,7 @@ export function FocusSettings(props: FocusSettingsProps) {
           <div className="set-tabs">{tabs.map(([id, label]) => <button className={`set-tab${tab === id ? " on" : ""}`} key={id} onClick={() => setTab(id)} type="button">{label}</button>)}</div>
           {tab === "general" && <General desktopShell={props.desktopShell} mode={props.mode} onModeChange={props.onModeChange} />}
           {tab === "models" && <Models modelSettings={props.modelSettings} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} />}
-          {tab === "providers" && <FocusProviders />}
+          {tab === "providers" && <FocusProviders onLocalModelsChanged={props.onLocalModelsChanged} />}
           {tab === "workspace" && <Workspace activeRun={props.activeRun} project={props.project} threads={props.threads} />}
           {tab === "privacy" && <Privacy />}
           {tab === "appearance" && <Appearance compact={compact} mode={props.mode} onCompact={() => setCompact((value) => !value)} onModeChange={props.onModeChange} />}
@@ -87,12 +89,15 @@ function Models({ modelSettings, onRefreshModels, onSelectModel }: { modelSettin
 }
 
 function Workspace({ activeRun, project, threads }: { activeRun: AgentRunView | undefined; project: WorkspaceProject; threads: TaskThread[] }) {
-  return <Section label="Repository">
-    <Row title="Active project" detail={project.path}><span className="tag live">{project.name}</span></Row>
-    <Row title="Git state" detail={gitChangeLabel(project)}><span className={`tag ${project.git.isRepo ? "live" : "off"}`}>{project.git.branch || "no repo"}</span></Row>
-    <Row title="Approved root" detail={project.approvedRoots[0] ?? "No approved root loaded."}><span className="tag live">local</span></Row>
-    <Row title="Active threads" detail={`${threads.filter((thread) => !thread.archived).length} visible thread(s)`}><span className="tag off">{activeRun?.status ?? "no run"}</span></Row>
-  </Section>;
+  return <>
+    <Section label="Repository">
+      <Row title="Active project" detail={project.path}><span className="tag live">{project.name}</span></Row>
+      <Row title="Git state" detail={gitChangeLabel(project)}><span className={`tag ${project.git.isRepo ? "live" : "off"}`}>{project.git.branch || "no repo"}</span></Row>
+      <Row title="Approved root" detail={project.approvedRoots[0] ?? "No approved root loaded."}><span className="tag live">local</span></Row>
+      <Row title="Active threads" detail={`${threads.filter((thread) => !thread.archived).length} visible thread(s)`}><span className="tag off">{activeRun?.status ?? "no run"}</span></Row>
+    </Section>
+    <ProjectTrustPanel name={project.name} rootPath={project.path} />
+  </>;
 }
 
 function providerDetail(provider: ModelSettingsView["providers"][number]) {

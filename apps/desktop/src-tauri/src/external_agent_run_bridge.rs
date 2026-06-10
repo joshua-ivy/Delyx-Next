@@ -87,39 +87,79 @@ pub struct ExternalAgentEventView {
     pub timestamp: String,
 }
 
+// The CLI agent runs to completion (possibly minutes); run it on a blocking
+// thread so the Tauri main thread — and the webview — stay responsive. The
+// AppHandle moves into the task because `tauri::State` borrows cannot.
 #[tauri::command]
-pub fn external_agent_run_codex(
-    state: tauri::State<ExternalAgentRunBridgeState>,
-    approvals: tauri::State<ApprovalBridgeState>,
+pub async fn external_agent_run_codex(
+    app: tauri::AppHandle,
     request: ExternalAgentCodexRunRequest,
 ) -> Result<ExternalAgentRunArtifactView, String> {
-    approvals.with_engine(|engine| {
-        let mut store = state
-            .store
-            .lock()
-            .map_err(|_| "External agent run bridge lock failed.".to_string())?;
-        let view = run_kind_agent_record(ExternalAgentKind::CodexCli, &mut store, engine, request)?;
-        state.save_if_persistent(&store)?;
-        Ok(view)
-    })?
+    run_kind_agent_async(app, ExternalAgentKind::CodexCli, request).await
 }
 
 #[tauri::command]
-pub fn external_agent_run_claude(
-    state: tauri::State<ExternalAgentRunBridgeState>,
-    approvals: tauri::State<ApprovalBridgeState>,
+pub async fn external_agent_run_claude(
+    app: tauri::AppHandle,
     request: ExternalAgentCodexRunRequest,
 ) -> Result<ExternalAgentRunArtifactView, String> {
-    approvals.with_engine(|engine| {
-        let mut store = state
-            .store
-            .lock()
-            .map_err(|_| "External agent run bridge lock failed.".to_string())?;
-        let view =
-            run_kind_agent_record(ExternalAgentKind::ClaudeCode, &mut store, engine, request)?;
-        state.save_if_persistent(&store)?;
+    run_kind_agent_async(app, ExternalAgentKind::ClaudeCode, request).await
+}
+
+async fn run_kind_agent_async(
+    app: tauri::AppHandle,
+    kind: ExternalAgentKind,
+    request: ExternalAgentCodexRunRequest,
+) -> Result<ExternalAgentRunArtifactView, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        use tauri::Manager;
+        // Snapshot the planned files before the worker runs so its edits can be
+        // promoted into a reviewable, restorable Delyx patch afterwards.
+        let promote = request.capture_diff
+            && request.permission_mode == "workspace_write"
+            && !request.changed_files.is_empty();
+        let planned_paths: Vec<std::path::PathBuf> =
+            request.changed_files.iter().map(PathBuf::from).collect();
+        let pre_snapshot = promote
+            .then(|| crate::external_agent_diff::snapshot_external_agent_diff(&planned_paths));
+        let run_id = request.run_id.clone();
+        let approval_id = request.external_approval_id.clone();
+
+        let state = app.state::<ExternalAgentRunBridgeState>();
+        let approvals = app.state::<ApprovalBridgeState>();
+        let view = approvals.with_engine(|engine| {
+            let mut store = state
+                .store
+                .lock()
+                .map_err(|_| "External agent run bridge lock failed.".to_string())?;
+            let view = run_kind_agent_record(kind, &mut store, engine, request)?;
+            state.save_if_persistent(&store)?;
+            Ok::<_, String>(view)
+        })??;
+
+        // Promote real changes into the patch store (applied + checkpointed) so
+        // the existing diff review/restore UI owns the worker's edits.
+        if let Some(snapshot) = pre_snapshot.filter(|_| view.status != "failed") {
+            let changes = crate::external_agent_diff::external_diff_file_changes(&snapshot);
+            if !changes.is_empty() {
+                let patches = app.state::<crate::patch_bridge::PatchBridgeState>();
+                let mut patch_store = patches
+                    .store
+                    .lock()
+                    .map_err(|_| "Patch bridge lock failed.".to_string())?;
+                crate::external_agent_patch_promotion::promote_worker_diff_to_patch(
+                    &mut patch_store,
+                    &run_id,
+                    &approval_id,
+                    &changes,
+                );
+                patches.save_if_persistent(&patch_store)?;
+            }
+        }
         Ok(view)
-    })?
+    })
+    .await
+    .map_err(|error| format!("External agent task failed: {error}"))?
 }
 
 #[tauri::command]

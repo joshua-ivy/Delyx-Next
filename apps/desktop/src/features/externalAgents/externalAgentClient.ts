@@ -52,6 +52,26 @@ export async function runCodexExternalAgent(
   return invoke<ExternalAgentRunArtifactView>("external_agent_run_codex", { request });
 }
 
+export async function runClaudeExternalAgent(
+  request: ExternalAgentCodexRunRequest,
+): Promise<ExternalAgentRunArtifactView> {
+  return invoke<ExternalAgentRunArtifactView>("external_agent_run_claude", { request });
+}
+
+/** Launch the named CLI agent (adapter id) through its approval-gated bridge. */
+export async function runExternalAgent(
+  adapterId: string,
+  request: ExternalAgentCodexRunRequest,
+): Promise<ExternalAgentRunArtifactView> {
+  if (adapterId === "claude-code") {
+    return runClaudeExternalAgent(request);
+  }
+  if (adapterId === "codex-cli") {
+    return runCodexExternalAgent(request);
+  }
+  throw new Error(`External agent launch is not supported for adapter \`${adapterId}\`.`);
+}
+
 export async function loadExternalAgentRunSnapshot(runId: string) {
   return invoke<ExternalAgentRunArtifactView[]>("external_agent_run_snapshot", { runId });
 }

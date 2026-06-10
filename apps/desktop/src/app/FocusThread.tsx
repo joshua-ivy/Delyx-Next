@@ -13,6 +13,9 @@ import { focusModes, latestRunEvent, modeLabel, modeStep, planProgress, runStatu
 import { FocusDiffPeek } from "./FocusDiffPeek";
 import { MarkdownMessage } from "./focusMarkdown";
 import { FocusActionLine, FocusOutcomePeek, FocusSchedulerPeek, FocusTestPeek } from "./FocusThreadArtifacts";
+import { AttachmentBar } from "../features/attachments/AttachmentBar";
+import { cancelActiveModelStream } from "../features/models/modelClient";
+import { FocusWorkerPeek } from "./FocusWorkerPeek";
 
 interface FocusThreadProps {
   activePlan: PlanView | undefined;
@@ -29,6 +32,8 @@ interface FocusThreadProps {
   onRunReview: () => void;
   onRunTests: () => void;
   onSend: (value: string) => void;
+  onLaunchWorker?: () => void;
+  projectId?: string;
   patches: PatchProposalView[];
   proposals: ActionProposalView[];
   reviews: ReviewReportView[];
@@ -66,6 +71,7 @@ export function FocusThread(props: FocusThreadProps) {
             <FocusSchedulerPeek decision={props.schedulerDecision} onApplyPatch={props.onApplyPatch} onRecordFinal={props.onRecordFinal} onResumeRun={props.onResumeRun} onRunReview={props.onRunReview} onRunTests={props.onRunTests} />
             <PlanBlock activePlan={props.activePlan} onApprovePlan={props.onApprovePlan} />
             <FocusApprovalBlock onDecideProposal={props.onDecideProposal} proposals={visibleApprovals} />
+            <FocusWorkerPeek onLaunch={props.onLaunchWorker} proposals={props.proposals} runId={props.thread.activeRunId} />
             <FocusDiffPeek onPatchAction={props.onApplyPatch} patches={props.patches} proposals={props.proposals} run={props.run} />
             <FocusTestPeek activePlan={props.activePlan} onRunTests={props.onRunTests} patches={props.patches} tests={props.tests} />
             <ReviewPeek onRequestRepair={props.onRequestRepair} onRunReview={props.onRunReview} patches={props.patches} reports={props.reviews} tests={props.tests} />
@@ -74,6 +80,7 @@ export function FocusThread(props: FocusThreadProps) {
         </div>
         <div className="dock">
           <div className="bigcomp">
+            <AttachmentBar projectId={props.projectId} threadId={props.thread.id} />
             <textarea
               className="in"
               onChange={(event) => setValue(event.target.value)}
@@ -90,6 +97,9 @@ export function FocusThread(props: FocusThreadProps) {
             <div className="ctl">
               <button className="icon-btn" title="Open commands" type="button" onClick={props.onOpenPalette}><FocusIcon name="plus" /></button>
               <div className="seg">{focusModes.slice(0, 3).map((item) => <button className={props.mode === item ? "on" : ""} key={item} onClick={() => props.onModeChange(item)} type="button">{modeLabel(item)}</button>)}</div>
+              {props.thread.status === "exploring" && (
+                <button className="btn-stop" onClick={() => void cancelActiveModelStream()} title="Stop generating" type="button">Stop</button>
+              )}
               <button className="btn-send" onClick={send} type="button">Send <span className="kbd">Enter</span></button>
             </div>
           </div>

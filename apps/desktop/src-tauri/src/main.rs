@@ -86,6 +86,14 @@ fn main() {
         )
         .manage(delyx_next_desktop::secret_bridge::SecretBridgeState::keyring())
         .manage(delyx_next_desktop::model_embedded::EmbeddedRuntimeState::new())
+        .manage(delyx_next_desktop::project_bridge::ProjectBridgeState::new(
+            delyx_next_desktop::sqlite_store::default_database_path(),
+        ))
+        .manage(
+            delyx_next_desktop::attachment_bridge::AttachmentBridgeState::new(
+                delyx_next_desktop::sqlite_store::default_database_path(),
+            ),
+        )
         .invoke_handler(tauri::generate_handler![
             delyx_next_desktop::agent_drive_bridge::agent_drive_run,
             delyx_next_desktop::agent_patch_apply_step::agent_run_patch_apply_step,
@@ -106,6 +114,9 @@ fn main() {
             delyx_next_desktop::cli_chat::cli_chat,
             delyx_next_desktop::cli_review::cli_review,
             delyx_next_desktop::model_chat::model_chat,
+            delyx_next_desktop::model_chat::model_chat_stream,
+            delyx_next_desktop::model_chat::model_chat_tools,
+            delyx_next_desktop::model_chat::model_chat_cancel,
             delyx_next_desktop::model_embedded_bridge::local_model_import,
             delyx_next_desktop::model_embedded_bridge::local_model_list,
             delyx_next_desktop::model_embedded_bridge::local_model_list_ollama,
@@ -165,7 +176,24 @@ fn main() {
             delyx_next_desktop::thread_run_bridge::thread_status_update,
             delyx_next_desktop::workspace_bridge::workspace_recent_project,
             delyx_next_desktop::workspace_bridge::workspace_read_files,
-            delyx_next_desktop::workspace_bridge::workspace_snapshot
+            delyx_next_desktop::workspace_bridge::workspace_snapshot,
+            delyx_next_desktop::project_bridge::project_save,
+            delyx_next_desktop::project_bridge::project_ensure,
+            delyx_next_desktop::project_bridge::project_snapshot,
+            delyx_next_desktop::project_bridge::project_list,
+            delyx_next_desktop::project_bridge::project_remove,
+            delyx_next_desktop::attachment_bridge::attachment_propose,
+            delyx_next_desktop::attachment_bridge::attachment_snapshot,
+            delyx_next_desktop::attachment_bridge::attachment_approve,
+            delyx_next_desktop::attachment_bridge::attachment_deny,
+            delyx_next_desktop::attachment_bridge::attachment_expire,
+            delyx_next_desktop::attachment_bridge::attachment_parse,
+            delyx_next_desktop::attachment_bridge::context_pack_create,
+            delyx_next_desktop::attachment_bridge::attachment_evidence_from_pack,
+            delyx_next_desktop::attachment_bridge::attachment_evidence_snapshot,
+            delyx_next_desktop::attachment_bridge::attachment_parse_pdf,
+            delyx_next_desktop::attachment_bridge::attachment_external_snapshot,
+            delyx_next_desktop::attachment_bridge::attachment_report_snapshot
         ])
         .run(tauri::generate_context!())
         .expect("error while running Delyx Next");

@@ -8,6 +8,59 @@
   overflow: hidden;
 }
 
+/* Strong-worker launch state (queued task + approval state + launch action). */
+.focus-app .worker-peek {
+  align-items: center;
+  background: linear-gradient(135deg, var(--accent-soft), transparent 60%), var(--surface);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 8px 0;
+  padding: 11px 14px;
+}
+
+.focus-app .worker-peek-meta {
+  display: grid;
+  flex: 1 1 260px;
+  gap: 2px;
+  min-width: 0;
+}
+
+.focus-app .worker-peek-meta b {
+  font-size: 13px;
+}
+
+.focus-app .worker-peek-meta span {
+  color: var(--fg-3);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-app .worker-peek-ctl {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+/* Stop button shown while a local model is streaming. */
+.focus-app .btn-stop {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: var(--r-md);
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+}
+
+.focus-app .btn-stop:hover {
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+}
+
 .focus-app .plan-head,
 .focus-app .peek-head {
   align-items: center;
@@ -183,105 +236,4 @@
   border-radius: 999px;
   height: 4px;
   width: 4px;
-}
-
-.focus-app .settings {
-  flex: 1;
-  overflow: auto;
-}
-
-.focus-app .set-wrap {
-  animation: rise .5s cubic-bezier(.2,.7,.2,1) both;
-  margin: 0 auto;
-  max-width: 760px;
-  padding: 30px 28px 60px;
-}
-
-.focus-app .set-title {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.focus-app .set-lead {
-  color: var(--fg-2);
-  font-size: 14px;
-  margin-bottom: 26px;
-}
-
-.focus-app .set-tabs {
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  gap: 4px;
-  margin-bottom: 26px;
-  overflow-x: auto;
-}
-
-.focus-app .set-tab {
-  border-bottom: 2px solid transparent;
-  color: var(--fg-3);
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: -1px;
-  padding: 9px 13px;
-  white-space: nowrap;
-}
-
-.focus-app .set-tab.on {
-  border-bottom-color: var(--accent);
-  color: var(--fg);
-}
-
-.focus-app .set-sec {
-  margin-bottom: 34px;
-}
-
-.focus-app .set-input {
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--fg);
-  font-size: 13px;
-  min-width: 0;
-  padding: 8px 11px;
-}
-
-.focus-app .set-input:focus {
-  border-color: var(--line-2);
-  outline: none;
-}
-
-.focus-app .set-input::placeholder {
-  color: var(--fg-3);
-}
-
-.focus-app .row {
-  align-items: center;
-  border-top: 1px solid var(--line);
-  display: flex;
-  gap: 16px;
-  padding: 15px 0;
-}
-
-.focus-app .row:first-of-type {
-  border-top: 0;
-}
-
-.focus-app .rmeta {
-  flex: 1;
-  min-width: 0;
-}
-
-.focus-app .rmeta b,
-.focus-app .rmeta span {
-  display: block;
-}
-
-.focus-app .rmeta span {
-  color: var(--fg-3);
-  font-size: 12.5px;
-}
-
-.focus-app .rctl {
-  flex: none;
 }

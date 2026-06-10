@@ -7,6 +7,7 @@
     "apps/desktop"
   ],
   "scripts": {
+    "desktop": "dev-cuda.cmd",
     "dev": ".\\.tools\\npm.cmd --workspace @delyx/desktop run dev",
     "dev:desktop": ".\\.tools\\npm.cmd --workspace @delyx/desktop run dev:desktop",
     "dev:desktop:cuda": ".\\.tools\\npm.cmd --workspace @delyx/desktop run dev:desktop:cuda",

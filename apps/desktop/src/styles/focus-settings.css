@@ -1,0 +1,175 @@
+/* Focus settings layout, rows, and local model controls. */
+.focus-app .settings {
+  flex: 1;
+  overflow: auto;
+}
+
+.focus-app .set-wrap {
+  animation: rise .5s cubic-bezier(.2,.7,.2,1) both;
+  margin: 0 auto;
+  max-width: 760px;
+  padding: 30px 28px 60px;
+}
+
+.focus-app .set-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.focus-app .set-lead {
+  color: var(--fg-2);
+  font-size: 14px;
+  margin-bottom: 26px;
+}
+
+.focus-app .set-tabs {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 4px;
+  margin-bottom: 26px;
+  overflow-x: auto;
+}
+
+.focus-app .set-tab {
+  border-bottom: 2px solid transparent;
+  color: var(--fg-3);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: -1px;
+  padding: 9px 13px;
+  white-space: nowrap;
+}
+
+.focus-app .set-tab.on {
+  border-bottom-color: var(--accent);
+  color: var(--fg);
+}
+
+.focus-app .set-sec {
+  margin-bottom: 34px;
+}
+
+.focus-app .set-input {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--fg);
+  font-size: 13px;
+  min-width: 0;
+  padding: 8px 11px;
+}
+
+.focus-app .set-input:focus {
+  border-color: var(--line-2);
+  outline: none;
+}
+
+.focus-app .set-input::placeholder {
+  color: var(--fg-3);
+}
+
+.focus-app .row {
+  align-items: flex-start;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  padding: 15px 0;
+}
+
+.focus-app .row:first-of-type {
+  border-top: 0;
+}
+
+.focus-app .rmeta {
+  flex: 1 1 220px;
+  min-width: min(220px, 100%);
+}
+
+.focus-app .rmeta b,
+.focus-app .rmeta span {
+  display: block;
+}
+
+.focus-app .rmeta span {
+  color: var(--fg-3);
+  font-size: 12.5px;
+}
+
+.focus-app .rctl {
+  align-items: center;
+  display: flex;
+  flex: 1 1 320px;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  min-width: min(320px, 100%);
+}
+
+.focus-app .rctl > .set-input {
+  flex: 1 1 190px;
+}
+
+.focus-app .sampling-grid {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(5, minmax(74px, 1fr)) auto;
+  width: 100%;
+}
+
+.focus-app .sampling-field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.focus-app .sampling-field span {
+  color: var(--fg-3);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.focus-app .sampling-field .set-input {
+  width: 100%;
+}
+
+.focus-app .sampling-save {
+  justify-content: center;
+  min-width: 72px;
+}
+
+.focus-app .trust-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.focus-app .trust-options .select.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+@media (max-width: 720px) {
+  .focus-app .rctl {
+    justify-content: stretch;
+  }
+
+  .focus-app .rctl > .select,
+  .focus-app .rctl > .tag {
+    flex: none;
+  }
+
+  .focus-app .sampling-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .focus-app .sampling-save {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}

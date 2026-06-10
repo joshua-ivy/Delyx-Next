@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ShellPreferenceController } from "./ShellPreferenceController";
 import { decideApprovalAndMaybeResume, resumeAndDispatchSchedulerRun } from "./appShellApprovalDecisionActions";
 import { applyApprovedPatchForActiveRun } from "./appShellPatchActions";
@@ -23,6 +23,7 @@ import { currentWorkspaceProject } from "../features/workspace/workspaceData";
 import type { WorkspaceProject, WorkspaceUiState } from "../features/workspace/workspaceTypes";
 import { loadRuntimeBridgeState, modelSettingsFromRuntimeStatus, webRuntimeBridge, type RuntimeBridgeState } from "./runtimeBridge";
 import { mergeCliProviders, selectModelRoute } from "./cliModels";
+import { ensureProject } from "../features/projects/projectClient";
 import { useRunApprovals } from "./useRunApprovals";
 import { useRunReceipts } from "./useRunReceipts";
 import { useSchedulerDecision } from "./useSchedulerDecision";
@@ -42,6 +43,13 @@ export function AppShell() {
   const [baseModelSettings, setModelSettings] = useState<ModelSettingsView>(currentModelSettings);
   const [externalAgentState, setExternalAgentState] = useState<ExternalAgentStateView>(currentExternalAgentState);
   const [qaqcAdapterId, setQaqcAdapterId] = useState<string | undefined>(undefined);
+  const [qaqcModel, setQaqcModel] = useState<string | undefined>(undefined);
+  const [workerAdapterId, setWorkerAdapterId] = useState<string | undefined>(undefined);
+  const [workerMode, setWorkerMode] = useState<"read_only" | "workspace_write">("read_only");
+  // Auto-enable QA/QC once when a reviewer CLI is first detected. Tracked by a ref
+  // so turning it off manually afterwards isn't re-enabled on the next render.
+  const qaqcAutoSelected = useRef(false);
+  const [nativeProjectId, setNativeProjectId] = useState<string | undefined>(undefined);
   const [runtimeBridge, setRuntimeBridge] = useState<RuntimeBridgeState>(webRuntimeBridge);
   const activeProject = projects[0] ?? currentWorkspaceProject;
   const visibleThreads = threads.filter((thread) => !thread.archived);
@@ -90,6 +98,20 @@ export function AppShell() {
       cancelled = true;
     };
   }, []);
+  // Default QA/QC on: pick the first detected reviewer CLI (Claude Code, else
+  // Codex) so generated code is checked out of the box. Runs once.
+  useEffect(() => {
+    if (qaqcAutoSelected.current || qaqcAdapterId) {
+      return;
+    }
+    const reviewer =
+      externalAgentState.adapters.find((adapter) => adapter.id === "claude-code" && adapter.status === "available")
+      ?? externalAgentState.adapters.find((adapter) => adapter.id === "codex-cli" && adapter.status === "available");
+    if (reviewer) {
+      qaqcAutoSelected.current = true;
+      setQaqcAdapterId(reviewer.id);
+    }
+  }, [externalAgentState.adapters, qaqcAdapterId]);
   useEffect(() => {
     let cancelled = false;
     setWorkspaceState("loading");
@@ -108,6 +130,22 @@ export function AppShell() {
     };
   }, []);
   useProjectSnapshots({ projectId: activeProject.id, setActiveThreadId, setAgentRuns, setPlans, setThreads, setThreadState });
+  // Resolve (or create) the native project record for the active workspace so the
+  // attachment pipeline has a real project id + policy to classify against.
+  useEffect(() => {
+    let cancelled = false;
+    setNativeProjectId(undefined);
+    void ensureProject(activeProject.name, activeProject.path)
+      .then((record) => {
+        if (!cancelled) setNativeProjectId(record.id);
+      })
+      .catch(() => {
+        // Desktop runtime unavailable — attachments stay disabled.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProject.name, activeProject.path]);
   useEffect(() => {
     document.documentElement.dataset.mode = activeThread?.mode ?? "build";
   }, [activeThread?.mode]);
@@ -130,25 +168,70 @@ export function AppShell() {
       threads,
     });
   };
-  const sendInstruction = (value: string) => {
-    sendComposerInstruction({
-      activeProject,
-      activeRun,
-      activeThread,
-      modelSettings,
-      qaqcAdapterId,
-      setActiveThreadId,
-      setAgentRuns,
-      setThreads,
-      setThreadState,
-      threads,
-    }, value);
+  const composerState = () => ({
+    activeProject,
+    activeRun,
+    activeThread,
+    modelSettings,
+    qaqcAdapterId,
+    qaqcModel,
+    workerAdapterId,
+    workerMode,
+    setActionProposals,
+    setActiveThreadId,
+    setAgentRuns,
+    setThreads,
+    setThreadState,
+    threads,
+  });
+  const sendInstruction = (value: string, newThread = false) => {
+    sendComposerInstruction(composerState(), value, newThread);
+  };
+  const launchWorker = () => {
+    if (!activeThread) {
+      return;
+    }
+    const runId = activeThread.activeRunId;
+    void import("./appShellWorkerActions").then(async ({ launchQueuedWorker }) => {
+      await launchQueuedWorker(composerState(), activeThread, actionProposals);
+      // A write-capable worker promotes its edits into a patch record; reload so
+      // the reviewable diff (and its restore action) appears immediately.
+      if (runId) {
+        const { loadPatchSnapshot } = await import("../features/patches/patchClient");
+        const snapshot = await loadPatchSnapshot(runId);
+        if (snapshot) {
+          setPatches(snapshot);
+        }
+      }
+    });
   };
   const selectModel = (selection: ModelSelectionKey) => {
     setModelSettings((current) => selectModelRoute(current, externalAgentState.adapters, selection));
   };
+  // Re-read the full runtime status (Delyx Local + Ollama) after the local model
+  // catalog changes. Importing a .gguf only updates the import panel's own list;
+  // without this, the `delyx-local` provider stays "not ready" in the picker, so
+  // selecting it is silently dropped and chat keeps falling back to Ollama.
+  const refreshRuntimeModels = () => {
+    void loadRuntimeBridgeState().then((state) => {
+      setRuntimeBridge(state);
+      const status = state.status;
+      if (status) {
+        setModelSettings((current) => modelSettingsFromRuntimeStatus(current, status));
+      }
+    });
+  };
   const selectQaqc = (adapterId: string | undefined) => {
     setQaqcAdapterId(adapterId);
+    // Reset to the new reviewer's economical default model.
+    setQaqcModel(undefined);
+  };
+  const selectQaqcModel = (model: string) => {
+    setQaqcModel(model);
+  };
+  const selectWorker = (adapterId: string | undefined, mode: "read_only" | "workspace_write" = "read_only") => {
+    setWorkerAdapterId(adapterId);
+    setWorkerMode(mode);
   };
   const runReview = () => {
     void runReviewForActiveRun({
@@ -258,13 +341,21 @@ export function AppShell() {
         onRecordFinal={recordFinal}
         onRequestRepair={requestRepair}
         onRefreshModels={() => runPaletteCommand("models.ollama.refresh")}
+        onLocalModelsChanged={refreshRuntimeModels}
         onResumeRun={() => { void resumeAndDispatchSchedulerRun({ actionProposals, activePlan, activeProject, activeRun, activeThread, modelSettings, patches, reviews, setActionProposals, setAgentRuns, setPatches, setReviews, setTests, setThreads, setThreadState, tests }); }}
         onRunReview={runReview}
         onRunTests={runTests}
         onRunCommand={runPaletteCommand}
         onSelectModel={selectModel}
         onSelectQaqc={selectQaqc}
+        onSelectQaqcModel={selectQaqcModel}
+        onSelectWorker={selectWorker}
+        onLaunchWorker={launchWorker}
+        nativeProjectId={nativeProjectId}
         qaqcAdapterId={qaqcAdapterId}
+        qaqcModel={qaqcModel}
+        workerAdapterId={workerAdapterId}
+        workerMode={workerMode}
         onSelectThread={(threadId) => {
           setActiveThreadId(threadId);
           setThreadState("ready");

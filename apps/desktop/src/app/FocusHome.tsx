@@ -3,6 +3,7 @@ import type { ModelSettingsView } from "../features/models/modelTypes";
 import type { WorkspaceProject } from "../features/workspace/workspaceTypes";
 import { FocusIcon, Pipe } from "./focusAtoms";
 import { focusModes, modeLabel, modeStep, repoLabel, selectedModel, selectedProvider, type FocusMode } from "./focusFormat";
+import { AttachmentBar } from "../features/attachments/AttachmentBar";
 
 interface FocusHomeProps {
   mode: FocusMode;
@@ -13,6 +14,7 @@ interface FocusHomeProps {
   onOpenWorkspace: () => void;
   onSend: (value: string) => void;
   project: WorkspaceProject;
+  projectId?: string;
 }
 
 export function FocusHome({
@@ -24,6 +26,7 @@ export function FocusHome({
   onOpenWorkspace,
   onSend,
   project,
+  projectId,
 }: FocusHomeProps) {
   const [value, setValue] = useState("");
   const model = selectedModel(modelSettings);
@@ -58,6 +61,7 @@ export function FocusHome({
           <p className="home-sub">Send one real local instruction to open a thread.</p>
 
           <div className="bigcomp">
+            <AttachmentBar projectId={projectId} />
             <textarea
               className="in"
               onChange={(event) => setValue(event.target.value)}

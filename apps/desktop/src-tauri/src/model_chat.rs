@@ -47,6 +47,95 @@ pub async fn model_chat(
     .await
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelChatStreamRequest {
+    pub provider_id: String,
+    pub model: String,
+    pub messages: Vec<ModelChatMessage>,
+    pub request_id: String,
+}
+
+/// Streamed chat for the embedded Delyx Local runtime: deltas arrive as
+/// `model-stream` events; the command resolves with the full (or cancelled
+/// partial) text. Other providers stay on the non-streaming `model_chat`.
+#[tauri::command]
+pub async fn model_chat_stream(
+    app: tauri::AppHandle,
+    runtime: tauri::State<'_, crate::runtime_bridge::RuntimeBridgeState>,
+    embedded: tauri::State<'_, EmbeddedRuntimeState>,
+    request: ModelChatStreamRequest,
+) -> Result<ModelChatResult, String> {
+    if request.provider_id != "delyx-local" {
+        return Err("Streaming is only available for the Delyx Local provider.".to_string());
+    }
+    if request.request_id.trim().is_empty() {
+        return Err("Streaming requires a request id.".to_string());
+    }
+    validate_messages(&request.messages)?;
+    let database_path = runtime.database_path().to_path_buf();
+    let profile = load_profile_from_path(&database_path, &request.model)?;
+    crate::model_embedded::stream_embedded_chat(
+        &embedded,
+        &app,
+        &database_path,
+        profile,
+        request.messages,
+        request.request_id,
+    )
+    .await
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelChatToolsRequest {
+    pub provider_id: String,
+    pub model: String,
+    pub messages: Vec<ModelChatMessage>,
+    pub request_id: String,
+    pub project_root: String,
+}
+
+/// Agentic chat for Delyx Local: the model may call read-only project tools
+/// (read_file / list_dir / grep) before answering. Tool turns narrate via
+/// `tool-loop` events; the final answer streams via `model-stream`.
+#[tauri::command]
+pub async fn model_chat_tools(
+    app: tauri::AppHandle,
+    runtime: tauri::State<'_, crate::runtime_bridge::RuntimeBridgeState>,
+    embedded: tauri::State<'_, EmbeddedRuntimeState>,
+    request: ModelChatToolsRequest,
+) -> Result<ModelChatResult, String> {
+    if request.provider_id != "delyx-local" {
+        return Err("Tool-using chat is only available for the Delyx Local provider.".to_string());
+    }
+    if request.request_id.trim().is_empty() || request.project_root.trim().is_empty() {
+        return Err("Tool-using chat requires a request id and project root.".to_string());
+    }
+    validate_messages(&request.messages)?;
+    let database_path = runtime.database_path().to_path_buf();
+    let profile = load_profile_from_path(&database_path, &request.model)?;
+    crate::agent_tool_loop::run_tool_loop(
+        &embedded,
+        &app,
+        &database_path,
+        profile,
+        request.messages,
+        request.project_root,
+        request.request_id,
+    )
+    .await
+}
+
+#[tauri::command]
+pub fn model_chat_cancel(
+    embedded: tauri::State<'_, EmbeddedRuntimeState>,
+    request_id: String,
+) -> Result<(), String> {
+    embedded.cancel_stream(&request_id);
+    Ok(())
+}
+
 pub async fn send_model_chat(
     database_path: &Path,
     embedded: &EmbeddedRuntimeState,

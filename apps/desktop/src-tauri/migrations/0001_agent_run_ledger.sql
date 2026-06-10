@@ -108,6 +108,131 @@ CREATE TABLE IF NOT EXISTS workspace_project_snapshots (
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS projects (
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
+  root_path TEXT NOT NULL,
+  trust_level TEXT NOT NULL,
+  approval_policy_json TEXT NOT NULL,
+  model_permissions_json TEXT NOT NULL,
+  tool_permissions_json TEXT NOT NULL,
+  memory_scope_json TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS project_file_scopes (
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  scope_index INTEGER NOT NULL,
+  path TEXT NOT NULL,
+  recursive INTEGER NOT NULL DEFAULT 0,
+  can_read INTEGER NOT NULL DEFAULT 1,
+  can_write INTEGER NOT NULL DEFAULT 0,
+  reason TEXT NOT NULL,
+  PRIMARY KEY (project_id, scope_index)
+);
+
+CREATE TABLE IF NOT EXISTS attachment_proposals (
+  id TEXT PRIMARY KEY NOT NULL,
+  project_id TEXT NOT NULL,
+  thread_id TEXT,
+  source_kind TEXT NOT NULL,
+  detected_kind TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  source_locator TEXT NOT NULL,
+  proposed_scope_json TEXT NOT NULL,
+  estimated_bytes INTEGER,
+  estimated_file_count INTEGER,
+  requires_approval INTEGER NOT NULL DEFAULT 0,
+  approval_reason TEXT,
+  risk TEXT NOT NULL,
+  status TEXT NOT NULL,
+  approval_id TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_attachment_proposals_project
+  ON attachment_proposals(project_id);
+
+CREATE TABLE IF NOT EXISTS attachments (
+  id TEXT PRIMARY KEY NOT NULL,
+  project_id TEXT NOT NULL,
+  thread_id TEXT,
+  message_id TEXT,
+  run_id TEXT,
+  source_kind TEXT NOT NULL,
+  detected_kind TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  original_locator TEXT NOT NULL,
+  local_reference_path TEXT,
+  content_hash TEXT,
+  bytes INTEGER,
+  parse_status TEXT NOT NULL,
+  index_status TEXT NOT NULL,
+  approval_id TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_attachments_project
+  ON attachments(project_id);
+
+CREATE INDEX IF NOT EXISTS idx_attachments_thread
+  ON attachments(thread_id);
+
+CREATE TABLE IF NOT EXISTS attachment_chunks (
+  attachment_id TEXT NOT NULL REFERENCES attachments(id) ON DELETE CASCADE,
+  chunk_index INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  title TEXT NOT NULL,
+  locator TEXT NOT NULL,
+  text TEXT NOT NULL,
+  token_estimate INTEGER NOT NULL DEFAULT 0,
+  content_hash TEXT,
+  PRIMARY KEY (attachment_id, chunk_index)
+);
+
+CREATE TABLE IF NOT EXISTS context_packs (
+  id TEXT PRIMARY KEY NOT NULL,
+  project_id TEXT NOT NULL,
+  thread_id TEXT NOT NULL,
+  run_id TEXT,
+  strategy TEXT NOT NULL,
+  budget_tokens INTEGER NOT NULL,
+  used_tokens INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS context_pack_items (
+  context_pack_id TEXT NOT NULL REFERENCES context_packs(id) ON DELETE CASCADE,
+  item_index INTEGER NOT NULL,
+  attachment_id TEXT,
+  evidence_record_id TEXT,
+  locator TEXT NOT NULL,
+  text TEXT NOT NULL,
+  token_estimate INTEGER NOT NULL,
+  inclusion_reason TEXT NOT NULL,
+  PRIMARY KEY (context_pack_id, item_index)
+);
+
+CREATE TABLE IF NOT EXISTS attachment_evidence_records (
+  id TEXT PRIMARY KEY NOT NULL,
+  project_id TEXT NOT NULL,
+  thread_id TEXT,
+  run_id TEXT,
+  attachment_id TEXT NOT NULL REFERENCES attachments(id) ON DELETE CASCADE,
+  source_kind TEXT NOT NULL,
+  title TEXT NOT NULL,
+  locator TEXT NOT NULL,
+  excerpt TEXT NOT NULL,
+  content_hash TEXT,
+  retrieved_at TEXT NOT NULL,
+  relevance_score INTEGER,
+  relevance_reason TEXT
+);
+
 CREATE TABLE IF NOT EXISTS plan_records (
   thread_id TEXT PRIMARY KEY NOT NULL,
   project_id TEXT NOT NULL,

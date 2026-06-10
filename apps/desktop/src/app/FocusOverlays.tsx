@@ -3,6 +3,7 @@ import type { ModelProviderView, ModelSelectionKey, ModelSettingsView } from "..
 import type { TaskThread } from "../features/threads/threadTypes";
 import { FocusIcon, type FocusIconName } from "./focusAtoms";
 import { selectedModel, selectedProvider } from "./focusFormat";
+import { QAQC_MODELS, defaultQaqcModel } from "./cliReviewClient";
 
 type FocusView = "home" | "thread" | "settings";
 
@@ -96,14 +97,24 @@ export function FocusModelMenu({
   onRefreshModels,
   onSelectModel,
   onSelectQaqc,
+  onSelectQaqcModel,
+  onSelectWorker,
   qaqcAdapterId,
+  qaqcModel,
+  workerAdapterId,
+  workerMode,
 }: {
   modelSettings: ModelSettingsView;
   onClose: () => void;
   onRefreshModels: () => void;
   onSelectModel: (selection: ModelSelectionKey) => void;
   onSelectQaqc: (adapterId: string | undefined) => void;
+  onSelectQaqcModel?: (model: string) => void;
+  onSelectWorker?: (adapterId: string | undefined, mode?: "read_only" | "workspace_write") => void;
   qaqcAdapterId?: string;
+  qaqcModel?: string;
+  workerAdapterId?: string;
+  workerMode?: "read_only" | "workspace_write";
 }) {
   const activeProvider = selectedProvider(modelSettings);
   const activeModel = selectedModel(modelSettings);
@@ -125,6 +136,25 @@ export function FocusModelMenu({
         {cliReviewers.map((item) => <button className={`menu-item${item.id === qaqcAdapterId ? " on" : ""}`} key={item.id} onClick={() => { onSelectQaqc(item.id); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{item.label}</b><span>Reviews each local-model reply read-only</span></span>{item.id === qaqcAdapterId && <span className="mi-meta active">active</span>}</button>)}
         {cliReviewers.length === 0 && <button className="menu-item" onClick={onClose} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>No review CLIs detected</b><span>Install the Claude Code or Codex CLI to enable QA/QC.</span></span><span className="mi-meta">off</span></button>}
       </div>
+      {qaqcAdapterId && onSelectQaqcModel && (QAQC_MODELS[qaqcAdapterId]?.length ?? 0) > 0 && <>
+        <div className="menu-head"><div className="ey">Reviewer model</div><h3 className="disp">Cheaper = fewer tokens per review</h3></div>
+        <div className="menu-list">
+          {QAQC_MODELS[qaqcAdapterId].map((option) => {
+            const isActive = option.id === (qaqcModel ?? defaultQaqcModel(qaqcAdapterId));
+            return <button className={`menu-item${isActive ? " on" : ""}`} key={option.id} onClick={() => { onSelectQaqcModel(option.id); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{option.label}</b><span>{option.hint}</span></span>{isActive && <span className="mi-meta active">active</span>}</button>;
+          })}
+        </div>
+      </>}
+      {onSelectWorker && cliReviewers.length > 0 && <>
+        <div className="menu-head"><div className="ey">Agent worker</div><h3 className="disp">Send tasks to an agentic CLI run</h3></div>
+        <div className="menu-list">
+          <button className={`menu-item${!workerAdapterId ? " on" : ""}`} onClick={() => { onSelectWorker(undefined); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>Off</b><span>Composer sends go to the chat model</span></span>{!workerAdapterId && <span className="mi-meta active">active</span>}</button>
+          {cliReviewers.flatMap((item) => [
+            <button className={`menu-item${item.id === workerAdapterId && workerMode !== "workspace_write" ? " on" : ""}`} key={`worker-${item.id}-ro`} onClick={() => { onSelectWorker(item.id, "read_only"); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{item.label} — read-only</b><span>Approval-gated agent run; explores and reports, no writes</span></span>{item.id === workerAdapterId && workerMode !== "workspace_write" && <span className="mi-meta active">active</span>}</button>,
+            <button className={`menu-item${item.id === workerAdapterId && workerMode === "workspace_write" ? " on" : ""}`} key={`worker-${item.id}-rw`} onClick={() => { onSelectWorker(item.id, "workspace_write"); onClose(); }} type="button"><span className="mi-ic"><FocusIcon name="cpu" /></span><span className="mi-tx"><b>{item.label} — write</b><span>Edits planned files (checkpointed first) — tag your task with [files: …]</span></span>{item.id === workerAdapterId && workerMode === "workspace_write" && <span className="mi-meta active">active</span>}</button>,
+          ])}
+        </div>
+      </>}
     </div>
   </Scrim>;
 }

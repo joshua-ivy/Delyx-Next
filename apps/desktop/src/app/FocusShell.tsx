@@ -34,6 +34,7 @@ interface FocusShellProps {
   onOpenWorkspace: () => void;
   onRecordFinal: () => void;
   onRefreshModels: () => void;
+  onLocalModelsChanged?: () => void;
   onRequestRepair: (reportId: string, findingId: string) => void;
   onResumeRun: () => void;
   onRunReview: () => void;
@@ -41,9 +42,16 @@ interface FocusShellProps {
   onRunCommand: (commandId: string) => void;
   onSelectModel: (selection: ModelSelectionKey) => void;
   onSelectQaqc: (adapterId: string | undefined) => void;
+  onSelectQaqcModel?: (model: string) => void;
+  onSelectWorker?: (adapterId: string | undefined, mode?: "read_only" | "workspace_write") => void;
+  onLaunchWorker?: () => void;
+  nativeProjectId?: string;
   qaqcAdapterId?: string;
+  qaqcModel?: string;
+  workerAdapterId?: string;
+  workerMode?: "read_only" | "workspace_write";
   onSelectThread: (threadId: string) => void;
-  onSendInstruction: (value: string) => void;
+  onSendInstruction: (value: string, newThread?: boolean) => void;
   patches: PatchProposalView[];
   proposals: ActionProposalView[];
   reviews: ReviewReportView[];
@@ -97,7 +105,10 @@ export function FocusShell(props: FocusShellProps) {
   }, []);
 
   const send = (value: string) => {
-    props.onSendInstruction(value);
+    // The home / new-chat composer starts a fresh thread; the in-thread composer
+    // continues the open one.
+    const newThread = view === "home" || !props.activeThread;
+    props.onSendInstruction(value, newThread);
     setView("thread");
   };
   const setMode = (next: FocusMode) => {
@@ -117,14 +128,14 @@ export function FocusShell(props: FocusShellProps) {
         <RailIconButton active={view === "settings"} icon="settings" label="Settings" onClick={() => setView("settings")} />
       </aside>
 
-      {view === "home" && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} />}
-      {view === "thread" && props.activeThread && <FocusThread activePlan={props.activePlan} mode={mode} model={selectedModel(props.modelSettings)} onApplyPatch={props.onApplyPatch} onApprovePlan={props.onApprovePlan} onDecideProposal={props.onDecideProposal} onModeChange={setMode} onOpenPalette={() => setOverlay("palette")} onRecordFinal={props.onRecordFinal} onRequestRepair={props.onRequestRepair} onResumeRun={props.onResumeRun} onRunReview={props.onRunReview} onRunTests={props.onRunTests} onSend={send} patches={activePatches} proposals={activeProposals} reviews={props.reviews.filter((report) => report.runId === props.activeRun?.id)} run={props.activeRun} schedulerDecision={props.schedulerDecision} tests={activeTests} thread={props.activeThread} />}
-      {view === "thread" && !props.activeThread && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} />}
-      {view === "settings" && <FocusSettings activeRun={props.activeRun} desktopShell={props.desktopShell} mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} project={props.activeProject} threads={visibleThreads} />}
+      {view === "home" && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} projectId={props.nativeProjectId} />}
+      {view === "thread" && props.activeThread && <FocusThread activePlan={props.activePlan} mode={mode} model={selectedModel(props.modelSettings)} onApplyPatch={props.onApplyPatch} onApprovePlan={props.onApprovePlan} onDecideProposal={props.onDecideProposal} onModeChange={setMode} onOpenPalette={() => setOverlay("palette")} onRecordFinal={props.onRecordFinal} onRequestRepair={props.onRequestRepair} onResumeRun={props.onResumeRun} onRunReview={props.onRunReview} onRunTests={props.onRunTests} onSend={send} onLaunchWorker={props.onLaunchWorker} projectId={props.nativeProjectId} patches={activePatches} proposals={activeProposals} reviews={props.reviews.filter((report) => report.runId === props.activeRun?.id)} run={props.activeRun} schedulerDecision={props.schedulerDecision} tests={activeTests} thread={props.activeThread} />}
+      {view === "thread" && !props.activeThread && <FocusHome mode={mode} modelSettings={props.modelSettings} onModeChange={setMode} onOpenModels={() => setOverlay("models")} onOpenPalette={() => setOverlay("palette")} onOpenWorkspace={props.onOpenWorkspace} onSend={send} project={props.activeProject} projectId={props.nativeProjectId} />}
+      {view === "settings" && <FocusSettings activeRun={props.activeRun} desktopShell={props.desktopShell} mode={mode} modelSettings={props.modelSettings} onLocalModelsChanged={props.onLocalModelsChanged} onModeChange={setMode} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} project={props.activeProject} threads={visibleThreads} />}
 
       {overlay === "palette" && <FocusCommandPalette onArchiveActive={props.onArchiveActive} onClose={() => setOverlay(undefined)} onOpenModels={() => setOverlay("models")} onOpenThreads={() => setOverlay("threads")} onOpenWorkspace={props.onOpenWorkspace} onRunCommand={props.onRunCommand} onView={(next) => setView(next)} />}
       {overlay === "threads" && <FocusThreadsMenu activeThreadId={props.activeThread?.id} onClose={() => setOverlay(undefined)} onNewThread={() => setView("home")} onSelectThread={(threadId) => { props.onSelectThread(threadId); setView("thread"); }} threads={visibleThreads} />}
-      {overlay === "models" && <FocusModelMenu modelSettings={props.modelSettings} onClose={() => setOverlay(undefined)} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} onSelectQaqc={props.onSelectQaqc} qaqcAdapterId={props.qaqcAdapterId} />}
+      {overlay === "models" && <FocusModelMenu modelSettings={props.modelSettings} onClose={() => setOverlay(undefined)} onRefreshModels={props.onRefreshModels} onSelectModel={props.onSelectModel} onSelectQaqc={props.onSelectQaqc} onSelectQaqcModel={props.onSelectQaqcModel} onSelectWorker={props.onSelectWorker} qaqcAdapterId={props.qaqcAdapterId} qaqcModel={props.qaqcModel} workerAdapterId={props.workerAdapterId} workerMode={props.workerMode} />}
     </div>
   );
 }

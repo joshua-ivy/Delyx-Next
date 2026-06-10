@@ -3,7 +3,7 @@ mod tests {
     use crate::{
         model_ollama::{
             chat_from_http_result, parse_ollama_model_names, provider_from_tags_result,
-            send_ollama_chat, OllamaChatMessage,
+            send_ollama_chat, split_http_response, OllamaChatMessage,
         },
         model_provider::{ProviderKind, ProviderStatus, SecretPolicy},
     };
@@ -135,6 +135,44 @@ mod tests {
         .unwrap_err();
 
         assert!(error.contains("not supported"));
+    }
+
+    #[test]
+    fn split_http_response_reads_content_length_body() {
+        let response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 22\r\nConnection: close\r\n\r\n{\"response\":\"Hi there\"}";
+        let (status, body) = split_http_response(response);
+
+        assert_eq!(status, 200);
+        assert_eq!(body, r#"{"response":"Hi there"}"#);
+    }
+
+    #[test]
+    fn split_http_response_decodes_chunked_body() {
+        // A real Ollama reply long enough to chunk: the body starts with a hex
+        // chunk-size line, which previously leaked into the JSON parser.
+        let payload = r#"{"message":{"content":"Hello! How can I assist you today?"},"done":true}"#;
+        let size = format!("{:x}", payload.len());
+        let response = format!(
+            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n{size}\r\n{payload}\r\n0\r\n\r\n"
+        );
+        let (status, body) = split_http_response(&response);
+
+        assert_eq!(status, 200);
+        assert_eq!(body, payload);
+
+        // And the decoded body parses cleanly through the chat reader.
+        let result = chat_from_http_result("qwen2.5-coder:14b", Ok((status, body))).unwrap();
+        assert_eq!(result.text, "Hello! How can I assist you today?");
+    }
+
+    #[test]
+    fn split_http_response_decodes_multi_chunk_body() {
+        // Two 10-byte chunks (0xa each) that concatenate to one JSON object.
+        let response = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\na\r\n{\"response\r\na\r\n\":\"split\"}\r\n0\r\n\r\n";
+        let (status, body) = split_http_response(response);
+
+        assert_eq!(status, 200);
+        assert_eq!(body, r#"{"response":"split"}"#);
     }
 
     fn message(role: &str, content: &str) -> OllamaChatMessage {

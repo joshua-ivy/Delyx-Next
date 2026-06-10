@@ -60,4 +60,52 @@ describe("FocusProviders", () => {
 
     expect(await screen.findByText("web preview")).toBeTruthy();
   });
+
+  it("shows local model sampling fields and saves numeric tuning values", async () => {
+    invoke.mockImplementation((cmd: string) => {
+      if (cmd === "secret_status") return Promise.resolve({ providers: [] });
+      if (cmd === "external_agent_status") return Promise.resolve({ adapters: [] });
+      if (cmd === "local_model_list") {
+        return Promise.resolve([{
+          contextWindow: 8192,
+          displayName: "Qwen local",
+          format: "gguf",
+          id: "local-1",
+          loadStatus: "loaded",
+          modelPath: "C:\\models\\qwen.gguf",
+          repeatPenalty: 1.1,
+          runtime: "llama.cpp",
+          supportsTools: true,
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.9,
+        }]);
+      }
+      if (cmd === "local_model_list_ollama") return Promise.resolve([]);
+      if (cmd === "local_model_set_sampling") return Promise.resolve({ message: "sampling saved", status: "ok" });
+      return Promise.resolve({ providers: [] });
+    });
+
+    render(<FocusProviders />);
+
+    expect(await screen.findByText("Qwen local")).toBeTruthy();
+    expect(screen.getByText("Temp")).toBeTruthy();
+    expect(screen.getByText("top_p")).toBeTruthy();
+    expect(screen.getByText("Repeat")).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("local-1 temperature"), { target: { value: "0.5" } });
+    fireEvent.change(screen.getByLabelText("local-1 max_tokens"), { target: { value: "2048" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("local_model_set_sampling", {
+      request: {
+        id: "local-1",
+        maxTokens: 2048,
+        repeatPenalty: 1.1,
+        temperature: 0.5,
+        topK: 40,
+        topP: 0.9,
+      },
+    }));
+  });
 });

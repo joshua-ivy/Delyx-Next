@@ -153,11 +153,17 @@ fn first_ready_model<'a>(registry: &'a ModelRegistry, provider_id: &str) -> Opti
 }
 
 #[tauri::command]
-pub fn ollama_chat(
+pub async fn ollama_chat(
     model: String,
     messages: Vec<OllamaChatMessage>,
 ) -> Result<OllamaChatResult, String> {
-    send_ollama_chat(model, messages, Duration::from_secs(120))
+    // Blocking TCP round-trip to Ollama; run it off the main thread so the UI
+    // stays responsive while the model generates.
+    tauri::async_runtime::spawn_blocking(move || {
+        send_ollama_chat(model, messages, Duration::from_secs(120))
+    })
+    .await
+    .map_err(|error| format!("Ollama chat task failed: {error}"))?
 }
 
 pub fn runtime_status_from_registry(registry: &ModelRegistry) -> RuntimeStatusView {

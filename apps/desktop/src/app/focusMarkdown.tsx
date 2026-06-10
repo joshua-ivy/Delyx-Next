@@ -5,7 +5,18 @@ type Block =
   | { kind: "heading"; text: string }
   | { kind: "ol"; items: string[] }
   | { kind: "p"; text: string }
+  | { kind: "qaqc"; verdict: string; label: string }
   | { kind: "ul"; items: string[] };
+
+const QAQC_MARKER = /^\[\[qaqc:(pass|fixed|verified|fail|unclear):(.+)\]\]$/;
+
+const QAQC_META: Record<string, { glyph: string; title: string }> = {
+  fail: { glyph: "!", title: "QA/QC failed" },
+  fixed: { glyph: "✦", title: "QA/QC fixed" },
+  pass: { glyph: "✓", title: "QA/QC passed" },
+  unclear: { glyph: "?", title: "QA/QC unclear" },
+  verified: { glyph: "✓", title: "QA/QC fixed & verified" },
+};
 
 export function MarkdownMessage({ text }: { text: string }) {
   const blocks = markdownBlocks(text);
@@ -13,6 +24,9 @@ export function MarkdownMessage({ text }: { text: string }) {
 }
 
 function renderBlock(block: Block, index: number) {
+  if (block.kind === "qaqc") {
+    return <QaqcBadge key={index} label={block.label} verdict={block.verdict} />;
+  }
   if (block.kind === "heading") {
     return <h3 key={index}>{inlineNodes(block.text)}</h3>;
   }
@@ -26,6 +40,20 @@ function renderBlock(block: Block, index: number) {
     return <pre key={index} data-language={block.language}><code>{block.code}</code></pre>;
   }
   return <p key={index}>{inlineNodes(block.text)}</p>;
+}
+
+function QaqcBadge({ verdict, label }: { verdict: string; label: string }) {
+  const meta = QAQC_META[verdict] ?? QAQC_META.unclear;
+  return (
+    <div className={`qaqc-badge qaqc-${verdict}`} role="status">
+      <span className="qaqc-glyph" aria-hidden="true">{meta.glyph}</span>
+      <span className="qaqc-text">
+        <span className="qaqc-title">{meta.title}</span>
+        <span className="qaqc-by">{label}</span>
+      </span>
+      <span className="qaqc-sheen" aria-hidden="true" />
+    </div>
+  );
 }
 
 function markdownBlocks(text: string) {
@@ -47,6 +75,10 @@ function markdownBlocks(text: string) {
       }
       blocks.push({ code: code.join("\n"), kind: "code", language });
       index += lines[index]?.trim().startsWith("```") ? 1 : 0;
+    } else if (QAQC_MARKER.test(trimmed)) {
+      const match = trimmed.match(QAQC_MARKER)!;
+      blocks.push({ kind: "qaqc", label: match[2].trim(), verdict: match[1] });
+      index += 1;
     } else if (/^#{1,3}\s+/.test(trimmed)) {
       blocks.push({ kind: "heading", text: trimmed.replace(/^#{1,3}\s+/, "") });
       index += 1;

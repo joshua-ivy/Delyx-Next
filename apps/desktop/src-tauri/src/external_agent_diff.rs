@@ -115,3 +115,51 @@ fn read_state(path: &Path) -> FileState {
         Err(error) => FileState::Unreadable(error.to_string()),
     }
 }
+
+/// A concrete before/after change extracted from a snapshot, ready to become a
+/// reviewable patch record. Unchanged and unreadable files are skipped.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExternalDiffFileChange {
+    pub path: String,
+    pub before: String,
+    pub after: String,
+    /// "modify", "create", or "delete".
+    pub change_kind: &'static str,
+}
+
+/// Re-read the snapshot's files now (post-run) and return the real changes with
+/// text contents. Lossy UTF-8: binary edits still produce a truthful receipt.
+pub fn external_diff_file_changes(
+    snapshot: &ExternalAgentDiffSnapshot,
+) -> Vec<ExternalDiffFileChange> {
+    snapshot
+        .files
+        .iter()
+        .filter_map(|file| {
+            let path = file.path.display().to_string();
+            match (&file.before, read_state(&file.path)) {
+                (FileState::Bytes(before), FileState::Bytes(after)) if before != &after => {
+                    Some(ExternalDiffFileChange {
+                        path,
+                        before: String::from_utf8_lossy(before).into_owned(),
+                        after: String::from_utf8_lossy(&after).into_owned(),
+                        change_kind: "modify",
+                    })
+                }
+                (FileState::Missing, FileState::Bytes(after)) => Some(ExternalDiffFileChange {
+                    path,
+                    before: String::new(),
+                    after: String::from_utf8_lossy(&after).into_owned(),
+                    change_kind: "create",
+                }),
+                (FileState::Bytes(before), FileState::Missing) => Some(ExternalDiffFileChange {
+                    path,
+                    before: String::from_utf8_lossy(before).into_owned(),
+                    after: String::new(),
+                    change_kind: "delete",
+                }),
+                _ => None,
+            }
+        })
+        .collect()
+}

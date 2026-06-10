@@ -56,3 +56,93 @@
   border: 0;
   padding: 0;
 }
+
+/* QA/QC verdict badge — a high-end, colorful stamp at the top of vetted replies. */
+.focus-app .mdmsg .qaqc-badge {
+  --qaqc: var(--accent);
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  padding: 7px 16px 7px 9px;
+  border-radius: var(--r-pill);
+  border: 1px solid color-mix(in srgb, var(--qaqc) 50%, transparent);
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--qaqc) 26%, transparent),
+      color-mix(in srgb, var(--qaqc) 7%, transparent) 70%),
+    var(--surface-2);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent),
+    0 8px 22px -10px color-mix(in srgb, var(--qaqc) 75%, transparent);
+}
+
+.focus-app .mdmsg .qaqc-pass { --qaqc: var(--success); }
+.focus-app .mdmsg .qaqc-verified { --qaqc: var(--success); }
+.focus-app .mdmsg .qaqc-fixed { --qaqc: var(--accent); }
+.focus-app .mdmsg .qaqc-fail { --qaqc: var(--danger); }
+.focus-app .mdmsg .qaqc-unclear { --qaqc: var(--warning); }
+
+/* Verified = fixed + re-checked: a brighter double ring to outrank a plain pass. */
+.focus-app .mdmsg .qaqc-verified {
+  border-color: color-mix(in srgb, var(--qaqc) 65%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--qaqc) 30%, transparent),
+    0 8px 24px -10px color-mix(in srgb, var(--qaqc) 85%, transparent);
+}
+
+.focus-app .mdmsg .qaqc-glyph {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, #fff 35%, var(--qaqc)), var(--qaqc));
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--qaqc) 70%, transparent);
+}
+
+.focus-app .mdmsg .qaqc-text {
+  display: grid;
+  gap: 1px;
+  line-height: 1.12;
+}
+
+.focus-app .mdmsg .qaqc-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--qaqc) 88%, var(--fg));
+}
+
+.focus-app .mdmsg .qaqc-by {
+  font-size: 10.5px;
+  letter-spacing: .03em;
+  color: color-mix(in srgb, var(--fg) 58%, transparent);
+}
+
+/* One-shot sheen sweep so the stamp feels alive without being noisy. */
+.focus-app .mdmsg .qaqc-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 32%, color-mix(in srgb, #fff 24%, transparent) 50%, transparent 68%);
+  transform: translateX(-130%);
+  animation: qaqc-sheen 2.6s cubic-bezier(.4, 0, .2, 1) .25s 1;
+}
+
+@keyframes qaqc-sheen {
+  to { transform: translateX(130%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-app .mdmsg .qaqc-sheen { display: none; }
+}

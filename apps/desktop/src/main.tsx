@@ -20,7 +20,9 @@ import "./styles/focus-layout.css";
 import "./styles/focus-markdown.css";
 import "./styles/focus-scrollbars.css";
 import "./styles/focus-surfaces.css";
+import "./styles/focus-settings.css";
 import "./styles/focus-artifacts.css";
+import "./styles/focus-attachments.css";
 import "./styles/focus-overlays.css";
 
 const rootElement = document.getElementById("root");

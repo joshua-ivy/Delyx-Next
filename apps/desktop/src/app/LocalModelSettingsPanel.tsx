@@ -12,7 +12,7 @@ import {
   type OllamaModelEntry,
 } from "../features/models/localModelClient";
 
-export function LocalModelSettingsPanel() {
+export function LocalModelSettingsPanel({ onChanged }: { onChanged?: () => void } = {}) {
   const [profiles, setProfiles] = useState<LocalModelProfile[] | undefined>(undefined);
   const [path, setPath] = useState("");
   const [name, setName] = useState("");
@@ -40,6 +40,7 @@ export function LocalModelSettingsPanel() {
     try {
       setStatus((await importOllamaModel(name)).message);
       await refresh();
+      onChanged?.();
     } catch (cause) {
       setStatus(String(cause));
     }
@@ -67,6 +68,7 @@ export function LocalModelSettingsPanel() {
       setName("");
       setContext("");
       await refresh();
+      onChanged?.();
     } catch (cause) {
       setStatus(String(cause));
     } finally {
@@ -82,6 +84,7 @@ export function LocalModelSettingsPanel() {
   async function remove(id: string) {
     setStatus((await removeLocalModelProfile(id)).message);
     await refresh();
+    onChanged?.();
   }
 
   async function saveSampling(request: ModelSamplingRequest) {
@@ -151,13 +154,73 @@ function SamplingEditor({ onSave, profile }: { onSave: (request: ModelSamplingRe
   const [maxTokens, setMaxTokens] = useState(numText(profile.maxTokens));
   return (
     <Row detail="Tune sampling for this model. Blank = model default. Applies to chat and PatchDraft." title="Sampling">
-      <input aria-label={`${profile.id} temperature`} className="set-input" onChange={(event) => setTemperature(event.target.value)} placeholder="temp" value={temperature} />
-      <input aria-label={`${profile.id} top_p`} className="set-input" onChange={(event) => setTopP(event.target.value)} placeholder="top_p" value={topP} />
-      <input aria-label={`${profile.id} top_k`} className="set-input" onChange={(event) => setTopK(event.target.value)} placeholder="top_k" value={topK} />
-      <input aria-label={`${profile.id} repeat_penalty`} className="set-input" onChange={(event) => setRepeatPenalty(event.target.value)} placeholder="rep" value={repeatPenalty} />
-      <input aria-label={`${profile.id} max_tokens`} className="set-input" onChange={(event) => setMaxTokens(event.target.value)} placeholder="max" value={maxTokens} />
-      <button className="select" onClick={() => onSave({ id: profile.id, maxTokens: numInt(maxTokens), repeatPenalty: num(repeatPenalty), temperature: num(temperature), topK: numInt(topK), topP: num(topP) })} type="button">Save sampling</button>
+      <div className="sampling-grid">
+        <SamplingField
+          inputMode="decimal"
+          label="Temp"
+          name={`${profile.id} temperature`}
+          onChange={setTemperature}
+          placeholder="0.7"
+          value={temperature}
+        />
+        <SamplingField
+          inputMode="decimal"
+          label="top_p"
+          name={`${profile.id} top_p`}
+          onChange={setTopP}
+          placeholder="0.9"
+          value={topP}
+        />
+        <SamplingField
+          inputMode="numeric"
+          label="top_k"
+          name={`${profile.id} top_k`}
+          onChange={setTopK}
+          placeholder="40"
+          value={topK}
+        />
+        <SamplingField
+          inputMode="decimal"
+          label="Repeat"
+          name={`${profile.id} repeat_penalty`}
+          onChange={setRepeatPenalty}
+          placeholder="1.1"
+          value={repeatPenalty}
+        />
+        <SamplingField
+          inputMode="numeric"
+          label="Max"
+          name={`${profile.id} max_tokens`}
+          onChange={setMaxTokens}
+          placeholder="default"
+          value={maxTokens}
+        />
+        <button className="select sampling-save" onClick={() => onSave({ id: profile.id, maxTokens: numInt(maxTokens), repeatPenalty: num(repeatPenalty), temperature: num(temperature), topK: numInt(topK), topP: num(topP) })} type="button">Save</button>
+      </div>
     </Row>
+  );
+}
+
+function SamplingField(props: {
+  inputMode: "decimal" | "numeric";
+  label: string;
+  name: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  value: string;
+}) {
+  return (
+    <label className="sampling-field">
+      <span>{props.label}</span>
+      <input
+        aria-label={props.name}
+        className="set-input"
+        inputMode={props.inputMode}
+        onChange={(event) => props.onChange(event.target.value)}
+        placeholder={props.placeholder}
+        value={props.value}
+      />
+    </label>
   );
 }
 

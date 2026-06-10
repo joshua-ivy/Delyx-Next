@@ -1,0 +1,152 @@
+/* Composer attachment surface: + menu, pending chips, and drop zone. */
+.focus-app .attach-bar {
+  border-radius: var(--r-md);
+  display: grid;
+  gap: 8px;
+  position: relative;
+}
+
+.focus-app .attach-bar.dropping {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+}
+
+.focus-app .attach-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.focus-app .attach-hint {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.focus-app .attach-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.focus-app .attach-chip {
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  display: inline-flex;
+  gap: 7px;
+  padding: 3px 6px 3px 10px;
+}
+
+.focus-app .attach-chip-name {
+  font-size: 12.5px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-app .attach-chip-x {
+  color: var(--fg-3);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.focus-app .attach-chip-x:hover {
+  color: var(--fg);
+}
+
+.focus-app .attach-chip-act {
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+}
+
+.focus-app .attach-chip-act.ok {
+  background: color-mix(in srgb, var(--success) 18%, transparent);
+  color: var(--success);
+}
+
+.focus-app .attach-chip-act.no {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  color: var(--danger);
+}
+
+.focus-app .attach-chip.done {
+  border-color: color-mix(in srgb, var(--success) 30%, var(--line));
+}
+
+.focus-app .attach-context-btn {
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-pill);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+}
+
+.focus-app .attach-pack,
+.focus-app .attach-note {
+  color: var(--fg-2);
+  font-size: 12px;
+  padding: 2px 2px 0;
+}
+
+.focus-app .attach-note {
+  color: var(--danger);
+}
+
+.focus-app .attach-menu {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, .5);
+  display: grid;
+  gap: 2px;
+  max-width: 280px;
+  padding: 6px;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+}
+
+.focus-app .attach-item {
+  border-radius: 7px;
+  color: var(--fg);
+  font-size: 13px;
+  padding: 7px 10px;
+  text-align: left;
+}
+
+.focus-app .attach-item:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.focus-app .attach-item.disabled,
+.focus-app .attach-item:disabled {
+  color: var(--fg-3);
+  cursor: default;
+}
+
+.focus-app .attach-url {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  padding: 4px 2px;
+}
+
+.focus-app .attach-url .set-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Reuse a warn tone for needs-approval/expired chips. */
+.focus-app .tag.warn {
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+  color: var(--warning);
+}

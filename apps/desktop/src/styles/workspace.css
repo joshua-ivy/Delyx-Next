@@ -110,6 +110,48 @@
   width: 100%;
 }
 
+.workspace-open {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.workspace-open > label {
+  color: var(--fg-2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.workspace-open-row {
+  display: flex;
+  gap: 8px;
+}
+
+.workspace-open-row input {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--fg);
+  flex: 1 1 auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  min-width: 0;
+  padding: 9px 11px;
+}
+
+.workspace-open-row input:focus {
+  border-color: var(--accent-line);
+  outline: none;
+}
+
+.workspace-open-hint {
+  color: var(--fg-3);
+  font-size: 12px;
+  margin: 0;
+}
+
 .workspace-project:hover {
   border-color: var(--line-2);
 }

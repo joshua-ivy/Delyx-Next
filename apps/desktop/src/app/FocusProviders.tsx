@@ -9,7 +9,7 @@ const CLI_SETUP: Record<string, { install: string; login: string }> = {
   "codex-cli": { install: "npm i -g @openai/codex", login: "codex login" },
 };
 
-export function FocusProviders() {
+export function FocusProviders({ onLocalModelsChanged }: { onLocalModelsChanged?: () => void } = {}) {
   const [adapters, setAdapters] = useState<ExternalAgentAdapterView[] | undefined>(undefined);
   const [providers, setProviders] = useState<SecretProviderView[] | undefined>(undefined);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -73,7 +73,7 @@ export function FocusProviders() {
 
   return (
     <>
-      <LocalModelSettingsPanel />
+      <LocalModelSettingsPanel onChanged={onLocalModelsChanged} />
       <div className="set-sec">
         <div className="ey">Agent CLIs</div>
         {(adapters ?? []).filter((adapter) => CLI_SETUP[adapter.id]).map((adapter) => (

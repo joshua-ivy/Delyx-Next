@@ -5,6 +5,8 @@ mod tests {
     use crate::agent_run::AgentRunStatus;
     use crate::approval_bridge::{approval_snapshot_from_store, ApprovalBridgeStore};
     use crate::patch_bridge::{DiffLineView, PatchBridgeStore, PatchFileView, PatchProposalView};
+    use crate::plan_bridge::{ExploreView, PlanView};
+    use crate::plan_persistence::save_plan_to_path;
     use crate::review_bridge::ReviewBridgeStore;
     use crate::test_runner_bridge::TestRunnerBridgeStore;
     use crate::thread_run_bridge::{
@@ -186,6 +188,73 @@ mod tests {
         assert_eq!(created.action_type, "edit_file");
         assert_eq!(patches.records[0].status, "proposed");
         let _ = fs::remove_file(db);
+    }
+
+    #[test]
+    fn drive_does_not_run_tests_without_an_executable_terminal_approval() {
+        // An applied patch + a supported plan test command, but NO granted terminal
+        // approval: the driver must stop asking for approval and never auto-run the
+        // command (no terminal auto-grant bypass).
+        let db = temp_db("drive-test-no-bypass");
+        let mut threads = ThreadRunStore::default();
+        let record = create_thread_run_record(&mut threads, thread_request()).unwrap();
+        move_to_building(&mut threads, &record.thread.id);
+        // Persist a plan whose tests_to_run holds a real supported command.
+        save_plan_to_path(&db, "project-1", &test_plan(&record.thread.id)).unwrap();
+        let mut patches = PatchBridgeStore::default();
+        patches
+            .records
+            .push(patch(&record.run.id, "applied", "let value = 1;"));
+        let mut tests = TestRunnerBridgeStore::default();
+        let mut reviews = ReviewBridgeStore::default();
+        let mut approvals = ApprovalBridgeStore::default();
+        let mut persists = 0;
+
+        let outcome = drive_run(
+            &mut context(
+                &mut threads,
+                &mut approvals,
+                &mut patches,
+                &mut tests,
+                &mut reviews,
+                &db,
+            ),
+            |_, _, _, _| {
+                persists += 1;
+                Ok(())
+            },
+        )
+        .unwrap();
+
+        assert_eq!(outcome.steps.len(), 0);
+        assert_eq!(outcome.stopped_because.kind, "needs_test_approval");
+        // No command ran: no test artifact, no persisted progress.
+        assert!(tests.artifacts.is_empty());
+        assert_eq!(persists, 0);
+        let _ = fs::remove_file(db);
+    }
+
+    fn test_plan(thread_id: &str) -> PlanView {
+        PlanView {
+            decision: "approved".to_string(),
+            explore: ExploreView {
+                architecture_summary: "Typed local workbench.".to_string(),
+                project_commands: vec!["cargo test".to_string()],
+                relevant_files: vec!["src/main.rs".to_string()],
+                relevant_symbols: Vec::new(),
+                risks: Vec::new(),
+                suggested_next_steps: Vec::new(),
+                unknowns: Vec::new(),
+            },
+            files_likely_involved: vec!["src/main.rs".to_string()],
+            goal_understanding: "Apply and test one change.".to_string(),
+            permissions_needed: vec!["edit_file".to_string()],
+            rollback_strategy: "Restore via checkpoint.".to_string(),
+            risks: Vec::new(),
+            steps: vec!["Apply the patch, then test.".to_string()],
+            tests_to_run: vec!["cargo test".to_string()],
+            thread_id: thread_id.to_string(),
+        }
     }
 
     fn context<'a>(

@@ -67,6 +67,30 @@ export function WorkspaceOverlay({
           <span className={`workspace-caret${switching ? " open" : ""}`}><ChevronDown /></span>
         </button>
 
+        <div className="workspace-open">
+          <label htmlFor="workspace-open-path">Open a project folder</label>
+          <div className="workspace-open-row">
+            <input
+              autoComplete="off"
+              id="workspace-open-path"
+              onChange={(event) => setPath(event.target.value)}
+              onKeyDown={(event) => { if (event.key === "Enter" && path.trim()) onAddProject(path.trim()); }}
+              placeholder="Paste a folder path, e.g. C:\\Users\\you\\my-app"
+              spellCheck={false}
+              value={path}
+            />
+            <button
+              className="workspace-button primary"
+              disabled={state === "loading" || path.trim().length === 0}
+              onClick={() => onAddProject(path.trim())}
+              type="button"
+            >
+              {state === "loading" ? "Opening…" : "Open"}
+            </button>
+          </div>
+          <p className="workspace-open-hint">Delyx reads this folder read-only as the project root. Like Claude Code / Codex, it's just a directory — no browser dialog needed.</p>
+        </div>
+
         {switching && (
           <div className="workspace-switch">
             <div className="workspace-switch-head">Recent projects</div>

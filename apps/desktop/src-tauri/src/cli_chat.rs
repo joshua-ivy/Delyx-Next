@@ -31,8 +31,12 @@ pub struct CliChatResult {
 }
 
 #[tauri::command]
-pub fn cli_chat(request: CliChatRequest) -> Result<CliChatResult, String> {
-    run_cli_chat(request)
+pub async fn cli_chat(request: CliChatRequest) -> Result<CliChatResult, String> {
+    // Runs a CLI subprocess to completion; keep it off the main thread so the
+    // webview doesn't freeze while the CLI thinks.
+    tauri::async_runtime::spawn_blocking(move || run_cli_chat(request))
+        .await
+        .map_err(|error| format!("CLI chat task failed: {error}"))?
 }
 
 pub fn run_cli_chat(request: CliChatRequest) -> Result<CliChatResult, String> {

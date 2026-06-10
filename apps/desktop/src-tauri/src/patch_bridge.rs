@@ -244,7 +244,7 @@ fn change_kind(kind: PatchFileChangeKind) -> &'static str {
     }
 }
 
-fn diff_view(line: &DiffLine) -> DiffLineView {
+pub(crate) fn diff_view(line: &DiffLine) -> DiffLineView {
     DiffLineView {
         kind: diff_kind(line.kind).to_string(),
         text: line.text.clone(),

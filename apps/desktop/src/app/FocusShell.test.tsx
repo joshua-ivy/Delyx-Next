@@ -20,7 +20,8 @@ describe("FocusShell", () => {
     fireEvent.click(screen.getByRole("button", { name: /Send/ }));
 
     expect(onSendInstruction).toHaveBeenCalledTimes(1);
-    expect(onSendInstruction).toHaveBeenCalledWith("build the agent");
+    // Home composer sends with the new-thread intent so it doesn't reuse a thread.
+    expect(onSendInstruction).toHaveBeenCalledWith("build the agent", true);
   });
 
   it("lets the user switch modes from the chips on an active thread", () => {
