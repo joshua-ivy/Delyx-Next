@@ -1,8 +1,9 @@
-use crate::campaign::CampaignStore;
+﻿use crate::campaign::CampaignStore;
 use crate::campaign_bridge_requests::{CampaignQaqcPromptRequest, CampaignTurnPromptRequest};
 use crate::campaign_bridge_views::CampaignTurnPromptView;
 use crate::campaign_dice::{detect_check, resolve, sheet_stat};
-use crate::campaign_packs::{builtin_packs, find_pack};
+use crate::campaign_packs::find_pack;
+use crate::campaign_packs_user::available_packs;
 use crate::campaign_persistence::{character_status_key, content_rating_key};
 use crate::campaign_prompt::{build_turn_messages, rating_overlay, GmPromptMessage};
 
@@ -11,7 +12,7 @@ pub fn build_turn_prompt_record(
     request: CampaignTurnPromptRequest,
     seed: u64,
 ) -> Result<CampaignTurnPromptView, String> {
-    let packs = builtin_packs()?;
+    let packs = available_packs()?;
     let campaign = store
         .campaign(&request.campaign_id)
         .map_err(|error| format!("{error:?}"))?;
@@ -90,7 +91,7 @@ pub fn build_qaqc_prompt_record(
         .find(|turn| turn.turn_index == request.turn_index)
         .cloned()
         .ok_or_else(|| "Turn not found for QA/QC review.".to_string())?;
-    let packs = builtin_packs()?;
+    let packs = available_packs()?;
     let pack = find_pack(&packs, &campaign.era_pack_id)?;
 
     let mut prompt = format!(

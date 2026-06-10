@@ -114,6 +114,8 @@ mod campaign_dice_tests;
 pub mod campaign_model;
 pub mod campaign_packs;
 mod campaign_packs_tests;
+pub mod campaign_packs_user;
+mod campaign_packs_user_tests;
 pub mod campaign_persistence;
 pub mod campaign_persistence_codec;
 mod campaign_persistence_tests;

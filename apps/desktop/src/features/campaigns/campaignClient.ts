@@ -18,6 +18,11 @@ export async function loadCampaignPacks(): Promise<EraPackView[]> {
   return invoke<EraPackView[]>("campaign_pack_list");
 }
 
+/** Folder where drop-in era packs live; new wars need no rebuild. */
+export async function loadCampaignPackFolder(): Promise<string> {
+  return invoke<string>("campaign_pack_folder");
+}
+
 export async function loadCampaignSnapshot(projectId: string): Promise<CampaignSnapshotView> {
   return invoke<CampaignSnapshotView>("campaign_snapshot", { projectId });
 }

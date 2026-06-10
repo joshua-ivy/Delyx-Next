@@ -8,7 +8,8 @@ use crate::campaign_bridge_views::{
     CampaignTurnCommitView, CampaignTurnView, CampaignView,
 };
 use crate::campaign_delta::{apply_delta, split_narration_and_delta};
-use crate::campaign_packs::{builtin_packs, find_pack, find_scenario, EraPack};
+use crate::campaign_packs::{find_pack, find_scenario, EraPack};
+use crate::campaign_packs_user::available_packs;
 use crate::campaign_persistence::{parse_content_rating, parse_qaqc_status};
 
 pub fn commit_turn_record(
@@ -142,7 +143,7 @@ pub fn create_campaign_record(
         return Err("Campaign creation requires a player character name.".to_string());
     }
     let content_rating = parse_content_rating(&request.content_rating)?;
-    let packs = builtin_packs()?;
+    let packs = available_packs()?;
     let pack = find_pack(&packs, &request.era_pack_id)?;
     let scenario = find_scenario(&pack, &request.scenario_id)?;
 

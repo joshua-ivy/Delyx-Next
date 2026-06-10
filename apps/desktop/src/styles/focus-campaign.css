@@ -83,6 +83,12 @@
   flex: 1 1 220px;
 }
 
+.focus-app .campaign-pack-hint {
+  color: var(--fg-3);
+  font-size: 12px;
+  margin: 14px 0 0;
+}
+
 /* --- Play layout: timeline + rail + composer --- */
 .focus-app .campaign-play {
   display: grid;

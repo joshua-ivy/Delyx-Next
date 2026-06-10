@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createCampaign } from "./campaignClient";
+import { useEffect, useState } from "react";
+import { createCampaign, loadCampaignPackFolder } from "./campaignClient";
 import type { CampaignView as CampaignRecordView, EraPackView } from "./campaignTypes";
 import { RATINGS, describe } from "./campaignViewShared";
 
@@ -23,6 +23,10 @@ export function CampaignHome({
   const [playerName, setPlayerName] = useState("");
   const [rating, setRating] = useState<"story" | "heroic" | "historical">("story");
   const [creating, setCreating] = useState(false);
+  const [packFolder, setPackFolder] = useState("");
+  useEffect(() => {
+    loadCampaignPackFolder().then(setPackFolder).catch(() => setPackFolder(""));
+  }, []);
   const pack = packs.find((item) => item.id === packId);
   const scenario = pack?.scenarios.find((item) => item.id === scenarioId);
 
@@ -142,6 +146,13 @@ export function CampaignHome({
               {creating ? "Mustering..." : "Begin campaign"}
             </button>
           </div>
+        )}
+
+        {packFolder && (
+          <p className="campaign-pack-hint">
+            Add your own wars: drop a pack folder (pack.json, scenarios.json, lore.md) into{" "}
+            <span className="mono">{packFolder}</span>
+          </p>
         )}
       </section>
     </div>

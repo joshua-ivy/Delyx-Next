@@ -118,6 +118,7 @@ fn main() {
             delyx_next_desktop::agent_test_step::agent_run_test_step,
             delyx_next_desktop::approval_bridge::approval_decide,
             delyx_next_desktop::campaign_bridge::campaign_create,
+            delyx_next_desktop::campaign_bridge::campaign_pack_folder,
             delyx_next_desktop::campaign_bridge::campaign_pack_list,
             delyx_next_desktop::campaign_bridge::campaign_memory_commit,
             delyx_next_desktop::campaign_bridge::campaign_memory_prompt,

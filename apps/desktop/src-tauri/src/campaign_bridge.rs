@@ -17,7 +17,7 @@ pub use crate::campaign_bridge_views::{
     CampaignSnapshotView, CampaignTurnCommitView, CampaignTurnPromptView, CampaignTurnView,
     CampaignView, EraPackView, EraScenarioView,
 };
-use crate::campaign_packs::builtin_packs;
+use crate::campaign_packs_user::{available_packs, user_packs_dir};
 use crate::campaign_prompt::GmPromptMessage;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -48,7 +48,12 @@ impl CampaignBridgeState {
 
 #[tauri::command]
 pub fn campaign_pack_list() -> Result<Vec<EraPackView>, String> {
-    Ok(builtin_packs()?.iter().map(pack_view).collect())
+    Ok(available_packs()?.iter().map(pack_view).collect())
+}
+
+#[tauri::command]
+pub fn campaign_pack_folder() -> String {
+    user_packs_dir().display().to_string()
 }
 
 #[tauri::command]
