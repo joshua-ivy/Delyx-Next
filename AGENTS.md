@@ -72,7 +72,7 @@ The product promise:
 - Keep frontend state truthful and boring.
 - Add tests before polish.
 - Use deterministic fixtures before live-model testing.
-- Record architectural decisions in `docs/ARCHITECTURE.md`.
+- Record architectural decisions in `SOURCE_OF_TRUTH.md` (§13 ADRs).
 - When touching grounded answers, report whether directness, grounding, source quality, or usefulness changed.
 
 ## Default Validation Commands

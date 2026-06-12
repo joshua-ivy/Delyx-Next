@@ -9,9 +9,9 @@ real local state or truthful empty states only.
 
 Start with the source of truth:
 
-- `DELYX_NEXT_UI_FIRST_CODEX_BUILD_PLAN.md`
-- `AGENTS.md`
-- `docs/`
+- `SOURCE_OF_TRUTH.md` — the single canonical doc: architecture, current
+  state, competitive gap list, roadmap, and decision records
+- `AGENTS.md` — runtime rules read by the agent and external CLI workers
 
 ## Local models
 
