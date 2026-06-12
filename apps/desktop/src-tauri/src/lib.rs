@@ -162,6 +162,8 @@ pub mod external_agent_terminal;
 mod external_agent_terminal_tests;
 mod external_agent_tests;
 mod external_agent_types;
+pub mod injection_screen;
+mod injection_screen_tests;
 pub mod local_store_bridge;
 mod local_store_bridge_tests;
 pub mod memory;

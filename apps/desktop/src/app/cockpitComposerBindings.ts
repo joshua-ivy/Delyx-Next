@@ -166,6 +166,8 @@ async function requestModelReplyInner(state: ComposerBindingState, thread: TaskT
     // resolve in one shot (the client falls back internally).
     let draftStarted = false;
     const toolSummaries: string[] = [];
+    const toolWarnings: string[] = [];
+    const draftLines: string[] = [];
     const ensureDraft = () => {
       if (!draftStarted) {
         draftStarted = true;
@@ -183,8 +185,15 @@ async function requestModelReplyInner(state: ComposerBindingState, thread: TaskT
         },
         onTool: (summary) => {
           toolSummaries.push(summary);
+          draftLines.push(`🔧 ${summary}…`);
           ensureDraft();
-          updateLocalDraft(state, thread.id, toolSummaries.map((item) => `🔧 ${item}…`).join("\n"));
+          updateLocalDraft(state, thread.id, draftLines.join("\n"));
+        },
+        onToolWarning: (summary) => {
+          toolWarnings.push(summary);
+          draftLines.push(`⚠ ${summary}`);
+          ensureDraft();
+          updateLocalDraft(state, thread.id, draftLines.join("\n"));
         },
       },
     );
@@ -202,6 +211,17 @@ async function requestModelReplyInner(state: ComposerBindingState, thread: TaskT
         state,
         thread.id,
         { role: "system", body: `🔧 Tool loop: ${toolSummaries.length} read-only call(s) — ${toolSummaries.join("; ")}` },
+        "idle",
+      );
+    }
+    if (toolWarnings.length > 0) {
+      appendMessage(
+        state,
+        thread.id,
+        {
+          role: "system",
+          body: `⚠ Security: ${toolWarnings.join("; ")}. The flagged content was delivered to the model as quoted data with a warning, not as instructions.`,
+        },
         "idle",
       );
     }

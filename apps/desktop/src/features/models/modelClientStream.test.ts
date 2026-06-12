@@ -112,6 +112,41 @@ describe("sendModelChatStream", () => {
     }));
   });
 
+  it("routes tool warnings to onToolWarning without polluting onTool", async () => {
+    const handlers = new Map<string, StreamHandler>();
+    listenMock.mockImplementation(async (eventName, callback) => {
+      handlers.set(eventName as string, callback as StreamHandler);
+      return () => undefined;
+    });
+    invokeMock.mockImplementation(async (_command, args) => {
+      const requestId = (args as { request: { requestId: string } }).request.requestId;
+      const tool = handlers.get("tool-loop");
+      const stream = handlers.get("model-stream");
+      tool?.({ payload: { requestId, kind: "tool", summary: "read_file notes.md" } as never });
+      tool?.({
+        payload: {
+          requestId,
+          kind: "tool_warning",
+          summary: "possible prompt injection in read_file notes.md: instruction_override",
+        } as never,
+      });
+      tool?.({ payload: { requestId: "someone-else", kind: "tool_warning", summary: "IGNORED" } as never });
+      stream?.({ payload: { requestId, kind: "done", text: "Answer." } });
+      return { model: "model-1", providerId: "delyx-local", text: "Answer." };
+    });
+
+    const tools: string[] = [];
+    const warnings: string[] = [];
+    await sendModelChatTools(settings("delyx-local", "delyx_local"), [], "C:/code/app", {
+      onToken: () => undefined,
+      onTool: (summary) => tools.push(summary),
+      onToolWarning: (summary) => warnings.push(summary),
+    });
+
+    expect(tools).toEqual(["read_file notes.md"]);
+    expect(warnings).toEqual(["possible prompt injection in read_file notes.md: instruction_override"]);
+  });
+
   it("falls back to the non-streaming call for other providers", async () => {
     invokeMock.mockResolvedValue({ model: "model-1", providerId: "ollama-local", text: "full reply" });
 

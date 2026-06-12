@@ -34,7 +34,7 @@ export async function cancelActiveModelStream(): Promise<void> {
 
 interface ToolLoopEvent {
   requestId: string;
-  kind: "tool" | "tool_result";
+  kind: "tool" | "tool_result" | "tool_warning";
   summary: string;
 }
 
@@ -42,6 +42,8 @@ export interface ToolLoopHandlers {
   onToken: (accumulated: string, delta: string) => void;
   /** Fires when the model calls a read-only project tool. */
   onTool?: (summary: string) => void;
+  /** Fires when a tool result contained instruction-shaped (possible prompt-injection) content. */
+  onToolWarning?: (summary: string) => void;
 }
 
 /**
@@ -81,8 +83,14 @@ export async function sendModelChatTools(
     }
   });
   const unlistenTool = await listen<ToolLoopEvent>("tool-loop", (event) => {
-    if (event.payload.requestId === requestId && event.payload.kind === "tool") {
+    if (event.payload.requestId !== requestId) {
+      return;
+    }
+    if (event.payload.kind === "tool") {
       handlers.onTool?.(event.payload.summary);
+    }
+    if (event.payload.kind === "tool_warning") {
+      handlers.onToolWarning?.(event.payload.summary);
     }
   });
   try {

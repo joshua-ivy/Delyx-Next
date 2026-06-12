@@ -18,7 +18,8 @@ pub const TOOL_LOOP_EVENT: &str = "tool-loop";
 #[serde(rename_all = "camelCase")]
 pub struct ToolLoopEvent {
     pub request_id: String,
-    /// "tool" while calling, "tool_result" when done.
+    /// "tool" while calling, "tool_result" when done, "tool_warning" when the
+    /// result contained instruction-shaped (possible prompt-injection) content.
     pub kind: String,
     pub summary: String,
 }
@@ -154,6 +155,20 @@ pub async fn run_tool_loop(
                     },
                 );
                 let result = execute_tool(&root, &call);
+                // Tool output is untrusted data: screen it for instruction-shaped
+                // content, surface hits to the UI, and feed the model a wrapped,
+                // data-framed result either way. Detection warns; it never blocks.
+                let findings = crate::injection_screen::screen_tool_result(&result);
+                if !findings.is_empty() {
+                    let _ = app.emit(
+                        TOOL_LOOP_EVENT,
+                        ToolLoopEvent {
+                            request_id: request_id.clone(),
+                            kind: "tool_warning".to_string(),
+                            summary: crate::injection_screen::warning_summary(&summary, &findings),
+                        },
+                    );
+                }
                 let _ = app.emit(
                     TOOL_LOOP_EVENT,
                     ToolLoopEvent {
@@ -168,7 +183,10 @@ pub async fn run_tool_loop(
                 });
                 messages.push(ModelChatMessage {
                     role: "user".to_string(),
-                    content: format!("Tool result:\n{result}\n\nContinue. Call another tool only if needed, otherwise give your final answer."),
+                    content: format!(
+                        "{}\n\nContinue. Call another tool only if needed, otherwise give your final answer.",
+                        crate::injection_screen::wrap_untrusted(&result, &findings)
+                    ),
                 });
             }
             None => {
