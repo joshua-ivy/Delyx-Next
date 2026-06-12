@@ -83,11 +83,23 @@ export async function sendCampaignTurn(
   if (!result.text.trim()) {
     throw new Error("The Game Master returned an empty scene. Try again.");
   }
+  // A scene without a parseable delta gets one schema-locked extraction pass
+  // (Delyx Local only). Best-effort: a repair failure never blocks the turn,
+  // and cancelled partials are committed as-is — half a scene is not canon.
+  let modelText = result.text;
+  if (!result.cancelled) {
+    const repair = await invoke<{ rawText: string; repaired: boolean }>("campaign_delta_repair", {
+      request: { providerId: result.providerId, model: result.model, rawText: result.text },
+    }).catch(() => undefined);
+    if (repair?.repaired) {
+      modelText = repair.rawText;
+    }
+  }
   const committed = await invoke<CampaignTurnCommitView>("campaign_turn_commit", {
     request: {
       campaignId,
       playerText,
-      modelText: result.text,
+      modelText,
       resolution: prompt.resolution ?? null,
       createdAt: new Date().toISOString(),
     },

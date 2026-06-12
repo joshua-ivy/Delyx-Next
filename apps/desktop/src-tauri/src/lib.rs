@@ -108,6 +108,8 @@ mod campaign_bridge_requests;
 mod campaign_bridge_tests;
 mod campaign_bridge_views;
 pub mod campaign_delta;
+pub mod campaign_delta_repair;
+mod campaign_delta_repair_tests;
 mod campaign_delta_tests;
 pub mod campaign_dice;
 mod campaign_dice_tests;

@@ -453,8 +453,10 @@ Turn loop (`campaign_bridge.rs` + ~40 modules):
 3 NARRATE   model_chat_stream — tokens stream into the play view; cancel works
 4 DELTA     trailing fenced ```delta json parsed in Rust, stripped from prose,
             validated (unknown character → entry rejected; dead can't act;
-            clock only moves forward), applied to SQLite; malformed delta is
-            non-fatal (narration posts; QA/QC backstops)
+            clock only moves forward), applied to SQLite; a missing/malformed
+            delta first gets one schema-locked extraction pass
+            (`campaign_delta_repair`, embedded provider only) and is
+            otherwise non-fatal (narration posts; QA/QC backstops)
 5 PERSIST   atomic turn row + canon events (model dies mid-turn → no row,
             retry affordance, state untouched)
 6 QA/QC     async CLI reviewer: continuity, anachronisms, rating violations,
@@ -669,10 +671,13 @@ and where it lands. Ordered roughly by leverage-per-effort.
    the tool-call JSON schema via `Constraint::JsonSchema` (llguidance in
    mistral.rs) — the regenerated call is valid by construction, narrated as
    "(repaired)" in the loop. Cloud harnesses can't touch the sampler; they
-   parse-and-retry blind. Remaining: constrain campaign ```delta blocks the
-   same way (two-pass narrate-then-extract with a schema-locked second
-   pass), and consider full constrained tool turns once llguidance grammars
-   can express "tool JSON or free prose" cleanly.
+   parse-and-retry blind. ~~Campaign delta repair SHIPPED same day~~:
+   scenes missing a parseable ```delta block get one schema-locked
+   extraction pass (`campaign_delta_repair.rs`, no-op when the delta is
+   already valid / provider isn't embedded / the partial was cancelled) —
+   closing the old design's #1 open question, delta reliability on a 30B.
+   Remaining: full constrained tool turns once llguidance grammars can
+   express "tool JSON or free prose" cleanly.
 
 2. **KV-cache-aware prompt layout.** Order every prompt stable-prefix-first
    (GM contract / system rules / repo map / canon **before** anything

@@ -129,6 +129,7 @@ fn main() {
             delyx_next_desktop::campaign_bridge::campaign_turn_prompt,
             delyx_next_desktop::campaign_bridge::campaign_turn_qaqc_commit,
             delyx_next_desktop::campaign_bridge::campaign_turns,
+            delyx_next_desktop::campaign_delta_repair::campaign_delta_repair,
             delyx_next_desktop::cli_chat::cli_chat,
             delyx_next_desktop::cli_review::cli_review,
             delyx_next_desktop::model_chat::model_chat,
