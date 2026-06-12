@@ -1,5 +1,5 @@
-use crate::model_ollama_http::{ollama_provider, provider_from_models};
 pub(crate) use crate::model_ollama_http::split_http_response;
+use crate::model_ollama_http::{ollama_provider, provider_from_models};
 use crate::model_provider::{ModelProvider, ProviderStatus};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;

@@ -21,6 +21,7 @@ export function CampaignHome({
   const [packId, setPackId] = useState("");
   const [scenarioId, setScenarioId] = useState("");
   const [playerName, setPlayerName] = useState("");
+  const [playerTrait, setPlayerTrait] = useState("");
   const [rating, setRating] = useState<"story" | "heroic" | "historical">("story");
   const [creating, setCreating] = useState(false);
   const [packFolder, setPackFolder] = useState("");
@@ -42,6 +43,7 @@ export function CampaignHome({
       playerName: playerName.trim(),
       playerRole: "",
       contentRating: rating,
+      playerTrait: playerTrait || undefined,
     })
       .then((snapshot) => onCreate(snapshot.campaigns))
       .catch((problem) => onError(describe(problem)))
@@ -84,6 +86,7 @@ export function CampaignHome({
               onClick={() => {
                 setPackId(item.id);
                 setScenarioId(item.scenarios[0]?.id ?? "");
+                setPlayerTrait("");
               }}
               type="button"
             >
@@ -116,7 +119,7 @@ export function CampaignHome({
           </div>
         )}
 
-        {scenario && (
+        {pack && scenario && (
           <div className="campaign-create">
             <input
               className="in"
@@ -124,6 +127,25 @@ export function CampaignHome({
               placeholder="Your character's name"
               value={playerName}
             />
+            <div className="seg" title="Your specialty rolls at +2">
+              <button
+                className={playerTrait === "" ? "on" : ""}
+                onClick={() => setPlayerTrait("")}
+                type="button"
+              >
+                Balanced
+              </button>
+              {pack.checks.map((check) => (
+                <button
+                  className={playerTrait === check ? "on" : ""}
+                  key={check}
+                  onClick={() => setPlayerTrait(check)}
+                  type="button"
+                >
+                  {check.charAt(0).toUpperCase() + check.slice(1)} +2
+                </button>
+              ))}
+            </div>
             <div className="seg">
               {RATINGS.map((item) => (
                 <button

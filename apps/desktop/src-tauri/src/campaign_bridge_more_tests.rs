@@ -1,4 +1,4 @@
-#[cfg(test)]
+﻿#[cfg(test)]
 mod tests {
     use crate::campaign::CampaignStore;
     use crate::campaign_bridge::{
@@ -251,6 +251,7 @@ mod tests {
             content_rating: rating.to_string(),
             created_at: "T0".to_string(),
             title: None,
+            player_trait: None,
         }
     }
 }

@@ -160,12 +160,28 @@ pub fn create_campaign_record(
         request.player_role
     };
 
+    let player_trait = request
+        .player_trait
+        .map(|value| value.trim().to_lowercase())
+        .filter(|value| !value.is_empty());
+    if let Some(chosen) = &player_trait {
+        if !pack.checks.contains(chosen) {
+            return Err(format!(
+                "Unknown trait \"{chosen}\" for this era; pick one of: {}.",
+                pack.checks.join(", ")
+            ));
+        }
+    }
+
     let mut characters = vec![CharacterInput {
         kind: CharacterKind::Player,
         name: request.player_name,
         role: player_role,
-        sheet_json: starting_sheet_json(&pack),
-        notes: String::new(),
+        sheet_json: player_sheet_json(&pack, player_trait.as_deref()),
+        notes: player_trait
+            .as_deref()
+            .map(|chosen| format!("specialty: {chosen}"))
+            .unwrap_or_default(),
     }];
     for squad_member in &scenario.squad {
         characters.push(CharacterInput {
@@ -197,10 +213,24 @@ pub fn create_campaign_record(
 }
 
 fn starting_sheet_json(pack: &EraPack) -> String {
+    player_sheet_json(pack, None)
+}
+
+/// The chosen specialty rolls at +2; everything else starts flat. With 2d6
+/// thresholds at 7/10 that one pick is the whole character build - big enough
+/// to feel, small enough to never auto-win.
+fn player_sheet_json(pack: &EraPack, specialty: Option<&str>) -> String {
     let sheet: serde_json::Map<String, serde_json::Value> = pack
         .checks
         .iter()
-        .map(|check| (check.clone(), serde_json::Value::from(0)))
+        .map(|check| {
+            let stat = if specialty == Some(check.as_str()) {
+                2
+            } else {
+                0
+            };
+            (check.clone(), serde_json::Value::from(stat))
+        })
         .collect();
     serde_json::Value::Object(sheet).to_string()
 }

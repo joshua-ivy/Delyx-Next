@@ -13,6 +13,8 @@ pub struct CampaignCreateRequest {
     pub created_at: String,
     #[serde(default)]
     pub title: Option<String>,
+    #[serde(default)]
+    pub player_trait: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

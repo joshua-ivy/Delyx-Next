@@ -89,4 +89,6 @@ export interface CampaignCreateInput {
   playerRole: string;
   contentRating: "story" | "heroic" | "historical";
   title?: string;
+  /** A check from the era pack; the character rolls it at +2. */
+  playerTrait?: string;
 }

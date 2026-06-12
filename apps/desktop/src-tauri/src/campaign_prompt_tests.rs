@@ -1,4 +1,4 @@
-#[cfg(test)]
+﻿#[cfg(test)]
 mod tests {
     use crate::campaign::{CampaignStatus, CampaignStore, CharacterStatus, TurnInput};
     use crate::campaign_bridge::{create_campaign_record, CampaignCreateRequest};
@@ -193,6 +193,7 @@ mod tests {
                 content_rating: rating.to_string(),
                 created_at: "T0".to_string(),
                 title: None,
+                player_trait: None,
             },
         )
         .unwrap();

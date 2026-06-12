@@ -96,11 +96,7 @@ mod tests {
     fn user_pack_overrides_builtin_with_same_id() {
         let mut packs = builtin_packs().unwrap();
         let count = packs.len();
-        let mut replacement = packs
-            .iter()
-            .find(|pack| pack.id == "ww1")
-            .cloned()
-            .unwrap();
+        let mut replacement = packs.iter().find(|pack| pack.id == "ww1").cloned().unwrap();
         replacement.title = "WW1 (House Rules)".to_string();
         merge_packs(&mut packs, vec![replacement]);
         assert_eq!(packs.len(), count);
