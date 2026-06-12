@@ -35,6 +35,60 @@ mod tests {
     }
 
     #[test]
+    fn tool_shaped_failures_trigger_repair_but_prose_does_not() {
+        use crate::agent_tools::looks_like_tool_attempt;
+        // Malformed JSON / fenced attempts: repair candidates.
+        assert!(looks_like_tool_attempt(
+            "{ \"tool\": \"read_file\", path: src }"
+        ));
+        assert!(looks_like_tool_attempt("```json\n{\"tool\":\"grep\"\n```"));
+        assert!(looks_like_tool_attempt("  {\"tool\":\"list_dir\""));
+        // Prose answers: never repaired.
+        assert!(!looks_like_tool_attempt("Use a checked add in main.rs."));
+        assert!(!looks_like_tool_attempt("1. read the file\n2. fix the bug"));
+    }
+
+    #[test]
+    fn repair_schema_matches_the_toolcall_serde_shape() {
+        use crate::agent_tools::tool_call_json_schema;
+        let schema = tool_call_json_schema();
+        let branches = schema["anyOf"].as_array().expect("anyOf branches");
+        assert_eq!(branches.len(), 3);
+
+        // Every schema-conforming example must parse into the matching ToolCall —
+        // the constraint and the parser cannot drift apart.
+        let read = r#"{"tool":"read_file","path":"src/lib.rs","start_line":1,"end_line":40}"#;
+        assert_eq!(
+            parse_tool_call(read),
+            Some(ToolCall::ReadFile {
+                path: "src/lib.rs".to_string(),
+                start_line: Some(1),
+                end_line: Some(40)
+            }),
+        );
+        let list = r#"{"tool":"list_dir","path":"src"}"#;
+        assert_eq!(
+            parse_tool_call(list),
+            Some(ToolCall::ListDir {
+                path: Some("src".to_string())
+            }),
+        );
+        let grep = r#"{"tool":"grep","query":"fn main"}"#;
+        assert_eq!(
+            parse_tool_call(grep),
+            Some(ToolCall::Grep {
+                query: "fn main".to_string()
+            }),
+        );
+        // The tags the sampler is allowed to emit are exactly the parser's tags.
+        let tags: Vec<&str> = branches
+            .iter()
+            .map(|branch| branch["properties"]["tool"]["const"].as_str().unwrap())
+            .collect();
+        assert_eq!(tags, vec!["read_file", "list_dir", "grep"]);
+    }
+
+    #[test]
     fn read_file_returns_numbered_lines_inside_root() {
         let root = workspace("tools-read");
         fs::write(root.join("a.txt"), "alpha\nbeta\ngamma\n").unwrap();

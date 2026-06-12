@@ -143,9 +143,32 @@ pub async fn run_tool_loop(
             break 'turns;
         }
 
-        match parse_tool_call(&turn_text) {
-            Some(call) => {
-                let summary = call.summary();
+        // A reply that parses is a tool call; one that merely *looks* like a
+        // tool call (JSON/fence-shaped but invalid) gets one constrained
+        // repair turn — the sampler is grammar-locked to the tool schema, so
+        // the regenerated call is valid by construction instead of leaking to
+        // the user as a garbage "answer".
+        let parsed = match parse_tool_call(&turn_text) {
+            Some(call) => Some((call, turn_text.trim().to_string(), false)),
+            None if crate::agent_tools::looks_like_tool_attempt(&turn_text) => {
+                repair_tool_call(&loaded, &messages, &profile, &turn_text)
+                    .await
+                    .map(|(call, text)| (call, text, true))
+            }
+            None => None,
+        };
+        if state.take_cancel(&request_id) {
+            cancelled = true;
+            final_text = turn_text;
+            break 'turns;
+        }
+        match parsed {
+            Some((call, assistant_text, repaired)) => {
+                let summary = if repaired {
+                    format!("{} (repaired)", call.summary())
+                } else {
+                    call.summary()
+                };
                 let _ = app.emit(
                     TOOL_LOOP_EVENT,
                     ToolLoopEvent {
@@ -179,7 +202,7 @@ pub async fn run_tool_loop(
                 );
                 messages.push(ModelChatMessage {
                     role: "assistant".to_string(),
-                    content: turn_text.trim().to_string(),
+                    content: assistant_text,
                 });
                 messages.push(ModelChatMessage {
                     role: "user".to_string(),
@@ -213,4 +236,53 @@ pub async fn run_tool_loop(
         model: profile.id,
         text,
     })
+}
+
+/// Instruction for the constrained repair turn. The schema constraint does the
+/// real work — this just tells the model why it is being re-asked.
+pub const TOOL_REPAIR_INSTRUCTION: &str = "Your last reply looked like a tool call but was not \
+     a valid tool-call JSON object. Reply with exactly one valid tool-call JSON object and \
+     nothing else.";
+
+/// One grammar-constrained retry for a malformed tool call: re-ask the same
+/// turn with the sampler locked to the tool-call JSON schema (llguidance), so
+/// the regenerated call cannot be malformed. Returns the parsed call plus the
+/// exact text to record as the assistant turn; None falls back to treating the
+/// original reply as a final answer (today's behavior). Best-effort by design —
+/// repair failures must never kill the loop.
+#[cfg(feature = "embedded_mistral")]
+async fn repair_tool_call(
+    loaded: &std::sync::Arc<crate::model_embedded::LoadedLocalModel>,
+    messages: &[ModelChatMessage],
+    profile: &LocalModelProfile,
+    malformed: &str,
+) -> Option<(crate::agent_tools::ToolCall, String)> {
+    use crate::agent_tools::{parse_tool_call, tool_call_json_schema};
+    use crate::model_embedded::chat_request;
+
+    let attempt = malformed.trim();
+    if attempt.is_empty() {
+        return None;
+    }
+    let mut repair_messages = messages.to_vec();
+    repair_messages.push(ModelChatMessage {
+        role: "assistant".to_string(),
+        content: attempt.to_string(),
+    });
+    repair_messages.push(ModelChatMessage {
+        role: "user".to_string(),
+        content: TOOL_REPAIR_INSTRUCTION.to_string(),
+    });
+    let request = chat_request(repair_messages, profile)
+        .ok()?
+        .set_constraint(mistralrs::Constraint::JsonSchema(tool_call_json_schema()));
+    let response = loaded.model.send_chat_request(request).await.ok()?;
+    let text = response
+        .choices
+        .first()
+        .and_then(|choice| choice.message.content.as_ref())
+        .map(|content| content.trim().to_string())
+        .filter(|content| !content.is_empty())?;
+    let call = parse_tool_call(&text)?;
+    Some((call, text))
 }

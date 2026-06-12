@@ -71,6 +71,55 @@ pub fn parse_tool_call(reply: &str) -> Option<ToolCall> {
         .or_else(|| serde_json::from_str::<ToolCall>(body).ok())
 }
 
+/// True when a reply is shaped like a tool call (bare JSON object or fenced
+/// block) even if it failed to parse. This is the trigger for a constrained
+/// repair turn: without repair, malformed tool JSON would fall through and be
+/// shown to the user as the "final answer".
+pub fn looks_like_tool_attempt(reply: &str) -> bool {
+    let trimmed = reply.trim_start();
+    trimmed.starts_with('{') || trimmed.starts_with("```")
+}
+
+/// JSON Schema mirroring `ToolCall`'s serde shape, applied as a sampler-level
+/// decoding constraint (llguidance via mistral.rs) during repair turns so the
+/// regenerated tool call is valid by construction — illegal tokens are masked
+/// at sampling time. Keep in sync with `ToolCall`.
+pub fn tool_call_json_schema() -> serde_json::Value {
+    serde_json::json!({
+        "anyOf": [
+            {
+                "type": "object",
+                "properties": {
+                    "tool": { "const": "read_file" },
+                    "path": { "type": "string" },
+                    "start_line": { "type": "integer", "minimum": 1 },
+                    "end_line": { "type": "integer", "minimum": 1 }
+                },
+                "required": ["tool", "path"],
+                "additionalProperties": false
+            },
+            {
+                "type": "object",
+                "properties": {
+                    "tool": { "const": "list_dir" },
+                    "path": { "type": "string" }
+                },
+                "required": ["tool"],
+                "additionalProperties": false
+            },
+            {
+                "type": "object",
+                "properties": {
+                    "tool": { "const": "grep" },
+                    "query": { "type": "string" }
+                },
+                "required": ["tool", "query"],
+                "additionalProperties": false
+            }
+        ]
+    })
+}
+
 /// Execute a read-only tool inside `root`. Errors are returned as readable text
 /// so the model can adjust (wrong path, etc.) instead of the loop dying.
 pub fn execute_tool(root: &Path, call: &ToolCall) -> String {

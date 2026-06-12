@@ -209,8 +209,13 @@ Four cooperating Rust modules own the loop:
   `tool_warning` event (⚠ line in the live draft + a security receipt
   message in the thread) and append a SECURITY NOTE telling the model the
   flagged lines are data. Detection warns and hardens; it never blocks.
-- Works with any GGUF — no grammar/function-calling support is assumed
-  (but see §12.1 for where that should go).
+- Works with any GGUF — no grammar/function-calling support is assumed.
+- **Constrained repair** (shipped 2026-06-11): a turn that is tool-shaped
+  but malformed gets one retry with the sampler grammar-locked to the
+  tool-call JSON schema (`tool_call_json_schema()` in `agent_tools.rs`,
+  `Constraint::JsonSchema`/llguidance in mistral.rs), so the repaired call
+  is valid by construction and narrated as "(repaired)". Repair failures
+  fall back to the old treat-as-answer behavior; they never kill the loop.
 
 **`agent_scheduler.rs` — pure decision logic.** Reads the persisted AgentRun,
 approval, patch, test, and review stores and returns a typed decision:
@@ -657,14 +662,17 @@ our model executes in-process, our state is local SQLite, and our loop is
 deterministic Rust. Each item below states what, why nobody else does it,
 and where it lands. Ordered roughly by leverage-per-effort.
 
-1. **Grammar-constrained tool calls (GBNF / constrained decoding).** Because
-   the model runs in-process via mistral.rs, constrain decoding during tool
-   turns so the tool-call JSON is *valid by construction* — illegal tokens
-   are masked at sampling time. Cloud harnesses can't touch the sampler;
-   they parse-and-retry. This deletes the entire malformed-tool-call failure
-   class for any GGUF, including small ones — and the same trick guarantees
-   campaign `delta` blocks always parse. Lands in: `model_embedded.rs`
-   (sampler hook) + `agent_tool_loop.rs` / `campaign_delta.rs` (schemas).
+1. **Grammar-constrained tool calls (constrained decoding).** ~~v1 SHIPPED
+   2026-06-11~~ as *constrained repair*: when a tool-loop turn looks like a
+   tool call but fails to parse (previously it leaked to the user as a
+   garbage "answer"), the turn is re-asked once with the sampler locked to
+   the tool-call JSON schema via `Constraint::JsonSchema` (llguidance in
+   mistral.rs) — the regenerated call is valid by construction, narrated as
+   "(repaired)" in the loop. Cloud harnesses can't touch the sampler; they
+   parse-and-retry blind. Remaining: constrain campaign ```delta blocks the
+   same way (two-pass narrate-then-extract with a schema-locked second
+   pass), and consider full constrained tool turns once llguidance grammars
+   can express "tool JSON or free prose" cleanly.
 
 2. **KV-cache-aware prompt layout.** Order every prompt stable-prefix-first
    (GM contract / system rules / repo map / canon **before** anything
